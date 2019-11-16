@@ -3,14 +3,17 @@ name: Fortran CI
 on: pull_request
 
 jobs:
-  build:
+  linux-build:
 
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v1
-    - name: Build with meson and ninja
-      run: |
-        docker pull jpakkane/mesonci
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - run: sudo apt install -yq --no-install-recommends gfortran
+    - run: pip3 install meson
+    - run: |
         meson setup build_gcc
         ninja -C build_gcc test
