@@ -34,13 +34,25 @@ module d3def_molecule
       real(wp) :: lattice(3,3) = 0.0_wp      !< direct lattice parameters
       real(wp) :: rec_lat(3,3) = 0.0_wp      !< reciprocal lattice parameters
       real(wp) :: volume = 0.0_wp            !< volume of unit cell
+      character(len=:), allocatable :: name
+      integer :: ftype
    contains
       generic :: new => new_from_natoms
       procedure, private :: new_from_natoms => molecule_new_from_natoms
+      procedure :: read => read_molecule_generic
       procedure :: print_info => molecule_print_info
       procedure :: destroy => molecule_destroy
       final :: molecule_finalizer
    end type d3_molecule
+
+
+   interface
+      module subroutine read_molecule_generic(self, unit, format)
+         class(d3_molecule), intent(out) :: self
+         integer, intent(in) :: unit
+         integer, intent(in), optional :: format
+      end subroutine read_molecule_generic
+   end interface
 
 
    interface len

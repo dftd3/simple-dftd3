@@ -43,9 +43,14 @@ fsrcs += 'src/typedef/environment.f90'
 fsrcs += 'src/typedef/argparser.f90'
 fsrcs += 'src/typedef/molecule.f90'
 
+fsrcs += 'src/io/molecule_reader.f90'
+
+fsrcs += 'src/utils/file_utils.f90'
+
 fsrcs += 'src/param/constants.f90'
 fsrcs += 'src/param/units.f90'
 fsrcs += 'src/param/atomic_units.f90'
+fsrcs += 'src/param/pse.f90'
 
 incdir = include_directories('include')
 

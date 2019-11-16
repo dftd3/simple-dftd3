@@ -1,12 +1,15 @@
 program sdftd3_prog
-   use d3mod_header
-   use d3mod_main
    use d3def_environment
    use d3def_molecule
+   use d3mod_header
+   use d3mod_main
+   use d3mod_file_utils
    implicit none
    type(d3_environment) :: env
    type(d3_molecule) :: mol
    character(len=:), allocatable :: filename
+   logical :: exist
+   integer :: ifile
 
    call env%new
 
@@ -15,8 +18,19 @@ program sdftd3_prog
 
    call sdftd3_header(env%unit)
 
-   !call main_run(env, filename)
-   !call env%checkpoint("running calculation from '"//filename//"'")
+   inquire(file=filename, exist=exist)
+   if (exist) then
+      open(file=filename, newunit=ifile)
+      call mol%read(ifile, format=p_ftype%default)
+      if (mol%ftype < 0) call env%set_error(mol%name)
+      close(ifile)
+   else
+      call env%set_error("input file not found")
+   endif
+   call env%checkpoint("reading molecule from '"//filename//"'")
+
+   call main_run(env, mol)
+   call env%checkpoint("running calculation for '"//filename//"'")
 
 contains
 
@@ -30,6 +44,7 @@ subroutine read_command_line_arguments(env, filename)
 
    type(d3_argparser) :: args
    integer :: iarg
+
    call args%new
 
    if (size(args) == 0) then
