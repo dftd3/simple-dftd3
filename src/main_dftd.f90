@@ -16,6 +16,7 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module d3mod_main
+   use iso_fortran_env, only: wp => real64
    implicit none
    public :: main_run
    private
@@ -34,10 +35,19 @@ subroutine main_run(env, opt, mol, res)
    class(d3_molecule), intent(inout) :: mol
    class(d3_results), intent(out) :: res
 
+   real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
+
    ! check for the reference C6 coefficients first
    if (.not.allocated(reference_c6)) call copy_c6(reference_c6)
 
    call mol%print_info(env%unit)
+
+   allocate(cn(len(mol)), dcndr(3, len(mol), len(mol)), dcndL(3, 3, len(mol)), &
+      &     res%energies(len(mol)), res%gradient(3, len(mol)), res%stress(3, 3), &
+      &     source=0.0_wp)
+
+   call d3bj_eg(mol, opt%par, opt%weighting_factor, cn, dcndr, dcndL, &
+      &         opt%cutoff_disp, res%energies, res%gradient, res%stress)
 
 end subroutine main_run
 

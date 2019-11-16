@@ -7,7 +7,7 @@ module d3mod_dftd3
 contains 
 
 subroutine d3bj_eg(mol, par, weighting_factor, cn, dcndr, dcndL, r_thr, &
-      &            energy, gradient, sigma)
+      &            energies, gradient, sigma)
    use d3def_molecule
    use d3def_damping_parameters
    use d3par_dftd3
@@ -23,7 +23,7 @@ subroutine d3bj_eg(mol, par, weighting_factor, cn, dcndr, dcndL, r_thr, &
    real(wp), intent(in) :: dcndL(:, :, :)
    real(wp), intent(in) :: r_thr
 
-   real(wp), intent(inout) :: energy
+   real(wp), intent(inout) :: energies(:)
    real(wp), intent(inout) :: gradient(:, :)
    real(wp), intent(inout) :: sigma(:, :)
 
@@ -54,7 +54,7 @@ subroutine d3bj_eg(mol, par, weighting_factor, cn, dcndr, dcndL, r_thr, &
    ! omp&        norm, dnorm, tgw, dgw, r4r2ij, r0, t, rij, r2, r, &
    ! omp&        oor6, oor8, oor10, door6, door8, door10, gtmp, &
    ! omp&        c6ij, dic6ij, djc6ij, c6ref, disp, ddisp, dtmp) &
-   ! omp reduction(+:energy,gradient,sigma,dEdcn)
+   ! omp reduction(+:energies,gradient,sigma,dEdcn)
    ! omp do schedule(runtime)
    do iat = 1, len(mol)
       ati = mol%at(iat)
@@ -113,7 +113,7 @@ subroutine d3bj_eg(mol, par, weighting_factor, cn, dcndr, dcndL, r_thr, &
             & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
          ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
             & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-         energy = energy - c6ij*disp
+         energies(iat) = energies(iat) - c6ij*disp
          dtmp = c6ij*ddisp*rij/r
          dEdcn(iat) = dEdcn(iat) + (dic6ij + djc6ij)*disp
          sigma = sigma - spread(dtmp, 1, 3)*spread(rij, 2, 3)
@@ -160,10 +160,11 @@ subroutine d3bj_eg(mol, par, weighting_factor, cn, dcndr, dcndL, r_thr, &
                & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
             ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
                & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-            energy = energy - c6ij*disp
+            energies(iat) = energies(iat) - c6ij*disp/2
+            energies(jat) = energies(jat) - c6ij*disp/2
             ! save this
-            dEdcn(iat) = dEdcn(iat) + dic6ij *disp
-            dEdcn(jat) = dEdcn(jat) + djc6ij *disp
+            dEdcn(iat) = dEdcn(iat) + dic6ij * disp
+            dEdcn(jat) = dEdcn(jat) + djc6ij * disp
             dtmp = c6ij*ddisp*rij/r
             gtmp = gtmp - dtmp
             sigma = sigma - spread(dtmp, 1, 3)*spread(rij, 2, 3)
