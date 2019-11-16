@@ -1,0 +1,4 @@
+[wrap-git]
+directory = dftd4
+url = https://github.com/awvwgk/simple-dftd3.git
+revision = head
