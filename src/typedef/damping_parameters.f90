@@ -15,19 +15,22 @@
 ! You should have received a copy of the GNU General Public License
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-module d3par_constants
+module d3def_damping_parameters
    use iso_fortran_env, only: wp => real64
    implicit none
+   public :: d3_damping_parameters
+   private
 
-   !> ratio of a circle's circumference to its diameter
-   real(wp), parameter :: pi = 4.0_wp * atan(1.0_wp)
-   !> √π
-   real(wp), parameter :: sqrtpi = sqrt(pi)
-   !> 2×π
-   real(wp), parameter :: twopi = 2.0_wp * pi
-   !> 4×π
-   real(wp), parameter :: fourpi = 4.0_wp * pi
-   !> π/2
-   real(wp), parameter :: pihalf = 0.5_wp * pi
 
-end module d3par_constants
+   type :: d3_damping_parameters
+      real(wp) :: s6 = -1.0_wp
+      real(wp) :: s8 = -1.0_wp
+      real(wp) :: s10 = 0.0_wp
+      real(wp) :: s9 = 1.0_wp
+      real(wp) :: a1 = -1.0_wp
+      real(wp) :: a2 = -1.0_wp
+      integer :: alp = 16
+   end type d3_damping_parameters
+
+
+end module d3def_damping_parameters

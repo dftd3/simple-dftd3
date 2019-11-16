@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU General Public License
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-module d3mod_file_utils
+module d3mod_utils_filetype
    implicit none
 
    type, private :: d3_enum_molecule
@@ -121,4 +121,4 @@ subroutine file_figure_out_ftype(ftype, extension, basename)
 
 end subroutine file_figure_out_ftype
 
-end module d3mod_file_utils
+end module d3mod_utils_filetype

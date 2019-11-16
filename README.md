@@ -8,6 +8,8 @@ and [*JCC* **32**, 1456 (2011)](https://dx.doi.org/10.1002/jcc.21759) for detail
 It is mostly based on the [`dftd4`](https://github.com/dftd4/dftd4) program and
 borrows one or two ideas from the implementation in [`ased3`](https://github.com/ehermes/ased3).
 
+Right now it is more a playground to test various features, designs and tools.
+
 ## Installing
 
 To build this project we use [`meson`](https://mesonbuild.com/) and require

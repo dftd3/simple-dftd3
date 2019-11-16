@@ -38,14 +38,18 @@ fmain  = 'src/program_dftd.f90'
 fsrcs += 'src/main_dftd.f90'
 fsrcs += 'src/header.f90'
 fsrcs += 'src/help.f90'
+fsrcs += 'src/dftd3.f90'
 
 fsrcs += 'src/typedef/environment.f90'
 fsrcs += 'src/typedef/argparser.f90'
 fsrcs += 'src/typedef/molecule.f90'
+fsrcs += 'src/typedef/damping_parameters.f90'
 
 fsrcs += 'src/io/molecule_reader.f90'
 
 fsrcs += 'src/utils/file_utils.f90'
+fsrcs += 'src/utils/periodic.f90'
+fsrcs += 'src/utils/symbols.f90'
 
 fsrcs += 'src/param/constants.f90'
 fsrcs += 'src/param/units.f90'
