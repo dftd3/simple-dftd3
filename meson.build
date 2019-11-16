@@ -66,14 +66,16 @@ incdir = include_directories('include')
 dftd3_lib = library(meson.project_name(),
                     sources: fsrcs,
                     version: meson.project_version(),
-                    include_directories: incdir)
+                    include_directories: incdir,
+                    install: true)
 
 dftd3_dep = declare_dependency(link_with: dftd3_lib)
 
 dftd3_exe = executable(meson.project_name(),
                        sources: fmain,
                        link_with: dftd3_lib,
-                       include_directories: incdir)
+                       include_directories: incdir,
+                       install: true)
 
 # test executable
 test_env = environment()
@@ -83,4 +85,4 @@ test('print version', dftd3_exe, env: test_env, args: '--version')
 test('print help', dftd3_exe, env: test_env, args: '--help')
 test('no arguments', dftd3_exe, env: test_env, should_fail: true)
 test('taxol.xyz', dftd3_exe, env: test_env,
-     args: meson.current_source_dir()/'assets'/'inputs'/'xyz'/'taxol.xyz')
+     args: files('assets/inputs/xyz/taxol.xyz'))
