@@ -21,6 +21,7 @@ project('s-dftd3', 'fortran',
         meson_version: '>=0.49')
 
 conf = configuration_data()
+conf.set('name', meson.project_name())
 conf.set('version', meson.project_version())
 conf.set('commit', run_command(find_program('git'),'show','-s','--format=%h').stdout().strip())
 conf.set('date', run_command(find_program('date'),'-I').stdout().strip())
@@ -39,7 +40,7 @@ fsrcs += 'src/header.f90'
 fsrcs += 'src/help.f90'
 
 fsrcs += 'src/typedef/environment.f90'
-fsrcs += 'src/typedef/file.f90'
+fsrcs += 'src/typedef/argparser.f90'
 fsrcs += 'src/typedef/molecule.f90'
 
 fsrcs += 'src/param/constants.f90'
