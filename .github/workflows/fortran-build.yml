@@ -1,6 +1,6 @@
 name: Fortran CI
 
-on: [push, pull_request]
+on: pull_request
 
 jobs:
   build:
@@ -9,9 +9,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Install build system
-      run: docker pull jpakkane/mesonci
     - name: Build with meson and ninja
       run: |
+        docker pull jpakkane/mesonci
         meson setup build_gcc
         ninja -C build_gcc test
