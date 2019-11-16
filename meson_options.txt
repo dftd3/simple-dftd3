@@ -1,0 +1,2 @@
+
+option('openmp', type: 'boolean', value: 'true', description: 'use OpenMP')
