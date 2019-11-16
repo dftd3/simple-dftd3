@@ -1,0 +1,17 @@
+name: Fortran CI
+
+on: [push, pull_request]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install build system
+      run: docker pull jpakkane/mesonci
+    - name: Build with meson and ninja
+      run: |
+        meson setup build_gcc
+        ninja -C build_gcc test
