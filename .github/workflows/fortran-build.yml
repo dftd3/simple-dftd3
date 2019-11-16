@@ -14,19 +14,28 @@ jobs:
         python-version: '3.x'
     - run: sudo apt install -yq --no-install-recommends gfortran ninja-build
     - run: pip3 install meson
-    - run: |
-        meson setup build_gcc
-        ninja -C build_gcc test
+    - run: meson setup _build
+    - run: ninja -C _build test
 
-  macos:
+  osx-build:
     runs-on: macos-latest
     steps:
     - uses: actions/checkout@v1
     - uses: actions/setup-python@v1
       with:
         python-version: '3.x'
-    - run: brew install gcc ninja
+    - run: brew install gcc ninja meson
+    - run: meson setup _build
+    - run: ninja -C _build test
+
+  windows-build:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - run: choco install ninja
     - run: pip3 install meson
-    - run: |
-        meson setup build_gcc
-        ninja -C build_gcc test
+    - run: meson setup _build
+    - run: ninja -C _build test
