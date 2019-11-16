@@ -51,6 +51,9 @@ fsrcs += 'src/param/constants.f90'
 fsrcs += 'src/param/units.f90'
 fsrcs += 'src/param/atomic_units.f90'
 fsrcs += 'src/param/pse.f90'
+fsrcs += 'src/param/dftd3_parameters.f90'
+fsrcs += 'src/param/r4r2_expectation_values.f90'
+fsrcs += 'src/param/covalent_radii.f90'
 
 incdir = include_directories('include')
 
@@ -65,3 +68,11 @@ dftd3_exe = executable(meson.project_name(),
                        sources: fmain,
                        link_with: dftd3_lib,
                        include_directories: incdir)
+
+# test executable
+test_env = environment()
+test_env.prepend('LD_LIBRARY_PATH', meson.current_build_dir())
+
+test('print version', dftd3_exe, env: test_env, args: '--version')
+test('print help', dftd3_exe, env: test_env, args: '--help')
+test('no arguments', dftd3_exe, env: test_env, should_fail: true)
