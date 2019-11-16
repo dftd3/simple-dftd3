@@ -18,12 +18,16 @@
 program sdftd3_prog
    use d3def_environment
    use d3def_molecule
+   use d3def_options
+   use d3def_results
    use d3mod_header
    use d3mod_main
    use d3mod_utils_filetype
    implicit none
    type(d3_environment) :: env
+   type(d3_options) :: opt
    type(d3_molecule) :: mol
+   type(d3_results) :: res
    character(len=:), allocatable :: filename
    logical :: exist
    integer :: ifile
@@ -46,7 +50,7 @@ program sdftd3_prog
    endif
    call env%checkpoint("reading molecule from '"//filename//"'")
 
-   call main_run(env, mol)
+   call main_run(env, opt, mol, res)
    call env%checkpoint("running calculation for '"//filename//"'")
 
 contains

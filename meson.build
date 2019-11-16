@@ -44,6 +44,8 @@ fsrcs += 'src/typedef/environment.f90'
 fsrcs += 'src/typedef/argparser.f90'
 fsrcs += 'src/typedef/molecule.f90'
 fsrcs += 'src/typedef/damping_parameters.f90'
+fsrcs += 'src/typedef/options.f90'
+fsrcs += 'src/typedef/results.f90'
 
 fsrcs += 'src/io/molecule_reader.f90'
 
@@ -80,3 +82,5 @@ test_env.prepend('LD_LIBRARY_PATH', meson.current_build_dir())
 test('print version', dftd3_exe, env: test_env, args: '--version')
 test('print help', dftd3_exe, env: test_env, args: '--help')
 test('no arguments', dftd3_exe, env: test_env, should_fail: true)
+test('taxol.xyz', dftd3_exe, env: test_env,
+     args: meson.current_source_dir()/'assets'/'inputs'/'xyz'/'taxol.xyz')

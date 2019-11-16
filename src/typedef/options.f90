@@ -15,30 +15,18 @@
 ! You should have received a copy of the GNU General Public License
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-module d3mod_main
+module d3def_options
+   use iso_fortran_env, only: wp => real64
+   use d3def_damping_parameters
    implicit none
-   public :: main_run
-   private
+
+   type :: d3_options
+      character(len=:), allocatable :: func
+      type(d3_damping_parameters) :: par = d3_damping_parameters()
+      real(wp) :: weighting_factor = 4.0_wp
+      real(wp) :: cutoff_disp = 64.0_wp
+   end type d3_options
 
 contains
 
-subroutine main_run(env, opt, mol, res)
-   use d3def_environment
-   use d3def_molecule
-   use d3def_options
-   use d3def_results
-   use d3mod_dftd3
-   use d3par_dftd3
-   class(d3_environment), intent(inout) :: env
-   class(d3_options), intent(in) :: opt
-   class(d3_molecule), intent(inout) :: mol
-   class(d3_results), intent(out) :: res
-
-   ! check for the reference C6 coefficients first
-   if (.not.allocated(reference_c6)) call copy_c6(reference_c6)
-
-   call mol%print_info(env%unit)
-
-end subroutine main_run
-
-end module d3mod_main
+end module d3def_options
