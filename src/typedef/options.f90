@@ -22,7 +22,7 @@ module d3def_options
 
    type :: d3_options
       character(len=:), allocatable :: func
-      type(d3_damping_parameters) :: par = d3_damping_parameters()
+      type(d3_damping_parameters), allocatable :: par
       real(wp) :: weighting_factor = 4.0_wp
       real(wp) :: cutoff_disp = 64.0_wp
    end type d3_options

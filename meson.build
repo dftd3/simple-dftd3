@@ -39,6 +39,7 @@ fsrcs += 'src/main_dftd.f90'
 fsrcs += 'src/header.f90'
 fsrcs += 'src/help.f90'
 fsrcs += 'src/dftd3.f90'
+fsrcs += 'src/coordination_number.f90'
 
 fsrcs += 'src/typedef/environment.f90'
 fsrcs += 'src/typedef/argparser.f90'
@@ -46,6 +47,8 @@ fsrcs += 'src/typedef/molecule.f90'
 fsrcs += 'src/typedef/damping_parameters.f90'
 fsrcs += 'src/typedef/options.f90'
 fsrcs += 'src/typedef/results.f90'
+fsrcs += 'src/typedef/latp_generator.f90'
+fsrcs += 'src/typedef/dynamic_neighbourlist.f90'
 
 fsrcs += 'src/io/molecule_reader.f90'
 
@@ -60,6 +63,7 @@ fsrcs += 'src/param/pse.f90'
 fsrcs += 'src/param/dftd3_parameters.f90'
 fsrcs += 'src/param/r4r2_expectation_values.f90'
 fsrcs += 'src/param/covalent_radii.f90'
+fsrcs += 'src/param/damping_parameters.f90'
 
 incdir = include_directories('include')
 

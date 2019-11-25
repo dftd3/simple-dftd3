@@ -49,7 +49,12 @@ module d3def_argparser
       procedure, private :: new_default => ap_new_default
       procedure :: has_option => ap_has_option
       procedure :: get_argument => ap_get_argument
-      procedure :: get_option => ap_get_option
+      generic :: get_option => ap_get_option_logical, ap_get_option_char, &
+         & ap_get_option_real, ap_get_option_int
+      procedure, private :: ap_get_option_logical
+      procedure, private :: ap_get_option_real
+      procedure, private :: ap_get_option_int
+      procedure, private :: ap_get_option_char
       procedure :: get_file => ap_get_filename
       procedure :: destroy => ap_destroy
       final :: ap_finalizer
@@ -146,10 +151,10 @@ subroutine ap_get_argument(self, argument)
    enddo
 end subroutine ap_get_argument
 
-subroutine ap_get_option(self, option, value, found)
+subroutine ap_get_option_logical(self, option, value, found)
    class(d3_argparser), intent(inout) :: self
    character(len=*), intent(in) :: option
-   class(*), intent(out) :: value
+   logical, intent(out) :: value
    logical, intent(out), optional :: found
    integer :: iarg, error
    logical :: found_local
@@ -160,7 +165,7 @@ subroutine ap_get_option(self, option, value, found)
             found_local = arg%string == '--'//option
             if (found_local) then
                call sec%get_value(value, error)
-               if (error /= 0) then
+               if (error == 0) then
                   arg%unread = .false.
                   sec%unread = .false.
                else
@@ -172,7 +177,87 @@ subroutine ap_get_option(self, option, value, found)
       end associate
    enddo
    if (present(found)) found = found_local
-end subroutine ap_get_option
+end subroutine ap_get_option_logical
+
+subroutine ap_get_option_real(self, option, value, found)
+   class(d3_argparser), intent(inout) :: self
+   character(len=*), intent(in) :: option
+   real(real64), intent(out) :: value
+   logical, intent(out), optional :: found
+   integer :: iarg, error
+   logical :: found_local
+   found_local = .false.
+   do iarg = 1, size(self)-1
+      associate( arg => self%args(iarg), sec => self%args(iarg+1) )
+         if (arg%option .and. arg%unread .and. sec%unread) then
+            found_local = arg%string == '--'//option
+            if (found_local) then
+               call sec%get_value(value, error)
+               if (error == 0) then
+                  arg%unread = .false.
+                  sec%unread = .false.
+               else
+                  found_local = .false.
+               endif
+               exit
+            endif
+         endif
+      end associate
+   enddo
+   if (present(found)) found = found_local
+end subroutine ap_get_option_real
+
+subroutine ap_get_option_int(self, option, value, found)
+   class(d3_argparser), intent(inout) :: self
+   character(len=*), intent(in) :: option
+   integer, intent(out) :: value
+   logical, intent(out), optional :: found
+   integer :: iarg, error
+   logical :: found_local
+   found_local = .false.
+   do iarg = 1, size(self)-1
+      associate( arg => self%args(iarg), sec => self%args(iarg+1) )
+         if (arg%option .and. arg%unread .and. sec%unread) then
+            found_local = arg%string == '--'//option
+            if (found_local) then
+               call sec%get_value(value, error)
+               if (error == 0) then
+                  arg%unread = .false.
+                  sec%unread = .false.
+               else
+                  found_local = .false.
+               endif
+               exit
+            endif
+         endif
+      end associate
+   enddo
+   if (present(found)) found = found_local
+end subroutine ap_get_option_int
+
+subroutine ap_get_option_char(self, option, value, found)
+   class(d3_argparser), intent(inout) :: self
+   character(len=*), intent(in) :: option
+   character(len=:), allocatable, intent(out) :: value
+   logical, intent(out), optional :: found
+   integer :: iarg, error
+   logical :: found_local
+   found_local = .false.
+   do iarg = 1, size(self)-1
+      associate( arg => self%args(iarg), sec => self%args(iarg+1) )
+         if (arg%option .and. arg%unread .and. sec%unread) then
+            found_local = arg%string == '--'//option
+            if (found_local) then
+               value = sec%string
+               arg%unread = .false.
+               sec%unread = .false.
+               exit
+            endif
+         endif
+      end associate
+   enddo
+   if (present(found)) found = found_local
+end subroutine ap_get_option_char
 
 subroutine ap_get_filename(self, filename)
    class(d3_argparser), intent(inout) :: self
@@ -310,13 +395,13 @@ subroutine arg_to_logical(self, value, error)
    integer :: stat
    select case(self%string)
    case('Y','y','Yes','yes','T','t','true','True','1')
-      stat = .true.
+      stat = 0
       value = .true.
    case('N','n','No','no','F','f','false','False','0')
-      stat = .true.
+      stat = 0
       value = .false.
    case default
-      stat = .false.
+      stat = 128
    end select
    if (present(error)) error = stat
 end subroutine arg_to_logical

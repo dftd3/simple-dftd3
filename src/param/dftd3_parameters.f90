@@ -40,6 +40,8 @@ module d3par_dftd3
       &  2, 3, & ! Fr,Ra
       &     2, 2, 2, 2, 2, 2] ! Ac-Pu
 
+   integer, parameter :: reference_count(max_ref, max_elem) = 1
+
    real(wp), parameter :: reference_cn(max_ref, max_elem) = reshape([ &
       & 0.9118_wp,  0.0000_wp,  0.0000_wp,  0.0000_wp,  0.0000_wp, & ! H
       & 0.0000_wp,  0.0000_wp,  0.0000_wp,  0.0000_wp,  0.0000_wp, & ! He

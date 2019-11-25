@@ -32,5 +32,4 @@ module d3def_damping_parameters
       integer :: alp = 16
    end type d3_damping_parameters
 
-
 end module d3def_damping_parameters

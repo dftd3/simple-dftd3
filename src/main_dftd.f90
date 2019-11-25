@@ -28,12 +28,15 @@ subroutine main_run(env, opt, mol, res)
    use d3def_molecule
    use d3def_options
    use d3def_results
+   use d3def_neighbourlist
    use d3mod_dftd3
    use d3par_dftd3
    class(d3_environment), intent(inout) :: env
    class(d3_options), intent(in) :: opt
    class(d3_molecule), intent(inout) :: mol
    class(d3_results), intent(out) :: res
+
+   type(d3_neighbourlist) :: neighlist
 
    real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
 
@@ -42,12 +45,14 @@ subroutine main_run(env, opt, mol, res)
 
    call mol%print_info(env%unit)
 
+   call neighlist%new(opt%cutoff_disp, len(mol), mol%xyz, mol%lattice, mol%npbc > 0)
+
    allocate(cn(len(mol)), dcndr(3, len(mol), len(mol)), dcndL(3, 3, len(mol)), &
       &     res%energies(len(mol)), res%gradient(3, len(mol)), res%stress(3, 3), &
       &     source=0.0_wp)
 
-   call d3bj_eg(mol, opt%par, opt%weighting_factor, cn, dcndr, dcndL, &
-      &         opt%cutoff_disp, res%energies, res%gradient, res%stress)
+   call d3bj_eg(mol, neighlist, opt%par, opt%weighting_factor, cn, dcndr, dcndL, &
+      &         res%energies, res%gradient, res%stress)
 
 end subroutine main_run
 

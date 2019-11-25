@@ -6,198 +6,241 @@ module d3mod_dftd3
 
 contains 
 
-subroutine d3bj_eg(mol, par, weighting_factor, cn, dcndr, dcndL, r_thr, &
-      &            energies, gradient, sigma)
+!> Calculate the weights of the reference system and the derivatives w.r.t.
+!  coordination number for later use.
+subroutine weight_references(nat, numbers, weighting_factor, cn, gwvec, gwdcn)
+   use d3par_dftd3
+   !> Nr. of atoms (without periodic images)
+   integer, intent(in) :: nat
+   !> Atomic numbers of every atom.
+   integer, intent(in) :: numbers(:)
+   !> Exponent for the Gaussian weighting.
+   real(wp), intent(in) :: weighting_factor
+   !> Coordination number of every atom.
+   real(wp), intent(in) :: cn(:)
+   !> weighting for the atomic reference systems
+   real(wp), intent(out) :: gwvec(:, :)
+   !> derivative of the weighting function w.r.t. the coordination number
+   real(wp), intent(out) :: gwdcn(:, :)
+
+   integer :: iat, ati, iref, icount
+   real(wp) :: norm, dnorm, wf, gw, expw, expd, gwk, dgwk
+
+   gwVec = 0.0_wp
+   gwVec = 0.0_wp
+
+   do iat = 1, nat
+      ati = numbers(iat)
+      norm = 0.0_wp
+      dnorm = 0.0_wp
+      do iref = 1, number_of_references(ati)
+         do icount = 1, reference_count(iref, ati)
+            wf = icount * weighting_factor
+            gw = weight_CN(wf, cn(iat), reference_cn(iref, ati))
+            norm = norm + gw
+            dnorm = dnorm + 2*wf*(reference_cn(iref, ati) - cn(iat)) * gw
+         end do
+      end do
+      norm = 1.0_wp / norm
+      do iref = 1, number_of_references(ati)
+         expw = 0.0_wp
+         expd = 0.0_wp
+         do icount = 1, reference_count(iref, ati)
+            wf = icount * weighting_factor
+            gw = weight_CN(wf, cn(iat), reference_cn(iref, ati))
+            expw = expw + gw
+            expd = expd + 2*wf*(reference_cn(iref, ati) - cn(iat)) * gw
+         enddo
+
+         gwk = expw * norm
+         if (gwk /= gwk) then
+            if (maxval(reference_cn(:number_of_references(ati), ati)) &
+               & == reference_cn(iref, ati)) then
+               gwk = 1.0_wp
+            else
+               gwk = 0.0_wp
+            endif
+         endif
+         gwVec(iref, iat) = gwk
+
+         dgwk = expd*norm-expw*dnorm*norm**2
+         if (dgwk /= dgwk) then
+            dgwk = 0.0_wp
+         endif
+         gwdcn(iref, iat) = dgwk
+
+      end do
+   end do
+
+end subroutine weight_references
+
+!> calculate atomic dispersion coefficients and their derivatives w.r.t.
+!  the coordination number.
+subroutine get_atomic_c6(nat, numbers, gwvec, gwdcn, c6, dc6dcn)
+   use d3par_dftd3
+   !> Nr. of atoms (without periodic images)
+   integer, intent(in) :: nat
+   !> numbers of every atom.
+   integer, intent(in) :: numbers(:)
+   !> weighting function for the atomic reference systems
+   real(wp), intent(in) :: gwvec(:, :)
+   !> derivative of the weighting function w.r.t. the coordination number
+   real(wp), intent(in) :: gwdcn(:, :)
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(out) :: c6(:, :)
+   !> derivative of the C6 w.r.t. the coordination number
+   real(wp), intent(out) :: dc6dcn(:, :)
+
+   integer :: iat, jat, ati, atj, iref, jref
+   real(wp) :: refc6, dc6, dc6dcn1, dc6dcn2
+
+   c6 = 0.0_wp
+   dc6dcn = 0.0_wp
+
+   do iat = 1, nat
+      ati = numbers(iat)
+      do jat = 1, iat
+         atj = numbers(jat)
+         dc6 = 0.0_wp
+         dc6dcn1 = 0.0_wp
+         dc6dcn2 = 0.0_wp
+         do iref = 1, number_of_references(ati)
+            do jref = 1, number_of_references(atj)
+               refc6 = get_c6(iref, jref, ati, atj)
+               dc6 = dc6 + gwvec(iref, iat) * gwvec(jref, jat) * refc6
+               dc6dcn1 = dc6dcn1 + gwdcn(iref, iat) * gwvec(jref, jat) * refc6
+               dc6dcn2 = dc6dcn2 + gwvec(iref, iat) * gwdcn(jref, jat) * refc6
+            end do
+         end do
+         c6(iat, jat) = dc6
+         c6(jat, iat) = dc6
+         dc6dcn(iat, jat) = dc6dcn1
+         dc6dcn(jat, iat) = dc6dcn2
+      end do
+   end do
+end subroutine get_atomic_c6
+
+subroutine d3bj_eg(mol, neighlist, par, weighting_factor, &
+      &            cn, dcndr, dcndL, energies, gradient, sigma)
    use d3def_molecule
+   use d3def_neighbourlist
    use d3def_damping_parameters
    use d3par_dftd3
    use d3par_r4r2, only: r4r2 => sqrt_z_r4_over_r2
-   use d3mod_utils_periodic, only: get_realspace_cutoff
 
    class(d3_molecule), intent(in) :: mol
+   class(d3_neighbourlist), intent(in) :: neighlist
    class(d3_damping_parameters), intent(in) :: par
 
    real(wp), intent(in) :: weighting_factor
    real(wp), intent(in) :: cn(:)
    real(wp), intent(in) :: dcndr(:, :, :)
    real(wp), intent(in) :: dcndL(:, :, :)
-   real(wp), intent(in) :: r_thr
 
    real(wp), intent(inout) :: energies(:)
    real(wp), intent(inout) :: gradient(:, :)
    real(wp), intent(inout) :: sigma(:, :)
 
-   integer :: iat, jat, ati, atj, iref, jref, ic, max_ref
-   integer :: rep(3), tx, ty, tz
+   type(d3_neighlist_iterator) :: neighiter
 
-   real(wp) :: norm, dnorm, tgw, dgw
-   real(wp) :: r4r2ij, r0, t(3), rij(3), r2, r, oor6, oor8, oor10
-   real(wp) :: door6, door8, door10, disp, ddisp, dtmp(3)
-   real(wp) :: c6ij, dic6ij, djc6ij, c6ref, gtmp(3)
+   integer :: nat, neighs, max_ref
+   integer :: iat, jat, ati, atj, ij
+   integer :: image(iter_chunk_size)
 
-   real(wp), allocatable :: gw(:, :), dgwdcn(:, :), dEdcn(:)
+   real(wp) :: r4r2ij, r0, rij(3), r2, t6, t8, t10, d6, d8, d10
+   real(wp) :: dE, dG(3), disp, ddisp
+   real(wp) :: dists2(iter_chunk_size), coords(3, iter_chunk_size)
 
-   if (mol%npbc > 0) &
-   call get_realspace_cutoff(mol%lattice,r_thr,rep)
-   where(.not.mol%pbc) rep = 0
+   real(wp), allocatable :: gw(:, :), dgwdcn(:, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
+   real(wp), allocatable :: dEdcn(:)
 
    if (.not.allocated(reference_c6)) call copy_c6(reference_c6)
-   
+
+   nat = len(mol)
    max_ref = maxval(number_of_references(mol%at))
-   allocate(gw(max_ref, len(mol)), dgwdcn(max_ref, len(mol)), dEdcn(len(mol)), &
-      &     source=0.0_wp)
+   allocate(gw(max_ref, nat), dgwdcn(max_ref, nat), c6(nat, nat), &
+      &     dc6dcn(nat, nat), dEdcn(nat), source=0.0_wp)
 
-   ! omp parallel default(none) &
-   ! omp shared(mol, par, cn, rep, r_thr, gw, dgwdcn, weighting_factor, &
-   ! omp&       reference_c6) &
-   ! omp private(iat, jat, ati, atj, iref, jref, ic, tx, ty, tz, &
-   ! omp&        norm, dnorm, tgw, dgw, r4r2ij, r0, t, rij, r2, r, &
-   ! omp&        oor6, oor8, oor10, door6, door8, door10, gtmp, &
-   ! omp&        c6ij, dic6ij, djc6ij, c6ref, disp, ddisp, dtmp) &
-   ! omp reduction(+:energies,gradient,sigma,dEdcn)
-   ! omp do schedule(runtime)
+   call weight_references(nat, mol%at, weighting_factor, cn, gw, dgwdcn)
+
+   call get_atomic_c6(nat, mol%at, gw, dgwdcn, c6, dc6dcn)
+
+   !$omp parallel do default(none) schedule(runtime) &
+   !$omp reduction(+:energies, gradient, sigma, dEdcn) &
+   !$omp shared(mol, neighlist, par, c6) &
+   !$omp private(neighiter, neighs, ij, jat, ati, atj, coords, image, dists2, &
+   !$omp&        r2, rij, r4r2ij, r0, t6, t8, t10, d6, d8, d10, disp, ddisp, &
+   !$omp&        dE, dG)
    do iat = 1, len(mol)
       ati = mol%at(iat)
-      norm = 0.0_wp
-      dnorm = 0.0_wp
-      do iref = 1, number_of_references(ati)
-         tgw = cngw(weighting_factor, cn(iat), reference_cn(iref, ati))
-         norm = norm + tgw
-         dnorm = dnorm + 2*weighting_factor*(reference_cn(iref, ati)-cn(iat))*tgw
-      enddo
-      norm = 1.0_wp/(norm + 1.0e-14_wp)
-      do iref = 1, number_of_references(ati)
-         tgw = cngw(weighting_factor, cn(iat), reference_cn(iref, ati))
-         dgw =2*weighting_factor*(reference_cn(iref, ati)-cn(iat))*tgw
+      call neighlist%get_iterator(neighiter, iat)
+      neighs = iter_chunk_size
+      do while(neighs == iter_chunk_size)
+         call neighiter%next(neighs, coords=coords, image=image, dists2=dists2)
+         do ij = 1, neighs
+            jat = image(ij)
+            r2 = dists2(ij)
+            rij = mol%xyz(:, iat) - coords(:, ij)
+            atj = mol%at(jat)
 
-         gw(iref, iat) = tgw * norm
-         dgwdcn(iref, iat) = dgw*norm - tgw*dnorm*norm**2
+            r4r2ij = 3*r4r2(ati)*r4r2(atj)
+            r0 = par%a1*sqrt(r4r2ij) + par%a2
+
+            t6 = 1._wp/(r2**3+r0**6)
+            t8 = 1._wp/(r2**4+r0**8)
+            t10 = 1._wp/(r2**5+r0**10)
+
+            d6 = -6*r2**2*t6**2
+            d8 = -8*r2**3*t8**2
+            d10 = -10*r2**4*t10**2
+
+            disp = (par%s6*t6 + par%s8*r4r2ij*t8 &
+               &  + par%s10*49.0_wp/40.0_wp*r4r2ij**2*t10)*pair_scale(iat, jat)
+            ddisp= par%s6*d6 + par%s8*r4r2ij*d8 &
+               & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*d10
+
+            dE = -c6(iat, jat)*disp
+            dG = -c6(iat, jat)*ddisp*rij
+
+            energies(iat) = energies(iat) + 0.5_wp*dE
+            energies(jat) = energies(jat) + 0.5_wp*dE
+
+            dEdcn(iat) = dEdcn(iat) - dc6dcn(iat, jat) * disp
+            dEdcn(jat) = dEdcn(jat) - dc6dcn(jat, iat) * disp
+
+            gradient(:, iat) = gradient(:, iat) + dG
+            gradient(:, jat) = gradient(:, jat) - dG
+
+            sigma = sigma + spread(dG, 1, 3)*spread(rij, 2, 3)*pair_scale(iat, jat)
+
+         enddo
       enddo
    enddo
-   ! omp enddo
+   !$omp end parallel do
 
-   ! omp do schedule(runtime)
-   do iat = 1, len(mol)
-      ati = mol%at(iat)
-      c6ij = 0.0_wp
-      dic6ij = 0.0_wp
-      djc6ij = 0.0_wp
-      do iref = 1, number_of_references(ati)
-         do jref = 1, number_of_references(ati)
-            ic = ati * (1 + ati)/2
-            c6ref = reference_c6(iref, jref, ic)
-            c6ij = c6ij + gw(iref, iat) * gw(jref, iat) * c6ref
-            dic6ij = dic6ij + dgwdcn(iref, iat) * gw(jref, iat) * c6ref
-            djc6ij = djc6ij + gw(iref, iat) * dgwdcn(jref, iat) * c6ref
-         enddo
-      enddo
-      r4r2ij = 3*r4r2(ati)*r4r2(ati)
-      r0 = par%a1*sqrt(r4r2ij) + par%a2
-      do concurrent(tx = -rep(1):rep(1), &
-            &       ty = -rep(2):rep(2), &
-            &       tz = -rep(3):rep(3), &
-            &       tx /= 0 .or. ty /= 0 .or. tz /= 0)
-         ! cycle iat with iat interaction in same cell
-         t = [tx,ty,tz]
-         rij = matmul(mol%lattice,t)
-         r2  = sum( rij**2 )
-         if (r2.gt.r_thr) cycle
-         r   = sqrt(r2)
-         oor6 = 1._wp/(r2**3+r0**6)
-         oor8 = 1._wp/(r2**4+r0**8)
-         oor10 = 1._wp/(r2**5+r0**10)
-         door6 = -6*r2**2*r*oor6**2
-         door8 = -8*r2**3*r*oor8**2
-         door10 = -10*r2**4*r*oor10**2
-         disp = par%s6*oor6 + par%s8*r4r2ij*oor8   &
-            & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-         ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
-            & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-         energies(iat) = energies(iat) - c6ij*disp
-         dtmp = c6ij*ddisp*rij/r
-         dEdcn(iat) = dEdcn(iat) + (dic6ij + djc6ij)*disp
-         sigma = sigma - spread(dtmp, 1, 3)*spread(rij, 2, 3)
-      enddo
-      do jat = 1, iat-1
-         atj = mol%at(jat)
-         ! temps
-         gtmp = 0.0_wp
-         c6ij = 0.0_wp
-         dic6ij = 0.0_wp
-         djc6ij = 0.0_wp
-         ! all refs
-         do iref = 1, number_of_references(ati)
-            do jref = 1, number_of_references(atj)
-               if (ati > atj) then
-                  ic = atj + ati*(ati-1)/2
-                  c6ref = reference_c6(iref, jref, ic)
-               else
-                  ic = ati + atj*(atj-1)/2
-                  c6ref = reference_c6(jref, iref, ic)
-               endif
-               c6ij   = c6ij   + gw(iref, iat) * gw(jref, jat) * c6ref
-               dic6ij = dic6ij + dgwdcn(iref, iat) * gw(jref, jat) * c6ref
-               djc6ij = djc6ij + gw(iref, iat) * dgwdcn(jref, jat) * c6ref
-            enddo
-         enddo
-         r4r2ij = 3*r4r2(ati)*r4r2(atj)
-         r0 = par%a1*sqrt(r4r2ij) + par%a2
-         do concurrent(tx = -rep(1):rep(1), &
-               &       ty = -rep(2):rep(2), &
-               &       tz = -rep(3):rep(3))
-            t = [tx,ty,tz]
-            rij = mol%xyz(:,iat) - mol%xyz(:,jat) + matmul(mol%lattice,t)
-            r2 = sum(rij**2)
-            if (r2.gt.r_thr) cycle
-            r = sqrt(r2)
-            oor6 = 1._wp/(r2**3+r0**6)
-            oor8 = 1._wp/(r2**4+r0**8)
-            oor10 = 1._wp/(r2**5+r0**10)
-            door6 = -6*r2**2*r*oor6**2
-            door8 = -8*r2**3*r*oor8**2
-            door10 = -10*r2**4*r*oor10**2
-            disp = par%s6*oor6 + par%s8*r4r2ij*oor8 &
-               & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*oor10
-            ddisp= par%s6*door6 + par%s8*r4r2ij*door8 &
-               & + par%s10*49.0_wp/40.0_wp*r4r2ij**2*door10
-            energies(iat) = energies(iat) - c6ij*disp/2
-            energies(jat) = energies(jat) - c6ij*disp/2
-            ! save this
-            dEdcn(iat) = dEdcn(iat) + dic6ij * disp
-            dEdcn(jat) = dEdcn(jat) + djc6ij * disp
-            dtmp = c6ij*ddisp*rij/r
-            gtmp = gtmp - dtmp
-            sigma = sigma - spread(dtmp, 1, 3)*spread(rij, 2, 3)
-         enddo
-         gradient(:, iat) = gradient(:, iat) + gtmp
-         gradient(:, jat) = gradient(:, jat) - gtmp
-      enddo
-   enddo
-   ! omp enddo
-   ! omp endparallel
-
-   gradient = gradient - reshape(matmul(reshape(dcndr, [3*len(mol), len(mol)]), &
+   gradient = gradient + reshape(matmul(reshape(dcndr, [3*nat, nat]), &
       &                                 dEdcn), shape(gradient))
    if (mol%npbc > 0) then
-      sigma = sigma - reshape(matmul(reshape(dcndL, [9, len(mol)]), &
+      sigma = sigma + reshape(matmul(reshape(dcndL, [9, nat]), &
          &                           dEdcn), shape(sigma))
    endif
-   
+
 end subroutine d3bj_eg
 
-integer pure elemental function lin(i, j)
-   integer, intent(in) :: i, j
-   integer :: ii, jj
-   intrinsic :: max, min
-   ii = max(i, j)
-   jj = min(i, j)
-   lin = jj + ii*(ii-1)/2
-end function lin
-
-real(wp) pure elemental function cngw(wf,cn,cnref)
-   real(wp),intent(in) :: wf,cn,cnref
+real(wp) pure elemental function weight_cn(wf,cn,cnref) result(cngw)
+   real(wp),intent(in) :: wf, cn, cnref
    intrinsic :: exp
    cngw = exp ( -wf * ( cn - cnref )**2 )
-end function cngw
+end function weight_cn
+
+real(wp) pure elemental function pair_scale(iat, jat) result(scale)
+   integer, intent(in) :: iat, jat
+   if (iat == jat) then
+      scale = 0.5_wp
+   else
+      scale = 1.0_wp
+   endif
+end function pair_scale
 
 end module d3mod_dftd3

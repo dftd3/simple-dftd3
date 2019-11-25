@@ -34,7 +34,7 @@ program sdftd3_prog
 
    call env%new
 
-   call read_command_line_arguments(env, filename)
+   call read_command_line_arguments(env, filename, opt)
    call env%checkpoint("reading command line arguments")
 
    call sdftd3_header(env%unit)
@@ -55,16 +55,19 @@ program sdftd3_prog
 
 contains
 
-subroutine read_command_line_arguments(env, filename)
+subroutine read_command_line_arguments(env, filename, opt)
    use d3def_argparser
    use d3mod_help
+   use d3par_damping_parameters
    implicit none
    class(d3_environment), intent(inout) :: env
+   class(d3_options), intent(inout) :: opt
    character(len=:), allocatable, intent(out) :: filename
    character(len=:), allocatable :: string
 
    type(d3_argparser) :: args
    integer :: iarg
+   logical :: found
 
    call args%new
 
@@ -96,7 +99,21 @@ subroutine read_command_line_arguments(env, filename)
    endif
 
    ! now read the arguments
+   call args%get_option('func', opt%func, found)
+   if (found) then
+      allocate(opt%par, source=d3_damping_parameters())
+      call get_d3_damping_parameters(opt%par, opt%func, found)
+      if (.not.found) then
+         call env%set_error("functional '"//opt%func//"' not known")
+      endif
+   else
+      if (allocated(opt%func)) deallocate(opt%func)
+   endif
 
+   ! check for damping parameters, if we are in energy/gradient mode
+   if (.not.allocated(opt%par)) then
+      call env%set_error("No damping parameters given, so there is nothing to do")
+   endif
 
    ! everything left should be a file now, but we only want one input file
    if (file(args) > 1) then
