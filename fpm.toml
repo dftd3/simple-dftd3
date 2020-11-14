@@ -1,0 +1,12 @@
+name = "s-dftd3"
+version = "0.2.0"
+license = "LGPL-3.0-or-later"
+description = "Simple reimplementation of the DFT-D3 method"
+
+[dependencies]
+[dependencies.mctc-lib]
+git = "https://github.com/grimme-lab/mctc-lib"
+
+[dev-dependencies]
+[dev-dependencies.mstore]
+git = "https://github.com/grimme-lab/mstore"

@@ -1,92 +1,81 @@
 # This file is part of s-dftd3.
-#
-# Copyright (C) 2019 Sebastian Ehlert
+# SPDX-Identifier: LGPL-3.0-or-later
 #
 # s-dftd3 is free software: you can redistribute it and/or modify it under
-# the terms of the GNU General Public License as published by
+# the terms of the GNU Lesser General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
 # s-dftd3 is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Lesser General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-project('s-dftd3', 'fortran',
-        version: '1.0',
-        license: 'LGPL3',
-        meson_version: '>=0.49')
+project(
+  's-dftd3',
+  'fortran',
+  version: '0.2.0',
+  license: 'LGPL-3.0-or-later',
+  meson_version: '>=0.53',
+  default_options: [
+    'buildtype=debugoptimized',
+    'default_library=both',
+  ],
+)
+install = not (meson.is_subproject() and get_option('default_library') == 'static')
 
-conf = configuration_data()
-conf.set('name', meson.project_name())
-conf.set('version', meson.project_version())
-conf.set('commit', run_command(find_program('git'),'show','-s','--format=%h').stdout().strip())
-conf.set('date', run_command(find_program('date'),'-I').stdout().strip())
-conf.set('author', run_command(find_program('whoami')).stdout().strip())
-conf.set('origin', run_command(find_program('hostname')).stdout().strip())
-configure_file(input : 'include/version.fh', output : 's-dftd3-version.fh',
-  configuration : conf)
+# General configuration information
+inc_dirs = []
+lib_deps = []
+subdir('config')
 
-## source
-ftest  = []
-fsrcs  = []
-fmain  = 'src/program_dftd.f90'
+# Collect source of the project
+srcs = []
+subdir('src')
 
-fsrcs += 'src/main_dftd.f90'
-fsrcs += 'src/header.f90'
-fsrcs += 'src/help.f90'
-fsrcs += 'src/dftd3.f90'
-fsrcs += 'src/coordination_number.f90'
+# Library target
+sdftd3_lib = library(
+  meson.project_name(),
+  sources: srcs,
+  version: meson.project_version(),
+  dependencies: lib_deps,
+  include_directories: inc_dirs,
+  install: install,
+)
 
-fsrcs += 'src/typedef/environment.f90'
-fsrcs += 'src/typedef/argparser.f90'
-fsrcs += 'src/typedef/molecule.f90'
-fsrcs += 'src/typedef/damping_parameters.f90'
-fsrcs += 'src/typedef/options.f90'
-fsrcs += 'src/typedef/results.f90'
-fsrcs += 'src/typedef/latp_generator.f90'
-fsrcs += 'src/typedef/dynamic_neighbourlist.f90'
+# Export dependency for other projects and test suite
+sdftd3_inc = sdftd3_lib.private_dir_include()
+sdftd3_dep = declare_dependency(
+  link_with: sdftd3_lib,
+  include_directories: sdftd3_inc,
+  dependencies: lib_deps,
+)
 
-fsrcs += 'src/io/molecule_reader.f90'
+# Add applications
+subdir('app')
 
-fsrcs += 'src/utils/file_utils.f90'
-fsrcs += 'src/utils/periodic.f90'
-fsrcs += 'src/utils/symbols.f90'
+# Package the license files
+sdftd3_lic = files(
+  'COPYING',
+  'COPYING.LESSER',
+)
 
-fsrcs += 'src/param/constants.f90'
-fsrcs += 'src/param/units.f90'
-fsrcs += 'src/param/atomic_units.f90'
-fsrcs += 'src/param/pse.f90'
-fsrcs += 'src/param/dftd3_parameters.f90'
-fsrcs += 'src/param/r4r2_expectation_values.f90'
-fsrcs += 'src/param/covalent_radii.f90'
-fsrcs += 'src/param/damping_parameters.f90'
+if install
+  # Distribute the license files in share/licenses/<name>
+  install_data(
+    sdftd3_lic,
+    install_dir: get_option('datadir')/'licenses'/meson.project_name()
+  )
 
-incdir = include_directories('include')
+  pkg = import('pkgconfig')
+  pkg.generate(
+    sdftd3_lib,
+    description: 'Simple reimplementation of the DFT-D3 dispersion model',
+  )
+endif
 
-dftd3_lib = library(meson.project_name(),
-                    sources: fsrcs,
-                    version: meson.project_version(),
-                    include_directories: incdir,
-                    install: true)
-
-dftd3_dep = declare_dependency(link_with: dftd3_lib)
-
-dftd3_exe = executable(meson.project_name(),
-                       sources: fmain,
-                       link_with: dftd3_lib,
-                       include_directories: incdir,
-                       install: true)
-
-# test executable
-test_env = environment()
-test_env.prepend('LD_LIBRARY_PATH', meson.current_build_dir())
-
-test('print version', dftd3_exe, env: test_env, args: '--version')
-test('print help', dftd3_exe, env: test_env, args: '--help')
-test('no arguments', dftd3_exe, env: test_env, should_fail: true)
-test('taxol.xyz', dftd3_exe, env: test_env,
-     args: files('assets/inputs/xyz/taxol.xyz'))
+# add the testsuite
+subdir('test')
