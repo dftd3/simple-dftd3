@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@ module test_model
       & test_failed
    use mctc_io_structure, only : structure_type
    use mstore, only : get_structure
+   use dftd3_cutoff, only : get_lattice_points
    use dftd3_data, only : get_covalent_rad
    use dftd3_ncoord, only : get_coordination_number
    use dftd3_model
@@ -65,13 +66,15 @@ subroutine test_gw_gen(error, mol, ref)
 
    type(d3_model) :: d3
    real(wp), allocatable :: cn(:), rcov(:), gwvec(:, :)
-   real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
+   real(wp), parameter :: cutoff = 30.0_wp
+   real(wp), allocatable :: lattr(:, :)
 
    call new_d3_model(d3, mol)
 
    allocate(rcov(mol%nid), cn(mol%nat), gwvec(maxval(d3%ref), mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
    call get_coordination_number(mol, lattr, cutoff, rcov, cn)
 
    call d3%weight_references(mol, cn, gwvec)

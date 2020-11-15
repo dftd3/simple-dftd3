@@ -1,0 +1,161 @@
+/* This file is part of s-dftd3.
+ * SPDX-Identifier: LGPL-3.0-or-later
+ *
+ * s-dftd3 is free software: you can redistribute it and/or modify it under
+ * the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * s-dftd3 is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
+**/
+#pragma once
+
+#ifdef __cplusplus
+#define SDFTD3_API_ENTRY extern "C"
+#else
+#define SDFTD3_API_ENTRY extern
+#include <stdbool.h>
+#endif
+#define SDFTD3_API_CALL
+#define SDFTD3_API_SUFFIX__V_0_2
+
+/// Error handle class
+typedef struct _dftd3_error* dftd3_error;
+
+/// Molecular structure data class
+typedef struct _dftd3_structure* dftd3_structure;
+
+/// Dispersion model class
+typedef struct _dftd3_model* dftd3_model;
+
+/// Damping parameter class
+typedef struct _dftd3_param* dftd3_param;
+
+/*
+ * Global API queries
+**/
+
+/// Obtain library version as major * 10000 + minor + 100 + patch
+SDFTD3_API_ENTRY int SDFTD3_API_CALL
+dftd3_get_version() SDFTD3_API_SUFFIX__V_0_2;
+
+/*
+ * Error handle class
+**/
+
+/// Create new error handle object
+SDFTD3_API_ENTRY dftd3_error SDFTD3_API_CALL
+dftd3_new_error() SDFTD3_API_SUFFIX__V_0_2;
+
+/// Check error handle status
+SDFTD3_API_ENTRY int SDFTD3_API_CALL
+dftd3_check_error(dftd3_error /* error */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Get error message from error handle
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_get_error(dftd3_error /* error */,
+                char* /* buffer */,
+                const int* /* buffersize */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Delete error handle object
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_delete_error(dftd3_error* /* error */) SDFTD3_API_SUFFIX__V_0_2;
+
+/*
+ * Molecular structure data class
+**/
+
+/// Create new molecular structure data (quantities in Bohr)
+SDFTD3_API_ENTRY dftd3_structure SDFTD3_API_CALL
+dftd3_new_structure(dftd3_error /* error */,
+                    const int /* natoms */,
+                    const int* /* numbers [natoms] */,
+                    const double* /* positions [natoms][3] */,
+                    const double* /* lattice [3][3] */,
+                    const bool* /* periodic [3] */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Delete molecular structure data
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_delete_structure(dftd3_structure* /* mol */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Update coordinates and lattice parameters (quantities in Bohr)
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_update_structure(dftd3_structure /* mol */,
+                       const double* /* positions [natoms][3] */,
+                       const double* /* lattice [3][3] */) SDFTD3_API_SUFFIX__V_0_2;
+
+/*
+ * Dispersion model class
+**/
+
+/// Create new D3 dispersion model
+SDFTD3_API_ENTRY dftd3_model SDFTD3_API_CALL
+dftd3_new_d3_model(dftd3_error /* error */,
+                   dftd3_structure /* mol */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Delete dispersion model
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_delete_model(dftd3_model* /* disp */) SDFTD3_API_SUFFIX__V_0_2;
+
+/*
+ * Damping parameter class
+**/
+
+/// Create new zero damping parameters
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_new_zero_damping(dftd3_error /* error */,
+                       dftd3_structure /* mol */,
+                       double /* s6 */,
+                       double /* s8 */,
+                       double /* s9 */,
+                       double /* rs6 */,
+                       double /* rs8 */,
+                       double /* alp */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Load zero damping parameters from internal storage
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_load_zero_damping(dftd3_error /* error */,
+                        dftd3_structure /* mol */,
+                        char* /* method */,
+                        bool /* atm */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Create new rational damping parameters
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_new_rational_damping(dftd3_error /* error */,
+                           dftd3_structure /* mol */,
+                           double /* s6 */,
+                           double /* s8 */,
+                           double /* s9 */,
+                           double /* a1 */,
+                           double /* a2 */,
+                           double /* alp */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Load rational damping parameters from internal storage
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_load_rational_damping(dftd3_error /* error */,
+                            dftd3_structure /* mol */,
+                            char* /* method */,
+                            bool /* atm */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Delete damping parameters
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_delete_param(dftd3_param* /* param */) SDFTD3_API_SUFFIX__V_0_2;
+
+/*
+ * Perform dispersion calculations
+**/
+
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_get_dispersion(dftd3_error /* error */,
+                     dftd3_structure /* mol */,
+                     dftd3_model /* disp */,
+                     dftd3_param /* param */,
+                     double* /* energy */,
+                     double* /* gradient[n][3] */,
+                     double* /* sigma[3][3] */) SDFTD3_API_SUFFIX__V_0_2;

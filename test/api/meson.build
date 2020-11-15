@@ -14,8 +14,10 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-srcs += files(
-  'atm.f90',
-  'rational.f90',
-  'zero.f90',
+api_tester = executable(
+  'api-tester',
+  sources: files('api-test.c'),
+  dependencies: sdftd3_dep,
 )
+
+test('api-test', api_tester)

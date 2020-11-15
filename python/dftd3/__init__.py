@@ -13,9 +13,9 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
+"""Python API for the DFT-D3 dispersion model"""
 
-srcs += files(
-  'atm.f90',
-  'rational.f90',
-  'zero.f90',
-)
+# make sure we have a CFFI available
+import cffi
+
+__version__ = "0.2.0"

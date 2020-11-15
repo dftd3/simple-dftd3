@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,8 @@ program tester
    use test_dftd3, only : collect_dftd3
    use test_model, only : collect_model
    use test_ncoord, only : collect_ncoord
+   use test_param, only : collect_param
+   use test_periodic, only : collect_periodic
    implicit none
    integer :: stat, is
    character(len=:), allocatable :: suite_name, test_name
@@ -33,7 +35,9 @@ program tester
    testsuites = [ &
       & new_testsuite("ncoord", collect_ncoord), &
       & new_testsuite("model", collect_model), &
-      & new_testsuite("dftd3", collect_dftd3) &
+      & new_testsuite("dftd3", collect_dftd3), &
+      & new_testsuite("param", collect_param), &
+      & new_testsuite("periodic", collect_periodic) &
       & ]
 
    call get_argument(1, suite_name)

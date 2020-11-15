@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later AND BSD-3-Clause
+! SPDX-Identifier: LGPL-3.0-or-later AND BSD-3-Clause
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by

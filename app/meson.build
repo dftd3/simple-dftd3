@@ -20,3 +20,12 @@ sdftd3_exe = executable(
   dependencies: sdftd3_dep,
   install: install,
 )
+
+if os != 'windows'
+  test('app-version', sdftd3_exe, args: '--version')
+  test('app-help', sdftd3_exe, args: '--help')
+  test('app-noargs', sdftd3_exe, should_fail: true)
+  test('app-example', sdftd3_exe, args: files('example.xyz'))
+  test('app-zero', sdftd3_exe, args: ['--json', '--zero-param', '1.0', '1.868', '1.613', files('example.xyz')])
+  test('app-rational', sdftd3_exe, args: ['--bj-param', '1.0', '1.2576', '0.3768', '4.5865', files('example.xyz')])
+endif

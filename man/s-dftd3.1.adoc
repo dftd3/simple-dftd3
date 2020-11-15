@@ -1,0 +1,63 @@
+= s-dftd3(1)
+:doctype: manpage
+
+== Name
+s-dftd3 - Simple reimplementation of the DFT-D3 dispersion model
+
+== Synopsis
+*s-dftd3* [_options_] _input_
+
+== Description
+
+Takes an geometry input to calculate the D3 dispersion correction.
+Periodic calculations are performed automatically for periodic input formats
+Specify the functional to select the correct parameters.
+
+== Options
+
+*-i, --input* _format_::
+Hint for the format of the input file
+
+*--bj* _method_::
+Use rational (Becke-Johnson) damping function
+
+*--bj-param* _list_::
+Specify parameters for rational damping,
+expected order is s6, s8, a1, a2 (requires four arguments)
+
+*--zero* _method_::
+Use zero (Chai-Head-Gordon) damping function
+
+*--zero-param* _list_::
+Specify parameters for zero damping,
+expected order is s6, s8, rs6 (requires three arguments)
+
+*--atm*::
+Use ATM three-body dispersion
+
+*--atm-scale* _s9_::
+Use scaled ATM three-body dispersion
+
+*--noedisp*::
+Disable writing of dispersion energy to `.EDISP` file
+
+*--json* [_file_]::
+Dump results to JSON output (default: `dftd3.json`)
+
+*--grad*::
+Request gradient evaluation
+
+*--property*::
+Evaluate dispersion related properties
+
+*-v, --verbose*::
+Show more, can be used multiple times
+
+*-s, --silent*::
+Show less, use twice to supress all output
+
+*--version*::
+Print program version and exit
+
+*--help*::
+Show this help message

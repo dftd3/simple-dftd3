@@ -10,6 +10,7 @@ and [*JCC* **32**, 1456 (2011)](https://dx.doi.org/10.1002/jcc.21759) for detail
 It is mostly based on the [`dftd4`](https://github.com/dftd4/dftd4) program and
 borrows one or two ideas from the implementation in [`ased3`](https://github.com/ehermes/ased3).
 
+
 ## Installation
 
 To build this project from the source code in this repository you need to have
@@ -44,6 +45,31 @@ meson install -C _build
 
 This might require administrator access.
 You can alter the install prefix by ``meson configure _build --prefix=/path/to/install``.
+
+
+## Usage
+
+DFT-D3 calculations can be performed with the ``s-dftd3`` binary.
+To calculate the dispersion correction for PBE0-D3(BJ)-ATM run:
+
+```
+s-dftd3 --bj pbe0 --atm coord
+```
+
+In case you want to access the DFT-D3 results from other programs, dump the results to JSON with
+(the ``--noedisp`` flag prevents the ``.EDISP`` file generation):
+
+```
+s-dftd3 --bj pbe0 --atm --json --noedisp --grad struct.xyz
+```
+
+Dispersion related properties can be calculated as well:
+
+```
+s-dftd3 --property geo.gen
+```
+
+For an overview over all command line arguments use the ``--help`` argument.
 
 
 ## License

@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -20,6 +20,7 @@ module test_ncoord
       & test_failed
    use mctc_io_structure, only : structure_type
    use mstore, only : get_structure
+   use dftd3_cutoff, only : get_lattice_points
    use dftd3_data, only : get_covalent_rad
    use dftd3_ncoord
    implicit none
@@ -44,10 +45,13 @@ subroutine collect_ncoord(testsuite)
       & new_unittest("cn-mb01", test_cn_mb01), &
       & new_unittest("cn-mb02", test_cn_mb02), &
       & new_unittest("cn-mb03", test_cn_mb03), &
+      & new_unittest("cn-acetic", test_cn_acetic), &
       & new_unittest("dcndr-mb04", test_dcndr_mb04), &
       & new_unittest("dcndr-mb05", test_dcndr_mb05), &
+      & new_unittest("dcndr-ammonia", test_dcndr_ammonia), &
       & new_unittest("dcndL-mb06", test_dcndL_mb06), &
-      & new_unittest("dcndL-mb07", test_dcndL_mb07) &
+      & new_unittest("dcndL-mb07", test_dcndL_mb07), &
+      & new_unittest("dcndL-antracene", test_dcndL_anthracene) &
       & ]
 
 end subroutine collect_ncoord
@@ -65,11 +69,13 @@ subroutine test_cn_gen(error, mol, ref)
    real(wp), intent(in) :: ref(:)
 
    real(wp), allocatable :: cn(:), rcov(:)
-   real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
+   real(wp), parameter :: cutoff = 30.0_wp
+   real(wp), allocatable :: lattr(:, :)
 
    allocate(rcov(mol%nid), cn(mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
    call get_coordination_number(mol, lattr, cutoff, rcov, cn)
 
    if (any(abs(cn - ref) > thr)) then
@@ -92,13 +98,15 @@ subroutine test_numgrad(error, mol)
    real(wp), allocatable :: cn(:), rcov(:), cnr(:), cnl(:)
    real(wp), allocatable :: dcndr(:, :, :), dcndL(:, :, :)
    real(wp), allocatable :: numdr(:, :, :)
-   real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
+   real(wp), allocatable :: lattr(:, :)
+   real(wp), parameter :: cutoff = 30.0_wp
    real(wp), parameter :: step = 1.0e-6_wp
 
    allocate(rcov(mol%nid), cn(mol%nat), cnr(mol%nat), cnl(mol%nat), &
       & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), &
       & numdr(3, mol%nat, mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
 
    do iat = 1, mol%nat
       do ic = 1, 3
@@ -133,7 +141,8 @@ subroutine test_numsigma(error, mol)
    real(wp), allocatable :: cn(:), rcov(:), cnr(:), cnl(:), xyz(:, :)
    real(wp), allocatable :: dcndr(:, :, :), dcndL(:, :, :)
    real(wp), allocatable :: numdL(:, :, :)
-   real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
+   real(wp), allocatable :: lattr(:, :), trans(:, :)
+   real(wp), parameter :: cutoff = 30.0_wp
    real(wp), parameter :: unity(3, 3) = reshape(&
       & [1, 0, 0, 0, 1, 0, 0, 0, 1], shape(unity))
    real(wp), parameter :: step = 1.0e-6_wp
@@ -142,19 +151,24 @@ subroutine test_numsigma(error, mol)
       & dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat), xyz(3, mol%nat), &
       & numdL(3, 3, mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
 
    eps(:, :) = unity
    xyz(:, :) = mol%xyz
+   trans = lattr
    do ic = 1, 3
       do jc = 1, 3
          eps(jc, ic) = eps(jc, ic) + step
          mol%xyz(:, :) = matmul(eps, xyz)
+         lattr(:, :) = matmul(eps, trans)
          call get_coordination_number(mol, lattr, cutoff, rcov, cnr)
          eps(jc, ic) = eps(jc, ic) - 2*step
          mol%xyz(:, :) = matmul(eps, xyz)
+         lattr(:, :) = matmul(eps, trans)
          call get_coordination_number(mol, lattr, cutoff, rcov, cnl)
          eps(jc, ic) = eps(jc, ic) + step
          mol%xyz(:, :) = xyz
+         lattr(:, :) = trans
          numdL(jc, ic, :) = 0.5_wp*(cnr - cnl)/step
       end do
    end do
@@ -228,6 +242,31 @@ subroutine test_cn_mb03(error)
 end subroutine test_cn_mb03
 
 
+subroutine test_cn_acetic(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   real(wp), parameter :: ref(32) = &
+      &[1.04073942081051E+0_wp, 1.04075447219749E+0_wp, 1.04072460785363E+0_wp, &
+      & 1.04074537909498E+0_wp, 1.00106785365038E+0_wp, 1.00106704347558E+0_wp, &
+      & 1.00105728097980E+0_wp, 1.00011856051690E+0_wp, 1.00011453670332E+0_wp, &
+      & 1.00010898989233E+0_wp, 1.00010902098403E+0_wp, 9.99919326833198E-1_wp, &
+      & 9.99937703981683E-1_wp, 9.99930014540953E-1_wp, 9.99925344681896E-1_wp, &
+      & 1.00107012643494E+0_wp, 3.03354077923102E+0_wp, 3.03354412735121E+0_wp, &
+      & 3.03353351347200E+0_wp, 3.03354133527784E+0_wp, 4.03132872140176E+0_wp, &
+      & 4.03134738758689E+0_wp, 4.03131702071365E+0_wp, 4.03132425587530E+0_wp, &
+      & 2.03473390418093E+0_wp, 2.03477375742116E+0_wp, 2.03473667936156E+0_wp, &
+      & 2.03476589329806E+0_wp, 1.09702012963979E+0_wp, 1.09703678830469E+0_wp, &
+      & 1.09702558724507E+0_wp, 1.09704732777286E+0_wp]
+
+   call get_structure(mol, "X23", "acetic")
+   call test_cn_gen(error, mol, ref)
+
+end subroutine test_cn_acetic
+
+
 subroutine test_dcndr_mb04(error)
 
    !> Error handling
@@ -254,6 +293,19 @@ subroutine test_dcndr_mb05(error)
 end subroutine test_dcndr_mb05
 
 
+subroutine test_dcndr_ammonia(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   call get_structure(mol, "X23", "ammonia")
+   call test_numgrad(error, mol)
+
+end subroutine test_dcndr_ammonia
+
+
 subroutine test_dcndL_mb06(error)
 
    !> Error handling
@@ -278,6 +330,19 @@ subroutine test_dcndL_mb07(error)
    call test_numsigma(error, mol)
 
 end subroutine test_dcndL_mb07
+
+
+subroutine test_dcndL_anthracene(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   call get_structure(mol, "X23", "anthracene")
+   call test_numsigma(error, mol)
+
+end subroutine test_dcndL_anthracene
 
 
 end module test_ncoord

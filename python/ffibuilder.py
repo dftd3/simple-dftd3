@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # This file is part of s-dftd3.
 # SPDX-Identifier: LGPL-3.0-or-later
 #
@@ -14,8 +15,22 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-srcs += files(
-  'atm.f90',
-  'rational.f90',
-  'zero.f90',
+import cffi, sys
+
+if len(sys.argv) != 3:
+    raise RuntimeError("Requires two arguments")
+
+header_file = sys.argv[1]
+module_name = sys.argv[2]
+
+ffibuilder = cffi.FFI()
+ffibuilder.set_source(
+    module_name,
+    '#include "dftd3.h"',
 )
+
+with open(header_file) as f:
+    ffibuilder.cdef(f.read())
+
+if __name__ == '__main__':
+    ffibuilder.distutils_extension('.')

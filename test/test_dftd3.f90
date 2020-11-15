@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -240,11 +240,11 @@ subroutine test_tpssd3bj_mb03(error)
    type(rational_damping_param) :: param
    type(d3_param) :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
-      & a1 = 0.4535_wp, s8 = 1.9889_wp, a2 = 4.4211_wp)
+      & a1 = 0.4535_wp, s8 = 1.9435_wp, a2 = 4.4752_wp)
 
    call get_structure(mol, "MB16-43", "03")
    call new_rational_damping(param, inp, mol%num)
-   call test_dftd3_gen(error, mol, param, -3.0355867880549916E-002_wp)
+   call test_dftd3_gen(error, mol, param, -2.8684059421722093E-002_wp)
 
 end subroutine test_tpssd3bj_mb03
 
@@ -492,11 +492,11 @@ subroutine test_dsdblypd3bjatm_mb17(error)
    type(rational_damping_param) :: param
    type(d3_param) :: inp = d3_param(&
       & s6 = 0.5_wp, s9 = 1.0_wp, alp = 14.0_wp, &
-      & a1 = 0.0_wp, s8 = 0.2112_wp, a2 = 5.9077_wp)
+      & a1 = 0.0_wp, s8 = 0.2130_wp, a2 = 6.0519_wp)
 
    call get_structure(mol, "MB16-43", "17")
    call new_rational_damping(param, inp, mol%num)
-   call test_dftd3_gen(error, mol, param, -1.5247153855093298E-002_wp)
+   call test_dftd3_gen(error, mol, param, -1.3592756421169463E-002_wp)
 
 end subroutine test_dsdblypd3bjatm_mb17
 
@@ -546,11 +546,11 @@ subroutine test_bpbed3bjatm_mb20(error)
    type(rational_damping_param) :: param
    type(d3_param) :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
-      & a1 = 0.4567_wp, s8 = 4.0724_wp, a2 = 4.3908_wp)
+      & a1 = 0.4567_wp, s8 = 4.0728_wp, a2 = 4.3908_wp)
 
    call get_structure(mol, "MB16-43", "20")
    call new_rational_damping(param, inp, mol%num)
-   call test_dftd3_gen(error, mol, param, -3.4950665402484593E-002_wp)
+   call test_dftd3_gen(error, mol, param, -3.4953088194036953E-002_wp)
 
 end subroutine test_bpbed3bjatm_mb20
 

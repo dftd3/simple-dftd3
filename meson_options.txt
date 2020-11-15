@@ -14,8 +14,21 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-srcs += files(
-  'atm.f90',
-  'rational.f90',
-  'zero.f90',
+option(
+  'openmp',
+  type: 'boolean',
+  value: true,
+  description: 'Use OpenMP parallelisation',
+)
+option(
+  'python',
+  type: 'boolean',
+  value: false,
+  description: 'Build Python extension module',
+)
+option(
+  'python_version',
+  type: 'string',
+  value: '3',
+  description: 'Python version to link against.',
 )

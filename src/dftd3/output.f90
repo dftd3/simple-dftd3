@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -19,13 +19,16 @@ module dftd3_output
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa, autokcal, autoev
    use mctc_io_math, only : matinv_3x3
+   use dftd3_damping, only : damping_param
+   use dftd3_damping_rational, only : rational_damping_param
+   use dftd3_damping_zero, only : zero_damping_param
    use dftd3_model, only : d3_model
    use dftd3_version, only : get_dftd3_version
    implicit none
    private
 
    public :: ascii_atomic_radii, ascii_atomic_references, ascii_system_properties
-   public :: ascii_results
+   public :: ascii_results, ascii_damping_param
    public :: turbomole_gradient, turbomole_gradlatt
    public :: json_results
 
@@ -183,6 +186,57 @@ subroutine ascii_results(unit, mol, energy, gradient, sigma)
    end if
 
 end subroutine ascii_results
+
+
+subroutine ascii_damping_param(unit, param, method)
+
+   !> Unit for output
+   integer, intent(in) :: unit
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Method name
+   character(len=*), intent(in), optional :: method
+
+   select type(param)
+   type is (zero_damping_param)
+      write(unit, '(a, ":", 1x)', advance="no") "Zero (Chai-Head-Gordon) damping"
+      if (present(method)) then
+         write(unit, '(a, "-")', advance="no") method
+      end if
+      write(unit, '(a)') &
+         & trim(merge("D3(0)    ", "D3(0)-ATM", abs(param%s9) > 0))
+      write(unit, '(20("-"))')
+      write(unit, '(a4, t10, f10.4)') &
+         & "s6", param%s6, &
+         & "s8", param%s8, &
+         & "s9", param%s9, &
+         & "rs6", param%rs6, &
+         & "rs8", param%rs8, &
+         & "alp", param%alp
+      write(unit, '(20("-"))')
+      write(unit, '(a)')
+   type is (rational_damping_param)
+      write(unit, '(a, ":", 1x)', advance="no") "Rational (Becke-Johnson) damping"
+      if (present(method)) then
+         write(unit, '(a, "-")', advance="no") method
+      end if
+      write(unit, '(a)') &
+         & trim(merge("D3(BJ)    ", "D3(BJ)-ATM", abs(param%s9) > 0))
+      write(unit, '(21("-"))')
+      write(unit, '(a4, t10, f10.4)') &
+         & "s6", param%s6, &
+         & "s8", param%s8, &
+         & "s9", param%s9, &
+         & "a1", param%a1, &
+         & "a2", param%a2, &
+         & "alp", param%alp
+      write(unit, '(20("-"))')
+      write(unit, '(a)')
+   end select
+
+end subroutine ascii_damping_param
 
 
 subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)

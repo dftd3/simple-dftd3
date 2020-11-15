@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -15,6 +15,7 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_model
+   use ieee_arithmetic, only : ieee_is_nan
    use dftd3_data, only : get_covalent_rad, get_r4r2_val, get_vdw_rad
    use dftd3_reference
    use mctc_env, only : wp
@@ -167,6 +168,8 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
       gwvec(:, :) = 0.0_wp
       gwdcn(:, :) = 0.0_wp
 
+      !$omp parallel do default(none) shared(gwvec, gwdcn, mol, self, cn) &
+      !$omp private(iat, izp, iref, norm, dnorm, gw, expw, expd, gwk, dgwk)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          norm = 0.0_wp
@@ -181,9 +184,19 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
             expw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
             expd = 2*self%wf * (self%cn(iref, izp) - cn(iat)) * expw
             gwk = expw * norm
+            if (ieee_is_nan(gwk)) then
+               if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
+                  gwk = 1.0_wp
+               else
+                  gwk = 0.0_wp
+               end if
+            end if
             gwvec(iref, iat) = gwk
 
             dgwk = expd * norm - expw * dnorm * norm**2
+            if (ieee_is_nan(dgwk)) then
+               dgwk = 0.0_wp
+            end if
             gwdcn(iref, iat) = dgwk
          end do
       end do
@@ -192,10 +205,11 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
 
       gwvec(:, :) = 0.0_wp
 
+      !$omp parallel do default(none) shared(gwvec, mol, self, cn) &
+      !$omp private(iat, izp, iref, norm, gw, expw, gwk)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          norm = 0.0_wp
-         dnorm = 0.0_wp
          do iref = 1, self%ref(izp)
             gw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
             norm = norm + gw
@@ -204,6 +218,13 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
          do iref = 1, self%ref(izp)
             expw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
             gwk = expw * norm
+            if (ieee_is_nan(gwk)) then
+               if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
+                  gwk = 1.0_wp
+               else
+                  gwk = 0.0_wp
+               end if
+            end if
             gwvec(iref, iat) = gwk
          end do
       end do
@@ -235,31 +256,33 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
    real(wp), intent(out), optional :: dc6dcn(:, :)
 
    integer :: iat, jat, izp, jzp, iref, jref
-   real(wp) :: refc6, dc6, dc6dcn1, dc6dcn2
+   real(wp) :: refc6, dc6, dc6dcni, dc6dcnj
 
    if (present(gwdcn).and.present(dc6dcn)) then
       c6(:, :) = 0.0_wp
       dc6dcn(:, :) = 0.0_wp
 
+      !$omp parallel do default(none) shared(c6, dc6dcn, mol, self, gwvec, gwdcn) &
+      !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6, dc6dcni, dc6dcnj)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat
             jzp = mol%id(jat)
             dc6 = 0.0_wp
-            dc6dcn1 = 0.0_wp
-            dc6dcn2 = 0.0_wp
+            dc6dcni = 0.0_wp
+            dc6dcnj = 0.0_wp
             do iref = 1, self%ref(izp)
                do jref = 1, self%ref(jzp)
                   refc6 = self%c6(iref, jref, izp, jzp)
                   dc6 = dc6 + gwvec(iref, iat) * gwvec(jref, jat) * refc6
-                  dc6dcn1 = dc6dcn1 + gwdcn(iref, iat) * gwvec(jref, jat) * refc6
-                  dc6dcn2 = dc6dcn2 + gwvec(iref, iat) * gwdcn(jref, jat) * refc6
+                  dc6dcni = dc6dcni + gwdcn(iref, iat) * gwvec(jref, jat) * refc6
+                  dc6dcnj = dc6dcnj + gwvec(iref, iat) * gwdcn(jref, jat) * refc6
                end do
             end do
             c6(iat, jat) = dc6
             c6(jat, iat) = dc6
-            dc6dcn(iat, jat) = dc6dcn1
-            dc6dcn(jat, iat) = dc6dcn2
+            dc6dcn(iat, jat) = dc6dcni
+            dc6dcn(jat, iat) = dc6dcnj
          end do
       end do
 
@@ -267,6 +290,8 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
 
       c6(:, :) = 0.0_wp
 
+      !$omp parallel do default(none) shared(c6, mol, self, gwvec) &
+      !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat

@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -16,7 +16,7 @@
 
 module dftd3_disp
    use dftd3_blas, only : d3_gemv
-   use dftd3_cutoff, only : realspace_cutoff
+   use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_damping, only : damping_param
    use dftd3_data, only : get_covalent_rad
    use dftd3_model, only : d3_model
@@ -62,13 +62,14 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
    real(wp), allocatable :: dEdcn(:)
-   real(wp), parameter :: lattr(3, 1) = 0.0_wp
+   real(wp), allocatable :: lattr(:, :)
 
    mref = maxval(disp%ref)
    grad = present(gradient).and.present(sigma)
 
    allocate(cn(mol%nat))
    if (grad) allocate(dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn, dcndr, dcndL)
 
    allocate(gwvec(mref, mol%nat))
@@ -86,8 +87,10 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
       gradient(:, :) = 0.0_wp
       sigma(:, :) = 0.0_wp
    end if
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
    call param%get_dispersion2(mol, lattr, cutoff%disp2, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
    call param%get_dispersion3(mol, lattr, cutoff%disp3, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
    if (grad) then

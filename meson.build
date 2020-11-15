@@ -26,6 +26,7 @@ project(
   ],
 )
 install = not (meson.is_subproject() and get_option('default_library') == 'static')
+has_cc = add_languages('c', required: get_option('python'))
 
 # General configuration information
 inc_dirs = []
@@ -47,7 +48,7 @@ sdftd3_lib = library(
 )
 
 # Export dependency for other projects and test suite
-sdftd3_inc = sdftd3_lib.private_dir_include()
+sdftd3_inc = [sdftd3_lib.private_dir_include(), include_directories('include')]
 sdftd3_dep = declare_dependency(
   link_with: sdftd3_lib,
   include_directories: sdftd3_inc,
@@ -63,11 +64,20 @@ sdftd3_lic = files(
   'COPYING.LESSER',
 )
 
+sdftd3_header = files(
+  'include/dftd3.h',
+  'include/s-dftd3.h',
+)
+
 if install
   # Distribute the license files in share/licenses/<name>
   install_data(
     sdftd3_lic,
-    install_dir: get_option('datadir')/'licenses'/meson.project_name()
+    install_dir: get_option('datadir')/'licenses'/meson.project_name(),
+  )
+
+  install_headers(
+    sdftd3_header,
   )
 
   pkg = import('pkgconfig')
@@ -75,7 +85,23 @@ if install
     sdftd3_lib,
     description: 'Simple reimplementation of the DFT-D3 dispersion model',
   )
+
+  asciidoc = find_program('asciidoctor', required: false)
+  if asciidoc.found()
+    install_man(
+      configure_file(
+        command: [asciidoc, '-b', 'manpage', '@INPUT@', '-o', '@OUTPUT@'],
+        input: files('man/s-dftd3.1.adoc'),
+        output: '@BASENAME@',
+      )
+    )
+  endif
 endif
 
-# add the testsuite
+# Add the testsuite
 subdir('test')
+
+# Build Python extension module
+if get_option('python')
+  subdir('python')
+endif

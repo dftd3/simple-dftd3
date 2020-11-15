@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -22,13 +22,15 @@ module dftd3
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_model, only : d3_model, new_d3_model
-   use dftd3_param, only : d3_param
+   use dftd3_param, only : d3_param, get_rational_damping_param, &
+      & get_zero_damping_param
    use dftd3_version, only : get_dftd3_version
    implicit none
    private
 
    public :: get_dispersion, get_coordination_number, realspace_cutoff
    public :: damping_param, d3_param
+   public :: get_rational_damping_param, get_zero_damping_param
    public :: rational_damping_param, new_rational_damping
    public :: zero_damping_param, new_zero_damping
    public :: d3_model, new_d3_model

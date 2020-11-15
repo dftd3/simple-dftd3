@@ -1,5 +1,5 @@
 ! This file is part of s-dftd3.
-! SPDX-Identifier: LGLP-3.0-or-later
+! SPDX-Identifier: LGPL-3.0-or-later
 !
 ! s-dftd3 is free software: you can redistribute it and/or modify it under
 ! the terms of the GNU Lesser General Public License as published by
@@ -20,12 +20,14 @@ program dftd3_main
    use mctc_io
    use dftd3
    use dftd3_output
+   use dftd3_utils
    implicit none
    character(len=*), parameter :: prog_name = "s-dftd3"
 
    type :: d3_config
-      logical :: json = .true.
+      logical :: json = .false.
       character(len=:), allocatable :: json_output
+      logical :: wrap = .true.
       logical :: tmer = .true.
       logical :: properties = .false.
       logical :: atm = .false.
@@ -49,13 +51,18 @@ program dftd3_main
    character(len=:), allocatable :: method
    type(zero_damping_param), allocatable :: zparam
    type(rational_damping_param), allocatable :: rparam
+   real(wp), allocatable :: s9
    integer :: stat, unit
    logical :: echo, exist
 
    call get_arguments(input, input_format, config, method, inp, echo, error)
    if (allocated(error)) then
-      write(error_unit, '(a)') error%message
+      write(error_unit, '("[Error]", 1x, a)') error%message
       error stop
+   end if
+
+   if (config%verbosity > 1) then
+      call header(output_unit)
    end if
 
    if (input == "-") then
@@ -65,19 +72,41 @@ program dftd3_main
       call read_structure(mol, input, error, input_format)
    end if
    if (allocated(error)) then
-      write(error_unit, '(a)') error%message
+      write(error_unit, '("[Error]", 1x, a)') error%message
       error stop
    end if
+   if (config%wrap) then
+      call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
+   end if
 
+   if (config%atm) s9 = inp%s9
    if (config%zero) then
+      if (.not.config%has_param) then
+         call get_zero_damping_param(inp, method, error, s9)
+         if (allocated(error)) then
+            write(error_unit, '("[Error]", 1x, a)') error%message
+            error stop
+         end if
+      end if
       allocate(zparam)
       call new_zero_damping(zparam, inp, mol%num)
       call move_alloc(zparam, param)
    end if
    if (config%rational) then
+      if (.not.config%has_param) then
+         call get_rational_damping_param(inp, method, error, s9)
+         if (allocated(error)) then
+            write(error_unit, '("[Error]", 1x, a)') error%message
+            error stop
+         end if
+      end if
       allocate(rparam)
       call new_rational_damping(rparam, inp, mol%num)
       call move_alloc(rparam, param)
+   end if
+
+   if (allocated(param) .and. config%verbosity > 0) then
+      call ascii_damping_param(output_unit, param, method)
    end if
 
    if (config%grad) then
@@ -186,6 +215,19 @@ subroutine property_calc(unit, mol, disp, verbosity)
 end subroutine property_calc
 
 
+subroutine header(unit)
+   integer, intent(in) :: unit
+   character(len=:), allocatable :: version_string
+
+   call get_dftd3_version(string=version_string)
+   write(unit, '(a)') &
+      "-----------------------------------", &
+      " s i m p l e   D F T - D 3  v"// version_string, &
+      "-----------------------------------", ""
+
+end subroutine header
+
+
 subroutine help(unit)
    integer, intent(in) :: unit
 
@@ -195,21 +237,20 @@ subroutine help(unit)
    write(unit, '(a)') &
       "", &
       "Takes an geometry input to calculate the D3 dispersion correction.", &
-      "Periodic calculations are performed automatically for periodic input formats", &
+      "Periodic calculations are performed automatically for periodic input formats.", &
       "Specify the functional to select the correct parameters.", &
       ""
 
    write(unit, '(2x, a, t25, a)') &
       "-i, --input <format>", "Hint for the format of the input file", &
-      "--func <method>", "Specify functional to use", &
-      "--bj", "Use rational (Becke-Johnson) damping function", &
+      "--bj <method>", "Use rational (Becke-Johnson) damping function", &
       "--bj-param <list>", "Specify parameters for rational damping,", &
       "", "expected order is s6, s8, a1, a2 (requires four arguments)", &
-      "--zero", "Use zero (Chai-Head-Gordon) damping function", &
-      "--zero-param <list>", "Specify functional to use,", &
+      "--zero <method>", "Use zero (Chai-Head-Gordon) damping function", &
+      "--zero-param <list>", "Specify parameters for zero damping,", &
       "", "expected order is s6, s8, rs6 (requires three arguments)", &
-      "--atm", "Use ATM three-body dispersion,", &
-      "--atm-scale <s9>", "Use scaled ATM three-body dispersion,", &
+      "--atm", "Use ATM three-body dispersion", &
+      "--atm-scale <s9>", "Use scaled ATM three-body dispersion", &
       "--noedisp", "Disable writing of dispersion energy to .EDISP file", &
       "--json [file]", "Dump results to JSON output (default: dftd3.json)", &
       "--grad", "Request gradient evaluation", &
@@ -340,7 +381,11 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
             call move_alloc(arg, input)
             cycle
          end if
-         call fatal_error(error, "Too many positional arguments present")
+         if (arg(1:1) == "-") then
+            call fatal_error(error, "Unknown argument encountered: '"//arg//"'")
+         else
+            call fatal_error(error, "Too many positional arguments present")
+         end if
          exit
       case("-i", "--input")
          iarg = iarg + 1
@@ -352,6 +397,7 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
          input_format = get_filetype("."//arg)
       case("--json")
          config%json = .true.
+         config%json_output = "dftd3.json"
          iarg = iarg + 1
          call get_argument(iarg, arg)
          if (allocated(arg)) then
@@ -360,13 +406,13 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
                cycle
             end if
             call move_alloc(arg, config%json_output)
-         else
-            config%json_output = "dftd3.json"
          end if
       case("--property")
          config%properties = .true.
       case("--noedisp")
          config%tmer = .false.
+      case("--nowrap")
+         config%wrap = .false.
       case("--grad")
          config%grad = .true.
       case("--atm")
@@ -377,6 +423,15 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
          call get_argument_as_real(iarg, inp%s9, error)
          if (allocated(error)) exit
          config%atm = .true.
+      case("--zero")
+         config%zero = .true.
+         iarg = iarg + 1
+         call get_argument(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for method")
+            exit
+         end if
+         call move_alloc(arg, method)
       case("--zero-param")
          config%zero = .true.
          config%has_param = .true.
@@ -389,6 +444,15 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
          iarg = iarg + 1
          call get_argument_as_real(iarg, inp%rs6, error)
          if (allocated(error)) exit
+      case("--bj")
+         config%rational = .true.
+         iarg = iarg + 1
+         call get_argument(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for method")
+            exit
+         end if
+         call move_alloc(arg, method)
       case("--bj-param")
          config%rational = .true.
          config%has_param = .true.
@@ -404,16 +468,9 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
          iarg = iarg + 1
          call get_argument_as_real(iarg, inp%a2, error)
          if (allocated(error)) exit
-      case("--func")
-         iarg = iarg + 1
-         call get_argument(iarg, arg)
-         if (.not.allocated(arg)) then
-            call fatal_error(error, "Missing argument for method")
-            exit
-         end if
-         call move_alloc(arg, method)
       end select
    end do
+   if (allocated(error)) return
 
    if (.not.config%has_param .and. .not.allocated(method)) then
       config%properties = .true.

@@ -1,5 +1,5 @@
 # This file is part of s-dftd3.
-# SPDX-Identifier: LGLP-3.0-or-later
+# SPDX-Identifier: LGPL-3.0-or-later
 #
 # s-dftd3 is free software: you can redistribute it and/or modify it under
 # the terms of the GNU Lesser General Public License as published by
@@ -13,6 +13,10 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
+
+if has_cc
+  subdir('api')
+endif
 
 # Create mstore as subproject for testing
 mstore_prj = subproject(
@@ -30,9 +34,11 @@ endif
 mstore_dep = mstore_prj.get_variable('mstore_dep')
 
 tests = [
-  'dftd3',
-  'model',
   'ncoord',
+  'model',
+  'dftd3',
+  'param',
+  'periodic',
 ]
 
 test_srcs = files(
