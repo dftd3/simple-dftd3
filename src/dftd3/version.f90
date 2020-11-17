@@ -24,10 +24,10 @@ module dftd3_version
 
 
    !> String representation of the s-dftd3 version
-   character(len=*), parameter :: dftd3_version_string = "0.2.0"
+   character(len=*), parameter :: dftd3_version_string = "0.3.0"
 
    !> Numeric representation of the s-dftd3 version
-   integer, parameter :: dftd3_version_compact(3) = [0, 2, 0]
+   integer, parameter :: dftd3_version_compact(3) = [0, 3, 0]
 
 
 contains

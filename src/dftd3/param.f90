@@ -20,6 +20,7 @@ module dftd3_param
 
    public :: d3_param
    public :: get_rational_damping, get_zero_damping
+   public :: get_mrational_damping, get_mzero_damping
 
 
    type :: d3_param
@@ -31,6 +32,7 @@ module dftd3_param
       real(wp) :: a1 = 0.4_wp
       real(wp) :: a2 = 5.0_wp
       real(wp) :: alp = 14.0_wp
+      real(wp) :: bet = 0.0_wp
    end type d3_param
 
 
@@ -390,6 +392,94 @@ subroutine get_zero_damping(param, method, error, s9)
    end if
 
 end subroutine get_zero_damping
+
+
+subroutine get_mrational_damping(param, method, error, s9)
+
+   !> Loaded parameter record
+   type(d3_param), intent(out) :: param
+
+   !> Name of the method to look up
+   character(len=*), intent(in) :: method
+
+   !> Overwrite s9
+   real(wp), intent(in), optional :: s9
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select case(get_method_id(method))
+   case default
+      call fatal_error(error, "No entry for '"//method//"' present")
+      return
+   case(p_b2plyp_df)
+      param = d3_param(a1=0.486434_wp, s8=0.672820_wp, a2=3.656466_wp, &
+         & s6=0.640000_wp)
+   case(p_b3lyp_df)
+      param = d3_param(a1=0.278672_wp, s8=1.466677_wp, a2=4.606311_wp)
+   case(p_b97d_df)
+      param = d3_param(a1=0.240184_wp, s8=1.206988_wp, a2=3.864426_wp)
+   case(p_blyp_df)
+      param = d3_param(a1=0.448486_wp, s8=1.875007_wp, a2=3.610679_wp)
+   case(p_bp_df)
+      param = d3_param(a1=0.821850_wp, s8=3.140281_wp, a2=2.728151_wp)
+   case(p_pbe_df)
+      param = d3_param(a1=0.012092_wp, s8=0.358940_wp, a2=5.938951_wp)
+   case(p_pbe0_df)
+      param = d3_param(a1=0.007912_wp, s8=0.528823_wp, a2=6.162326_wp)
+   case(p_lcwpbe_df)
+      param = d3_param(a1=0.563761_wp, s8=0.906564_wp, a2=3.593680_wp)
+   end select
+
+   if (present(s9)) then
+      param%s9 = s9
+   end if
+
+end subroutine get_mrational_damping
+
+
+subroutine get_mzero_damping(param, method, error, s9)
+
+   !> Loaded parameter record
+   type(d3_param), intent(out) :: param
+
+   !> Name of the method to look up
+   character(len=*), intent(in) :: method
+
+   !> Overwrite s9
+   real(wp), intent(in), optional :: s9
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select case(get_method_id(method))
+   case default
+      call fatal_error(error, "No entry for '"//method//"' present")
+      return
+   case(p_b2plyp_df)
+      param = d3_param(rs6=1.313134_wp, s8=0.717543_wp, bet=0.016035_wp, &
+         & s6=0.640000_wp)
+   case(p_b3lyp_df)
+      param = d3_param(rs6=1.338153_wp, s8=1.532981_wp, bet=0.013988_wp)
+   case(p_b97d_df)
+      param = d3_param(rs6=1.151808_wp, s8=1.020078_wp, bet=0.035964_wp)
+   case(p_blyp_df)
+      param = d3_param(rs6=1.279637_wp, s8=1.841686_wp, bet=0.014370_wp)
+   case(p_bp_df)
+      param = d3_param(rs6=1.233460_wp, s8=1.945174_wp, bet=0.000000_wp)
+   case(p_pbe_df)
+      param = d3_param(rs6=2.340218_wp, s8=0.000000_wp, bet=0.129434_wp)
+   case(p_pbe0_df)
+      param = d3_param(rs6=2.077949_wp, s8=0.000081_wp, bet=0.116755_wp)
+   case(p_lcwpbe_df)
+      param = d3_param(rs6=1.366361_wp, s8=1.280619_wp, bet=0.003160_wp)
+   end select
+
+   if (present(s9)) then
+      param%s9 = s9
+   end if
+
+end subroutine get_mzero_damping
 
 
 end module dftd3_param

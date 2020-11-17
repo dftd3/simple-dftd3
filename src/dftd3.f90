@@ -15,21 +15,26 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3
-   use dftd3_cutoff, only : realspace_cutoff
+   use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_disp, only : get_dispersion
    use dftd3_ncoord, only : get_coordination_number
    use dftd3_damping, only : damping_param
+   use dftd3_damping_mzero, only : mzero_damping_param, new_mzero_damping
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_model, only : d3_model, new_d3_model
-   use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping
+   use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
+      & get_mrational_damping, get_mzero_damping
    use dftd3_version, only : get_dftd3_version
    implicit none
    private
 
-   public :: get_dispersion, get_coordination_number, realspace_cutoff
+   public :: get_dispersion, get_coordination_number
+   public :: realspace_cutoff, get_lattice_points
    public :: damping_param, d3_param
    public :: get_rational_damping, get_zero_damping
+   public :: get_mrational_damping, get_mzero_damping
+   public :: mzero_damping_param, new_mzero_damping
    public :: rational_damping_param, new_rational_damping
    public :: zero_damping_param, new_zero_damping
    public :: d3_model, new_d3_model

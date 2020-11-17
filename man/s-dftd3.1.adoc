@@ -32,6 +32,20 @@ Use zero (Chai-Head-Gordon) damping function
 Specify parameters for zero damping,
 expected order is s6, s8, rs6 (requires three arguments)
 
+*--bjm* _method_::
+Use modified rational damping function
+
+*--bjm-param* _list_::
+Specify parameters for rational damping,
+expected order is s6, s8, a1, a2 (requires four arguments)
+
+*--zerom* _method_::
+Use modified zero damping function
+
+*--zerom-param* _list_::
+Specify parameters for modified zero damping,
+expected order is s6, s8, rs6, beta (requires four arguments)
+
 *--atm*::
 Use ATM three-body dispersion
 
@@ -44,8 +58,10 @@ Disable writing of dispersion energy to `.EDISP` file
 *--json* [_file_]::
 Dump results to JSON output (default: `dftd3.json`)
 
-*--grad*::
-Request gradient evaluation
+*--grad* [_file_]::
+Request gradient evaluation,
+write results to _file_ (default: dftd3.txt),
+attempts to add to Turbomole gradient and gradlatt files
 
 *--property*::
 Evaluate dispersion related properties

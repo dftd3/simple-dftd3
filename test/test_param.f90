@@ -41,10 +41,16 @@ subroutine collect_param(testsuite)
    testsuite = [ &
       & new_unittest("DFT-D3(BJ)", test_d3bj_mb01), &
       & new_unittest("DFT-D3(0)", test_d3zero_mb09), &
+      & new_unittest("DFT-D3(BJM)", test_d3bjm_mb02), &
+      & new_unittest("DFT-D3(0M)", test_d3zerom_mb03), &
       & new_unittest("DFT-D3(BJ)-ATM", test_d3bjatm_mb17), &
       & new_unittest("DFT-D3(0)-ATM", test_d3zeroatm_mb25), &
+      & new_unittest("DFT-D3(BJM)-ATM", test_d3bjmatm_mb04), &
+      & new_unittest("DFT-D3(0M)-ATM", test_d3zeromatm_mb05), &
       & new_unittest("unknown-D3(BJ)", test_d3bj_unknown, should_fail=.true.), &
-      & new_unittest("unknown-D3(0)", test_d3zero_unknown, should_fail=.true.) &
+      & new_unittest("unknown-D3(0)", test_d3zero_unknown, should_fail=.true.), &
+      & new_unittest("unknown-D3(BJM)", test_d3bjm_unknown, should_fail=.true.), &
+      & new_unittest("unknown-D3(0M)", test_d3zerom_unknown, should_fail=.true.) &
       & ]
 
 end subroutine collect_param
@@ -169,6 +175,7 @@ subroutine test_d3zero_mb09(error)
       if (allocated(error)) return
       call new_zero_damping(param, inp, mol%num)
       call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
    end do
 
 end subroutine test_d3zero_mb09
@@ -217,6 +224,7 @@ subroutine test_d3bjatm_mb17(error)
       if (allocated(error)) return
       call new_rational_damping(param, inp, mol%num)
       call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
    end do
 
 end subroutine test_d3bjatm_mb17
@@ -264,9 +272,125 @@ subroutine test_d3zeroatm_mb25(error)
       if (allocated(error)) return
       call new_zero_damping(param, inp, mol%num)
       call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
    end do
 
 end subroutine test_d3zeroatm_mb25
+
+
+subroutine test_d3bjm_mb02(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param
+   type(d3_param) :: inp
+
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      "b2plyp", "b3lyp", "b97d", "blyp", "bp", "pbe", "pbe0", "lcwpbe"]
+   real(wp), parameter :: ref(*) = [&
+      &-2.4496063247118574E-2_wp,-4.7306509081943296E-2_wp,-5.9503372903920583E-2_wp,&
+      &-5.6673388608130842E-2_wp,-4.7342640119970941E-2_wp,-2.4952685029454729E-2_wp,&
+      &-2.3521899651908002E-2_wp,-2.7484708967011155E-2_wp]
+
+
+   call get_structure(mol, "MB16-43", "02")
+   do ii = 1, size(func)
+      call get_rational_damping(inp, trim(func(ii)), error)
+      if (allocated(error)) exit
+      call new_rational_damping(param, inp, mol%num)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3bjm_mb02
+
+
+subroutine test_d3zerom_mb03(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(mzero_damping_param) :: param
+   type(d3_param) :: inp
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      "b2plyp", "b3lyp", "b97d", "blyp", "bp", "pbe", "pbe0", "lcwpbe"]
+   real(wp), parameter :: ref(*) = [&
+      &-1.8298670704452319E-2_wp,-3.3517560882274484E-2_wp,-8.3081172538397016E-2_wp,&
+      &-4.1380900243251549E-2_wp,-2.2212570818644292E-2_wp,-7.4972967973246998E-2_wp,&
+      &-5.7366054727364238E-2_wp,-1.6369520315554695E-2_wp]
+
+   call get_structure(mol, "MB16-43", "03")
+   do ii = 1, size(func)
+      call get_mzero_damping(inp, trim(func(ii)), error)
+      if (allocated(error)) return
+      call new_mzero_damping(param, inp, mol%num)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3zerom_mb03
+
+
+subroutine test_d3bjmatm_mb04(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param
+   type(d3_param) :: inp
+
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      "b2plyp", "b3lyp", "b97d", "blyp", "bp", "pbe", "pbe0", "lcwpbe"]
+   real(wp), parameter :: ref(*) = [&
+      &-1.8210584699554565E-2_wp,-4.9517673578593678E-2_wp,-1.1799782484083678E-1_wp,&
+      &-5.0482003148319445E-2_wp,-2.1296304828924539E-2_wp,-4.2996504333752357E-2_wp,&
+      &-4.2021636938441666E-2_wp,-1.8994833098554556E-2_wp]
+
+   call get_structure(mol, "MB16-43", "04")
+   do ii = 1, size(func)
+      call get_mrational_damping(inp, trim(func(ii)), error, s9=1.0_wp)
+      if (allocated(error)) exit
+      call new_rational_damping(param, inp, mol%num)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3bjmatm_mb04
+
+
+subroutine test_d3zeromatm_mb05(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(mzero_damping_param) :: param
+   type(d3_param) :: inp
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      & "b2plyp", "b3lyp", "b97d", "blyp", "bp", "pbe", "pbe0", "lcwpbe"]
+   real(wp), parameter :: ref(*) = [&
+      &-2.0123656701354201E-2_wp,-3.7721635943941914E-2_wp,-7.8081677058345220E-2_wp, &
+      &-4.6610013189846915E-2_wp,-2.6471073414636268E-2_wp,-1.2081296874585111E-1_wp, &
+      &-8.5996088468268228E-2_wp,-1.9517709619188587E-2_wp]
+
+   call get_structure(mol, "MB16-43", "05")
+   do ii = 1, size(func)
+      call get_mzero_damping(inp, trim(func(ii)), error, s9=1.0_wp)
+      if (allocated(error)) return
+      call new_mzero_damping(param, inp, mol%num)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3zeromatm_mb05
 
 
 subroutine test_d3bj_unknown(error)
@@ -291,6 +415,30 @@ subroutine test_d3zero_unknown(error)
    call get_zero_damping(inp, "unknown", error)
 
 end subroutine test_d3zero_unknown
+
+
+subroutine test_d3bjm_unknown(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(d3_param) :: inp
+
+   call get_mrational_damping(inp, "unknown", error)
+
+end subroutine test_d3bjm_unknown
+
+
+subroutine test_d3zerom_unknown(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(d3_param) :: inp
+
+   call get_mzero_damping(inp, "unknown", error)
+
+end subroutine test_d3zerom_unknown
 
 
 end module test_param

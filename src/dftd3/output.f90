@@ -20,6 +20,7 @@ module dftd3_output
    use mctc_io_convert, only : autoaa, autokcal, autoev
    use mctc_io_math, only : matinv_3x3
    use dftd3_damping, only : damping_param
+   use dftd3_damping_mzero, only : mzero_damping_param
    use dftd3_damping_rational, only : rational_damping_param
    use dftd3_damping_zero, only : zero_damping_param
    use dftd3_model, only : d3_model
@@ -30,7 +31,7 @@ module dftd3_output
    public :: ascii_atomic_radii, ascii_atomic_references, ascii_system_properties
    public :: ascii_results, ascii_damping_param
    public :: turbomole_gradient, turbomole_gradlatt
-   public :: json_results
+   public :: json_results, tagged_result
 
 
 contains
@@ -206,7 +207,7 @@ subroutine ascii_damping_param(unit, param, method)
          write(unit, '(a, "-")', advance="no") method
       end if
       write(unit, '(a)') &
-         & trim(merge("D3(0)    ", "D3(0)-ATM", abs(param%s9) > 0))
+         & trim(merge("D3(0)-ATM", "D3(0)    ", abs(param%s9) > 0))
       write(unit, '(20("-"))')
       write(unit, '(a4, t10, f10.4)') &
          & "s6", param%s6, &
@@ -217,13 +218,31 @@ subroutine ascii_damping_param(unit, param, method)
          & "alp", param%alp
       write(unit, '(20("-"))')
       write(unit, '(a)')
+   type is (mzero_damping_param)
+      write(unit, '(a, ":", 1x)', advance="no") "Modified zero damping"
+      if (present(method)) then
+         write(unit, '(a, "-")', advance="no") method
+      end if
+      write(unit, '(a)') &
+         & trim(merge("D3(0M)-ATM", "D3(0M)    ", abs(param%s9) > 0))
+      write(unit, '(20("-"))')
+      write(unit, '(a5, t10, f10.4)') &
+         & "s6", param%s6, &
+         & "s8", param%s8, &
+         & "s9", param%s9, &
+         & "rs6", param%rs6, &
+         & "rs8", param%rs8, &
+         & "alp", param%alp, &
+         & "beta", param%bet
+      write(unit, '(20("-"))')
+      write(unit, '(a)')
    type is (rational_damping_param)
       write(unit, '(a, ":", 1x)', advance="no") "Rational (Becke-Johnson) damping"
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
       write(unit, '(a)') &
-         & trim(merge("D3(BJ)    ", "D3(BJ)-ATM", abs(param%s9) > 0))
+         & trim(merge("D3(BJ)-ATM", "D3(BJ)    ", abs(param%s9) > 0))
       write(unit, '(21("-"))')
       write(unit, '(a4, t10, f10.4)') &
          & "s6", param%s6, &
@@ -507,12 +526,35 @@ subroutine write_json_array(unit, array, indent)
    write(unit, '("[")', advance='no')
    do i = 1, size(array)
       if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 2)
-      write(unit, '(1x,es25.16)', advance='no') array(i)
+      write(unit, '(es23.16)', advance='no') array(i)
       if (i /= size(array)) write(unit, '(",")', advance='no')
    end do
    if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
    write(unit, '("]")', advance='no')
 end subroutine write_json_array
 
+
+subroutine tagged_result(unit, energy, gradient, sigma)
+   integer, intent(in) :: unit
+   real(wp), intent(in), optional :: energy
+   real(wp), intent(in), optional :: gradient(:, :)
+   real(wp), intent(in), optional :: sigma(:, :)
+   character(len=*), parameter :: tag_header = &
+      & '(a,t20,":",a,":",i0,":",*(i0:,","))'
+
+   if (present(energy)) then
+      write(unit, tag_header) "energy", "real", 0
+      write(unit, '(3es24.16)') energy
+   end if
+   if (present(gradient)) then
+      write(unit, tag_header) "gradient", "real", 2, 3, size(gradient, 2)
+      write(unit, '(3es24.16)') gradient
+   end if
+   if (present(sigma)) then
+      write(unit, tag_header) "virial", "real", 2, 3, 3
+      write(unit, '(3es24.16)') sigma
+   end if
+
+end subroutine tagged_result
 
 end module dftd3_output

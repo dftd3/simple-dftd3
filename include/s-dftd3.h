@@ -24,6 +24,7 @@
 #endif
 #define SDFTD3_API_CALL
 #define SDFTD3_API_SUFFIX__V_0_2
+#define SDFTD3_API_SUFFIX__V_0_3
 
 /// Error handle class
 typedef struct _dftd3_error* dftd3_error;
@@ -142,6 +143,43 @@ dftd3_load_rational_damping(dftd3_error /* error */,
                             dftd3_structure /* mol */,
                             char* /* method */,
                             bool /* atm */) SDFTD3_API_SUFFIX__V_0_2;
+
+/// Create new modified zero damping parameters
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_new_mzero_damping(dftd3_error /* error */,
+                        dftd3_structure /* mol */,
+                        double /* s6 */,
+                        double /* s8 */,
+                        double /* s9 */,
+                        double /* rs6 */,
+                        double /* rs8 */,
+                        double /* alp */,
+                        double /* bet */) SDFTD3_API_SUFFIX__V_0_3;
+
+/// Load modified zero damping parameters from internal storage
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_load_mzero_damping(dftd3_error /* error */,
+                         dftd3_structure /* mol */,
+                         char* /* method */,
+                         bool /* atm */) SDFTD3_API_SUFFIX__V_0_3;
+
+/// Create new modified rational damping parameters
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_new_mrational_damping(dftd3_error /* error */,
+                            dftd3_structure /* mol */,
+                            double /* s6 */,
+                            double /* s8 */,
+                            double /* s9 */,
+                            double /* a1 */,
+                            double /* a2 */,
+                            double /* alp */) SDFTD3_API_SUFFIX__V_0_3;
+
+/// Load modified rational damping parameters from internal storage
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_load_mrational_damping(dftd3_error /* error */,
+                             dftd3_structure /* mol */,
+                             char* /* method */,
+                             bool /* atm */) SDFTD3_API_SUFFIX__V_0_3;
 
 /// Delete damping parameters
 SDFTD3_API_ENTRY void SDFTD3_API_CALL

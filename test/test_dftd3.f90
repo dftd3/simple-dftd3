@@ -71,7 +71,11 @@ subroutine collect_dftd3(testsuite)
       & new_unittest("M06-D3(0)-ATM", test_m06d3zeroatm_mb29), &
       & new_unittest("B3LYP-D3(0)-ATM", test_b3lypd3zeroatm_mb30), &
       & new_unittest("BP-D3(0)-ATM", test_bpd3zeroatm_mb31), &
-      & new_unittest("M05-D3(0)-ATM", test_m05d3zeroatm_mb32) &
+      & new_unittest("M05-D3(0)-ATM", test_m05d3zeroatm_mb32), &
+      & new_unittest("PBE-D3(0M)", test_pbed3zerom_mb33), &
+      & new_unittest("BLYP-D3(0M)", test_blypd3zerom_mb34), &
+      & new_unittest("B97-D3(0M)", test_b97dd3zerom_mb35), &
+      & new_unittest("lc-wPBE-D3(0M)", test_lcwpbed3zerom_mb36) &
       & ]
 
 end subroutine collect_dftd3
@@ -769,6 +773,78 @@ subroutine test_m05d3zeroatm_mb32(error)
    call test_numsigma(error, mol, param)
 
 end subroutine test_m05d3zeroatm_mb32
+
+
+subroutine test_pbed3zerom_mb33(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(mzero_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
+      & rs6 = 2.340218_wp, s8 = 0.0_wp, bet = 0.129434_wp)
+
+   call get_structure(mol, "MB16-43", "33")
+   call new_mzero_damping(param, inp, mol%num)
+   call test_dftd3_gen(error, mol, param, -6.4839732123927463E-002_wp)
+
+end subroutine test_pbed3zerom_mb33
+
+
+subroutine test_blypd3zerom_mb34(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(mzero_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
+      & rs6 = 1.279637_wp, s8 = 1.841686_wp, bet = 0.014370_wp)
+
+   call get_structure(mol, "MB16-43", "34")
+   call new_mzero_damping(param, inp, mol%num)
+   call test_dftd3_gen(error, mol, param, -4.1835943466459843E-002_wp)
+
+end subroutine test_blypd3zerom_mb34
+
+
+subroutine test_b97dd3zerom_mb35(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(mzero_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
+      & rs6 = 1.338153_wp, s8 = 1.532981_wp, bet = 0.013988_wp)
+
+   call get_structure(mol, "MB16-43", "35")
+   call new_mzero_damping(param, inp, mol%num)
+   call test_numgrad(error, mol, param)
+
+end subroutine test_b97dd3zerom_mb35
+
+
+subroutine test_lcwpbed3zerom_mb36(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(mzero_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
+      & rs6 = 1.366361_wp, s8 = 1.280619_wp, bet = 0.003160_wp)
+
+   call get_structure(mol, "MB16-43", "36")
+   call new_mzero_damping(param, inp, mol%num)
+   call test_numsigma(error, mol, param)
+
+end subroutine test_lcwpbed3zerom_mb36
 
 
 end module test_dftd3

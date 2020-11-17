@@ -24,12 +24,14 @@ module dftd3_api
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io_structure, only : structure_type, new
    use dftd3_cutoff, only : realspace_cutoff
+   use dftd3_damping_mzero, only : mzero_damping_param, new_mzero_damping
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_damping, only : damping_param
    use dftd3_disp, only : get_dispersion
    use dftd3_model, only : d3_model, new_d3_model
-   use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping
+   use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
+      & get_mrational_damping, get_mzero_damping
    use dftd3_version, only : get_dftd3_version
    implicit none
    private
@@ -48,6 +50,8 @@ module dftd3_api
    public :: vp_param
    public :: new_zero_damping_api, load_zero_damping_api
    public :: new_rational_damping_api, load_rational_damping_api
+   public :: new_mzero_damping_api, load_mzero_damping_api
+   public :: new_mrational_damping_api, load_mrational_damping_api
    public :: delete_param_api
 
 
@@ -230,11 +234,11 @@ subroutine update_structure_api(verror, vmol, positions, lattice) &
    type(vp_structure), pointer :: mol
    real(c_double), intent(in) :: positions(3, *)
    real(c_double), intent(in), optional :: lattice(3, 3)
-   real(wp) :: latvecs(3, 3)
 
-   if (c_associated(verror)) then
-      call c_f_pointer(verror, error)
+   if (.not.c_associated(verror)) then
+      return
    end if
+   call c_f_pointer(verror, error)
 
    if (.not.c_associated(vmol)) then
       call fatal_error(error%ptr, "Molecular structure data is missing")
@@ -353,7 +357,7 @@ function load_rational_damping_api(verror, vmol, charptr, atm) &
    logical(c_bool), value, intent(in) :: atm
    character(len=:, kind=c_char), allocatable :: method
    type(c_ptr) :: vparam
-   type(zero_damping_param), allocatable :: tmp
+   type(rational_damping_param), allocatable :: tmp
    type(vp_param), pointer :: param
    type(d3_param) :: inp
    real(wp), allocatable :: s9
@@ -376,7 +380,7 @@ function load_rational_damping_api(verror, vmol, charptr, atm) &
    if (allocated(error%ptr)) return
 
    allocate(tmp)
-   call new_zero_damping(tmp, inp, mol%ptr%num)
+   call new_rational_damping(tmp, inp, mol%ptr%num)
 
    allocate(param)
    call move_alloc(tmp, param%ptr)
@@ -469,6 +473,154 @@ function load_zero_damping_api(verror, vmol, charptr, atm) &
 end function load_zero_damping_api
 
 
+!> Create new rational damping parameters
+function new_mrational_damping_api(verror, vmol, s6, s8, s9, a1, a2, alp) &
+      & result(vparam) &
+      & bind(C, name="dftd3_new_mrational_damping")
+   type(c_ptr), value :: verror
+   type(c_ptr), value :: vmol
+   real(c_double), value, intent(in) :: s6
+   real(c_double), value, intent(in) :: s8
+   real(c_double), value, intent(in) :: s9
+   real(c_double), value, intent(in) :: a1
+   real(c_double), value, intent(in) :: a2
+   real(c_double), value, intent(in) :: alp
+   type(c_ptr) :: vparam
+
+   vparam = new_rational_damping_api(verror, vmol, s6, s8, s9, a1, a2, alp)
+
+end function new_mrational_damping_api
+
+
+!> Load rational damping parameters from internal storage
+function load_mrational_damping_api(verror, vmol, charptr, atm) &
+      & result(vparam) &
+      & bind(C, name="dftd3_load_mrational_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   character(kind=c_char), intent(in) :: charptr(*)
+   logical(c_bool), value, intent(in) :: atm
+   character(len=:, kind=c_char), allocatable :: method
+   type(c_ptr) :: vparam
+   type(rational_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+   type(d3_param) :: inp
+   real(wp), allocatable :: s9
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   call c_f_character(charptr, method)
+
+   if (atm) s9 = 1.0_wp
+   call get_mrational_damping(inp, method, error%ptr, s9)
+   if (allocated(error%ptr)) return
+
+   allocate(tmp)
+   call new_rational_damping(tmp, inp, mol%ptr%num)
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function load_mrational_damping_api
+
+
+!> Create new zero damping parameters
+function new_mzero_damping_api(verror, vmol, s6, s8, s9, rs6, rs8, alp, bet) &
+      & result(vparam) &
+      & bind(C, name="dftd3_new_mzero_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   real(c_double), value, intent(in) :: s6
+   real(c_double), value, intent(in) :: s8
+   real(c_double), value, intent(in) :: s9
+   real(c_double), value, intent(in) :: rs6
+   real(c_double), value, intent(in) :: rs8
+   real(c_double), value, intent(in) :: alp
+   real(c_double), value, intent(in) :: bet
+   type(c_ptr) :: vparam
+   type(mzero_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   allocate(tmp)
+   call new_mzero_damping(tmp, d3_param(s6=s6, s8=s8, s9=s9, rs6=rs6, rs8=rs8, &
+      & alp=alp, bet=bet), mol%ptr%num)
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function new_mzero_damping_api
+
+
+!> Load zero damping parameters from internal storage
+function load_mzero_damping_api(verror, vmol, charptr, atm) &
+      & result(vparam) &
+      & bind(C, name="dftd3_load_mzero_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   character(kind=c_char), intent(in) :: charptr(*)
+   logical(c_bool), value, intent(in) :: atm
+   character(len=:, kind=c_char), allocatable :: method
+   type(c_ptr) :: vparam
+   type(mzero_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+   type(d3_param) :: inp
+   real(wp), allocatable :: s9
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   call c_f_character(charptr, method)
+
+   if (atm) s9 = 1.0_wp
+   call get_mzero_damping(inp, method, error%ptr, s9)
+   if (allocated(error%ptr)) return
+
+   allocate(tmp)
+   call new_mzero_damping(tmp, inp, mol%ptr%num)
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function load_mzero_damping_api
+
+
 !> Delete damping parameters
 subroutine delete_param_api(vparam) &
       & bind(C, name="dftd3_delete_param")
@@ -558,7 +710,8 @@ subroutine f_c_character(rhs, lhs, len)
    integer :: length
    length = min(len-1, len_trim(rhs))
 
-   lhs(1:length) = transfer(rhs(1:length), lhs(1:length)) // c_null_char
+   lhs(1:length) = transfer(rhs(1:length), lhs(1:length))
+   lhs(length+1:length+1) = c_null_char
 
 end subroutine f_c_character
 
