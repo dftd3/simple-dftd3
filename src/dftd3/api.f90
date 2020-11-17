@@ -15,6 +15,10 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 !> Definition of the public C-API of s-dftd3
+!>
+!>```c
+!>{!./include/s-dftd3.h!}
+!>```
 module dftd3_api
    use iso_c_binding
    use mctc_env, only : wp, error_type, fatal_error
@@ -25,8 +29,7 @@ module dftd3_api
    use dftd3_damping, only : damping_param
    use dftd3_disp, only : get_dispersion
    use dftd3_model, only : d3_model, new_d3_model
-   use dftd3_param, only : d3_param, get_rational_damping_param, &
-      & get_zero_damping_param
+   use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping
    use dftd3_version, only : get_dftd3_version
    implicit none
    private
@@ -369,11 +372,11 @@ function load_rational_damping_api(verror, vmol, charptr, atm) &
    call c_f_character(charptr, method)
 
    if (atm) s9 = 1.0_wp
-   call get_rational_damping_param(inp, method, error%ptr, s9)
+   call get_rational_damping(inp, method, error%ptr, s9)
+   if (allocated(error%ptr)) return
 
    allocate(tmp)
    call new_zero_damping(tmp, inp, mol%ptr%num)
-   if (allocated(error%ptr)) return
 
    allocate(param)
    call move_alloc(tmp, param%ptr)
@@ -453,7 +456,7 @@ function load_zero_damping_api(verror, vmol, charptr, atm) &
    call c_f_character(charptr, method)
 
    if (atm) s9 = 1.0_wp
-   call get_zero_damping_param(inp, method, error%ptr, s9)
+   call get_zero_damping(inp, method, error%ptr, s9)
    if (allocated(error%ptr)) return
 
    allocate(tmp)

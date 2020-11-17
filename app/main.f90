@@ -82,7 +82,7 @@ program dftd3_main
    if (config%atm) s9 = inp%s9
    if (config%zero) then
       if (.not.config%has_param) then
-         call get_zero_damping_param(inp, method, error, s9)
+         call get_zero_damping(inp, method, error, s9)
          if (allocated(error)) then
             write(error_unit, '("[Error]", 1x, a)') error%message
             error stop
@@ -94,7 +94,7 @@ program dftd3_main
    end if
    if (config%rational) then
       if (.not.config%has_param) then
-         call get_rational_damping_param(inp, method, error, s9)
+         call get_rational_damping(inp, method, error, s9)
          if (allocated(error)) then
             write(error_unit, '("[Error]", 1x, a)') error%message
             error stop

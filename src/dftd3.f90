@@ -22,15 +22,14 @@ module dftd3
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_model, only : d3_model, new_d3_model
-   use dftd3_param, only : d3_param, get_rational_damping_param, &
-      & get_zero_damping_param
+   use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping
    use dftd3_version, only : get_dftd3_version
    implicit none
    private
 
    public :: get_dispersion, get_coordination_number, realspace_cutoff
    public :: damping_param, d3_param
-   public :: get_rational_damping_param, get_zero_damping_param
+   public :: get_rational_damping, get_zero_damping
    public :: rational_damping_param, new_rational_damping
    public :: zero_damping_param, new_zero_damping
    public :: d3_model, new_d3_model

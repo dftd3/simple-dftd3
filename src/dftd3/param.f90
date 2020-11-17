@@ -19,7 +19,7 @@ module dftd3_param
    implicit none
 
    public :: d3_param
-   public :: get_rational_damping_param, get_zero_damping_param
+   public :: get_rational_damping, get_zero_damping
 
 
    type :: d3_param
@@ -138,7 +138,7 @@ function get_method_id(method) result(id)
 end function get_method_id
 
 
-subroutine get_rational_damping_param(param, method, error, s9)
+subroutine get_rational_damping(param, method, error, s9)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -266,10 +266,10 @@ subroutine get_rational_damping_param(param, method, error, s9)
       param%s9 = s9
    end if
 
-end subroutine get_rational_damping_param
+end subroutine get_rational_damping
 
 
-subroutine get_zero_damping_param(param, method, error, s9)
+subroutine get_zero_damping(param, method, error, s9)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -389,7 +389,7 @@ subroutine get_zero_damping_param(param, method, error, s9)
       param%s9 = s9
    end if
 
-end subroutine get_zero_damping_param
+end subroutine get_zero_damping
 
 
 end module dftd3_param

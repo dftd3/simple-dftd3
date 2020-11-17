@@ -118,7 +118,7 @@ subroutine test_d3bj_mb01(error)
 
    call get_structure(mol, "MB16-43", "01")
    do ii = 1, size(func)
-      call get_rational_damping_param(inp, trim(func(ii)), error)
+      call get_rational_damping(inp, trim(func(ii)), error)
       if (allocated(error)) exit
       call new_rational_damping(param, inp, mol%num)
       call test_dftd3_gen(error, mol, param, ref(ii))
@@ -165,7 +165,7 @@ subroutine test_d3zero_mb09(error)
 
    call get_structure(mol, "MB16-43", "09")
    do ii = 1, size(func)
-      call get_zero_damping_param(inp, trim(func(ii)), error)
+      call get_zero_damping(inp, trim(func(ii)), error)
       if (allocated(error)) return
       call new_zero_damping(param, inp, mol%num)
       call test_dftd3_gen(error, mol, param, ref(ii))
@@ -213,7 +213,7 @@ subroutine test_d3bjatm_mb17(error)
 
    call get_structure(mol, "MB16-43", "17")
    do ii = 1, size(func)
-      call get_rational_damping_param(inp, trim(func(ii)), error, s9=1.0_wp)
+      call get_rational_damping(inp, trim(func(ii)), error, s9=1.0_wp)
       if (allocated(error)) return
       call new_rational_damping(param, inp, mol%num)
       call test_dftd3_gen(error, mol, param, ref(ii))
@@ -260,7 +260,7 @@ subroutine test_d3zeroatm_mb25(error)
 
    call get_structure(mol, "MB16-43", "25")
    do ii = 1, size(func)
-      call get_zero_damping_param(inp, trim(func(ii)), error, s9=1.0_wp)
+      call get_zero_damping(inp, trim(func(ii)), error, s9=1.0_wp)
       if (allocated(error)) return
       call new_zero_damping(param, inp, mol%num)
       call test_dftd3_gen(error, mol, param, ref(ii))
@@ -276,7 +276,7 @@ subroutine test_d3bj_unknown(error)
 
    type(d3_param) :: inp
 
-   call get_rational_damping_param(inp, "unknown", error)
+   call get_rational_damping(inp, "unknown", error)
 
 end subroutine test_d3bj_unknown
 
@@ -288,7 +288,7 @@ subroutine test_d3zero_unknown(error)
 
    type(d3_param) :: inp
 
-   call get_zero_damping_param(inp, "unknown", error)
+   call get_zero_damping(inp, "unknown", error)
 
 end subroutine test_d3zero_unknown
 
