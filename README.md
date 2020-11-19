@@ -1,5 +1,10 @@
 # The D3 dispersion model
 
+[![Latest Version](https://img.shields.io/github/v/release/awvwgk/simple-dftd3)](https://github.com/awvwgk/simple-dftd3/releases/latest)
+[![LGPL-3.0-or-later](https://img.shields.io/github/license/awvwgk/simple-dftd3)](COPYING)
+[![CI](https://github.com/awvwgk/simple-dftd3/workflows/CI/badge.svg)](https://github.com/awvwgk/simple-dftd3/actions)
+[![docs](https://github.com/awvwgk/simple-dftd3/workflows/docs/badge.svg)](https://awvwgk.github.io/simple-dftd3/)
+
 A simple drop-in replacement for ``dftd3``.
 
 This program provides a small and easy to use implementation of the DFT-D3
@@ -18,20 +23,19 @@ To build this project from the source code in this repository you need to have
 - [meson](https://mesonbuild.com) version 0.53 or newer
 - a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
 
+Optional dependencies are
+- BLAS (enabled with `-Dblas=netlib`)
+- asciidoctor to build the manual page
+- FORD to build the developer documentation
+
 Setup a build with
 
 ```
 meson setup _build
 ```
 
-You can select the Fortran compiler by the `FC` environment variable, currently this project supports GCC and Intel compilers.
-To compile the project run
-
-```
-meson compile -C _build
-```
-
-You can run the projects testsuite with
+You can select the Fortran compiler by the `FC` environment variable, this project is currently tested with GCC 9 on Ubuntu, MacOS and Windows.
+To compile and run the projects testsuite use
 
 ```
 meson test -C _build --print-errorlogs
@@ -40,16 +44,16 @@ meson test -C _build --print-errorlogs
 If the testsuite passes you can install with
 
 ```
+meson configure _build --prefix=/path/to/install
 meson install -C _build
 ```
 
-This might require administrator access.
-You can alter the install prefix by ``meson configure _build --prefix=/path/to/install``.
+This might require administrator access depending on the chosen install prefix.
 
 
 ## Usage
 
-DFT-D3 calculations can be performed with the ``s-dftd3`` binary.
+DFT-D3 calculations can be performed with the ``s-dftd3`` executable.
 To calculate the dispersion correction for PBE0-D3(BJ)-ATM run:
 
 ```
@@ -69,7 +73,7 @@ Dispersion related properties can be calculated as well:
 s-dftd3 --property geo.gen
 ```
 
-For an overview over all command line arguments use the ``--help`` argument.
+For an overview over all command line arguments use the ``--help`` argument or checkout the [``s-dftd3(1)``](man/s-dftd3.1.adoc) manpage.
 
 
 ## License

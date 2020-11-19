@@ -54,6 +54,15 @@ if get_option('openmp')
   lib_deps += omp_dep
 endif
 
+if get_option('blas') == 'netlib'
+  blas_dep = dependency('blas', required: false)
+  if not blas_dep.found()
+    blas_dep = fc.find_library('blas', required: true)
+  endif
+  lib_deps += blas_dep
+  add_project_arguments('-DWITH_BLAS', language: 'fortran')
+endif
+
 # Create the tool chain library as subproject
 mctc_prj = subproject(
   'mctc-lib',
