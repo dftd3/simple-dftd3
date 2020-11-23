@@ -112,7 +112,7 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
    real(wp), intent(in), optional :: dc6dcn(:, :)
 
    !> Dispersion energy
-   real(wp), intent(inout) :: energy
+   real(wp), intent(inout) :: energy(:)
 
    !> Derivative of the energy w.r.t. the coordination number
    real(wp), intent(inout), optional :: dEdcn(:)
@@ -163,11 +163,11 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
                dG(:) = -c6ij*gdisp*vec
                dS(:, :) = spread(dG, 1, 3) * spread(vec, 2, 3) * 0.5_wp
 
-               energy = energy + dE
+               energy(iat) = energy(iat) + dE
                dEdcn(iat) = dEdcn(iat) - dc6dcn(iat, jat) * edisp
                sigma(:, :) = sigma + dS
                if (iat /= jat) then
-                  energy = energy + dE
+                  energy(jat) = energy(jat) + dE
                   dEdcn(jat) = dEdcn(jat) - dc6dcn(jat, iat) * edisp
                   gradient(:, iat) = gradient(:, iat) + dG
                   gradient(:, jat) = gradient(:, jat) - dG
@@ -199,9 +199,9 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
 
                dE = -c6ij*edisp * 0.5_wp
 
-               energy = energy + dE
+               energy(iat) = energy(iat) + dE
                if (iat /= jat) then
-                  energy = energy + dE
+                  energy(jat) = energy(jat) + dE
                end if
             end do
          end do
@@ -234,7 +234,7 @@ subroutine get_dispersion3(self, mol, trans, cutoff, c6, dc6dcn, &
    real(wp), intent(in), optional :: dc6dcn(:, :)
 
    !> Dispersion energy
-   real(wp), intent(inout) :: energy
+   real(wp), intent(inout) :: energy(:)
 
    !> Derivative of the energy w.r.t. the coordination number
    real(wp), intent(inout), optional :: dEdcn(:)

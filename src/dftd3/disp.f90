@@ -61,7 +61,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
    real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
-   real(wp), allocatable :: dEdcn(:)
+   real(wp), allocatable :: dEdcn(:), energies(:)
    real(wp), allocatable :: lattr(:, :)
 
    mref = maxval(disp%ref)
@@ -80,7 +80,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    if (grad) allocate(dc6dcn(mol%nat, mol%nat))
    call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
 
-   energy = 0.0_wp
+   allocate(energies(mol%nat))
+   energies(:) = 0.0_wp
    if (grad) then
       allocate(dEdcn(mol%nat))
       dEdcn(:) = 0.0_wp
@@ -89,14 +90,16 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    end if
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
    call param%get_dispersion2(mol, lattr, cutoff%disp2, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energies, dEdcn, gradient, sigma)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
    call param%get_dispersion3(mol, lattr, cutoff%disp3, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energies, dEdcn, gradient, sigma)
    if (grad) then
       call d3_gemv(dcndr, dEdcn, gradient, beta=1.0_wp)
       call d3_gemv(dcndL, dEdcn, sigma, beta=1.0_wp)
    end if
+
+   energy = sum(energies)
 
 end subroutine get_dispersion
 

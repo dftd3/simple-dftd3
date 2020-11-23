@@ -54,7 +54,7 @@ module dftd3_damping
          real(wp), intent(in), optional :: dc6dcn(:, :)
 
          !> Dispersion energy
-         real(wp), intent(inout) :: energy
+         real(wp), intent(inout) :: energy(:)
 
          !> Derivative of the energy w.r.t. the coordination number
          real(wp), intent(inout), optional :: dEdcn(:)

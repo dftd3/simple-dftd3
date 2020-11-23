@@ -57,7 +57,7 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn
    real(wp), intent(in), optional :: dc6dcn(:, :)
 
    !> Dispersion energy
-   real(wp), intent(inout) :: energy
+   real(wp), intent(inout) :: energy(:)
 
    !> Derivative of the energy w.r.t. the coordination number
    real(wp), intent(inout), optional :: dEdcn(:)
@@ -148,7 +148,9 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn
                      dGjk(:) = c9 * (-dang * fdmp + ang * dfdmp) / r2jk * vjk
 
                      dE = rr * c9 * triple
-                     energy = energy - dE
+                     energy(iat) = energy(iat) - dE/3
+                     energy(jat) = energy(jat) - dE/3
+                     energy(kat) = energy(kat) - dE/3
 
                      gradient(:, iat) = gradient(:, iat) - dGij - dGik
                      gradient(:, jat) = gradient(:, jat) + dGij - dGjk
@@ -216,7 +218,9 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn
                      rr = ang*fdmp
 
                      dE = rr * c9 * triple
-                     energy = energy - dE
+                     energy(iat) = energy(iat) - dE/3
+                     energy(jat) = energy(jat) - dE/3
+                     energy(kat) = energy(kat) - dE/3
                   end do
                end do
             end do
