@@ -14,8 +14,42 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-if has_cc
-  subdir('api')
+# Create mstore as subproject for testing
+mstore_prj = subproject(
+  'mstore',
+  version: '>=0.1',
+  required: not meson.is_subproject(),
+  default_options: [
+    'default_library=static',
+  ],
+)
+# If we do not find mstore and are a subproject, we just skip testing
+if not mstore_prj.found()
+   subdir_done()
 endif
+mstore_dep = mstore_prj.get_variable('mstore_dep')
 
-subdir('unit')
+tests = [
+  'ncoord',
+  'model',
+  'dftd3',
+  'param',
+  'periodic',
+]
+
+test_srcs = files(
+  'main.f90',
+)
+foreach t : tests
+  test_srcs += files('test_@0@.f90'.format(t.underscorify()))
+endforeach
+
+tester = executable(
+  'tester',
+  sources: test_srcs,
+  dependencies: [sdftd3_dep, mstore_dep],
+)
+
+foreach t : tests
+  test(t, tester, args: t)
+endforeach

@@ -1,7 +1,11 @@
 name = "s-dftd3"
 version = "0.3.0"
 license = "LGPL-3.0-or-later"
+maintainer = ["@awvwgk"]
+author = ["Sebastian Ehlert"]
+copyright = "2019-2021 Sebastian Ehlert"
 description = "Simple reimplementation of the DFT-D3 method"
+keywords = ["dispersion-correction", "quantum-chemistry"]
 
 [dependencies]
 [dependencies.mctc-lib]
@@ -10,3 +14,10 @@ git = "https://github.com/grimme-lab/mctc-lib"
 [dev-dependencies]
 [dev-dependencies.mstore]
 git = "https://github.com/grimme-lab/mstore"
+
+[build]
+auto-tests = false
+
+[[test]]
+name = "tester"
+source-dir = "test/unit"
