@@ -139,7 +139,8 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
    alp8 = self%alp + 2.0_wp
 
    if (grad) then
-      !$omp parallel do default(none) reduction(+:energy, gradient, sigma, dEdcn) &
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp reduction(+:energy, gradient, sigma, dEdcn) &
       !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, alp6, alp8) &
       !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r1, r6, r8, t6, t8, d6, &
       !$omp& d8, f6, f8, edisp, gdisp, r0ij, rrij, c6ij, dE, dG, dS)
@@ -191,7 +192,7 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
          end do
       end do
    else
-      !$omp parallel do default(none) reduction(+:energy) &
+      !$omp parallel do schedule(runtime) default(none) reduction(+:energy) &
       !$omp shared(mol, self, c6, trans, cutoff2, alp6, alp8) &
       !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r1, r6, r8, t6, t8, f6, &
       !$omp& f8, edisp, r0ij, rrij, c6ij, dE)

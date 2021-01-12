@@ -87,7 +87,7 @@ subroutine ncoord_exp(mol, trans, cutoff, rcov, cn)
    cn(:) = 0.0_wp
    cutoff2 = cutoff**2
 
-   !$omp parallel do default(none) reduction(+:cn) &
+   !$omp parallel do schedule(runtime) default(none) reduction(+:cn) &
    !$omp shared(mol, trans, cutoff2, rcov) &
    !$omp private(jat, itr, izp, jzp, r2, rij, r1, rc, countf)
    do iat = 1, mol%nat
@@ -148,8 +148,8 @@ subroutine ncoord_dexp(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
    dcndL(:, :, :) = 0.0_wp
    cutoff2 = cutoff**2
 
-   !$omp parallel do default(none) reduction(+:cn, dcndr, dcndL) &
-   !$omp shared(mol, trans, cutoff2, rcov) &
+   !$omp parallel do schedule(runtime) default(none) &
+   !$omp reduction(+:cn, dcndr, dcndL) shared(mol, trans, cutoff2, rcov) &
    !$omp private(jat, itr, izp, jzp, r2, rij, r1, rc, countf, countd, sigma)
    do iat = 1, mol%nat
       izp = mol%id(iat)

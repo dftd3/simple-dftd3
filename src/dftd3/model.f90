@@ -168,7 +168,8 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
       gwvec(:, :) = 0.0_wp
       gwdcn(:, :) = 0.0_wp
 
-      !$omp parallel do default(none) shared(gwvec, gwdcn, mol, self, cn) &
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp shared(gwvec, gwdcn, mol, self, cn) &
       !$omp private(iat, izp, iref, norm, dnorm, gw, expw, expd, gwk, dgwk)
       do iat = 1, mol%nat
          izp = mol%id(iat)
@@ -205,7 +206,8 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
 
       gwvec(:, :) = 0.0_wp
 
-      !$omp parallel do default(none) shared(gwvec, mol, self, cn) &
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp shared(gwvec, mol, self, cn) &
       !$omp private(iat, izp, iref, norm, gw, expw, gwk)
       do iat = 1, mol%nat
          izp = mol%id(iat)
@@ -262,7 +264,8 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
       c6(:, :) = 0.0_wp
       dc6dcn(:, :) = 0.0_wp
 
-      !$omp parallel do default(none) shared(c6, dc6dcn, mol, self, gwvec, gwdcn) &
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp shared(c6, dc6dcn, mol, self, gwvec, gwdcn) &
       !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6, dc6dcni, dc6dcnj)
       do iat = 1, mol%nat
          izp = mol%id(iat)
@@ -290,7 +293,8 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
 
       c6(:, :) = 0.0_wp
 
-      !$omp parallel do default(none) shared(c6, mol, self, gwvec) &
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp shared(c6, mol, self, gwvec) &
       !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6)
       do iat = 1, mol%nat
          izp = mol%id(iat)

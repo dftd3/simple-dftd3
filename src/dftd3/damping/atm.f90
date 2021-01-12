@@ -80,7 +80,8 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn
    cutoff2 = cutoff*cutoff
 
    if (grad) then
-      !$omp parallel do default(none) reduction(+:energy, gradient, sigma, dEdcn) &
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp reduction(+:energy, gradient, sigma, dEdcn) &
       !$omp shared(mol, trans, c6, s9, rs9, alp, rvdw, cutoff2, dc6dcn) &
       !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
       !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
@@ -174,7 +175,7 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn
          end do
       end do
    else
-      !$omp parallel do default(none) reduction(+:energy) &
+      !$omp parallel do schedule(runtime) default(none) reduction(+:energy) &
       !$omp shared(mol, trans, c6, s9, rs9, alp, rvdw, cutoff2) &
       !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
       !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
