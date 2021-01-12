@@ -18,8 +18,14 @@ option(
   'blas',
   type: 'combo',
   value: 'none',
-  choices: ['none', 'netlib'],
+  choices: ['none', 'netlib', 'custom'],
   description: 'Use basic linear algebra subprograms',
+)
+option(
+  'blas_libs',
+  type: 'array',
+  value: [],
+  description: 'Libraries to link against as custom BLAS backend',
 )
 option(
   'openmp',
