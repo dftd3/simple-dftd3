@@ -16,8 +16,8 @@
 
 program dftd3_main
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit, input_unit
-   use mctc_env
-   use mctc_io
+   use mctc_env, only : wp, error_type, fatal_error
+   use mctc_io, only : structure_type, read_structure, filetype, get_filetype
    use dftd3
    use dftd3_output
    use dftd3_utils

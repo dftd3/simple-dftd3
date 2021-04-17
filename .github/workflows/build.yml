@@ -2,13 +2,16 @@ name: CI
 
 on: [push, pull_request]
 
+env:
+  BUILD_DIR: _build
+
 jobs:
   gcc-build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, macos-latest]
 
     env:
       FC: gfortran
@@ -41,13 +44,59 @@ jobs:
       run: pip3 install meson ninja
 
     - name: Configure build
-      run: meson setup _build -Dopenmp=false
+      run: meson setup ${{ env.BUILD_DIR }} -Dopenmp=false
 
     - name: Build library
-      run: meson compile -C _build
+      run: meson compile -C ${{ env.BUILD_DIR }}
 
     - name: Run unit tests
-      run: meson test -C _build --print-errorlogs --no-rebuild
+      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+
+  # Test native MinGW Windows build
+  mingw-build:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: [
+          { msystem: MINGW64, arch: x86_64 },
+        # { msystem: MINGW32, arch: i686   }
+        ]
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Setup MSYS2 toolchain
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: ${{ matrix.msystem }}
+        update: false
+        install: >-
+          git
+          mingw-w64-${{ matrix.arch }}-gcc-fortran
+          mingw-w64-${{ matrix.arch }}-python
+          mingw-w64-${{ matrix.arch }}-python-pip
+          mingw-w64-${{ matrix.arch }}-ninja
+
+    - name: Install meson
+      run: pip3 install meson==0.55.3
+
+    - name: Configure build
+      run: meson setup ${{ env.BUILD_DIR }} --warnlevel=0
+      env:
+        FC: gfortran
+        CC: gcc
+
+    - name: Build project
+      run: meson compile -C ${{ env.BUILD_DIR }}
+
+    - name: Run unit tests
+      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+      env:
+        OMP_NUM_THREADS: 2,1
 
   intel-build:
     runs-on: ${{ matrix.os }}
@@ -87,10 +136,10 @@ jobs:
       run: pip3 install meson ninja
 
     - name: Configure meson build
-      run: meson setup build
+      run: meson setup ${{ env.BUILD_DIR }}
 
     - name: Build library
-      run: meson compile -C build
+      run: meson compile -C ${{ env.BUILD_DIR }}
 
     - name: Run unit tests
-      run: meson test -C build --print-errorlogs --no-rebuild
+      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
