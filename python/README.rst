@@ -1,7 +1,7 @@
 DFT-D3 Python API
 -----------------
 
-Python interface for the generally applicable atomic-charge dependent London dispersion correction, DFT-D4.
+Python interface for the D3 dispersion model.
 This Python project is targeted at developers who want to interface their project via Python with ``s-dftd3``.
 
 This interface provides access to the C-API of ``s-dftd3`` via the CFFI module.
