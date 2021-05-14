@@ -4,6 +4,16 @@ on: [push, pull_request]
 
 env:
   BUILD_DIR: _build
+  PIP_PACKAGES: >-
+    meson==0.55.3
+    ninja
+    gcovr
+  PIP_EXTRAS: >-
+    pkgconfig
+    pytest
+    pytest-cov
+    cffi
+    numpy
 
 jobs:
   gcc-build:
@@ -12,11 +22,14 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
+        gcc_v: [9]
 
     env:
       FC: gfortran
-      GCC_V: 9
+      CC: gcc
+      GCC_V: ${{ matrix.gcc_v }}
       OMP_NUM_THREADS: 2,1
+      PYTHON_V: 3.8
 
     steps:
     - name: Checkout code
@@ -24,33 +37,159 @@ jobs:
 
     - uses: actions/setup-python@v1
       with:
-        python-version: '3.x'
+        python-version: ${{ env.PYTHON_V }}
 
     - name: Install GCC (OSX)
       if: contains(matrix.os, 'macos')
       run: |
-          ln -s /usr/local/bin/gfortran-${GCC_V} /usr/local/bin/gfortran
-          which gfortran-${GCC_V}
-          which gfortran
+        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
+        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
+        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
 
     - name: Install GCC (Linux)
       if: contains(matrix.os, 'ubuntu')
-      run: |
-        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-${GCC_V} 100 \
-        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${GCC_V} \
-        --slave /usr/bin/gcov gcov /usr/bin/gcov-${GCC_V}
+      run: >-
+        sudo update-alternatives
+        --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_V }} 100
+        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${{ env.GCC_V }}
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
 
-    - name: Install meson
-      run: pip3 install meson ninja
+    - name: Install meson and test dependencies
+      run: pip3 install ${{ env.PIP_PACKAGES }} ${{ env.PIP_EXTRAS }}
 
     - name: Configure build
-      run: meson setup ${{ env.BUILD_DIR }} -Dopenmp=false
+      run: >-
+        meson setup ${{ env.BUILD_DIR }}
+        --buildtype=debug
+        --prefix=$PWD/_dist
+        --libdir=lib
+        --warnlevel=0
+        -Db_coverage=true
+        -Dlapack=netlib
+        -Dpython=true
 
     - name: Build library
       run: meson compile -C ${{ env.BUILD_DIR }}
 
     - name: Run unit tests
-      run: meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild
+      run: |
+         meson test -C ${{ env.BUILD_DIR }} --print-errorlogs --no-rebuild --num-processes 2 -t 2
+         ninja -C ${{ env.BUILD_DIR }} coverage
+
+    - name: Install project
+      run: |
+        meson install -C ${{ env.BUILD_DIR }} --no-rebuild
+        echo "DFTD3_PREFIX=$PWD/_dist" >> $GITHUB_ENV
+
+    - name: Create package
+      run: |
+        tar cvf ${{ env.OUTPUT }} _dist
+        xz -T0 ${{ env.OUTPUT }}
+        echo "DFTD3_OUTPUT=${{ env.OUTPUT }}.xz" >> $GITHUB_ENV
+      env:
+        OUTPUT: dftd3-gcc-${{ matrix.gcc_v }}-${{ matrix.os }}.tar
+
+    - name: Upload package
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{ env.DFTD3_OUTPUT }}
+        path: ${{ env.DFTD3_OUTPUT }}
+
+    - name: Test Python API
+      run: pytest --pyargs dftd3 --cov=dftd3 -vv
+      env:
+        LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib
+        PYTHONPATH: ${{ env.PYTHONPATH }}:${{ env.DFTD3_PREFIX }}/lib/python${{ env.PYTHON_V }}/site-packages
+
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v1
+
+    - name: Configure out-of-tree build
+      run: >-
+        meson setup ${{ env.BUILD_DIR }}
+        --prefix=$PWD/_dist
+        --libdir=lib
+        --warnlevel=0
+      working-directory: python
+      env:
+        PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD3_PREFIX }}/lib/pkgconfig
+
+    - name: Build Python extension module
+      run: meson compile -C ${{ env.BUILD_DIR }}
+      working-directory: python
+
+    - name: Install Python extension module (meson)
+      run: meson install -C ${{ env.BUILD_DIR }} --no-rebuild
+      working-directory: python
+
+  python-build:
+    needs:
+      - gcc-build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        gcc_v: [9]
+        python_v: ['3.6', '3.7', '3.8']
+
+    env:
+      FC: gfortran
+      CC: gcc
+      GCC_V: ${{ matrix.gcc_v }}
+      PYTHON_V: ${{ matrix.python_v }}
+      OMP_NUM_THREADS: 2,1
+      DFTD3_OUTPUT: dftd3-gcc-${{ matrix.gcc_v }}-${{ matrix.os }}.tar.xz
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python_v }}
+
+    - name: Install GCC (OSX)
+      if: contains(matrix.os, 'macos')
+      run: |
+        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
+        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
+        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+
+    - name: Install GCC (Linux)
+      if: contains(matrix.os, 'ubuntu')
+      run: >-
+        sudo update-alternatives
+        --install /usr/bin/gcc gcc /usr/bin/gcc-${{ env.GCC_V }} 100
+        --slave /usr/bin/gfortran gfortran /usr/bin/gfortran-${{ env.GCC_V }}
+        --slave /usr/bin/gcov gcov /usr/bin/gcov-${{ env.GCC_V }}
+
+    - name: Install meson and test dependencies
+      run: pip3 install ${{ env.PIP_EXTRAS }}
+
+    - name: Download package
+      uses: actions/download-artifact@v2
+      with:
+        name: ${{ env.DFTD3_OUTPUT }}
+
+    - name: Unpack package
+      run: |
+        tar xvf ${{ env.DFTD3_OUTPUT }}
+        echo "DFTD3_PREFIX=$PWD/_dist" >> $GITHUB_ENV
+
+    - name: Install Python extension module (pip)
+      run: pip3 install . --user
+      working-directory: python
+      env:
+        PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD3_PREFIX }}/lib/pkgconfig
+
+    - name: Test Python API
+      run: pytest --pyargs dftd3 --cov=dftd3 -vv
+      env:
+        LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib
+
+    - name: Upload coverage report
+      uses: codecov/codecov-action@v1
 
   # Test native MinGW Windows build
   mingw-build:

@@ -18,6 +18,36 @@ borrows one or two ideas from the implementation in [`ased3`](https://github.com
 
 ## Installation
 
+
+### Conda package
+
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/simple-dftd3.svg?label=simple-dftd3)](https://anaconda.org/conda-forge/simple-dftd3)
+
+This project is packaged for the *conda* package manager and available on the *conda-forge* channel.
+To install the *conda* package manager we recommend the [miniforge](https://github.com/conda-forge/miniforge/releases) installer.
+If the *conda-forge* channel is not yet enabled, add it to your channels with
+
+```
+conda config --add channels conda-forge
+```
+
+Once the *conda-forge* channel has been enabled, this project can be installed with:
+
+```
+conda install simple-dftd3
+```
+
+It is possible to list all of the versions available on your platform with:
+
+```
+conda search simple-dftd3 --channel conda-forge
+```
+
+Now you are ready to use ``s-dftd3``.
+
+
+### Building from Source
+
 To build this project from the source code in this repository you need to have
 - a Fortran compiler supporting Fortran 2008
 - [meson](https://mesonbuild.com) version 0.53 or newer

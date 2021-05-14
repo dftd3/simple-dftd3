@@ -17,7 +17,7 @@
 project(
   's-dftd3',
   'fortran',
-  version: '0.3.0',
+  version: '0.4.0',
   license: 'LGPL-3.0-or-later',
   meson_version: '>=0.53',
   default_options: [
@@ -80,10 +80,17 @@ if install
     sdftd3_header,
   )
 
+  module_id = meson.project_name() / fc_id + '-' + fc.version()
+  meson.add_install_script(
+    find_program(files('config'/'install-mod.py')),
+    get_option('includedir') / module_id,
+  )
+
   pkg = import('pkgconfig')
   pkg.generate(
     sdftd3_lib,
     description: 'Simple reimplementation of the DFT-D3 dispersion model',
+    subdirs: ['', module_id],
   )
 
   asciidoc = find_program('asciidoctor', required: false)
@@ -103,5 +110,5 @@ subdir('test')
 
 # Build Python extension module
 if get_option('python')
-  subdir('python')
+  subdir('python'/'dftd3')
 endif

@@ -25,6 +25,22 @@ except ImportError:
     raise ImportError("DFT-D3 C extension unimportable, cannot use C-API")
 
 
+def get_api_version() -> str:
+    """Return the current API version from s-dftd3.
+    For easy usage in C the API version is provided as
+
+    10000 * major + 100 * minor + patch
+
+    For Python we want something that looks like a semantic version again.
+    """
+    api_version = lib.dftd3_get_version()
+    return "{}.{}.{}".format(
+        api_version // 10000,
+        api_version % 10000 // 100,
+        api_version % 100,
+    )
+
+
 def _delete_error(mol):
     """Delete a DFT-D3 error handle object"""
     ptr = ffi.new("dftd3_error *")
@@ -46,8 +62,10 @@ def _delete_structure(mol):
 
 def new_structure(natoms, numbers, positions, lattice, periodic):
     """Create new molecular structure data"""
-    return ffi.gc(
+    _error = new_error()
+    mol = ffi.gc(
         lib.dftd3_new_structure(
+            _error,
             natoms,
             numbers,
             positions,
@@ -56,6 +74,8 @@ def new_structure(natoms, numbers, positions, lattice, periodic):
         ),
         _delete_structure,
     )
+    handle_error(_error)
+    return mol
 
 
 def _delete_model(disp):
@@ -65,9 +85,12 @@ def _delete_model(disp):
     lib.dftd3_delete_model(ptr)
 
 
-def new_d3_model(error, mol):
+def new_d3_model(mol):
     """Create new D3 dispersion model"""
-    return ffi.gc(lib.dftd3_new_d3_model(), _delete_model)
+    _error = new_error()
+    model = ffi.gc(lib.dftd3_new_d3_model(_error, mol), _delete_model)
+    handle_error(_error)
+    return model
 
 
 def _delete_param(disp):
@@ -77,29 +100,100 @@ def _delete_param(disp):
     lib.dftd3_delete_model(ptr)
 
 
-def new_zero_damping(error, mol, s6, s8, s9, rs6, rs8, alp):
+def new_zero_damping(s6, s8, s9, rs6, rs8, alp):
     """Create new zero damping parameters"""
-    return ffi.gc(
-        lib.dftd3_new_zero_damping(error, mol, s6, s8, s9, rs6, rs8, alp),
+    _error = new_error()
+    param = ffi.gc(
+        lib.dftd3_new_zero_damping(_error, s6, s8, s9, rs6, rs8, alp),
         _delete_param,
     )
+    handle_error(_error)
+    return param
 
 
-def load_zero_damping(error, mol, method, atm):
+def load_zero_damping(method, atm):
     """Load zero damping parameters from internal storage"""
-    return ffi.gc(lib.dftd3_load_zero_damping(error, mol, method, atm), _delete_param)
+    _error = new_error()
+    param = ffi.gc(lib.dftd3_load_zero_damping(_error, method, atm), _delete_param)
+    handle_error(_error)
+    return param
 
 
-def new_rational_damping(error, mol, s6, s8, s9, a1, a2, alp):
+def new_rational_damping(s6, s8, s9, a1, a2, alp):
     """Create new rational damping parameters"""
-    return ffi.gc(
-        lib.dftd3_new_rational_damping(error, mol, s6, s8, s9, a1, a2, alp),
+    _error = new_error()
+    param = ffi.gc(
+        lib.dftd3_new_rational_damping(_error, s6, s8, s9, a1, a2, alp),
         _delete_param,
     )
+    handle_error(_error)
+    return param
 
 
-def load_rational_damping(error, mol, method, atm):
+def load_rational_damping(method, atm):
     """Load rational damping parameters from internal storage"""
-    return ffi.gc(
-        lib.dftd3_load_rational_damping(error, mol, method, atm), _delete_param
+    _error = new_error()
+    param = ffi.gc(
+        lib.dftd3_load_rational_damping(_error, method, atm), _delete_param
     )
+    handle_error(_error)
+    return param
+
+
+def new_mzero_damping(s6, s8, s9, rs6, rs8, alp, bet):
+    """Create new modified zero damping parameters"""
+    _error = new_error()
+    param = ffi.gc(
+        lib.dftd3_new_mzero_damping(_error, s6, s8, s9, rs6, rs8, alp, bet),
+        _delete_param,
+    )
+    handle_error(_error)
+    return param
+
+
+def load_mzero_damping(method, atm):
+    """Load modified zero damping parameters from internal storage"""
+    _error = new_error()
+    param = ffi.gc(
+        lib.dftd3_load_mzero_damping(_error, method, atm), _delete_param
+    )
+    handle_error(_error)
+    return param
+
+
+def new_mrational_damping(s6, s8, s9, a1, a2, alp):
+    """Create new modified rational damping parameters"""
+    _error = new_error()
+    param = ffi.gc(
+        lib.dftd3_new_mrational_damping(_error, s6, s8, s9, a1, a2, alp),
+        _delete_param,
+    )
+    handle_error(_error)
+    return param
+
+
+def load_mrational_damping(method, atm):
+    """Load modified rational damping parameters from internal storage"""
+    _error = new_error()
+    param = ffi.gc(
+        lib.dftd3_load_mrational_damping(_error, method, atm), _delete_param
+    )
+    handle_error(_error)
+    return param
+
+
+def handle_error(error) -> None:
+    """Helper to transform error objects into exceptions"""
+    if lib.dftd3_check_error(error):
+        _message = ffi.new("char[]", 512)
+        lib.dftd3_get_error(error, _message, _ref("int", 512))
+        raise RuntimeError(ffi.string(_message).decode())
+
+
+def _ref(ctype, value):
+    """Create a reference to a value"""
+    if value is None:
+        return ffi.NULL
+    ref = ffi.new(ctype + "*")
+    ref[0] = value
+    return ref

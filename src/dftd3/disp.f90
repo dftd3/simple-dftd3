@@ -89,10 +89,10 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
       sigma(:, :) = 0.0_wp
    end if
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-   call param%get_dispersion2(mol, lattr, cutoff%disp2, c6, dc6dcn, &
+   call param%get_dispersion2(mol, lattr, cutoff%disp2, disp%rvdw, disp%r4r2, c6, dc6dcn, &
       & energies, dEdcn, gradient, sigma)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_dispersion3(mol, lattr, cutoff%disp3, c6, dc6dcn, &
+   call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, c6, dc6dcn, &
       & energies, dEdcn, gradient, sigma)
    if (grad) then
       call d3_gemv(dcndr, dEdcn, gradient, beta=1.0_wp)

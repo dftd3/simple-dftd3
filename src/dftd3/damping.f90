@@ -31,7 +31,7 @@ module dftd3_damping
 
    abstract interface
       !> Evaluation of the dispersion energy expression
-      subroutine dispersion_interface(self, mol, trans, cutoff, c6, dc6dcn, &
+      subroutine dispersion_interface(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
             & energy, dEdcn, gradient, sigma)
          import :: structure_type, damping_param, wp
 
@@ -46,6 +46,12 @@ module dftd3_damping
 
          !> Real space cutoff
          real(wp), intent(in) :: cutoff
+
+         !> Van-der-Waals radii for damping function
+         real(wp), allocatable :: rvdw(:, :)
+
+         !> Expectation values for C8 extrapolation
+         real(wp), allocatable :: r4r2(:)
 
          !> C6 coefficients for all atom pairs.
          real(wp), intent(in) :: c6(:, :)

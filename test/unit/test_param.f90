@@ -128,7 +128,7 @@ subroutine test_d3bj_mb01(error)
    do ii = 1, size(func)
       call get_rational_damping(inp, trim(func(ii)), error)
       if (allocated(error)) exit
-      call new_rational_damping(param, inp, mol%num)
+      call new_rational_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do
@@ -176,7 +176,7 @@ subroutine test_d3zero_mb09(error)
    do ii = 1, size(func)
       call get_zero_damping(inp, trim(func(ii)), error)
       if (allocated(error)) return
-      call new_zero_damping(param, inp, mol%num)
+      call new_zero_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do
@@ -227,7 +227,7 @@ subroutine test_d3bjatm_mb17(error)
    do ii = 1, size(func)
       call get_rational_damping(inp, trim(func(ii)), error, s9=1.0_wp)
       if (allocated(error)) return
-      call new_rational_damping(param, inp, mol%num)
+      call new_rational_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do
@@ -275,7 +275,7 @@ subroutine test_d3zeroatm_mb25(error)
    do ii = 1, size(func)
       call get_zero_damping(inp, trim(func(ii)), error, s9=1.0_wp)
       if (allocated(error)) return
-      call new_zero_damping(param, inp, mol%num)
+      call new_zero_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do
@@ -305,7 +305,7 @@ subroutine test_d3bjm_mb02(error)
    do ii = 1, size(func)
       call get_rational_damping(inp, trim(func(ii)), error)
       if (allocated(error)) exit
-      call new_rational_damping(param, inp, mol%num)
+      call new_rational_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do
@@ -333,7 +333,7 @@ subroutine test_d3zerom_mb03(error)
    do ii = 1, size(func)
       call get_mzero_damping(inp, trim(func(ii)), error)
       if (allocated(error)) return
-      call new_mzero_damping(param, inp, mol%num)
+      call new_mzero_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do
@@ -362,7 +362,7 @@ subroutine test_d3bjmatm_mb04(error)
    do ii = 1, size(func)
       call get_mrational_damping(inp, trim(func(ii)), error, s9=1.0_wp)
       if (allocated(error)) exit
-      call new_rational_damping(param, inp, mol%num)
+      call new_rational_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do
@@ -390,7 +390,7 @@ subroutine test_d3zeromatm_mb05(error)
    do ii = 1, size(func)
       call get_mzero_damping(inp, trim(func(ii)), error, s9=1.0_wp)
       if (allocated(error)) return
-      call new_mzero_damping(param, inp, mol%num)
+      call new_mzero_damping(param, inp)
       call test_dftd3_gen(error, mol, param, ref(ii))
       if (allocated(error)) exit
    end do

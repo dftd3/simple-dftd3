@@ -211,7 +211,7 @@ subroutine test_pbed3bj_mb01(error)
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 
    call get_structure(mol, "MB16-43", "01")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -1.7882220406061061E-002_wp)
 
 end subroutine test_pbed3bj_mb01
@@ -229,7 +229,7 @@ subroutine test_b97d3bj_mb02(error)
       & a1 = 0.5545_wp, s8 = 2.2609_wp, a2 = 3.2297_wp)
 
    call get_structure(mol, "MB16-43", "02")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -5.9503372903920583E-002_wp)
 
 end subroutine test_b97d3bj_mb02
@@ -247,7 +247,7 @@ subroutine test_tpssd3bj_mb03(error)
       & a1 = 0.4535_wp, s8 = 1.9435_wp, a2 = 4.4752_wp)
 
    call get_structure(mol, "MB16-43", "03")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -2.8684059421722093E-002_wp)
 
 end subroutine test_tpssd3bj_mb03
@@ -265,7 +265,7 @@ subroutine test_pwpb95d3bj_mb04(error)
       & a1 = 0.0000_wp, s8 = 0.2904_wp, a2 = 7.3141_wp)
 
    call get_structure(mol, "MB16-43", "04")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -1.2270950304817715E-002_wp)
 
 end subroutine test_pwpb95d3bj_mb04
@@ -283,7 +283,7 @@ subroutine test_b2plypd3bj_mb05(error)
       & a1 = 0.3065_wp, s8 = 0.9147_wp, a2 = 5.0570_wp)
 
    call get_structure(mol, "MB16-43", "05")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_b2plypd3bj_mb05
@@ -301,7 +301,7 @@ subroutine test_pw6b95d3bj_mb06(error)
       & a1 = 0.2076_wp, s8 = 0.7257_wp, a2 = 6.3750_wp)
 
    call get_structure(mol, "MB16-43", "06")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_pw6b95d3bj_mb06
@@ -319,7 +319,7 @@ subroutine test_olypd3bj_mb07(error)
       & a1 = 0.5299_wp, s8 = 2.6205_wp, a2 = 2.8065_wp)
 
    call get_structure(mol, "MB16-43", "07")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_olypd3bj_mb07
@@ -337,7 +337,7 @@ subroutine test_pbe0d3bj_mb08(error)
       & a1 = 0.4145_wp, s8 = 1.2177_wp, a2 = 4.8593_wp)
 
    call get_structure(mol, "MB16-43", "08")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_pbe0d3bj_mb08
@@ -355,7 +355,7 @@ subroutine test_rpbed3zero_mb09(error)
       & rs6 = 0.872_wp, s8 = 0.514_wp)
 
    call get_structure(mol, "MB16-43", "09")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -2.0178785221185692E-002_wp)
 
 end subroutine test_rpbed3zero_mb09
@@ -373,7 +373,7 @@ subroutine test_b2gpplypd3zero_mb10(error)
       & rs6 = 1.586_wp, s8 = 0.760_wp)
 
    call get_structure(mol, "MB16-43", "10")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -8.2668335308596526E-003_wp)
 
 end subroutine test_b2gpplypd3zero_mb10
@@ -391,7 +391,7 @@ subroutine test_ssbd3zero_mb11(error)
       & rs6 = 1.215_wp, s8 = 0.663_wp)
 
    call get_structure(mol, "MB16-43", "11")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -8.7923137607804885E-003_wp)
 
 end subroutine test_ssbd3zero_mb11
@@ -409,7 +409,7 @@ subroutine test_b1b95d3zero_mb12(error)
       & rs6 = 1.613_wp, s8 = 1.868_wp)
 
    call get_structure(mol, "MB16-43", "12")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -1.5146295502180388E-002_wp)
 
 end subroutine test_b1b95d3zero_mb12
@@ -427,7 +427,7 @@ subroutine test_m06ld3zero_mb13(error)
       & rs6 = 1.581_wp, s8 = 0.000_wp)
 
    call get_structure(mol, "MB16-43", "13")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_m06ld3zero_mb13
@@ -445,7 +445,7 @@ subroutine test_tpsshd3zero_mb14(error)
       & rs6 = 1.223_wp, s8 = 1.219_wp)
 
    call get_structure(mol, "MB16-43", "14")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_tpsshd3zero_mb14
@@ -463,7 +463,7 @@ subroutine test_hfd3zero_mb15(error)
       & rs6 = 1.158_wp, s8 = 1.746_wp)
 
    call get_structure(mol, "MB16-43", "15")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_hfd3zero_mb15
@@ -481,7 +481,7 @@ subroutine test_camb3lypd3zero_mb16(error)
       & rs6 = 1.378_wp, s8 = 1.217_wp)
 
    call get_structure(mol, "MB16-43", "16")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_camb3lypd3zero_mb16
@@ -499,7 +499,7 @@ subroutine test_dsdblypd3bjatm_mb17(error)
       & a1 = 0.0_wp, s8 = 0.2130_wp, a2 = 6.0519_wp)
 
    call get_structure(mol, "MB16-43", "17")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -1.3592756421169463E-002_wp)
 
 end subroutine test_dsdblypd3bjatm_mb17
@@ -517,7 +517,7 @@ subroutine test_mpwlypd3bjatm_mb18(error)
       & a1 = 0.4831_wp, s8 = 2.0077_wp, a2 = 3.5043_wp)
 
    call get_structure(mol, "MB16-43", "18")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -4.4058900712440292E-002_wp)
 
 end subroutine test_mpwlypd3bjatm_mb18
@@ -535,7 +535,7 @@ subroutine test_tpss0d3bjatm_mb19(error)
       & a1 = 0.3768_wp, s8 = 1.2576_wp, a2 = 4.5865_wp)
 
    call get_structure(mol, "MB16-43", "19")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -4.1318512478579240E-002_wp)
 
 end subroutine test_tpss0d3bjatm_mb19
@@ -553,7 +553,7 @@ subroutine test_bpbed3bjatm_mb20(error)
       & a1 = 0.4567_wp, s8 = 4.0728_wp, a2 = 4.3908_wp)
 
    call get_structure(mol, "MB16-43", "20")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -3.4953088194036953E-002_wp)
 
 end subroutine test_bpbed3bjatm_mb20
@@ -571,7 +571,7 @@ subroutine test_pwb6kd3bjatm_mb21(error)
       & a1 = 0.1865_wp, s8 = 0.9383_wp, a2 = 7.7627_wp)
 
    call get_structure(mol, "MB16-43", "21")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_pwb6kd3bjatm_mb21
@@ -589,7 +589,7 @@ subroutine test_lcwpbed3bjatm_mb22(error)
       & a1 = 0.3919_wp, s8 = 1.8541_wp, a2 = 5.0897_wp)
 
    call get_structure(mol, "MB16-43", "22")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_lcwpbed3bjatm_mb22
@@ -607,7 +607,7 @@ subroutine test_pw1pwd3bjatm_mb23(error)
       & a1 = 0.3807_wp, s8 = 2.3363_wp, a2 = 5.8844_wp)
 
    call get_structure(mol, "MB16-43", "23")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_pw1pwd3bjatm_mb23
@@ -625,7 +625,7 @@ subroutine test_mpw1b95d3bjatm_mb24(error)
       & a1 = 0.1955_wp, s8 = 1.0508_wp, a2 = 6.4177_wp)
 
    call get_structure(mol, "MB16-43", "24")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_mpw1b95d3bjatm_mb24
@@ -643,7 +643,7 @@ subroutine test_blypd3zeroatm_mb25(error)
       & rs6 = 1.094_wp, s8 = 1.682_wp)
 
    call get_structure(mol, "MB16-43", "25")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -1.8876287896469810E-002_wp)
 
 end subroutine test_blypd3zeroatm_mb25
@@ -661,7 +661,7 @@ subroutine test_revpbed3zeroatm_mb26(error)
       & rs6 = 0.923_wp, s8 = 1.010_wp)
 
    call get_structure(mol, "MB16-43", "26")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -2.1820150667180394E-002_wp)
 
 end subroutine test_revpbed3zeroatm_mb26
@@ -679,7 +679,7 @@ subroutine test_hse06d3zeroatm_mb27(error)
       & rs6 = 1.129_wp, s8 = 0.109_wp)
 
    call get_structure(mol, "MB16-43", "27")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -6.1850031430639224E-003_wp)
 
 end subroutine test_hse06d3zeroatm_mb27
@@ -697,7 +697,7 @@ subroutine test_bmkd3zeroatm_mb28(error)
       & rs6 = 1.931_wp, s8 = 2.168_wp)
 
    call get_structure(mol, "MB16-43", "28")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -1.5629632845627295E-002_wp)
 
 end subroutine test_bmkd3zeroatm_mb28
@@ -715,7 +715,7 @@ subroutine test_m06d3zeroatm_mb29(error)
       & rs6 = 1.325_wp, s8 = 0.000_wp)
 
    call get_structure(mol, "MB16-43", "29")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_m06d3zeroatm_mb29
@@ -733,7 +733,7 @@ subroutine test_b3lypd3zeroatm_mb30(error)
       & rs6 = 1.261_wp, s8 = 1.105_wp)
 
    call get_structure(mol, "MB16-43", "30")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_b3lypd3zeroatm_mb30
@@ -751,7 +751,7 @@ subroutine test_bpd3zeroatm_mb31(error)
       & rs6 = 1.139_wp, s8 = 1.683_wp)
 
    call get_structure(mol, "MB16-43", "31")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_bpd3zeroatm_mb31
@@ -769,7 +769,7 @@ subroutine test_m05d3zeroatm_mb32(error)
       & rs6 = 1.355_wp, s8 = 1.279_wp)
 
    call get_structure(mol, "MB16-43", "32")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_m05d3zeroatm_mb32
@@ -787,7 +787,7 @@ subroutine test_pbed3zerom_mb33(error)
       & rs6 = 2.340218_wp, s8 = 0.0_wp, bet = 0.129434_wp)
 
    call get_structure(mol, "MB16-43", "33")
-   call new_mzero_damping(param, inp, mol%num)
+   call new_mzero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -6.4839732123927463E-002_wp)
 
 end subroutine test_pbed3zerom_mb33
@@ -805,7 +805,7 @@ subroutine test_blypd3zerom_mb34(error)
       & rs6 = 1.279637_wp, s8 = 1.841686_wp, bet = 0.014370_wp)
 
    call get_structure(mol, "MB16-43", "34")
-   call new_mzero_damping(param, inp, mol%num)
+   call new_mzero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -4.1835943466459843E-002_wp)
 
 end subroutine test_blypd3zerom_mb34
@@ -823,7 +823,7 @@ subroutine test_b97dd3zerom_mb35(error)
       & rs6 = 1.338153_wp, s8 = 1.532981_wp, bet = 0.013988_wp)
 
    call get_structure(mol, "MB16-43", "35")
-   call new_mzero_damping(param, inp, mol%num)
+   call new_mzero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_b97dd3zerom_mb35
@@ -841,7 +841,7 @@ subroutine test_lcwpbed3zerom_mb36(error)
       & rs6 = 1.366361_wp, s8 = 1.280619_wp, bet = 0.003160_wp)
 
    call get_structure(mol, "MB16-43", "36")
-   call new_mzero_damping(param, inp, mol%num)
+   call new_mzero_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_lcwpbed3zerom_mb36

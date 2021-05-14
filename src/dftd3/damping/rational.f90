@@ -17,7 +17,6 @@
 module dftd3_damping_rational
    use dftd3_damping, only : damping_param
    use dftd3_damping_atm, only : get_atm_dispersion
-   use dftd3_data, only : get_r4r2_val, get_vdw_rad
    use dftd3_param, only : d3_param
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -34,8 +33,6 @@ module dftd3_damping_rational
       real(wp) :: a1
       real(wp) :: a2
       real(wp) :: alp
-      real(wp), allocatable :: r4r2(:)
-      real(wp), allocatable :: rvdw(:, :)
    contains
 
       !> Evaluate pairwise dispersion energy expression
@@ -51,18 +48,13 @@ contains
 
 
 !> Create new rational damping model
-subroutine new_rational_damping(self, param, num)
+subroutine new_rational_damping(self, param)
 
    !> Rational damping parameters
    type(rational_damping_param), intent(out) :: self
 
    !> Parameters
    type(d3_param), intent(in) :: param
-
-   !> Atomic numbers
-   integer, intent(in) :: num(:)
-
-   integer :: isp, jsp, izp, jzp
 
    self%s6 = param%s6
    self%s8 = param%s8
@@ -71,26 +63,11 @@ subroutine new_rational_damping(self, param, num)
    self%a2 = param%a2
    self%alp = param%alp
 
-   allocate(self%r4r2(size(num)))
-   do isp = 1, size(num)
-      self%r4r2(isp) = get_r4r2_val(num(isp))
-   end do
-
-   allocate(self%rvdw(size(num), size(num)))
-   do isp = 1, size(num)
-      izp = num(isp)
-      do jsp = 1, isp
-         jzp = num(jsp)
-         self%rvdw(jsp, isp) = get_vdw_rad(jzp, izp)
-         self%rvdw(isp, jsp) = self%rvdw(jsp, isp)
-      end do
-   end do
-
 end subroutine new_rational_damping
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
+subroutine get_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
 
    !> Damping parameters
@@ -104,6 +81,12 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Van-der-Waals radii for damping function
+   real(wp), allocatable :: rvdw(:, :)
+
+   !> Expectation values for C8 extrapolation
+   real(wp), allocatable :: r4r2(:)
 
    !> C6 coefficients for all atom pairs.
    real(wp), intent(in) :: c6(:, :)
@@ -136,14 +119,14 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
    if (grad) then
       !$omp parallel do schedule(runtime) default(none) &
       !$omp reduction(+:energy, gradient, sigma, dEdcn) &
-      !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2) &
+      !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, r4r2) &
       !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r0ij, rrij, c6ij, t6, t8, &
       !$omp& d6, d8, edisp, gdisp, dE, dG, dS)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat
             jzp = mol%id(jat)
-            rrij = 3*self%r4r2(izp)*self%r4r2(jzp)
+            rrij = 3*r4r2(izp)*r4r2(jzp)
             r0ij = self%a1 * sqrt(rrij) + self%a2
             c6ij = c6(jat, iat)
             do jtr = 1, size(trans, 2)
@@ -179,13 +162,13 @@ subroutine get_dispersion2(self, mol, trans, cutoff, c6, dc6dcn, &
       end do
    else
       !$omp parallel do schedule(runtime) default(none) reduction(+:energy) &
-      !$omp shared(mol, self, c6, trans, cutoff2) private(iat, jat, izp, jzp, &
+      !$omp shared(mol, self, c6, trans, cutoff2, r4r2) private(iat, jat, izp, jzp, &
       !$omp& jtr, vec, r2, r0ij, rrij, c6ij, t6, t8, edisp, dE)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat
             jzp = mol%id(jat)
-            rrij = 3*self%r4r2(izp)*self%r4r2(jzp)
+            rrij = 3*r4r2(izp)*r4r2(jzp)
             r0ij = self%a1 * sqrt(rrij) + self%a2
             c6ij = c6(jat, iat)
             do jtr = 1, size(trans, 2)
@@ -213,7 +196,7 @@ end subroutine get_dispersion2
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_dispersion3(self, mol, trans, cutoff, c6, dc6dcn, &
+subroutine get_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
 
    !> Damping parameters
@@ -227,6 +210,12 @@ subroutine get_dispersion3(self, mol, trans, cutoff, c6, dc6dcn, &
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Van-der-Waals radii for damping function
+   real(wp), allocatable :: rvdw(:, :)
+
+   !> Expectation values for C8 extrapolation
+   real(wp), allocatable :: r4r2(:)
 
    !> C6 coefficients for all atom pairs.
    real(wp), intent(in) :: c6(:, :)
@@ -247,7 +236,7 @@ subroutine get_dispersion3(self, mol, trans, cutoff, c6, dc6dcn, &
    real(wp), intent(inout), optional :: sigma(:, :)
 
    call get_atm_dispersion(mol, trans, cutoff, self%s9, 4.0/3.0_wp, self%alp+2, &
-      & self%rvdw, c6, dc6dcn, energy, dEdcn, gradient, sigma)
+      & rvdw, c6, dc6dcn, energy, dEdcn, gradient, sigma)
 
 end subroutine get_dispersion3
 

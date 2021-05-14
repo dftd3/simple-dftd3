@@ -193,7 +193,7 @@ subroutine test_pbed3bj_acetic(error)
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 
    call get_structure(mol, "X23", "acetic")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -6.673283761139015E-2_wp)
 
 end subroutine test_pbed3bj_acetic
@@ -211,7 +211,7 @@ subroutine test_pbesold3bj_adaman(error)
       & a1 = 0.4466_wp, s8 = 2.9491_wp, a2 = 6.1742_wp)
 
    call get_structure(mol, "X23", "adaman")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -7.931351552127060E-2_wp)
 
 end subroutine test_pbesold3bj_adaman
@@ -229,7 +229,7 @@ subroutine test_tpssd3bj_ammonia(error)
       & a1 = 0.4535_wp, s8 = 1.9435_wp, a2 = 4.4752_wp)
 
    call get_structure(mol, "X23", "ammonia")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_tpssd3bj_ammonia
@@ -247,7 +247,7 @@ subroutine test_hse06d3bj_anthracene(error)
       & a1 = 0.383_wp, s8 = 2.310_wp, a2 = 5.685_wp)
 
    call get_structure(mol, "X23", "anthracene")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_hse06d3bj_anthracene
@@ -265,7 +265,7 @@ subroutine test_blypd3zero_benzene(error)
       & rs6 = 1.094_wp, s8 = 1.682_wp)
 
    call get_structure(mol, "X23", "benzene")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -0.16647369651118463_wp)
 
 end subroutine test_blypd3zero_benzene
@@ -283,7 +283,7 @@ subroutine test_m06ld3zero_cyanamide(error)
       & rs6 = 1.581_wp, s8 = 0.000_wp)
 
    call get_structure(mol, "X23", "cyanamide")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -2.3222572072479526E-2_wp)
 
 end subroutine test_m06ld3zero_cyanamide
@@ -301,7 +301,7 @@ subroutine test_rpw86pbed3zero_co2(error)
       & rs6 = 1.224_wp, s8 = 0.901_wp)
 
    call get_structure(mol, "X23", "CO2")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_rpw86pbed3zero_co2
@@ -319,7 +319,7 @@ subroutine test_revssbd3zero_cytosine(error)
       & rs6 = 1.221_wp, s8 = 0.560_wp)
 
    call get_structure(mol, "X23", "cytosine")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_revssbd3zero_cytosine
@@ -337,7 +337,7 @@ subroutine test_hsesold3bjatm_oxacb(error)
       & a1 = 0.4650_wp, s8 = 2.9215_wp, a2 = 6.2003_wp)
 
    call get_structure(mol, "X23", "oxacb")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_hsesold3bjatm_oxacb
@@ -355,7 +355,7 @@ subroutine test_pwggad3bjatm_pyrazine(error)
       & a1 = 0.2211_wp, s8 = 2.6910_wp, a2 = 6.7278_wp)
 
    call get_structure(mol, "X23", "pyrazine")
-   call new_rational_damping(param, inp, mol%num)
+   call new_rational_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_pwggad3bjatm_pyrazine
@@ -373,7 +373,7 @@ subroutine test_b3pw91d3zeroatm_urea(error)
       & rs6 = 1.176_wp, s8 = 1.775_wp)
 
    call get_structure(mol, "X23", "urea")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numgrad(error, mol, param)
 
 end subroutine test_b3pw91d3zeroatm_urea
@@ -391,7 +391,7 @@ subroutine test_rpbed3zeroatm_hexamine(error)
       & rs6 = 0.872_wp, s8 = 0.514_wp)
 
    call get_structure(mol, "X23", "hexamine")
-   call new_zero_damping(param, inp, mol%num)
+   call new_zero_damping(param, inp)
    call test_numsigma(error, mol, param)
 
 end subroutine test_rpbed3zeroatm_hexamine

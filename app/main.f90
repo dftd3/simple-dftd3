@@ -93,7 +93,7 @@ program dftd3_main
          end if
       end if
       allocate(zparam)
-      call new_zero_damping(zparam, inp, mol%num)
+      call new_zero_damping(zparam, inp)
       call move_alloc(zparam, param)
    end if
    if (config%mzero) then
@@ -105,7 +105,7 @@ program dftd3_main
          end if
       end if
       allocate(mparam)
-      call new_mzero_damping(mparam, inp, mol%num)
+      call new_mzero_damping(mparam, inp)
       call move_alloc(mparam, param)
    end if
    if (config%rational .or. config%mrational) then
@@ -121,7 +121,7 @@ program dftd3_main
          end if
       end if
       allocate(rparam)
-      call new_rational_damping(rparam, inp, mol%num)
+      call new_rational_damping(rparam, inp)
       call move_alloc(rparam, param)
    end if
 

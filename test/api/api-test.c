@@ -55,7 +55,7 @@ main (void) {
    assert(!!disp);
 
    // PBE-D3(BJ)
-   param = dftd3_new_rational_damping(error, mol, 1.0, 0.7875, 0.0, 0.4289, 4.4407, 14.0);
+   param = dftd3_new_rational_damping(error, 1.0, 0.7875, 0.0, 0.4289, 4.4407, 14.0);
    if (dftd3_check_error(error)) {return 1;}
    assert(!!param);
    dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
@@ -65,7 +65,7 @@ main (void) {
    dftd3_delete_param(&param);
 
    // RPBE-D3(0)
-   param = dftd3_load_zero_damping(error, mol, "rpbe", false);
+   param = dftd3_load_zero_damping(error, "rpbe", false);
    if (dftd3_check_error(error)) {return 1;}
    assert(!!param);
    dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
@@ -75,7 +75,7 @@ main (void) {
    dftd3_delete_param(&param);
 
    // DSD-BLYP-D3(BJ)-ATM
-   param = dftd3_load_rational_damping(error, mol, "dsdblyp", true);
+   param = dftd3_load_rational_damping(error, "dsdblyp", true);
    if (dftd3_check_error(error)) {return 1;}
    assert(!!param);
    dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
@@ -85,7 +85,7 @@ main (void) {
    dftd3_delete_param(&param);
 
    // BLYP-D3(0)-ATM
-   param = dftd3_new_zero_damping(error, mol, 1.0, 1.682, 1.0, 1.094, 1.0, 14.0);
+   param = dftd3_new_zero_damping(error, 1.0, 1.682, 1.0, 1.094, 1.0, 14.0);
    if (dftd3_check_error(error)) {return 1;}
    assert(!!param);
    dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
