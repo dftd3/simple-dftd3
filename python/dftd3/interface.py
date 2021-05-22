@@ -136,7 +136,7 @@ class DampingParam:
     def __init__(self, **kwargs):
         """Create new damping parameter from method name or explicit data"""
 
-        if "method" in kwargs:
+        if "method" in kwargs and kwargs["method"] is not None:
             self._param = self.load_param(**kwargs)
         else:
             self._param = self.new_param(**kwargs)

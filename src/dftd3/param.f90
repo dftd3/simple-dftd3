@@ -73,7 +73,7 @@ function get_method_id(method) result(id)
          lc_method(j:j) = method(i:i)
       end if
    end do
-   select case(trim(lc_method))
+   select case(trim(lowercase(lc_method)))
    case default; id = p_invalid
    case("b1b95"); id = p_b1b95_df
    case("b2gpplyp"); id = p_b2gpplyp_df
@@ -492,6 +492,38 @@ subroutine get_mzero_damping(param, method, error, s9)
    end if
 
 end subroutine get_mzero_damping
+
+
+!> Convert string to lower case
+pure function lowercase(str) result(lcstr)
+   character(len=*), intent(in)  :: str
+   character(len=len_trim(str)) :: lcstr
+   integer :: ilen, ioffset, iquote, i, iav, iqc
+
+   ilen=len_trim(str)
+   ioffset=iachar('A')-iachar('a')
+   iquote=0
+   lcstr=str
+   do i=1, ilen
+      iav=iachar(str(i:i))
+      if(iquote==0 .and. (iav==34 .or.iav==39)) then
+         iquote=1
+         iqc=iav
+        cycle
+      endif
+      if(iquote==1 .and. iav==iqc) then
+         iquote=0
+         cycle
+      endif
+      if (iquote==1) cycle
+      if(iav >= iachar('A') .and. iav <= iachar('Z')) then
+         lcstr(i:i)=achar(iav-ioffset)
+      else
+         lcstr(i:i)=str(i:i)
+      endif
+   enddo
+
+end function lowercase
 
 
 end module dftd3_param

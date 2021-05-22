@@ -81,7 +81,7 @@ def new_structure(natoms, numbers, positions, lattice, periodic):
 def _delete_model(disp):
     """Delete a DFT-D3 dispersion model object"""
     ptr = ffi.new("dftd3_model *")
-    ptr[0] = mol
+    ptr[0] = disp
     lib.dftd3_delete_model(ptr)
 
 
@@ -93,11 +93,11 @@ def new_d3_model(mol):
     return model
 
 
-def _delete_param(disp):
+def _delete_param(param):
     """Delete a DFT-D3 damping parameteter object"""
-    ptr = ffi.new("dftd3_model *")
-    ptr[0] = mol
-    lib.dftd3_delete_model(ptr)
+    ptr = ffi.new("dftd3_param *")
+    ptr[0] = param
+    lib.dftd3_delete_param(ptr)
 
 
 def new_zero_damping(s6, s8, s9, rs6, rs8, alp):

@@ -37,6 +37,39 @@ A more pythonic interface is provided in the ``dftd3.interface`` module which ca
    # => -0.029489232932494884
 
 
+QCSchema Integration
+~~~~~~~~~~~~~~~~~~~~
+
+This Python API natively understands QCSchema and the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
+If the QCElemental package is installed the ``dftd3.qcschema`` module becomes importable and provides the ``run_qcschema`` function.
+
+.. code:: python
+
+   from dftd3.qcschema import run_qcschema
+   import qcelemental as qcel
+   atomic_input = qcel.models.AtomicInput(
+       molecule = qcel.models.Molecule(
+           symbols = ["O", "H", "H"],
+           geometry = [
+               0.00000000000000,  0.00000000000000, -0.73578586109551,
+               1.44183152868459,  0.00000000000000,  0.36789293054775,
+              -1.44183152868459,  0.00000000000000,  0.36789293054775
+           ],
+       ),
+       driver = "energy",
+       model = {
+           "method": "tpss",
+       },
+       keywords = {
+           "level_hint": "d3bj",
+       },
+   )
+
+   atomic_result = run_qcschema(atomic_input)
+   print(atomic_result.return_result)
+   # => -0.0004204244108151285
+
+
 Building the extension module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
