@@ -15,7 +15,6 @@
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 # Include the mctc-lib project
-message(STATUS "Looking for mctc-lib...")
 if(NOT TARGET mctc-lib)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mctc-lib/CMakeLists.txt)
     add_subdirectory("mctc-lib")
@@ -30,8 +29,6 @@ if(NOT TARGET mctc-lib)
     )
     FetchContent_MakeAvailable("mctc-lib")
   endif()
-else()
-  message(STATUS "mctc-lib already present")
 endif()
 
 list(
@@ -40,7 +37,6 @@ list(
 )
 
 # Include the mstore project
-message(STATUS "Looking for mstore...")
 if(NOT TARGET mstore)
   if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/mstore/CMakeLists.txt)
     add_subdirectory("mstore")
