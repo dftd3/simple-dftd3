@@ -25,7 +25,7 @@ if(NOT TARGET mctc-lib)
     FetchContent_Declare(
       "mctc-lib"
       GIT_REPOSITORY "${mctc-lib-url}"
-      GIT_TAG "HEAD"
+      GIT_TAG "main"
     )
     FetchContent_MakeAvailable("mctc-lib")
   endif()
@@ -47,7 +47,7 @@ if(NOT TARGET mstore)
     FetchContent_Declare(
       "mstore"
       GIT_REPOSITORY "${mstore-url}"
-      GIT_TAG "HEAD"
+      GIT_TAG "main"
     )
     FetchContent_MakeAvailable("mstore")
   endif()
