@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-if has_cc
+if get_option('api')
   subdir('api')
 endif
 

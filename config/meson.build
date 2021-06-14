@@ -17,9 +17,6 @@
 os = host_machine.system()
 fc = meson.get_compiler('fortran')
 fc_id = fc.get_id()
-if has_cc and not get_option('python')
-  has_cc = fc_id == meson.get_compiler('c').get_id()
-endif
 
 if fc_id == 'gcc'
   add_project_arguments(

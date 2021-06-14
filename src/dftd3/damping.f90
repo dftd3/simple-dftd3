@@ -48,10 +48,10 @@ module dftd3_damping
          real(wp), intent(in) :: cutoff
 
          !> Van-der-Waals radii for damping function
-         real(wp), allocatable :: rvdw(:, :)
+         real(wp), intent(in) :: rvdw(:, :)
 
          !> Expectation values for C8 extrapolation
-         real(wp), allocatable :: r4r2(:)
+         real(wp), intent(in) :: r4r2(:)
 
          !> C6 coefficients for all atom pairs.
          real(wp), intent(in) :: c6(:, :)

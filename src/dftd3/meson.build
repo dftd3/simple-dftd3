@@ -18,7 +18,6 @@ subdir('damping')
 subdir('data')
 
 srcs += files(
-  'api.f90',
   'blas.F90',
   'cutoff.f90',
   'damping.f90',
@@ -32,3 +31,6 @@ srcs += files(
   'utils.f90',
   'version.f90',
 )
+if get_option('api') or get_option('python')
+  srcs += files('api.f90')
+endif
