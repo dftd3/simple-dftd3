@@ -108,6 +108,11 @@ Install the project with pip
 
    pip install .
 
+If you already have a ``s-dftd3`` installation, *e.g.* from conda-forge, you can build the Python extension module directly without cloning this repository
+
+.. code:: sh
+   pip install "https://github.com/awvwgk/simple-dftd3/archive/refs/heads/main.zip#egg=dftd3-python&subdirectory=python"
+
 
 
 Using meson
