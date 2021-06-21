@@ -1,5 +1,5 @@
 name = "s-dftd3"
-version = "0.3.0"
+version = "0.4.1"
 license = "LGPL-3.0-or-later"
 maintainer = ["@awvwgk"]
 author = ["Sebastian Ehlert"]
@@ -10,12 +10,12 @@ keywords = ["dispersion-correction", "quantum-chemistry"]
 [dependencies]
 [dependencies.mctc-lib]
 git = "https://github.com/grimme-lab/mctc-lib"
-tag = "v0.2.0"
+tag = "v0.2.3"
 
 [dev-dependencies]
 [dev-dependencies.mstore]
 git = "https://github.com/grimme-lab/mstore"
-tag = "v0.1.1"
+tag = "v0.1.2"
 
 [build]
 auto-tests = false
