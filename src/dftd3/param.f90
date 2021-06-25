@@ -50,7 +50,7 @@ module dftd3_param
          & p_pwgga_df, p_hsesol_df, p_hf3c_df, p_hf3cv_df, p_pbeh3c_df, &
          & p_slaterdiracexchange_df, p_m05_df, p_m052x_df, p_m06l_df, p_m06_df, &
          & p_m062x_df, p_m06hf_df, p_pbe38_df, p_mpwb1k_df, p_scan_df, &
-         & p_rscan_df, p_r2scan_df
+         & p_rscan_df, p_r2scan_df, p_wb97x_df, p_b97m_df, p_wb97m_df
    end enum
 
 contains
@@ -139,6 +139,9 @@ function get_method_id(method) result(id)
    case("scan"); id = p_scan_df
    case("rscan"); id = p_rscan_df
    case("r2scan"); id = p_r2scan_df
+   case("b97m"); id = p_b97m_df
+   case("wb97m"); id = p_wb97m_df
+   case("wb97x"); id = p_wb97x_df
    end select
 
 end function get_method_id
@@ -272,6 +275,12 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(a1=0.47023427_wp, s8=1.08859014_wp, a2=5.73408312_wp)
    case(p_r2scan_df)
       param = d3_param(a1=0.49484001_wp, s8=0.78981345_wp, a2=5.73083694_wp)
+   case(p_wb97x_df)
+      param = d3_param(a1=0.0000_wp, s8=0.2641_wp, a2=5.4959_wp)
+   case(p_wb97m_df)
+      param = d3_param(a1=0.5660_wp, s8=0.3908_wp, a2=3.1280_wp)
+   case(p_b97m_df)
+      param = d3_param(a1=-0.0780_wp, s8=0.1384_wp, a2=5.5946_wp)
    end select
 
    if (present(s9)) then
@@ -397,6 +406,8 @@ subroutine get_zero_damping(param, method, error, s9)
       param = d3_param(rs6=1.221_wp, s8=1.206_wp)
    case(p_scan_df)
       param = d3_param(rs6=1.324_wp, s8=0.000_wp)
+   case(p_wb97x_df)
+      param = d3_param(rs6=1.281_wp, s8=1.0_wp, rs8=1.094_wp)
    end select
 
    if (present(s9)) then
