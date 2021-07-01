@@ -4,6 +4,7 @@
 [![LGPL-3.0-or-later](https://img.shields.io/github/license/awvwgk/simple-dftd3)](COPYING)
 [![CI](https://github.com/awvwgk/simple-dftd3/workflows/CI/badge.svg)](https://github.com/awvwgk/simple-dftd3/actions)
 [![docs](https://github.com/awvwgk/simple-dftd3/workflows/docs/badge.svg)](https://awvwgk.github.io/simple-dftd3/)
+[![codecov](https://codecov.io/gh/awvwgk/simple-dftd3/branch/main/graph/badge.svg)](https://codecov.io/gh/awvwgk/simple-dftd3)
 
 A simple drop-in replacement for ``dftd3``.
 
@@ -22,6 +23,7 @@ borrows one or two ideas from the implementation in [`ased3`](https://github.com
 ### Conda package
 
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/simple-dftd3.svg?label=simple-dftd3)](https://anaconda.org/conda-forge/simple-dftd3)
+[![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd3-python.svg?label=dftd3-python)](https://anaconda.org/conda-forge/dftd3-python)
 
 This project is packaged for the *conda* package manager and available on the *conda-forge* channel.
 To install the *conda* package manager we recommend the [miniforge](https://github.com/conda-forge/miniforge/releases) installer.
@@ -35,6 +37,12 @@ Once the *conda-forge* channel has been enabled, this project can be installed w
 
 ```
 conda install simple-dftd3
+```
+
+If you want to enable the Python API as well install
+
+```
+conda install dftd3-python
 ```
 
 It is possible to list all of the versions available on your platform with:

@@ -1,5 +1,5 @@
 DFT-D3 Python API
------------------
+=================
 
 Python interface for the D3 dispersion model.
 This Python project is targeted at developers who want to interface their project via Python with ``s-dftd3``.
@@ -38,7 +38,7 @@ A more pythonic interface is provided in the ``dftd3.interface`` module which ca
 
 
 QCSchema Integration
-~~~~~~~~~~~~~~~~~~~~
+--------------------
 
 This Python API natively understands QCSchema and the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
 If the QCElemental package is installed the ``dftd3.qcschema`` module becomes importable and provides the ``run_qcschema`` function.
@@ -68,6 +68,37 @@ If the QCElemental package is installed the ``dftd3.qcschema`` module becomes im
    atomic_result = run_qcschema(atomic_input)
    print(atomic_result.return_result)
    # => -0.0004204244108151285
+
+
+Installing
+----------
+
+.. image:: https://img.shields.io/conda/vn/conda-forge/dftd3-python.svg
+   :alt: Conda Version
+   :target: https://anaconda.org/conda-forge/dftd3-python
+
+This project is packaged for the *conda* package manager and available on the *conda-forge* channel.
+To install the *conda* package manager we recommend the `miniforge <https://github.com/conda-forge/miniforge/releases>`_ installer.
+If the *conda-forge* channel is not yet enabled, add it to your channels with
+
+.. code:: sh
+
+   conda config --add channels conda-forge
+
+Once the *conda-forge* channel has been enabled, this project can be installed with:
+
+.. code:: sh
+
+   conda install dftd3-python
+
+Now you are ready to use ``dftd3``, check if you can import it with
+
+.. code:: python
+
+   >>> import dftd3
+   >>> from dftd3.libdftd3 import get_api_version
+   >>> get_api_version()
+   '0.4.1'
 
 
 Building the extension module
