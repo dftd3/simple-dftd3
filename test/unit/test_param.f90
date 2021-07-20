@@ -78,7 +78,7 @@ subroutine test_dftd3_gen(error, mol, param, ref)
 
    call check(error, energy, ref, thr=thr)
    if (allocated(error)) then
-      print*,energy
+      print *,energy
    end if
 
 end subroutine test_dftd3_gen
@@ -102,7 +102,11 @@ subroutine test_d3bj_mb01(error)
       & "olyp", "opbe", "otpss", "pbe", "pbe0", "pbeh3c", "pbesol", "ptpss", &
       & "pw1pw", "pw6b95", "pwb6k", "pwgga", "pwpb95", "revpbe", "revpbe0", &
       & "revpbe38", "revssb", "rpbe", "rpw86pbe", "ssb", "tpss", "tpss0", "tpssh", &
-      & "scan", "rscan", "r2scan", "b97m", "wb97m", "wb97x"]
+      & "scan", "rscan", "r2scan", "b97m", "wb97m", "wb97x", &
+      & "pbehpbe", "xlyp", "mpwpw", "hcth407", "revtpss", "tauhcth", "b3p", "b1p", &
+      & "b1lyp", "mpw1pw", "mpw1kcis", "pbeh1pbe", "pbe1kcis", "x3lyp", "o3lyp", &
+      & "b971", "b972", "b98", "hiss", "hse03", "revtpssh", "revtpss0", "tpss1kcis", &
+      & "tauhcthhyb", "mn15", "lcwhpbe", "mpw2plyp", "m11", "sogga11x", "n12sx", "mn12sx"]
    real(wp), parameter :: ref(*) = [&
       & -2.9551695097427895E-2_wp,-1.6638703327271943E-2_wp,-1.6725877952934207E-2_wp,&
       & -3.3014430058391525E-2_wp,-2.2051435529913663E-2_wp,-3.3481566296209062E-2_wp,&
@@ -123,7 +127,17 @@ subroutine test_d3bj_mb01(error)
       & -4.5113899837342458E-2_wp,-2.3465720037227366E-2_wp,-2.5011519452203857E-2_wp,&
       & -2.2089903668121399E-2_wp,-4.1432014419532683E-3_wp,-6.6123762443193899E-3_wp,&
       & -5.4507720332652972E-3_wp,-5.8854886182709031E-2_wp,-2.1655168704096176E-2_wp,&
-      & -4.8891115463209484E-2_wp]
+      & -4.8891115463209484E-2_wp,-3.2173514217765979E-2_wp,-8.1794584117917735E-2_wp,&
+      & -3.5666193724993633E-2_wp,-1.2744920615367161E-1_wp,-2.1920190043172975E-2_wp,&
+      & -8.9701535968745305E-2_wp,-2.0954340420500189E-2_wp,-2.0696460566514960E-2_wp,&
+      & -4.5547719597581894E-2_wp,-2.7939172032246610E-2_wp,-6.2045225393881034E-2_wp,&
+      & -2.9161162547409945E-2_wp,-3.8203962104274451E-2_wp,-3.6103964026426009E-2_wp,&
+      & -4.4759236035659941E-2_wp,-3.2738408163387009E-2_wp,-5.3991579199678563E-2_wp,&
+      & -4.3851713503816309E-2_wp,-2.3700539272541038E-2_wp,-2.8136698376405332E-2_wp,&
+      & -2.4751360991084652E-2_wp,-2.3986534077274996E-2_wp,-5.6113881174257106E-2_wp,&
+      & -2.6879433404186437E-3_wp,-4.7068040531449457E-5_wp,-2.2830468001236413E-2_wp,&
+      & -8.9046742259553460E-3_wp,-4.2882620142630961E-3_wp,-3.4182033229747014E-2_wp,&
+      & -1.7851924243396270E-2_wp,-7.2749943813437013E-3_wp]
 
    call get_structure(mol, "MB16-43", "01")
    do ii = 1, size(func)
