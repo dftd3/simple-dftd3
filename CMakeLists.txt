@@ -26,10 +26,6 @@ project(
 # Follow GNU conventions for installing directories
 include(GNUInstallDirs)
 
-# Collect subprojects
-set(lib-deps)
-add_subdirectory("subprojects" EXCLUDE_FROM_ALL)
-
 # General configuration information
 add_subdirectory("config")
 
@@ -38,8 +34,20 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
 endif()
 
 if(NOT TARGET "BLAS::BLAS" AND WITH_BLAS)
-   find_package("BLAS" REQUIRED)
+  find_package("custom-blas" REQUIRED)
 endif()
+
+# Collect subprojects
+if(NOT TARGET "mctc-lib::mctc-lib")
+  find_package("mctc-lib" REQUIRED)
+endif()
+if(NOT TARGET "mstore::mstore")
+  find_package("mstore" REQUIRED)
+endif()
+set(
+  lib-deps
+  "mctc-lib::mctc-lib"
+)
 
 # Collect source of the project
 set(srcs)
@@ -86,6 +94,7 @@ endif()
 target_include_directories(
   "${PROJECT_NAME}-lib"
   PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
   $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}>
@@ -112,6 +121,11 @@ install(
   NAMESPACE
   "${PROJECT_NAME}::"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+)
+install(
+  DIRECTORY
+  "${CMAKE_CURRENT_SOURCE_DIR}/include/"
+  DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
 )
 install(
   DIRECTORY

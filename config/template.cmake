@@ -16,4 +16,8 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
   if(NOT TARGET "BLAS::BLAS" AND "@PROJECT_NAME@_WITH_BLAS")
     find_dependency("BLAS")
   endif()
+
+  if(NOT TARGET "mctc-lib::mctc-lib")
+    find_dependency("mctc-lib")
+  endif()
 endif()
