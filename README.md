@@ -280,6 +280,12 @@ Proceed with the build as described before and install the projects to make the 
 For the out-of-tree build see the instructions in the [``python``](./python) directory.
 
 
+## Contributing
+
+This is a volunteer open source projects and contributions are always welcome. 
+Please, take a moment to read the [contributing guidelines](CONTRIBUTING.md).
+
+
 ## License
 
 This project is free software: you can redistribute it and/or modify it under
