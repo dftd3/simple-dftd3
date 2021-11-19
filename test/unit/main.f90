@@ -24,6 +24,7 @@ program tester
    use test_ncoord, only : collect_ncoord
    use test_param, only : collect_param
    use test_periodic, only : collect_periodic
+   use test_regression, only : collect_regression
    implicit none
    integer :: stat, is
    character(len=:), allocatable :: suite_name, test_name
@@ -37,7 +38,8 @@ program tester
       & new_testsuite("model", collect_model), &
       & new_testsuite("dftd3", collect_dftd3), &
       & new_testsuite("param", collect_param), &
-      & new_testsuite("periodic", collect_periodic) &
+      & new_testsuite("periodic", collect_periodic), &
+      & new_testsuite("regression", collect_regression) &
       & ]
 
    call get_argument(1, suite_name)

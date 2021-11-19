@@ -185,7 +185,7 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
             expw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
             expd = 2*self%wf * (self%cn(iref, izp) - cn(iat)) * expw
             gwk = expw * norm
-            if (ieee_is_nan(gwk)) then
+            if (is_exceptional(gwk)) then
                if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
                   gwk = 1.0_wp
                else
@@ -195,7 +195,7 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
             gwvec(iref, iat) = gwk
 
             dgwk = expd * norm - expw * dnorm * norm**2
-            if (ieee_is_nan(dgwk)) then
+            if (is_exceptional(dgwk)) then
                dgwk = 0.0_wp
             end if
             gwdcn(iref, iat) = dgwk
@@ -220,7 +220,7 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
          do iref = 1, self%ref(izp)
             expw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
             gwk = expw * norm
-            if (ieee_is_nan(gwk)) then
+            if (is_exceptional(gwk)) then
                if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
                   gwk = 1.0_wp
                else
@@ -233,6 +233,14 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
    end if
 
 end subroutine weight_references
+
+
+!> Check whether we are dealing with an exceptional value, NaN or Inf
+elemental function is_exceptional(val)
+   real(wp), intent(in) :: val
+   logical :: is_exceptional
+   is_exceptional = ieee_is_nan(val) .or. abs(val) > huge(val)
+end function is_exceptional
 
 
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.

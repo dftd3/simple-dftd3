@@ -245,7 +245,7 @@ jobs:
       run: pip3 install meson==0.55.3
 
     - name: Configure build
-      run: meson setup ${{ env.M_BUILD_DIR }} --warnlevel=0
+      run: meson setup ${{ env.M_BUILD_DIR }} --warnlevel=0 -Dfortran_link_args="-Wl,--allow-multiple-definition"
       env:
         FC: gfortran
         CC: gcc

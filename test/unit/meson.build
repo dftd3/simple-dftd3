@@ -32,6 +32,7 @@ tests = [
   'dftd3',
   'param',
   'periodic',
+  'regression',
 ]
 
 test_srcs = files(

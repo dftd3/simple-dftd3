@@ -22,6 +22,7 @@ set(
   "dftd3"
   "param"
   "periodic"
+  "regression"
 )
 set(
   test-srcs
