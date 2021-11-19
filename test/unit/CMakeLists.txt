@@ -21,6 +21,7 @@ set(
   "model"
   "dftd3"
   "param"
+  "pairwise"
   "periodic"
   "regression"
 )
@@ -45,5 +46,5 @@ target_link_libraries(
 )
 
 foreach(t IN LISTS tests)
-  add_test("${t}" "${PROJECT_NAME}-tester" "${t}")
+   add_test("${PROJECT_NAME}/${t}" "${PROJECT_NAME}-tester" "${t}")
 endforeach()

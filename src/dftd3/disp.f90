@@ -27,7 +27,7 @@ module dftd3_disp
    implicit none
    private
 
-   public :: get_dispersion
+   public :: get_dispersion, get_pairwise_dispersion
 
 
 contains
@@ -102,6 +102,55 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    energy = sum(energies)
 
 end subroutine get_dispersion
+
+
+!> Wrapper to handle the evaluation of pairwise representation of the dispersion energy
+subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d3_model), intent(in) :: disp
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Pairwise representation of additive dispersion energy
+   real(wp), intent(out) :: energy2(:, :)
+
+   !> Pairwise representation of non-additive dispersion energy
+   real(wp), intent(out) :: energy3(:, :)
+
+   integer :: mref
+   real(wp), allocatable :: cn(:), gwvec(:, :), c6(:, :), lattr(:, :)
+
+   mref = maxval(disp%ref)
+
+   allocate(cn(mol%nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
+
+   allocate(gwvec(mref, mol%nat))
+   call disp%weight_references(mol, cn, gwvec)
+
+   allocate(c6(mol%nat, mol%nat))
+   call disp%get_atomic_c6(mol, gwvec, c6=c6)
+
+   energy2(:, :) = 0.0_wp
+   energy3(:, :) = 0.0_wp
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
+   call param%get_pairwise_dispersion2(mol, lattr, cutoff%disp2, disp%rvdw, disp%r4r2, &
+      & c6, energy2)
+
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
+   call param%get_pairwise_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, &
+      & c6, energy3)
+
+end subroutine get_pairwise_dispersion
 
 
 end module dftd3_disp

@@ -28,7 +28,7 @@ module dftd3_api
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_damping, only : damping_param
-   use dftd3_disp, only : get_dispersion
+   use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
    use dftd3_model, only : d3_model, new_d3_model
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping
@@ -656,6 +656,58 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    endif
 
 end subroutine get_dispersion_api
+
+
+!> Calculate pairwise representation of dispersion energy
+subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
+      & c_pair_energy2, c_pair_energy3) &
+      & bind(C, name=namespace//"get_pairwise_dispersion")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   type(c_ptr), value :: vparam
+   type(vp_param), pointer :: param
+   type(c_ptr), value, intent(in) :: c_pair_energy2
+   real(wp), pointer :: pair_energy2(:, :)
+   type(c_ptr), value, intent(in) :: c_pair_energy3
+   real(wp), pointer :: pair_energy3(:, :)
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   if (.not.c_associated(vparam)) then
+      call fatal_error(error%ptr, "Damping parameters are missing")
+      return
+   end if
+   call c_f_pointer(vparam, param)
+
+   if (.not.allocated(param%ptr)) then
+      call fatal_error(error%ptr, "Damping parameters are not initialized")
+      return
+   end if
+
+   call c_f_pointer(c_pair_energy2, pair_energy2, [mol%ptr%nat, mol%ptr%nat])
+   call c_f_pointer(c_pair_energy3, pair_energy3, [mol%ptr%nat, mol%ptr%nat])
+
+   call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, realspace_cutoff(), &
+      & pair_energy2, pair_energy3)
+
+end subroutine get_pairwise_dispersion_api
 
 
 subroutine f_c_character(rhs, lhs, len)

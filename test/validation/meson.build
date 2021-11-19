@@ -14,9 +14,30 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-if get_option('api')
-  subdir('api')
-endif
+app_tester = find_program(meson.current_source_dir() / 'tester.py')
 
-subdir('unit')
-subdir('validation')
+test(
+  'energy',
+  app_tester,
+  args: [
+    sdftd3_exe,
+    files('01-energy.json'),
+    files('01-ammonia.tmol'),
+    '--noedisp',
+    '--zero', 'tpssh',
+  ],
+  suite: 'app',
+)
+test(
+  'gradient',
+  app_tester,
+  args: [
+    sdftd3_exe,
+    files('02-gradient.json'),
+    files('02-nitralin.mol'),
+    '--noedisp',
+    '--bj', 'scan',
+    '--grad',
+  ],
+  suite: 'app',
+)

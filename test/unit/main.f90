@@ -23,6 +23,7 @@ program tester
    use test_model, only : collect_model
    use test_ncoord, only : collect_ncoord
    use test_param, only : collect_param
+   use test_pairwise, only : collect_pairwise
    use test_periodic, only : collect_periodic
    use test_regression, only : collect_regression
    implicit none
@@ -38,6 +39,7 @@ program tester
       & new_testsuite("model", collect_model), &
       & new_testsuite("dftd3", collect_dftd3), &
       & new_testsuite("param", collect_param), &
+      & new_testsuite("pairwise", collect_pairwise), &
       & new_testsuite("periodic", collect_periodic), &
       & new_testsuite("regression", collect_regression) &
       & ]

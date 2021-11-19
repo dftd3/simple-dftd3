@@ -41,7 +41,7 @@ endif()
 if(NOT TARGET "mctc-lib::mctc-lib")
   find_package("mctc-lib" REQUIRED)
 endif()
-if(NOT TARGET "mstore::mstore")
+if(NOT TARGET "mstore::mstore" AND WITH_TESTS)
   find_package("mstore" REQUIRED)
 endif()
 set(
@@ -148,5 +148,7 @@ install(
 )
 
 # add the testsuite
-enable_testing()
-add_subdirectory("test")
+if(WITH_TESTS)
+  enable_testing()
+  add_subdirectory("test")
+endif()

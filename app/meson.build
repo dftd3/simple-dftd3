@@ -22,10 +22,10 @@ sdftd3_exe = executable(
 )
 
 if os != 'windows'
-  test('app-version', sdftd3_exe, args: '--version')
-  test('app-help', sdftd3_exe, args: '--help')
-  test('app-noargs', sdftd3_exe, should_fail: true)
-  test('app-example', sdftd3_exe, args: files('example.xyz'))
-  test('app-zero', sdftd3_exe, args: ['--json', '--zero-param', '1.0', '1.868', '1.613', files('example.xyz')])
-  test('app-rational', sdftd3_exe, args: ['--bj-param', '1.0', '1.2576', '0.3768', '4.5865', files('example.xyz')])
+  test('version', sdftd3_exe, args: '--version', suite: 'app')
+  test('help', sdftd3_exe, args: '--help', suite: 'app')
+  test('noargs', sdftd3_exe, should_fail: true, suite: 'app')
+  test('example', sdftd3_exe, args: files('example.xyz'), suite: 'app')
+  test('zero', sdftd3_exe, args: ['--json', '--zero-param', '1.0', '1.868', '1.613', files('example.xyz')], suite: 'app')
+  test('rational', sdftd3_exe, args: ['--bj-param', '1.0', '1.2576', '0.3768', '4.5865', files('example.xyz')], suite: 'app')
 endif

@@ -33,6 +33,8 @@ main (void) {
        1.92825631079613, 0.00000000000000,-2.53624948351102,
        0.00000000000000, 0.00000000000000, 5.23010455462158};
    double energy;
+   double pair_disp2[49];
+   double pair_disp3[49];
    double gradient[21];
    double sigma[9];
 
@@ -61,6 +63,8 @@ main (void) {
    dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
    if (dftd3_check_error(error)) {return 1;}
    dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
+   if (dftd3_check_error(error)) {return 1;}
+   dftd3_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
    if (dftd3_check_error(error)) {return 1;}
    dftd3_delete_param(&param);
 

@@ -66,6 +66,9 @@ attempts to add to Turbomole gradient and gradlatt files
 *--property*::
 Evaluate dispersion related properties
 
+*--pair-resolved*::
+Calculate pairwise representation of dispersion energy
+
 *-v, --verbose*::
 Show more, can be used multiple times
 

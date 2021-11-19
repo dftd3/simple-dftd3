@@ -58,10 +58,10 @@ sdftd3_pyext = python.extension_module(
 if install
   python.install_sources(
     '__init__.py',
-    'libdftd3.py',
+    'library.py',
     'interface.py',
-    'test_libdftd3.py',
+    'test_library.py',
     'test_interface.py',
-    subdir: 'dftd3'
+    subdir: 'dftd3',
   )
 endif

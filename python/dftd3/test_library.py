@@ -17,7 +17,7 @@
 
 from pkg_resources import parse_version
 from dftd3 import __version__
-from dftd3.libdftd3 import get_api_version
+from dftd3.library import get_api_version
 
 
 def test_api_version():

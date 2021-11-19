@@ -26,6 +26,7 @@ Supported keywords are
 ======================== =========== ============================================
  level_hint               None        Dispersion correction level (allowed: "d4")
  params_tweaks            None        Optional dict with the damping parameters
+ pair_resolved            False       Enable pairwise resolved dispersion energy
 ======================== =========== ============================================
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
@@ -86,7 +87,7 @@ from .interface import (
     ModifiedRationalDampingParam,
     ModifiedZeroDampingParam,
 )
-from .libdftd3 import get_api_version
+from .library import get_api_version
 import numpy as np
 import qcelemental as qcel
 
@@ -127,7 +128,7 @@ def run_qcschema(
     provenance = {
         "creator": "s-dftd3",
         "version": get_api_version(),
-        "routine": "dftd4.qcschema.run_qcschema",
+        "routine": "dftd3.qcschema.run_qcschema",
     }
     success = False
     return_result = 0.0
@@ -190,6 +191,10 @@ def run_qcschema(
                 fullgrad[ireal, :] = res.get("gradient")
 
         properties.update(return_energy=res.get("energy"))
+
+        if atomic_input.keywords.get("pair_resolved", False):
+            res = disp.get_pairwise_dispersion(param=param)
+            extras["dftd3"].update(res)
 
         success = atomic_input.driver in _supported_drivers
         if atomic_input.driver == "energy":

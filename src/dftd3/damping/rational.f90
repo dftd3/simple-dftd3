@@ -16,7 +16,7 @@
 
 module dftd3_damping_rational
    use dftd3_damping, only : damping_param
-   use dftd3_damping_atm, only : get_atm_dispersion
+   use dftd3_damping_atm, only : get_atm_dispersion, get_atm_pairwise_dispersion
    use dftd3_param, only : d3_param
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -41,7 +41,16 @@ module dftd3_damping_rational
       !> Evaluate ATM three-body dispersion energy expression
       procedure :: get_dispersion3
 
+      !> Evaluate pairwise representation of additive dispersion energy
+      procedure :: get_pairwise_dispersion2
+
+      !> Evaluate pairwise representation of non-additive dispersion energy
+      procedure :: get_pairwise_dispersion3
+
    end type rational_damping_param
+
+
+   real(wp), parameter :: rs9 = 4.0_wp/3.0_wp
 
 
 contains
@@ -320,10 +329,110 @@ subroutine get_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
-   call get_atm_dispersion(mol, trans, cutoff, self%s9, 4.0/3.0_wp, self%alp+2, &
+   call get_atm_dispersion(mol, trans, cutoff, self%s9, rs9, self%alp+2, &
       & rvdw, c6, dc6dcn, energy, dEdcn, gradient, sigma)
 
 end subroutine get_dispersion3
+
+
+!> Evaluation of the dispersion energy expression projected on atomic pairs
+subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, energy)
+
+   !> Damping parameters
+   class(rational_damping_param), intent(in) :: self
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Van-der-Waals radii for damping function
+   real(wp), intent(in) :: rvdw(:, :)
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Dispersion energy
+   real(wp), intent(inout) :: energy(:, :)
+
+   integer :: iat, jat, izp, jzp, jtr
+   real(wp) :: vec(3), r2, cutoff2, r0ij, rrij, c6ij, t6, t8, edisp, dE
+
+   cutoff2 = cutoff*cutoff
+
+   !$omp parallel do schedule(runtime) default(none) shared(energy) &
+   !$omp shared(mol, self, c6, trans, cutoff2, r4r2) private(iat, jat, izp, jzp, &
+   !$omp& jtr, vec, r2, r0ij, rrij, c6ij, t6, t8, edisp, dE)
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      do jat = 1, iat
+         jzp = mol%id(jat)
+         rrij = 3*r4r2(izp)*r4r2(jzp)
+         r0ij = self%a1 * sqrt(rrij) + self%a2
+         c6ij = c6(jat, iat)
+         do jtr = 1, size(trans, 2)
+            vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
+            r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
+            if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
+
+            t6 = 1.0_wp/(r2**3 + r0ij**6)
+            t8 = 1.0_wp/(r2**4 + r0ij**8)
+
+            edisp = self%s6*t6 + self%s8*rrij*t8
+
+            dE = -c6ij*edisp * 0.5_wp
+
+            !$omp atomic
+            energy(jat, iat) = energy(jat, iat) + dE
+            if (iat /= jat) then
+               !$omp atomic
+               energy(iat, jat) = energy(iat, jat) + dE
+            end if
+         end do
+      end do
+   end do
+
+end subroutine get_pairwise_dispersion2
+
+
+!> Evaluation of the dispersion energy expression
+subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, energy)
+
+   !> Damping parameters
+   class(rational_damping_param), intent(in) :: self
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Van-der-Waals radii for damping function
+   real(wp), intent(in) :: rvdw(:, :)
+
+   !> Expectation values for r4 over r2 operator
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Dispersion energy
+   real(wp), intent(inout) :: energy(:, :)
+
+   call get_atm_pairwise_dispersion(mol, trans, cutoff, self%s9, rs9, self%alp+2, &
+      & rvdw, c6, energy)
+
+end subroutine get_pairwise_dispersion3
 
 
 end module dftd3_damping_rational

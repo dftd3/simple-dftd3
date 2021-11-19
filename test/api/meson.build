@@ -20,4 +20,4 @@ api_tester = executable(
   dependencies: sdftd3_dep,
 )
 
-test('api-test', api_tester)
+test('api-test', api_tester, suite: 'api')

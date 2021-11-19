@@ -31,6 +31,7 @@ tests = [
   'model',
   'dftd3',
   'param',
+  'pairwise',
   'periodic',
   'regression',
 ]
@@ -49,5 +50,5 @@ tester = executable(
 )
 
 foreach t : tests
-  test(t, tester, args: t)
+  test(t, tester, args: t, suite: 'unit')
 endforeach

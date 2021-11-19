@@ -39,6 +39,7 @@ program dftd3_main
       logical :: mrational = .false.
       logical :: has_param = .false.
       integer :: verbosity = 2
+      logical :: pair_resolved = .false.
    end type d3_config
    type(d3_config) :: config
 
@@ -49,8 +50,8 @@ program dftd3_main
    type(d3_model) :: d3
    type(d3_param) :: inp
    type(error_type), allocatable :: error
-   real(wp) :: energy, sigma(3, 3)
-   real(wp), allocatable :: gradient(:, :)
+   real(wp), allocatable :: energy, gradient(:, :), sigma(:, :)
+   real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    character(len=:), allocatable :: method
    type(zero_damping_param), allocatable :: zparam
    type(mzero_damping_param), allocatable :: mparam
@@ -129,8 +130,11 @@ program dftd3_main
       call ascii_damping_param(output_unit, param, method)
    end if
 
-   if (config%grad) then
-      allocate(gradient(3, mol%nat))
+   if (allocated(param)) then
+      energy = 0.0_wp
+      if (config%grad) then
+         allocate(gradient(3, mol%nat), sigma(3, 3))
+      end if
    end if
 
    call new_d3_model(d3, mol)
@@ -142,8 +146,16 @@ program dftd3_main
    if (allocated(param)) then
       call get_dispersion(mol, d3, param, realspace_cutoff(), energy, gradient, &
          & sigma)
+      if (config%pair_resolved) then
+         allocate(pair_disp2(mol%nat, mol%nat), pair_disp3(mol%nat, mol%nat))
+         call get_pairwise_dispersion(mol, d3, param, realspace_cutoff(), pair_disp2, &
+            & pair_disp3)
+      end if
       if (config%verbosity > 0) then
          call ascii_results(output_unit, mol, energy, gradient, sigma)
+         if (config%pair_resolved) then
+            call ascii_pairwise(output_unit, mol, pair_disp2, pair_disp3)
+         end if
       end if
       if (config%tmer) then
          if (config%verbosity > 0) then
@@ -192,19 +204,16 @@ program dftd3_main
 
       if (config%json) then
          open(file=config%json_output, newunit=unit)
-         if (config%grad) then
-            call json_results(unit, "  ", energy, gradient, sigma)
-         else
-            call json_results(unit, "  ", energy)
-         end if
+         call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma, &
+            & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
          close(unit)
          if (config%verbosity > 0) then
             write(output_unit, '(a)') &
                & "[Info] JSON dump of results written to '"//config%json_output//"'"
          end if
       end if
-   end if
 
+   end if
 
 
 contains
@@ -297,6 +306,7 @@ subroutine help(unit)
       "", "write results to file (default: dftd3.txt),", &
       "", "attempts to add to Turbomole gradient and gradlatt files", &
       "--property", "Evaluate dispersion related properties", &
+      "--pair-resolved", "Calculate pairwise representation of dispersion energy", &
       "-v, --verbose", "Show more, can be used multiple times", &
       "-s, --silent", "Show less, use twice to supress all output", &
       "--version", "Print program version and exit", &
@@ -451,6 +461,8 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
          end if
       case("--property")
          config%properties = .true.
+      case("--pair-resolved")
+         config%pair_resolved = .true.
       case("--noedisp")
          config%tmer = .false.
       case("--nowrap")

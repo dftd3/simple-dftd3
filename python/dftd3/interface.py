@@ -18,23 +18,7 @@
 from typing import List, Optional, Union
 import numpy as np
 
-
-from .libdftd3 import (
-    ffi as _ffi,
-    lib as _lib,
-    new_error,
-    handle_error,
-    new_structure,
-    new_d3_model,
-    new_zero_damping,
-    load_zero_damping,
-    new_rational_damping,
-    load_rational_damping,
-    new_mzero_damping,
-    load_mzero_damping,
-    new_mrational_damping,
-    load_mrational_damping,
-)
+from . import library
 
 
 class Structure:
@@ -46,7 +30,7 @@ class Structure:
     and immutable atomic identifiers
     """
 
-    _mol = _ffi.NULL
+    _mol = library.ffi.NULL
 
     def __init__(
         self,
@@ -80,7 +64,7 @@ class Structure:
         else:
             _periodic = None
 
-        self._mol = new_structure(
+        self._mol = library.new_structure(
             self._natoms,
             _cast("int*", _numbers),
             _cast("double*", _positions),
@@ -117,21 +101,17 @@ class Structure:
         else:
             _lattice = None
 
-        _error = new_error()
-        _lib.dftd3_update_structure(
-            _error,
+        library.update_structure(
             self._mol,
             _cast("double*", _positions),
             _cast("double*", _lattice),
         )
 
-        handle_error(_error)
-
 
 class DampingParam:
     """Abstract base class for damping parameters"""
 
-    _param = _ffi.NULL
+    _param = library.ffi.NULL
 
     def __init__(self, **kwargs):
         """Create new damping parameter from method name or explicit data"""
@@ -156,8 +136,8 @@ class RationalDampingParam(DampingParam):
 
     @staticmethod
     def load_param(method, **kwargs):
-        _method = _ffi.new("char[]", method.encode())
-        return load_rational_damping(
+        _method = library.ffi.new("char[]", method.encode())
+        return library.load_rational_damping(
             _method,
             kwargs.get("s9", 1.0) > 0.0,
         )
@@ -165,7 +145,7 @@ class RationalDampingParam(DampingParam):
     @staticmethod
     def new_param(**kwargs):
         try:
-            return new_rational_damping(
+            return library.new_rational_damping(
                 kwargs.get("s6", 1.0),
                 kwargs["s8"],
                 kwargs.get("s9", 1.0),
@@ -183,8 +163,8 @@ class ZeroDampingParam(DampingParam):
 
     @staticmethod
     def load_param(method, **kwargs):
-        _method = _ffi.new("char[]", method.encode())
-        return load_zero_damping(
+        _method = library.ffi.new("char[]", method.encode())
+        return library.load_zero_damping(
             _method,
             kwargs.get("s9", 1.0) > 0.0,
         )
@@ -192,7 +172,7 @@ class ZeroDampingParam(DampingParam):
     @staticmethod
     def new_param(**kwargs):
         try:
-            return new_zero_damping(
+            return library.new_zero_damping(
                 kwargs.get("s6", 1.0),
                 kwargs["s8"],
                 kwargs.get("s9", 1.0),
@@ -210,8 +190,8 @@ class ModifiedRationalDampingParam(DampingParam):
 
     @staticmethod
     def load_param(method, **kwargs):
-        _method = _ffi.new("char[]", method.encode())
-        return load_mrational_damping(
+        _method = library.ffi.new("char[]", method.encode())
+        return library.load_mrational_damping(
             _method,
             kwargs.get("s9", 1.0) > 0.0,
         )
@@ -219,7 +199,7 @@ class ModifiedRationalDampingParam(DampingParam):
     @staticmethod
     def new_param(**kwargs):
         try:
-            return new_mrational_damping(
+            return library.new_mrational_damping(
                 kwargs.get("s6", 1.0),
                 kwargs["s8"],
                 kwargs.get("s9", 1.0),
@@ -237,8 +217,8 @@ class ModifiedZeroDampingParam(DampingParam):
 
     @staticmethod
     def load_param(method, **kwargs):
-        _method = _ffi.new("char[]", method.encode())
-        return load_mzero_damping(
+        _method = library.ffi.new("char[]", method.encode())
+        return library.load_mzero_damping(
             _method,
             kwargs.get("s9", 1.0) > 0.0,
         )
@@ -246,7 +226,7 @@ class ModifiedZeroDampingParam(DampingParam):
     @staticmethod
     def new_param(**kwargs):
         try:
-            return new_mzero_damping(
+            return library.new_mzero_damping(
                 kwargs.get("s6", 1.0),
                 kwargs["s8"],
                 kwargs.get("s9", 1.0),
@@ -264,7 +244,7 @@ class DispersionModel(Structure):
     .. Dispersion model
     """
 
-    _disp = _ffi.NULL
+    _disp = library.ffi.NULL
 
     def __init__(
         self,
@@ -275,13 +255,12 @@ class DispersionModel(Structure):
     ):
         Structure.__init__(self, numbers, positions, lattice, periodic)
 
-        self._disp = new_d3_model(self._mol)
+        self._disp = library.new_d3_model(self._mol)
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """Perform actual evaluation of the dispersion correction"""
 
-        _error = new_error()
-        _energy = _ffi.new("double *")
+        _energy = library.ffi.new("double *")
         if grad:
             _gradient = np.zeros((len(self), 3))
             _sigma = np.zeros((3, 3))
@@ -289,8 +268,7 @@ class DispersionModel(Structure):
             _gradient = None
             _sigma = None
 
-        _lib.dftd3_get_dispersion(
-            _error,
+        library.get_dispersion(
             self._mol,
             self._disp,
             param._param,
@@ -299,8 +277,6 @@ class DispersionModel(Structure):
             _cast("double*", _sigma),
         )
 
-        handle_error(_error)
-
         results = dict(energy=_energy[0])
         if _gradient is not None:
             results.update(gradient=_gradient)
@@ -308,16 +284,39 @@ class DispersionModel(Structure):
             results.update(virial=_sigma)
         return results
 
+    def get_pairwise_dispersion(self, param: DampingParam) -> dict:
+        """Evaluate pairwise representation of the dispersion energy"""
+
+        _pair_disp2 = np.zeros((len(self), len(self)))
+        _pair_disp3 = np.zeros((len(self), len(self)))
+
+        library.get_pairwise_dispersion(
+            self._mol,
+            self._disp,
+            param._param,
+            _cast("double*", _pair_disp2),
+            _cast("double*", _pair_disp3),
+        )
+
+        return {
+            "additive pairwise energy": _pair_disp2,
+            "non-additive pairwise energy": _pair_disp3,
+        }
+
 
 def _cast(ctype, array):
     """Cast a numpy array to a FFI pointer"""
-    return _ffi.NULL if array is None else _ffi.cast(ctype, array.ctypes.data)
+    return (
+        library.ffi.NULL
+        if array is None
+        else library.ffi.cast(ctype, array.ctypes.data)
+    )
 
 
 def _ref(ctype, value):
     """Create a reference to a value"""
     if value is None:
-        return _ffi.NULL
-    ref = _ffi.new(ctype + "*")
+        return library.ffi.NULL
+    ref = library.ffi.new(ctype + "*")
     ref[0] = value
     return ref
