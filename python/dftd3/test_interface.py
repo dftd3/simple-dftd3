@@ -29,62 +29,65 @@ import numpy as np
 def test_rational_damping_noargs():
     """Check constructor of damping parameters for insufficient arguments"""
 
-    with raises(RuntimeError):
+    with raises(TypeError):
         RationalDampingParam()
 
-    with raises(RuntimeError, match="s8"):
+    with raises(TypeError, match="s8"):
         RationalDampingParam(a1=0.4, a2=5.0)
 
-    with raises(RuntimeError, match="a1"):
+    with raises(TypeError, match="a1"):
         RationalDampingParam(s8=1.0, a2=5.0)
 
-    with raises(RuntimeError, match="a2"):
+    with raises(TypeError, match="a2"):
         RationalDampingParam(s8=1.0, a1=0.4)
 
 
 def test_zero_damping_noargs():
     """Check constructor of damping parameters for insufficient arguments"""
 
-    with raises(RuntimeError):
+    with raises(TypeError):
         ZeroDampingParam()
 
-    with raises(RuntimeError, match="s8"):
+    with raises(TypeError, match="s8"):
         ZeroDampingParam(rs6=1.2)
 
-    with raises(RuntimeError, match="rs6"):
+    with raises(TypeError, match="rs6"):
         ZeroDampingParam(s8=1.0)
 
 
 def test_modified_rational_damping_noargs():
     """Check constructor of damping parameters for insufficient arguments"""
 
-    with raises(RuntimeError):
+    with raises(TypeError):
         ModifiedRationalDampingParam()
 
-    with raises(RuntimeError, match="s8"):
+    with raises(TypeError, match="s8"):
         ModifiedRationalDampingParam(a1=0.4, a2=5.0)
 
-    with raises(RuntimeError, match="a1"):
+    with raises(TypeError, match="a1"):
         ModifiedRationalDampingParam(s8=1.0, a2=5.0)
 
-    with raises(RuntimeError, match="a2"):
+    with raises(TypeError, match="a2"):
         ModifiedRationalDampingParam(s8=1.0, a1=0.4)
 
 
 def test_modified_zero_damping_noargs():
     """Check constructor of damping parameters for insufficient arguments"""
 
-    with raises(RuntimeError):
+    with raises(TypeError):
         ModifiedZeroDampingParam()
 
-    with raises(RuntimeError, match="s8"):
+    with raises(TypeError, match="s8"):
         ModifiedZeroDampingParam(rs6=1.2, bet=1.0)
 
-    with raises(RuntimeError, match="rs6"):
+    with raises(TypeError, match="rs6"):
         ModifiedZeroDampingParam(s8=1.0, bet=1.0)
 
-    with raises(RuntimeError, match="bet"):
+    with raises(TypeError, match="bet"):
         ModifiedZeroDampingParam(s8=1.0, rs6=1.2)
+
+    with raises(TypeError):
+        ModifiedZeroDampingParam(s8=1.0, rs6=1.2, bet=1.0, method="abc")
 
 
 def test_structure():

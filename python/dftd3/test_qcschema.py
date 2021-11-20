@@ -244,7 +244,8 @@ def test_error_noargs():
         keywords={},
     )
     error = qcel.models.ComputeError(
-        error_type="input error", error_message="Constructor requires argument for 's8'"
+        error_type="input error",
+        error_message="new_param() missing 3 required keyword-only arguments: 's8', 'a1', and 'a2'",
     )
 
     atomic_result = run_qcschema(atomic_input)

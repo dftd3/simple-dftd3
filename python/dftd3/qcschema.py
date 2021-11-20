@@ -24,13 +24,18 @@ Supported keywords are
 ======================== =========== ============================================
  Keyword                  Default     Description
 ======================== =========== ============================================
- level_hint               None        Dispersion correction level (allowed: "d4")
+ level_hint               None        Dispersion correction level
  params_tweaks            None        Optional dict with the damping parameters
  pair_resolved            False       Enable pairwise resolved dispersion energy
 ======================== =========== ============================================
 
+Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``, and ``"d3zerom"``.
+
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
-must be provided
+must be provided for rational damping, while s8 and rs6 are required in case
+of zero damping.
+
+Parameters for (modified) rational damping are:
 
 ======================== =========== ============================================
  Tweakable parameter      Default     Description
@@ -40,18 +45,28 @@ must be provided
  s9                       1.0         Scaling of the three-body dispersion energy
  a1                       None        Scaling of the critical radii
  a2                       None        Offset of the critical radii
- alp                      16.0        Exponent of the zero damping (ATM only)
+ alp                      14.0        Exponent of the zero damping (ATM only)
 ======================== =========== ============================================
 
-Either method or s8, a1 and a2 must be provided, s9 can be used to overwrite
-the ATM scaling if the method is provided in the model.
-Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
-for damping parameters of a given method and prefers special two-body only
-damping parameters if available!
-If input_data.model.method and input_data.keywords["params_tweaks"] are both
-provided, the former "wins" without any consistency checking. Note that with the
-QCEngine QCSchema runner for classic ``dftd3``, the latter "wins" without any
-consistency checking.
+Parameters for (modified) zero damping are:
+
+======================== =========== ===================================================
+ Tweakable parameter      Default     Description
+======================== =========== ===================================================
+ s6                       1.0         Scaling of the dipole-dipole dispersion
+ s8                       None        Scaling of the dipole-quadrupole dispersion
+ s9                       1.0         Scaling of the three-body dispersion energy
+ rs6                      None        Scaling of the dipole-dipole damping
+ rs8                      1.0         Scaling of the dipole-quadrupole damping
+ alp                      14.0        Exponent of the zero damping
+ bet                      None        Offset for damping radius (modified zero damping)
+======================== =========== ===================================================
+
+.. note::
+
+    input_data.model.method with a full method name and input_data.keywords["params_tweaks"]
+    cannot be provided at the same time. It is an error to provide both options at the
+    same time.
 
 Example
 -------
@@ -153,21 +168,18 @@ def run_qcschema(
         return qcel.models.AtomicResult(**ret_data)
 
     # Check if the method is provided and strip the “dashlevel” from the method
-    _method = atomic_input.model.method
+    _method = atomic_input.model.method.split("-")
+    if _method[-1].lower().translate(_clean_dashlevel) == _level.lower():
+        _method.pop()
+    _method = "-".join(_method)
     if len(_method) == 0:
         _method = None
-    else:
-        _method = _method.split("-")
-        if _method[-1].lower().translate(_clean_dashlevel) == _level.lower():
-            _method.pop()
-        _method = "-".join(_method)
 
     # Obtain the parameters for the damping function
-    _input_param = atomic_input.keywords.get("params_tweaks", {})
+    _input_param = atomic_input.keywords.get("params_tweaks", {"method": _method})
 
     try:
         param = _damping_param[_level](
-            method=_method,
             **_input_param,
         )
 
@@ -211,7 +223,7 @@ def run_qcschema(
 
         ret_data["extras"].update(extras)
 
-    except RuntimeError as e:
+    except (RuntimeError, TypeError) as e:
         ret_data.update(
             error=qcel.models.ComputeError(
                 error_type="input error", error_message=str(e)

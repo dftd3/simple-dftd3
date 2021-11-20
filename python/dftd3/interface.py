@@ -13,7 +13,14 @@
 #
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
-"""Wrapper around the C-API of the s-dftd3 shared library."""
+"""
+Wrapper around the C-API of the s-dftd3 shared library.
+It provides the definition the basic interface to the library for most further integration
+in other Python frameworks.
+
+The classes defined here allow a more Pythonic usage of the API object provided by the
+library in actual workflows than the low-level access provided in the CFFI generated wrappers.
+"""
 
 from typing import List, Optional, Union
 import numpy as np
@@ -28,6 +35,27 @@ class Structure:
     Represents a wrapped structure object in ``s-dftd3``.
     The molecular structure data object has a fixed number of atoms
     and immutable atomic identifiers
+
+    Example
+    -------
+    >>> from dftd3.interface import Structure
+    >>> import numpy as np
+    >>> mol = Structure(
+    ...     positions=np.array([
+    ...         [+0.00000000000000, +0.00000000000000, -0.73578586109551],
+    ...         [+1.44183152868459, +0.00000000000000, +0.36789293054775],
+    ...         [-1.44183152868459, +0.00000000000000, +0.36789293054775],
+    ...     ]),
+    ...     numbers = np.array([8, 1, 1]),
+    ... )
+    ...
+    >>> len(mol)
+    3
+
+    Raises
+    ------
+    ValueError
+        on invalid input, like incorrect shape / type of the passed arrays
     """
 
     _mol = library.ffi.NULL
@@ -39,7 +67,17 @@ class Structure:
         lattice: Optional[np.ndarray] = None,
         periodic: Optional[np.ndarray] = None,
     ):
-        """Create new molecular structure data"""
+        """
+        Create new molecular structure data from arrays. The returned object has
+        immutable atomic species and boundary condition, also the total number of
+        atoms cannot be changed.
+
+        Raises
+        ------
+        ValueError
+            on invalid input, like incorrect shape / type of the passed arrays
+        """
+
         if positions.size % 3 != 0:
             raise ValueError("Expected tripels of cartesian coordinates")
 
@@ -80,14 +118,20 @@ class Structure:
         positions: np.ndarray,
         lattice: Optional[np.ndarray] = None,
     ) -> None:
-        """Update coordinates and lattice parameters, both provided in
+        """
+        Update coordinates and lattice parameters, both provided in
         atomic units (Bohr).
         The lattice update is optional also for periodic structures.
 
         Generally, only the cartesian coordinates and the lattice parameters
-        can be updated, every other modification, regarding total charge,
-        total spin, boundary condition, atomic types or number of atoms
+        can be updated, every other modification,
+        boundary condition, atomic types or number of atoms
         requires the complete reconstruction of the object.
+
+        Raises
+        ------
+        ValueError
+            on invalid input, like incorrect shape / type of the passed arrays
         """
 
         if 3 * len(self) != positions.size:
@@ -109,14 +153,38 @@ class Structure:
 
 
 class DampingParam:
-    """Abstract base class for damping parameters"""
+    """
+    Abstract base class for damping parameters, representing a parametrization of
+    a DFT-D3 method.
+
+    The damping parameters contained in the object are immutable. To change the
+    parametrization, a new object must be created. Furthermore, the object is
+    opaque to the user and the contained data cannot be accessed directly.
+
+    There are two main ways provided to generate a new damping parameter object:
+
+    1. a method name is passed to the constructor, the library will load the
+       required data from the *s-dftd3* shared library.
+
+    2. all required parameters are passed to the constructor and the library will
+       generate an object from the given parameters.
+
+    .. note::
+
+       Mixing of the two methods is not allowed to avoid partial initialization
+       of any created objects. Users who need full control over the creation
+       of the object should use the second method.
+    """
 
     _param = library.ffi.NULL
 
     def __init__(self, **kwargs):
         """Create new damping parameter from method name or explicit data"""
 
-        if "method" in kwargs and kwargs["method"] is not None:
+        if "method" in kwargs and kwargs["method"] is None:
+            del kwargs["method"]
+
+        if "method" in kwargs:
             self._param = self.load_param(**kwargs)
         else:
             self._param = self.new_param(**kwargs)
@@ -131,117 +199,150 @@ class DampingParam:
 
 
 class RationalDampingParam(DampingParam):
+    """
+    Rational damping function for DFT-D3.
+    The original scheme was proposed by Becke and Johnson\ :footcite:`becke2005,johnson2005,johnson2006`
+    and implemented in a slightly adjusted form using only the C8/C6 ratio in the critical
+    for DFT-D3.\ :footcite:`grimme2011`
+    The rational damping scheme has the advantage of damping the dispersion energy to
+    finite value, rather than removing it at short distances.
+
+    .. note::
+
+       The zero damping function is retained for the three-body contributions from the ATM
+       term.
+    """
+
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, **kwargs):
+    def load_param(method, atm=True):
         _method = library.ffi.new("char[]", method.encode())
         return library.load_rational_damping(
             _method,
-            kwargs.get("s9", 1.0) > 0.0,
+            atm,
         )
 
     @staticmethod
-    def new_param(**kwargs):
-        try:
-            return library.new_rational_damping(
-                kwargs.get("s6", 1.0),
-                kwargs["s8"],
-                kwargs.get("s9", 1.0),
-                kwargs["a1"],
-                kwargs["a2"],
-                kwargs.get("alp", 14.0),
-            )
-        except KeyError as e:
-            raise RuntimeError("Constructor requires argument for " + str(e))
+    def new_param(*, s6=1.0, s8, s9=1.0, a1, a2, alp=14.0):
+        return library.new_rational_damping(
+            s6,
+            s8,
+            s9,
+            a1,
+            a2,
+            alp,
+        )
 
 
 class ZeroDampingParam(DampingParam):
+    """
+    Original DFT-D3 damping function,\ :footcite:`grimme2010` based on a variant proposed by
+    Chai and Head-Gordon.\ :footcite:`chai2008`
+    Since it is damping the dispersion energy to zero at short distances it is usually
+    called zero damping scheme for simplicity. However, due to this short-range limit
+    of the dispersion energy a repulsive contribution to the gradient can arise, which
+    is considered artificial.\ :footcite:`grimme2011`
+    """
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, **kwargs):
+    def load_param(method, atm=True):
         _method = library.ffi.new("char[]", method.encode())
         return library.load_zero_damping(
             _method,
-            kwargs.get("s9", 1.0) > 0.0,
+            atm,
         )
 
     @staticmethod
-    def new_param(**kwargs):
-        try:
-            return library.new_zero_damping(
-                kwargs.get("s6", 1.0),
-                kwargs["s8"],
-                kwargs.get("s9", 1.0),
-                kwargs["rs6"],
-                kwargs.get("rs8", 1.0),
-                kwargs.get("alp", 14.0),
-            )
-        except KeyError as e:
-            raise RuntimeError("Constructor requires argument for " + str(e))
+    def new_param(*, s6=1.0, s8, s9=1.0, rs6, rs8=1.0, alp=14.0):
+        return library.new_zero_damping(
+            s6,
+            s8,
+            s9,
+            rs6,
+            rs8,
+            alp,
+        )
 
 
 class ModifiedRationalDampingParam(DampingParam):
+    """
+    Modified version of the rational damping parameters. The functional form of the
+    damping function is *unmodified* with respect to the original rational damping scheme.
+    However, for a number of functionals new parameters were introduced.:footcite:`smith2016`
+
+    This constructor allows to automatically load the reparameterized damping function
+    from the library rather than the original one. Providing a full parameter set is
+    functionally equivalent to using the `RationalDampingParam` constructor.
+    """
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, **kwargs):
+    def load_param(method, atm=True):
         _method = library.ffi.new("char[]", method.encode())
         return library.load_mrational_damping(
             _method,
-            kwargs.get("s9", 1.0) > 0.0,
+            atm,
         )
 
     @staticmethod
-    def new_param(**kwargs):
-        try:
-            return library.new_mrational_damping(
-                kwargs.get("s6", 1.0),
-                kwargs["s8"],
-                kwargs.get("s9", 1.0),
-                kwargs["a1"],
-                kwargs["a2"],
-                kwargs.get("alp", 14.0),
-            )
-        except KeyError as e:
-            raise RuntimeError("Constructor requires argument for " + str(e))
+    def new_param(*, s6=1.0, s8, s9=1.0, a1, a2, alp=14.0):
+        return library.new_mrational_damping(
+            s6,
+            s8,
+            s9,
+            a1,
+            a2,
+            alp,
+        )
 
 
 class ModifiedZeroDampingParam(DampingParam):
+    """
+    Modified zero damping function for DFT-D3.\ :footcite:`smith2016`
+    This scheme adds an additional offset parameter to the zero damping scheme
+    of the original DFT-D3.
+
+    .. note::
+
+       This damping function is identical to zero damping for ``bet=0.0``.
+    """
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, **kwargs):
+    def load_param(method, atm=True):
         _method = library.ffi.new("char[]", method.encode())
         return library.load_mzero_damping(
             _method,
-            kwargs.get("s9", 1.0) > 0.0,
+            atm,
         )
 
     @staticmethod
-    def new_param(**kwargs):
-        try:
-            return library.new_mzero_damping(
-                kwargs.get("s6", 1.0),
-                kwargs["s8"],
-                kwargs.get("s9", 1.0),
-                kwargs["rs6"],
-                kwargs.get("rs8", 1.0),
-                kwargs.get("alp", 14.0),
-                kwargs["bet"],
-            )
-        except KeyError as e:
-            raise RuntimeError("Constructor requires argument for " + str(e))
+    def new_param(*, s6=1.0, s8, s9=1.0, rs6, rs8=1.0, alp=14.0, bet):
+        return library.new_mzero_damping(
+            s6,
+            s8,
+            s9,
+            rs6,
+            rs8,
+            alp,
+            bet,
+        )
 
 
 class DispersionModel(Structure):
     """
     .. Dispersion model
+
+    Contains the required information to evaluate all dispersion related properties,
+    like C6 coefficients. It also manages an instance of the geometry it was constructed
+    for to ensure that the dispersion model is always used with the correct structure
+    input.
     """
 
     _disp = library.ffi.NULL
