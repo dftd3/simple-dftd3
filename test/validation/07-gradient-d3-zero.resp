@@ -1,0 +1,8 @@
+$ORIGIN/07-bih3-nh3.tmol
+-i
+coord
+--zero
+m06l
+--grad
+--noedisp
+--atm

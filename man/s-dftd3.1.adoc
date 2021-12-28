@@ -46,6 +46,13 @@ Use modified zero damping function
 Specify parameters for modified zero damping,
 expected order is s6, s8, rs6, beta (requires four arguments)
 
+*--op* _method_::
+Use modified zero damping function
+
+*--op-param* _list_::
+Specify parameters for optimized power damping,
+expected order is s6, s8, a1, a2, beta (requires five arguments)
+
 *--atm*::
 Use ATM three-body dispersion
 

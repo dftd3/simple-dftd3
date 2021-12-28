@@ -43,14 +43,17 @@ subroutine collect_param(testsuite)
       & new_unittest("DFT-D3(0)", test_d3zero_mb09), &
       & new_unittest("DFT-D3(BJM)", test_d3bjm_mb02), &
       & new_unittest("DFT-D3(0M)", test_d3zerom_mb03), &
+      & new_unittest("DFT-D3(op)", test_d3op_mb06), &
       & new_unittest("DFT-D3(BJ)-ATM", test_d3bjatm_mb17), &
       & new_unittest("DFT-D3(0)-ATM", test_d3zeroatm_mb25), &
       & new_unittest("DFT-D3(BJM)-ATM", test_d3bjmatm_mb04), &
       & new_unittest("DFT-D3(0M)-ATM", test_d3zeromatm_mb05), &
+      & new_unittest("DFT-D3(op)-ATM", test_d3opatm_mb07), &
       & new_unittest("unknown-D3(BJ)", test_d3bj_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(0)", test_d3zero_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(BJM)", test_d3bjm_unknown, should_fail=.true.), &
-      & new_unittest("unknown-D3(0M)", test_d3zerom_unknown, should_fail=.true.) &
+      & new_unittest("unknown-D3(0M)", test_d3zerom_unknown, should_fail=.true.), &
+      & new_unittest("unknown-D3(op)", test_d3op_unknown, should_fail=.true.) &
       & ]
 
 end subroutine collect_param
@@ -414,6 +417,69 @@ subroutine test_d3zeromatm_mb05(error)
 end subroutine test_d3zeromatm_mb05
 
 
+subroutine test_d3op_mb06(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(optimizedpower_damping_param) :: param
+   type(d3_param) :: inp
+
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      & "pbe", "pbe0", "revtpss", "revtpssh", "blyp", "b3lyp", "b97d", "b3lyp", "b971", &
+      & "revpbe", "revpbe0", "tpss", "tpssh", "ms2", "ms2h"]
+   real(wp), parameter :: ref(*) = [&
+      &-8.5891879921943682E-3_wp,-1.1189585588896347E-2_wp,-6.6642513722070590E-3_wp, &
+      &-6.6836852692448503E-3_wp,-2.8029636193601420E-2_wp,-1.6569059456183755E-2_wp, &
+      &-5.0045344603718941E-2_wp,-1.6569059456183755E-2_wp,-2.0411405937999439E-2_wp, &
+      &-4.9647291685624872E-2_wp,-3.1170803756397185E-2_wp,-8.6007551331382538E-3_wp, &
+      &-8.2556638456719785E-3_wp,-3.9408761892111592E-3_wp,-7.0002355996901834E-3_wp]
+
+   call get_structure(mol, "MB16-43", "06")
+   do ii = 1, size(func)
+      call get_optimizedpower_damping(inp, trim(func(ii)), error)
+      if (allocated(error)) exit
+      call new_optimizedpower_damping(param, inp)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3op_mb06
+
+
+subroutine test_d3opatm_mb07(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(optimizedpower_damping_param) :: param
+   type(d3_param) :: inp
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      &"pbe", "pbe0", "revtpss", "revtpssh", "blyp", "b3lyp", "b97d", "b3lyp", "b971", &
+      &"revpbe", "revpbe0", "tpss", "tpssh", "ms2", "ms2h"]
+   real(wp), parameter :: ref(*) = [&
+      &-2.2127522870759132E-2_wp,-2.8136233770900614E-2_wp,-1.2454663292573786E-2_wp, &
+      &-1.3483018736219156E-2_wp,-6.4438042138856247E-2_wp,-4.2243587928068191E-2_wp, &
+      &-9.2952155080734844E-2_wp,-4.2243587928068191E-2_wp,-4.6977217121418724E-2_wp, &
+      &-9.2179088832501657E-2_wp,-5.6249719374572231E-2_wp,-1.8481085118737084E-2_wp, &
+      &-1.7632420146122089E-2_wp,-7.8454187191445666E-3_wp,-1.4068305044312682E-2_wp]
+
+   call get_structure(mol, "MB16-43", "05")
+   do ii = 1, size(func)
+      call get_optimizedpower_damping(inp, trim(func(ii)), error, s9=1.0_wp)
+      if (allocated(error)) return
+      call new_optimizedpower_damping(param, inp)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3opatm_mb07
+
+
 subroutine test_d3bj_unknown(error)
 
    !> Error handling
@@ -460,6 +526,18 @@ subroutine test_d3zerom_unknown(error)
    call get_mzero_damping(inp, "unknown", error)
 
 end subroutine test_d3zerom_unknown
+
+
+subroutine test_d3op_unknown(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(d3_param) :: inp
+
+   call get_optimizedpower_damping(inp, "unknown", error)
+
+end subroutine test_d3op_unknown
 
 
 end module test_param

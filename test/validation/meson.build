@@ -15,29 +15,28 @@
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 app_tester = find_program(meson.current_source_dir() / 'tester.py')
+tests = [
+  '01-energy-d3-bj',
+  '02-energy-d3-zero',
+  '03-energy-d3-bjm',
+  '04-energy-d3-zerom',
+  '05-energy-d3-op',
+  '06-gradient-d3-bj',
+  '07-gradient-d3-zero',
+  '08-gradient-d3-bjm',
+  '09-gradient-d3-zerom',
+  '10-gradient-d3-op',
+]
 
-test(
-  'energy',
-  app_tester,
-  args: [
-    sdftd3_exe,
-    files('01-energy.json'),
-    files('01-ammonia.tmol'),
-    '--noedisp',
-    '--zero', 'tpssh',
-  ],
-  suite: 'app',
-)
-test(
-  'gradient',
-  app_tester,
-  args: [
-    sdftd3_exe,
-    files('02-gradient.json'),
-    files('02-nitralin.mol'),
-    '--noedisp',
-    '--bj', 'scan',
-    '--grad',
-  ],
-  suite: 'app',
-)
+foreach t : tests
+  benchmark(
+    t,
+    app_tester,
+    args: [
+      sdftd3_exe,
+      files('@0@.json'.format(t)),
+      files('@0@.resp'.format(t)),
+    ],
+    suite: 'app',
+  )
+endforeach

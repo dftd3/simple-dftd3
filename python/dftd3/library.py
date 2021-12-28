@@ -168,6 +168,21 @@ def load_mrational_damping(method, atm):
     )
 
 
+def new_optimizedpower_damping(s6, s8, s9, a1, a2, alp, bet):
+    """Create new optimized power damping parameters"""
+    return ffi.gc(
+        error_check(lib.dftd3_new_optimizedpower_damping)(s6, s8, s9, a1, a2, alp, bet),
+        _delete_param,
+    )
+
+
+def load_optimizedpower_damping(method, atm):
+    """Load optimized power damping parameters from internal storage"""
+    return ffi.gc(
+        error_check(lib.dftd3_load_optimizedpower_damping)(method, atm), _delete_param
+    )
+
+
 update_structure = error_check(lib.dftd3_update_structure)
 get_dispersion = error_check(lib.dftd3_get_dispersion)
 get_pairwise_dispersion = error_check(lib.dftd3_get_pairwise_dispersion)

@@ -16,7 +16,10 @@
 
 sdftd3_exe = executable(
   meson.project_name(),
-  sources: files('main.f90'),
+  sources: files(
+    'help.f90',
+    'main.f90',
+  ),
   dependencies: sdftd3_dep,
   install: install,
 )

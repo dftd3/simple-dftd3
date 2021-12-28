@@ -16,6 +16,7 @@
 
 add_executable(
   "${PROJECT_NAME}-exe"
+  "help.f90"
   "main.f90"
 )
 set_target_properties(

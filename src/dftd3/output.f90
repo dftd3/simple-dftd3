@@ -21,6 +21,7 @@ module dftd3_output
    use mctc_io_math, only : matinv_3x3
    use dftd3_damping, only : damping_param
    use dftd3_damping_mzero, only : mzero_damping_param
+   use dftd3_damping_optimizedpower, only : optimizedpower_damping_param
    use dftd3_damping_rational, only : rational_damping_param
    use dftd3_damping_zero, only : zero_damping_param
    use dftd3_model, only : d3_model
@@ -283,6 +284,24 @@ subroutine ascii_damping_param(unit, param, method)
          & "s9", param%s9, &
          & "rs6", param%rs6, &
          & "rs8", param%rs8, &
+         & "alp", param%alp, &
+         & "beta", param%bet
+      write(unit, '(20("-"))')
+      write(unit, '(a)')
+   type is (optimizedpower_damping_param)
+      write(unit, '(a, ":", 1x)', advance="no") "Optimized power damping"
+      if (present(method)) then
+         write(unit, '(a, "-")', advance="no") method
+      end if
+      write(unit, '(a)') &
+         & trim(merge("D3(op)-ATM", "D3(op)    ", abs(param%s9) > 0))
+      write(unit, '(20("-"))')
+      write(unit, '(a5, t10, f10.4)') &
+         & "s6", param%s6, &
+         & "s8", param%s8, &
+         & "s9", param%s9, &
+         & "a1", param%a1, &
+         & "a1", param%a2, &
          & "alp", param%alp, &
          & "beta", param%bet
       write(unit, '(20("-"))')

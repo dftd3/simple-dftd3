@@ -20,8 +20,82 @@
 
 #include "dftd3.h"
 
+static inline void
+show_error(dftd3_error error)
+{
+   char message[512];
+   dftd3_get_error(error, message, NULL);
+   printf("[Message] %s\n", message);
+}
+
 int
-main (void) {
+test_version (void)
+{
+   printf("Start test: version\n");
+   return dftd3_get_version() > 0 ? 0 : 1;
+}
+
+int
+test_uninitialized_error (void)
+{
+   printf("Start test: uninitialized error\n");
+   dftd3_error error = NULL;
+   return dftd3_check_error(error) ? 0 : 1;
+}
+
+int
+test_uninitialized_structure (void)
+{
+   printf("Start test: uninitialized structure\n");
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+
+   error = dftd3_new_error();
+
+   double xyz[6] = {0.0};
+   dftd3_update_structure(error, mol, xyz, NULL);
+   if (!dftd3_check_error(error)) goto unexpected;
+
+   dftd3_delete_error(&error);
+   return 0;
+
+unexpected:
+   printf("[Fatal] Unexpected pass for unititalized-structure test\n");
+   dftd3_delete_error(&error);
+   return 1;
+}
+
+int
+test_invalid_structure (void)
+{
+   printf("Start test: invalid structure\n");
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+
+   int natoms = 2;
+   int num[2] = {1, 1};
+   double xyz[6] = {0.0};
+
+   error = dftd3_new_error();
+
+   mol = dftd3_new_structure(error, natoms, num, xyz, NULL, NULL);
+   if (!dftd3_check_error(error)) goto unexpected;
+
+   show_error(error);
+
+   dftd3_delete_error(&error);
+   dftd3_delete_structure(&mol);
+   return 0;
+
+unexpected:
+   printf("[Fatal] Unexpected pass for invalid-structure test\n");
+   dftd3_delete_error(&error);
+   dftd3_delete_structure(&mol);
+   return 1;
+}
+
+int
+test (void) {
    int const natoms = 7;
    int const attyp[7] = {6,6,6,1,1,1,1};
    double const coord[21] =
@@ -37,8 +111,6 @@ main (void) {
    double pair_disp3[49];
    double gradient[21];
    double sigma[9];
-
-   assert(dftd3_get_version() > 0);
 
    dftd3_error error;
    dftd3_structure mol;
@@ -108,4 +180,16 @@ main (void) {
    assert(!error);
 
    return 0;
+}
+
+int
+main (void)
+{
+   int stat = 0;
+   stat += test_version();
+   stat += test_uninitialized_error();
+   stat += test_uninitialized_structure();
+   stat += test_invalid_structure();
+   stat += test();
+   return stat;
 }

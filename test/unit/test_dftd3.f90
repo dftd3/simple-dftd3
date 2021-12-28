@@ -75,7 +75,9 @@ subroutine collect_dftd3(testsuite)
       & new_unittest("PBE-D3(0M)", test_pbed3zerom_mb33), &
       & new_unittest("BLYP-D3(0M)", test_blypd3zerom_mb34), &
       & new_unittest("B97-D3(0M)", test_b97dd3zerom_mb35), &
-      & new_unittest("lc-wPBE-D3(0M)", test_lcwpbed3zerom_mb36) &
+      & new_unittest("lc-wPBE-D3(0M)", test_lcwpbed3zerom_mb36), &
+      & new_unittest("B97h-D3(op)", test_b97hd3op_mb37), &
+      & new_unittest("TPSSh-D3(op)", test_tpsshd3op_mb38) &
       & ]
 
 end subroutine collect_dftd3
@@ -845,6 +847,46 @@ subroutine test_lcwpbed3zerom_mb36(error)
    call test_numsigma(error, mol, param)
 
 end subroutine test_lcwpbed3zerom_mb36
+
+
+subroutine test_b97hd3op_mb37(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(optimizedpower_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 0.97388_wp, s9 = 1.0_wp, alp = 14.0_wp, bet = 6.0_wp, &
+      & a1 = 0.150_wp, s8 = 0.0_wp, a2 = 4.25_wp)
+
+   call get_structure(mol, "MB16-43", "37")
+   call new_optimizedpower_damping(param, inp)
+   call test_dftd3_gen(error, mol, param, -2.7952863374857046E-2_wp)
+   if (allocated(error)) return
+   call test_numgrad(error, mol, param)
+
+end subroutine test_b97hd3op_mb37
+
+
+subroutine test_tpsshd3op_mb38(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(optimizedpower_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, bet = 8.0_wp, &
+      & a1 = 0.575_wp, s8 = 0.43185_wp, a2 = 3.00_wp)
+
+   call get_structure(mol, "MB16-43", "38")
+   call new_optimizedpower_damping(param, inp)
+   call test_dftd3_gen(error, mol, param, -9.0101763910414457E-3_wp)
+   if (allocated(error)) return
+   call test_numsigma(error, mol, param)
+
+end subroutine test_tpsshd3op_mb38
 
 
 end module test_dftd3

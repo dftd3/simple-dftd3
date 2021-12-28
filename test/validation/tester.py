@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Minimal Python wrapper for testing the dftd4 command line interface.
+Minimal Python wrapper for testing the s-dftd3 command line interface.
 
 The wrapper will assume a specific order in the arguments rather than
 providing a generic command line interface by itself since it is
@@ -18,7 +18,9 @@ if len(sys.argv) < 4:
 thr = 1.0e-9
 prog = sys.argv[1]
 outp = sys.argv[2]
-args = sys.argv[3:]
+with open(sys.argv[3]) as fd:
+    wdir = os.path.dirname(fd.name)
+    args = [arg.replace('$ORIGIN', wdir) for arg in fd.read().strip().split("\n")]
 
 stat = subprocess.call(
     [prog, "--json", os.path.basename(outp)] + args,

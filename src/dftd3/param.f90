@@ -21,6 +21,7 @@ module dftd3_param
    public :: d3_param
    public :: get_rational_damping, get_zero_damping
    public :: get_mrational_damping, get_mzero_damping
+   public :: get_optimizedpower_damping
 
 
    type :: d3_param
@@ -56,7 +57,8 @@ module dftd3_param
          & p_mpw1kcis_df, p_pbeh1pbe_df, p_pbe1kcis_df, p_x3lyp_df, p_o3lyp_df, &
          & p_b97_1_df, p_b97_2_df, p_b98_df, p_hiss_df, p_hse03_df, p_revtpssh_df, &
          & p_revtpss0_df, p_tpss1kcis_df, p_tauhcthhyb_df, p_mn15_df, p_lc_whpbe_df, &
-         & p_mpw2plyp_df, p_m11_df, p_sogga11x_df, p_n12sx_df, p_mn12sx_df
+         & p_mpw2plyp_df, p_m11_df, p_sogga11x_df, p_n12sx_df, p_mn12sx_df, &
+         & p_ms2_df, p_ms2h_df
    end enum
 
 contains
@@ -135,6 +137,8 @@ function get_method_id(method) result(id)
    case("mpwb1k"); id = p_mpwb1k_df
    case("mpwlyp"); id = p_mpwlyp_df
    case("mpwpw", "mpwpw91"); id = p_mpwpw_df
+   case("ms2"); id = p_ms2_df
+   case("ms2h"); id = p_ms2h_df
    case("n12sx"); id = p_n12sx_df
    case("o3lyp"); id = p_o3lyp_df
    case("olyp"); id = p_olyp_df
@@ -537,8 +541,7 @@ subroutine get_mrational_damping(param, method, error, s9)
       call fatal_error(error, "No entry for '"//method//"' present")
       return
    case(p_b2plyp_df)
-      param = d3_param(a1=0.486434_wp, s8=0.672820_wp, a2=3.656466_wp, &
-         & s6=0.640000_wp)
+      param = d3_param(a1=0.486434_wp, s8=0.672820_wp, a2=3.656466_wp, s6=0.640000_wp)
    case(p_b3lyp_df)
       param = d3_param(a1=0.278672_wp, s8=1.466677_wp, a2=4.606311_wp)
    case(p_b97d_df)
@@ -581,8 +584,7 @@ subroutine get_mzero_damping(param, method, error, s9)
       call fatal_error(error, "No entry for '"//method//"' present")
       return
    case(p_b2plyp_df)
-      param = d3_param(rs6=1.313134_wp, s8=0.717543_wp, bet=0.016035_wp, &
-         & s6=0.640000_wp)
+      param = d3_param(rs6=1.313134_wp, s8=0.717543_wp, bet=0.016035_wp, s6=0.640000_wp)
    case(p_b3lyp_df)
       param = d3_param(rs6=1.338153_wp, s8=1.532981_wp, bet=0.013988_wp)
    case(p_b97d_df)
@@ -604,6 +606,61 @@ subroutine get_mzero_damping(param, method, error, s9)
    end if
 
 end subroutine get_mzero_damping
+
+
+subroutine get_optimizedpower_damping(param, method, error, s9)
+
+   !> Loaded parameter record
+   type(d3_param), intent(out) :: param
+
+   !> Name of the method to look up
+   character(len=*), intent(in) :: method
+
+   !> Overwrite s9
+   real(wp), intent(in), optional :: s9
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select case(get_method_id(method))
+   case default
+      call fatal_error(error, "No entry for '"//method//"' present")
+      return
+   case(p_pbe_df)
+      param = d3_param(s6=0.91826_wp, s8=0.0_wp, a1=0.200_wp, a2=4.750_wp, bet=6.0_wp)
+   case(p_pbe0_df)
+      param = d3_param(s6=0.88290_wp, s8=0.0_wp, a1=0.150_wp, a2=4.750_wp, bet=6.0_wp)
+   case(p_revtpss_df)
+      param = d3_param(s6=1.0_wp, s8=0.27632_wp, a1=0.700_wp, a2=2.500_wp, bet=8.0_wp)
+   case(p_revtpssh_df)
+      param = d3_param(s6=1.0_wp, s8=0.12467_wp, a1=0.575_wp, a2=3.000_wp, bet=10.0_wp)
+   case(p_blyp_df)
+      param = d3_param(s6=1.0_wp, s8=1.31867_wp, a1=0.425_wp, a2=3.50_wp, bet=2.0_wp)
+   case(p_b3lyp_df)
+      param = d3_param(s6=1.0_wp, s8=0.78311_wp, a1=0.300_wp, a2=4.25_wp, bet=4.0_wp)
+   case(p_b97d_df)
+      param = d3_param(s6=1.0_wp, s8=1.46861_wp, a1=0.600_wp, a2=2.50_wp, bet=0.0_wp)
+   case(p_b97_1_df, p_b97_2_df)
+      param = d3_param(s6=0.97388_wp, s8=0.0_wp, a1=0.150_wp, a2=4.25_wp, bet=6.0_wp)
+   case(p_revpbe_df)
+      param = d3_param(s6=1.0_wp, s8=1.44765_wp, a1=0.600_wp, a2=2.50_wp, bet=0.0_wp)
+   case(p_revpbe0_df)
+      param = d3_param(s6=1.0_wp, s8=1.25684_wp, a1=0.725_wp, a2=2.25_wp, bet=0.0_wp)
+   case(p_tpss_df)
+      param = d3_param(s6=1.0_wp, s8=0.51581_wp, a1=0.575_wp, a2=3.00_wp, bet=8.0_wp)
+   case(p_tpssh_df)
+      param = d3_param(s6=1.0_wp, s8=0.43185_wp, a1=0.575_wp, a2=3.00_wp, bet=8.0_wp)
+   case(p_ms2_df)
+      param = d3_param(s6=1.0_wp, s8=0.90743_wp, a1=0.700_wp, a2=4.00_wp, bet=2.0_wp)
+   case(p_ms2h_df)
+      param = d3_param(s6=1.0_wp, s8=1.69464_wp, a1=0.650_wp, a2=4.75_wp, bet=0.0_wp)
+   end select
+
+   if (present(s9)) then
+      param%s9 = s9
+   end if
+
+end subroutine get_optimizedpower_damping
 
 
 !> Convert string to lower case

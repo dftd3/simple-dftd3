@@ -20,6 +20,7 @@ from dftd3.interface import (
     ZeroDampingParam,
     ModifiedZeroDampingParam,
     ModifiedRationalDampingParam,
+    OptimizedPowerDampingParam,
     DispersionModel,
 )
 from pytest import approx, raises
@@ -88,6 +89,28 @@ def test_modified_zero_damping_noargs():
 
     with raises(TypeError):
         ModifiedZeroDampingParam(s8=1.0, rs6=1.2, bet=1.0, method="abc")
+
+
+def test_optimized_power_damping_noargs():
+    """Check constructor of damping parameters for insufficient arguments"""
+
+    with raises(TypeError):
+        OptimizedPowerDampingParam()
+
+    with raises(TypeError, match="s8"):
+        OptimizedPowerDampingParam(a1=0.3, a2=4.2, bet=1.0)
+
+    with raises(TypeError, match="a1"):
+        OptimizedPowerDampingParam(s8=1.0, a2=4.2, bet=1.0)
+
+    with raises(TypeError, match="a2"):
+        OptimizedPowerDampingParam(s8=1.0, a1=0.3, bet=1.0)
+
+    with raises(TypeError, match="bet"):
+        OptimizedPowerDampingParam(s8=1.0, a1=0.3, a2=4.2)
+
+    with raises(TypeError):
+        OptimizedPowerDampingParam(s8=1.0, a1=0.3, a2=4.2, bet=1.0, method="abc")
 
 
 def test_structure():
@@ -263,6 +286,34 @@ def test_bp_d3_zerom():
     model = DispersionModel(numbers, positions)
     res = model.get_dispersion(ModifiedZeroDampingParam(method="bp"), grad=False)
     assert approx(res.get("energy")) == -0.02601335734255335
+
+
+def test_bp_d3_op():
+
+    numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
+    positions = np.array(
+        [  # Coordinates in Bohr
+            [+2.79274810283778, +3.82998228828316, -2.79287054959216],
+            [-1.43447454186833, +0.43418729987882, +5.53854345129809],
+            [-3.26268343665218, -2.50644032426151, -1.56631149351046],
+            [+2.14548759959147, -0.88798018953965, -2.24592534506187],
+            [-4.30233097423181, -3.93631518670031, -0.48930754109119],
+            [+0.06107643564880, -3.82467931731366, -2.22333344469482],
+            [+0.41168550401858, +0.58105573172764, +5.56854609916143],
+            [+4.41363836635653, +3.92515871809283, +2.57961724984000],
+            [+1.33707758998700, +1.40194471661647, +1.97530004949523],
+            [+3.08342709834868, +1.72520024666801, -4.42666116106828],
+            [-3.02346932078505, +0.04438199934191, -0.27636197425010],
+            [+1.11508390868455, -0.97617412809198, +6.25462847718180],
+            [+0.61938955433011, +2.17903547389232, -6.21279842416963],
+            [-2.67491681346835, +3.00175899761859, +1.05038813614845],
+            [-4.13181080289514, -2.34226739863660, -3.44356159392859],
+            [+2.85007173009739, -2.64884892757600, +0.71010806424206],
+        ]
+    )
+    model = DispersionModel(numbers, positions)
+    res = model.get_dispersion(OptimizedPowerDampingParam(method="b97d"), grad=False)
+    assert approx(res.get("energy")) == -0.07681029606751344
 
 
 def test_pair_resolved():

@@ -335,6 +335,40 @@ class ModifiedZeroDampingParam(DampingParam):
         )
 
 
+class OptimizedPowerDampingParam(DampingParam):
+    """
+    Optimized power version of the rational damping parameters.\ :footcite:`witte2017`
+    The functional form of the damping function is modified by adding an additional
+    zero-damping like power function.
+
+    This constructor allows to automatically load the reparameterized damping function
+    from the library rather than the original one. Providing the parameter `bet=0` is
+    equivalent to using rational the `RationalDampingParam` constructor.
+    """
+    def __init__(self, **kwargs):
+        DampingParam.__init__(self, **kwargs)
+
+    @staticmethod
+    def load_param(method, atm=True):
+        _method = library.ffi.new("char[]", method.encode())
+        return library.load_optimizedpower_damping(
+            _method,
+            atm,
+        )
+
+    @staticmethod
+    def new_param(*, s6=1.0, s8, s9=1.0, a1, a2, alp=14.0, bet):
+        return library.new_optimizedpower_damping(
+            s6,
+            s8,
+            s9,
+            a1,
+            a2,
+            alp,
+            bet,
+        )
+
+
 class DispersionModel(Structure):
     """
     .. Dispersion model

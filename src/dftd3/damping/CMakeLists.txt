@@ -20,6 +20,7 @@ list(
   APPEND srcs
   "${dir}/atm.f90"
   "${dir}/mzero.f90"
+  "${dir}/optimizedpower.f90"
   "${dir}/rational.f90"
   "${dir}/zero.f90"
 )

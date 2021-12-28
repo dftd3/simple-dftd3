@@ -51,7 +51,9 @@ subroutine collect_pairwise(testsuite)
       & new_unittest("BLYP-D3(0)-ATM", test_blypd3_zero_atm_urea), &
       & new_unittest("B3LYP-D3M(0)", test_b3lypd3_mzero_mb05), &
       & new_unittest("PBE0-D3M(0)-ATM", test_pbe0d3_mzero_atm_mb06), &
-      & new_unittest("BP86-D3M(0)-ATM", test_bpd3_mzero_atm_co2) &
+      & new_unittest("BP86-D3M(0)-ATM", test_bpd3_mzero_atm_co2), &
+      & new_unittest("PBE0-D3(op)", test_revtpssd3_op_mb07), &
+      & new_unittest("PBE0-D3(op)-ATM", test_revpbed3_op_atm_mb08) &
       & ]
 
 end subroutine collect_pairwise
@@ -227,6 +229,38 @@ subroutine test_bpd3_mzero_atm_co2(error)
    call test_dftd3_pairwise(error, mol, param)
 
 end subroutine test_bpd3_mzero_atm_co2
+
+
+subroutine test_revtpssd3_op_mb07(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(optimizedpower_damping_param) :: param = optimizedpower_damping_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
+      & s8 = 0.27632_wp, a1 = 0.700_wp, a2 = 2.500_wp, bet = 8.0_wp)
+
+   call get_structure(mol, "MB16-43", "07")
+   call test_dftd3_pairwise(error, mol, param)
+
+end subroutine test_revtpssd3_op_mb07
+
+
+subroutine test_revpbed3_op_atm_mb08(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(optimizedpower_damping_param) :: param = optimizedpower_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
+      & s8 = 1.44765_wp, a1 = 0.600_wp, a2 = 2.50_wp, bet = 0.0_wp)
+
+   call get_structure(mol, "MB16-43", "08")
+   call test_dftd3_pairwise(error, mol, param)
+
+end subroutine test_revpbed3_op_atm_mb08
 
 
 end module test_pairwise

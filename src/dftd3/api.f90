@@ -25,13 +25,15 @@ module dftd3_api
    use mctc_io_structure, only : structure_type, new
    use dftd3_cutoff, only : realspace_cutoff
    use dftd3_damping_mzero, only : mzero_damping_param, new_mzero_damping
+   use dftd3_damping_optimizedpower, only : optimizedpower_damping_param, &
+      & new_optimizedpower_damping
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_damping, only : damping_param
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
    use dftd3_model, only : d3_model, new_d3_model
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
-      & get_mrational_damping, get_mzero_damping
+      & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_version, only : get_dftd3_version
    implicit none
@@ -53,6 +55,7 @@ module dftd3_api
    public :: new_rational_damping_api, load_rational_damping_api
    public :: new_mzero_damping_api, load_mzero_damping_api
    public :: new_mrational_damping_api, load_mrational_damping_api
+   public :: new_optimizedpower_damping_api, load_optimizedpower_damping_api
    public :: delete_param_api
 
 
@@ -574,6 +577,75 @@ function load_mzero_damping_api(verror, charptr, atm) &
    vparam = c_loc(param)
 
 end function load_mzero_damping_api
+
+
+!> Create new optimized power damping parameters
+function new_optimizedpower_damping_api(verror, s6, s8, s9, a1, a2, alp, bet) &
+      & result(vparam) &
+      & bind(C, name=namespace//"new_optimizedpower_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   real(c_double), value, intent(in) :: s6
+   real(c_double), value, intent(in) :: s8
+   real(c_double), value, intent(in) :: s9
+   real(c_double), value, intent(in) :: a1
+   real(c_double), value, intent(in) :: a2
+   real(c_double), value, intent(in) :: alp
+   real(c_double), value, intent(in) :: bet
+   type(c_ptr) :: vparam
+   type(optimizedpower_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   allocate(tmp)
+   call new_optimizedpower_damping(tmp, d3_param(s6=s6, s8=s8, s9=s9, a1=a1, a2=a2, &
+      & alp=alp, bet=bet))
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function new_optimizedpower_damping_api
+
+
+!> Load optimized power damping parameters from internal storage
+function load_optimizedpower_damping_api(verror, charptr, atm) &
+      & result(vparam) &
+      & bind(C, name=namespace//"load_optimizedpower_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   character(kind=c_char), intent(in) :: charptr(*)
+   logical(c_bool), value, intent(in) :: atm
+   character(len=:, kind=c_char), allocatable :: method
+   type(c_ptr) :: vparam
+   type(optimizedpower_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+   type(d3_param) :: inp
+   real(wp), allocatable :: s9
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   call c_f_character(charptr, method)
+
+   if (atm) s9 = 1.0_wp
+   call get_optimizedpower_damping(inp, method, error%ptr, s9)
+   if (allocated(error%ptr)) return
+
+   allocate(tmp)
+   call new_optimizedpower_damping(tmp, inp)
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function load_optimizedpower_damping_api
 
 
 !> Delete damping parameters

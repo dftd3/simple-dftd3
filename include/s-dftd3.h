@@ -176,6 +176,23 @@ dftd3_load_mrational_damping(dftd3_error /* error */,
                              char* /* method */,
                              bool /* atm */) SDFTD3_API_SUFFIX__V_0_4;
 
+/// Create new optimized power damping parameters
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_new_optimizedpower_damping(dftd3_error /* error */,
+                                 double /* s6 */,
+                                 double /* s8 */,
+                                 double /* s9 */,
+                                 double /* a1 */,
+                                 double /* a2 */,
+                                 double /* alp */,
+                                 double /* bet */) SDFTD3_API_SUFFIX__V_0_5;
+
+/// Load optimized power damping parameters from internal storage
+SDFTD3_API_ENTRY dftd3_param SDFTD3_API_CALL
+dftd3_load_optimizedpower_damping(dftd3_error /* error */,
+                                  char* /* method */,
+                                  bool /* atm */) SDFTD3_API_SUFFIX__V_0_5;
+
 /// Delete damping parameters
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
 dftd3_delete_param(dftd3_param* /* param */) SDFTD3_API_SUFFIX__V_0_2;

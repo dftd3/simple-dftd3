@@ -21,8 +21,8 @@ program dftd3_main
    use dftd3
    use dftd3_output
    use dftd3_utils
+   use dftd3_app_help, only : prog_name, header, help, version
    implicit none
-   character(len=*), parameter :: prog_name = "s-dftd3"
 
    type :: d3_config
       logical :: json = .false.
@@ -37,6 +37,7 @@ program dftd3_main
       logical :: rational = .false.
       logical :: mzero = .false.
       logical :: mrational = .false.
+      logical :: optimizedpower = .false.
       logical :: has_param = .false.
       integer :: verbosity = 2
       logical :: pair_resolved = .false.
@@ -53,9 +54,6 @@ program dftd3_main
    real(wp), allocatable :: energy, gradient(:, :), sigma(:, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    character(len=:), allocatable :: method
-   type(zero_damping_param), allocatable :: zparam
-   type(mzero_damping_param), allocatable :: mparam
-   type(rational_damping_param), allocatable :: rparam
    real(wp), allocatable :: s9
    integer :: stat, unit
    logical :: echo, exist
@@ -93,9 +91,12 @@ program dftd3_main
             error stop
          end if
       end if
-      allocate(zparam)
-      call new_zero_damping(zparam, inp)
-      call move_alloc(zparam, param)
+      block
+         type(zero_damping_param), allocatable :: zparam
+         allocate(zparam)
+         call new_zero_damping(zparam, inp)
+         call move_alloc(zparam, param)
+      end block
    end if
    if (config%mzero) then
       if (.not.config%has_param) then
@@ -105,9 +106,12 @@ program dftd3_main
             error stop
          end if
       end if
-      allocate(mparam)
-      call new_mzero_damping(mparam, inp)
-      call move_alloc(mparam, param)
+      block
+         type(mzero_damping_param), allocatable :: mparam
+         allocate(mparam)
+         call new_mzero_damping(mparam, inp)
+         call move_alloc(mparam, param)
+      end block
    end if
    if (config%rational .or. config%mrational) then
       if (.not.config%has_param) then
@@ -121,9 +125,27 @@ program dftd3_main
             error stop
          end if
       end if
-      allocate(rparam)
-      call new_rational_damping(rparam, inp)
-      call move_alloc(rparam, param)
+      block
+         type(rational_damping_param), allocatable :: rparam
+         allocate(rparam)
+         call new_rational_damping(rparam, inp)
+         call move_alloc(rparam, param)
+      end block
+   end if
+   if (config%optimizedpower) then
+      if (.not.config%has_param) then
+         call get_optimizedpower_damping(inp, method, error, s9)
+         if (allocated(error)) then
+            write(error_unit, '("[Error]", 1x, a)') error%message
+            error stop
+         end if
+      end if
+      block
+         type(optimizedpower_damping_param), allocatable :: oparam
+         allocate(oparam)
+         call new_optimizedpower_damping(oparam, inp)
+         call move_alloc(oparam, param)
+      end block
    end if
 
    if (allocated(param) .and. config%verbosity > 0) then
@@ -166,12 +188,14 @@ program dftd3_main
          close(unit)
       end if
       if (config%grad) then
-         open(file=config%grad_output, newunit=unit)
-         call tagged_result(unit, energy, gradient, sigma)
-         close(unit)
-         if (config%verbosity > 0) then
-            write(output_unit, '(a)') &
-               & "[Info] Dispersion results written to '"//config%grad_output//"'"
+         if (allocated(config%grad_output)) then
+            open(file=config%grad_output, newunit=unit)
+            call tagged_result(unit, energy, gradient, sigma)
+            close(unit)
+            if (config%verbosity > 0) then
+               write(output_unit, '(a)') &
+                  & "[Info] Dispersion results written to '"//config%grad_output//"'"
+            end if
          end if
 
          inquire(file="gradient", exist=exist)
@@ -256,76 +280,6 @@ subroutine property_calc(unit, mol, disp, verbosity)
    end if
 
 end subroutine property_calc
-
-
-subroutine header(unit)
-   integer, intent(in) :: unit
-   character(len=:), allocatable :: version_string
-
-   call get_dftd3_version(string=version_string)
-   write(unit, '(a)') &
-      "-----------------------------------", &
-      " s i m p l e   D F T - D 3  v"// version_string, &
-      "-----------------------------------", ""
-
-end subroutine header
-
-
-subroutine help(unit)
-   integer, intent(in) :: unit
-
-   write(unit, '(a, *(1x, a))') &
-      "Usage: "//prog_name//" [options] <input>"
-
-   write(unit, '(a)') &
-      "", &
-      "Takes an geometry input to calculate the D3 dispersion correction.", &
-      "Periodic calculations are performed automatically for periodic input formats.", &
-      "Specify the functional to select the correct parameters.", &
-      ""
-
-   write(unit, '(2x, a, t25, a)') &
-      "-i, --input <format>", "Hint for the format of the input file", &
-      "--bj <method>", "Use rational (Becke-Johnson) damping function", &
-      "--bj-param <list>", "Specify parameters for rational damping,", &
-      "", "expected order is s6, s8, a1, a2 (requires four arguments)", &
-      "--zero <method>", "Use zero (Chai-Head-Gordon) damping function", &
-      "--zero-param <list>", "Specify parameters for zero damping,", &
-      "", "expected order is s6, s8, rs6 (requires three arguments)", &
-      "--bjm <method>", "Use modified rational damping function", &
-      "--bjm-param <list>", "Specify parameters for rational damping,", &
-      "", "expected order is s6, s8, a1, a2 (requires four arguments)", &
-      "--zerom <method>", "Use modified zero damping function", &
-      "--zerom-param <list>", "Specify parameters for modified zero damping,", &
-      "", "expected order is s6, s8, rs6, bet (requires four arguments)", &
-      "--atm", "Use ATM three-body dispersion", &
-      "--atm-scale <s9>", "Use scaled ATM three-body dispersion", &
-      "--noedisp", "Disable writing of dispersion energy to .EDISP file", &
-      "--json [file]", "Dump results to JSON output (default: dftd3.json)", &
-      "--grad [file]", "Request gradient evaluation,", &
-      "", "write results to file (default: dftd3.txt),", &
-      "", "attempts to add to Turbomole gradient and gradlatt files", &
-      "--property", "Evaluate dispersion related properties", &
-      "--pair-resolved", "Calculate pairwise representation of dispersion energy", &
-      "-v, --verbose", "Show more, can be used multiple times", &
-      "-s, --silent", "Show less, use twice to supress all output", &
-      "--version", "Print program version and exit", &
-      "--help", "Show this help message"
-
-   write(unit, '(a)')
-
-end subroutine help
-
-
-subroutine version(unit)
-   integer, intent(in) :: unit
-   character(len=:), allocatable :: version_string
-
-   call get_dftd3_version(string=version_string)
-   write(unit, '(a, *(1x, a))') &
-      & prog_name, "version", version_string
-
-end subroutine version
 
 
 !> Obtain the command line argument at a given index
@@ -469,7 +423,6 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
          config%wrap = .false.
       case("--grad")
          config%grad = .true.
-         config%grad_output = "dftd3.txt"
          iarg = iarg + 1
          call get_argument(iarg, arg)
          if (allocated(arg)) then
@@ -565,6 +518,33 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
          iarg = iarg + 1
          call get_argument_as_real(iarg, inp%a2, error)
          if (allocated(error)) exit
+      case("--op")
+         config%optimizedpower = .true.
+         iarg = iarg + 1
+         call get_argument(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for method")
+            exit
+         end if
+         call move_alloc(arg, method)
+      case("--op-param")
+         config%optimizedpower = .true.
+         config%has_param = .true.
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, inp%s6, error)
+         if (allocated(error)) exit
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, inp%s8, error)
+         if (allocated(error)) exit
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, inp%a1, error)
+         if (allocated(error)) exit
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, inp%a2, error)
+         if (allocated(error)) exit
+         iarg = iarg + 1
+         call get_argument_as_real(iarg, inp%bet, error)
+         if (allocated(error)) exit
       end select
    end do
    if (allocated(error)) return
@@ -573,9 +553,14 @@ subroutine get_arguments(input, input_format, config, method, inp, echo, error)
       config%properties = .true.
    end if
 
-   if (count([config%zero, config%rational, config%mzero, config%mrational]) > 1) then
+   if (count([config%zero, config%rational, config%mzero, config%mrational, &
+      & config%optimizedpower]) > 1) then
       call fatal_error(error, "Can only select zero or rational damping function")
       return
+   end if
+
+   if (config%grad.and. .not.config%json) then
+      config%grad_output = "dftd3.txt"
    end if
 
    if (.not.allocated(input)) then
