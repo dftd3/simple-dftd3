@@ -65,3 +65,11 @@ mctc_dep = dependency(
   default_options: ['default_library=static'],
 )
 lib_deps += mctc_dep
+
+# Create the TOML Fortran library as subproject
+tomlf_dep = dependency(
+  'toml-f',
+  fallback: ['toml-f', 'tomlf_dep'],
+  default_options: ['default_library=static'],
+)
+exe_deps += tomlf_dep

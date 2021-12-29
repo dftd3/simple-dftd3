@@ -1,0 +1,406 @@
+[default]
+d3 = ["bj", "zero"]
+
+[default.parameter]
+d3.bj = {s6=1.0, s9=0.0, alp=14.0, damping="rational"}
+d3.zero = {s6=1.0, s9=0.0, rs8=1.0, alp=14.0, damping="zero"}
+d3.bjm = {s6=1.0, s9=0.0, alp=14.0, damping="rational"}
+d3.zerom = {s6=1.0, s9=0.0, rs8=1.0, alp=14.0, damping="mzero"}
+d3.op = {s9=0.0, alp=14.0, damping="optimizedpower"}
+
+[parameter.bp]
+d3.bj = {a1=0.3946, s8=3.2822, a2=4.8516}
+d3.zero = {rs6=1.139, s8=1.683, doi="10.1063/1.3382344"}
+d3.bjm = {a1=0.821850, s8=3.140281, a2=2.728151, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=1.233460, s8=1.945174, bet=0.000000, doi="10.1021/acs.jpclett.6b00780"}
+
+[parameter.blyp]
+d3.bj = {a1=0.4298, s8=2.6996, a2=4.2359}
+d3.zero = {rs6=1.094, s8=1.682, doi="10.1063/1.3382344"}
+d3.bjm = {a1=0.448486, s8=1.875007, a2=3.610679, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=1.279637, s8=1.841686, bet=0.014370, doi="10.1021/acs.jpclett.6b00780"}
+d3.op = {s6=1.0, s8=1.31867, a1=0.425, a2=3.50, bet=2.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.revpbe]
+d3.bj = {a1=0.5238, s8=2.3550, a2=3.5016}
+d3.zero = {rs6=0.923, s8=1.010, doi="10.1063/1.3382344"}
+d3.op = {s6=1.0, s8=1.44765, a1=0.600, a2=2.50, bet=0.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.rpbe]
+d3.bj = {a1=0.1820, s8=0.8318, a2=4.0094}
+d3.zero = {rs6=0.872, s8=0.514}
+
+[parameter.b97d]
+d3.bj = {a1=0.5545, s8=2.2609, a2=3.2297}
+d3.zero = {rs6=0.892, s8=0.909, doi="10.1063/1.3382344"}
+d3.bjm = {a1=0.240184, s8=1.206988, a2=3.864426, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=1.151808, s8=1.020078, bet=0.035964, doi="10.1021/acs.jpclett.6b00780"}
+d3.op = {s6=1.0, s8=1.46861, a1=0.600, a2=2.50, bet=0.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.pbe]
+d3.bj = {a1=0.4289, s8=0.7875, a2=4.4407}
+d3.zero = {rs6=1.217, s8=0.722, doi="10.1063/1.3382344"}
+d3.bjm = {a1=0.012092, s8=0.358940, a2=5.938951, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=2.340218, s8=0.000000, bet=0.129434, doi="10.1021/acs.jpclett.6b00780"}
+d3.op = {s6=0.91826, s8=0.0, a1=0.200, a2=4.750, bet=6.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.rpw86pbe]
+d3.bj = {a1=0.4613, s8=1.3845, a2=4.5062}
+
+[parameter.b3lyp]
+d3.bj = {a1=0.3981, s8=1.9889, a2=4.4211}
+d3.zero = {rs6=1.261, s8=1.703, doi="10.1063/1.3382344"}
+d3.bjm = {a1=0.278672, s8=1.466677, a2=4.606311, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=1.338153, s8=1.532981, bet=0.013988, doi="10.1021/acs.jpclett.6b00780"}
+d3.op = {s6=1.0, s8=0.78311, a1=0.300, a2=4.25, bet=4.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.tpss]
+d3.bj = {a1=0.4535, s8=1.9435, a2=4.4752}
+d3.zero = {rs6=1.166, s8=1.105, doi="10.1063/1.3382344"}
+d3.op = {s6=1.0, s8=0.51581, a1=0.575, a2=3.00, bet=8.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.hf]
+d3.bj = {a1=0.3385, s8=0.9171, a2=2.8830}
+
+[parameter.tpss0]
+d3.bj = {a1=0.3768, s8=1.2576, a2=4.5865}
+d3.zero = {rs6=1.252, s8=1.242, doi="10.1063/1.3382344"}
+
+[parameter.pbe0]
+d3.bj = {a1=0.4145, s8=1.2177, a2=4.8593}
+d3.zero = {rs6=1.287, s8=0.928, doi="10.1063/1.3382344"}
+d3.bjm = {a1=0.007912, s8=0.528823, a2=6.162326, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=2.077949, s8=0.000081, bet=0.116755, doi="10.1021/acs.jpclett.6b00780"}
+d3.op = {s6=0.88290, s8=0.0, a1=0.150, a2=4.750, bet=6.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.hse06]
+d3.bj = {a1=0.383, s8=2.310, a2=5.685}
+d3.zero = {rs6=1.129, s8=0.109}
+
+[parameter.revpbe38]
+d3.bj = {a1=0.4309, s8=1.4760, a2=3.9446}
+
+[parameter.pw6b95]
+d3.bj = {a1=0.2076, s8=0.7257, a2=6.3750}
+
+[parameter.b2plyp]
+d3.bj = {a1=0.3065, s8=0.9147, a2=5.0570, s6=0.64}
+d3.zero = {rs6=1.427, s8=1.022, s6=0.64}
+d3.bjm = {a1=0.486434, s8=0.672820, a2=3.656466, s6=0.64, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=1.313134, s8=0.717543, bet=0.016035, s6=0.64, doi="10.1021/acs.jpclett.6b00780"}
+
+[parameter.dsdblyp]
+d3.bj = {a1=0.0000, s8=0.2130, a2=6.0519, s6=0.50}
+d3.zero = {rs6=1.569, s8=0.705, s6=0.5}
+
+[parameter.dsdblypfc]
+d3.bj = {a1=0.0009, s8=0.2112, a2=5.9807, s6=0.50}
+
+[parameter.bop]
+d3.bj = {a1=0.4870, s8=3.2950, a2=3.5043}
+
+[parameter.mpwlyp]
+d3.bj = {a1=0.4831, s8=2.0077, a2=4.5323}
+d3.zero = {rs6=1.239, s8=1.098}
+
+[parameter.olyp]
+d3.bj = {a1=0.5299, s8=2.6205, a2=2.8065}
+d3.zero = {rs6=0.806, s8=1.764}
+
+[parameter.pbesol]
+d3.bj = {a1=0.4466, s8=2.9491, a2=6.1742}
+
+[parameter.bpbe]
+d3.bj = {a1=0.4567, s8=4.0728, a2=4.3908}
+d3.zero = {rs6=1.087, s8=2.033}
+
+[parameter.opbe]
+d3.bj = {a1=0.5512, s8=3.3816, a2=2.9444}
+d3.zero = {rs6=0.837, s8=2.033}
+
+[parameter.ssb]
+d3.bj = {a1=-0.0952, s8=-0.1744, a2=5.2170}
+
+[parameter.revssb]
+d3.bj = {a1=0.4720, s8=0.4389, a2=4.0986}
+
+[parameter.otpss]
+d3.bj = {a1=0.4634, s8=2.7495, a2=4.3153}
+
+[parameter.b3pw91]
+d3.bj = {a1=0.4312, s8=2.8524, a2=4.4693}
+d3.zero = {rs6=1.176, s8=1.775}
+
+[parameter.bhlyp]
+d3.bj = {a1=0.2793, s8=1.0354, a2=4.9615}
+d3.zero = {rs6=1.370, s8=1.442}
+
+[parameter.revpbe0]
+d3.bj = {a1=0.4679, s8=1.7588, a2=3.7619}
+d3.op = {s6=1.0, s8=1.25684, a1=0.725, a2=2.25, bet=0.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.tpssh]
+d3.bj = {a1=0.4529, s8=2.2382, a2=4.6550}
+d3.zero = {rs6=1.223, s8=1.219}
+d3.op = {s6=1.0, s8=0.43185, a1=0.575, a2=3.00, bet=8.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.mpw1b95]
+d3.bj = {a1=0.1955, s8=1.0508, a2=6.4177}
+
+[parameter.pwb6k]
+d3.bj = {a1=0.1805, s8=0.9383, a2=7.7627}
+
+[parameter.b1b95]
+d3.bj = {a1=0.2092, s8=1.4507, a2=5.5545}
+d3.zero = {rs6=1.613, s8=1.868}
+
+[parameter.bmk]
+d3.bj = {a1=0.1940, s8=2.0860, a2=5.9197}
+d3.zero = {rs6=1.931, s8=2.168}
+
+[parameter.camb3lyp]
+d3.bj = {a1=0.3708, s8=2.0674, a2=5.4743}
+
+[parameter.lcwpbe]
+d3.bj = {a1=0.3919, s8=1.8541, a2=5.0897}
+d3.zero = {rs6=1.355, s8=1.279}
+d3.bjm = {a1=0.563761, s8=0.906564, a2=3.593680, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=1.366361, s8=1.280619, bet=0.003160, doi="10.1021/acs.jpclett.6b00780"}
+
+[parameter.b2gpplyp]
+d3.bj = {a1=0.0000, s8=0.2597, a2=6.3332, s6=0.560}
+d3.zero = {rs6=1.586, s8=0.760, s6=0.56}
+
+[parameter.ptpss]
+d3.bj = {a1=0.0000, s8=0.2804, a2=6.5745, s6=0.750}
+
+[parameter.pwpb95]
+d3.bj = {a1=0.0000, s8=0.2904, a2=7.3141, s6=0.820}
+d3.zero = {rs6=1.557, s8=0.705, s6=0.82}
+
+[parameter.hf_mixed]
+d3.bj = {a1=0.5607, s8=3.9027, a2=4.5622}
+
+[parameter.hf_sv]
+d3.bj = {a1=0.4249, s8=2.1849, a2=4.2783}
+
+[parameter.hf_minis]
+d3.bj = {a1=0.1702, s8=0.9841, a2=3.8506}
+
+[parameter.b3lyp_631gd]
+d3.bj = {a1=0.5014, s8=4.0672, a2=4.8409}
+
+[parameter.hcth120]
+d3.bj = {a1=0.3563, s8=1.0821, a2=4.3359}
+
+[parameter.dftb3]
+d3.bj = {a1=0.5719, s8=0.5883, a2=3.6017}
+
+[parameter.pw1pw]
+d3.bj = {a1=0.3807, s8=2.3363, a2=5.8844}
+d3.zero = {rs6=1.4968, s8=1.1786, doi="10.1039/C7CP04913G"}
+
+[parameter.pwgga]
+d3.bj = {a1=0.2211, s8=2.6910, a2=6.7278}
+
+[parameter.hsesol]
+d3.bj = {a1=0.4650, s8=2.9215, a2=6.2003}
+
+[parameter.hf3c]
+d3.bj = {a1=0.4171, s8=0.8777, a2=2.9149}
+
+[parameter.hf3cv]
+d3.bj = {a1=0.3063, s8=0.5022, a2=3.9856}
+
+[parameter.pbeh3c]
+d3.bj = {a1=0.4860, s8=0.0000, a2=4.5000}
+
+[parameter.scan]
+d3.bj = {a1=0.5380, s8=0.0000, a2=5.4200}
+d3.zero = {rs6=1.324, s8=0.000}
+
+[parameter.rscan]
+d3.bj = {a1=0.47023427, s8=1.08859014, a2=5.73408312}
+
+[parameter.r2scan]
+d3.bj = {a1=0.49484001, s8=0.78981345, a2=5.73083694}
+
+[parameter.wb97x]
+d3.bj = {a1=0.0000, s8=0.2641, a2=5.4959}
+d3.zero = {rs6=1.281, s8=1.0, rs8=1.094}
+
+[parameter.wb97m]
+d3.bj = {a1=0.5660, s8=0.3908, a2=3.1280}
+
+[parameter.b97m]
+d3.bj = {a1=-0.0780, s8=0.1384, a2=5.5946}
+
+[parameter.pbehpbe]
+d3.bj = {a1=0.0000, s8=1.1152, a2=6.7184}
+d3.zero = {rs6=1.5703, s8=1.4010, doi="10.1039/C7CP04913G"}
+
+[parameter.xlyp]
+d3.bj = {a1=0.0809, s8=1.5669, a2=5.3166}
+d3.zero = {rs6=0.9384, s8=0.7447, doi="10.1039/C7CP04913G"}
+
+[parameter.mpwpw]
+d3.bj = {a1=0.3168, s8=1.7974, a2=4.7732}
+d3.zero = {rs6=1.3725, s8=1.9467, doi="10.1039/C7CP04913G"}
+
+[parameter.hcth407]
+d3.bj = {a1=0.0000, s8=0.6490, a2=4.8162}
+d3.zero = {rs6=4.0426, s8=2.7694, doi="10.1039/C7CP04913G"}
+
+[parameter.revtpss]
+d3.bj = {a1=0.4326, s8=1.4023, a2=4.4723}
+d3.zero = {rs6=1.3491, s8=1.3666, doi="10.1039/C7CP04913G"}
+d3.op = {s6=1.0, s8=0.27632, a1=0.700, a2=2.500, bet=8.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.tauhcth]
+d3.bj = {a1=0.0000, s8=1.2626, a2=5.6162}
+d3.zero = {rs6=0.9320, s8=0.5662, doi="10.1039/C7CP04913G"}
+
+[parameter.b3p]
+d3.bj = {a1=0.4601, s8=3.3211, a2=4.9858}
+d3.zero = {rs6=1.1897, s8=1.1961, doi="10.1039/C7CP04913G"}
+
+[parameter.b1p]
+d3.bj = {a1=0.4724, s8=3.5681, a2=4.9858}
+d3.zero = {rs6=1.1815, s8=1.1209, doi="10.1039/C7CP04913G"}
+
+[parameter.b1lyp]
+d3.bj = {a1=0.1986, s8=2.1167, a2=5.3875}
+d3.zero = {rs6=1.3725, s8=1.9467, doi="10.1039/C7CP04913G"}
+
+[parameter.mpwb1k]
+d3.bj = {a1=0.1474, s8=0.9499, a2=6.6223}
+d3.zero = {rs6=1.671, s8=1.061}
+
+[parameter.mpw1lyp]
+d3.zero = {rs6=2.0512, s8=1.9529, doi="10.1039/C7CP04913G"}
+
+[parameter.mpw1pw]
+d3.bj = {a1=0.3342, s8=1.8744, a2=4.9819}
+d3.zero = {rs6=1.2892, s8=1.4758, doi="10.1039/C7CP04913G"}
+
+[parameter.mpw1kcis]
+d3.bj = {a1=0.0576, s8=1.0893, a2=5.5314}
+d3.zero = {rs6=1.7231, s8=2.2917, doi="10.1039/C7CP04913G"}
+
+[parameter.mpwkcis1k]
+d3.zero = {rs6=1.4853, s8=1.7553, doi="10.1039/C7CP04913G"}
+
+[parameter.pbeh1pbe]
+d3.bj = {a1=0.0000, s8=1.4877, a2=7.0385}
+d3.zero = {rs6=1.3719, s8=1.0430, doi="10.1039/C7CP04913G"}
+
+[parameter.pbe1kcis]
+d3.bj = {a1=0.0000, s8=0.7688, a2=6.2794}
+d3.zero = {rs6=3.6355, s8=1.7934, doi="10.1039/C7CP04913G"}
+
+[parameter.x3lyp]
+d3.bj = {a1=0.2022, s8=1.5744, a2=5.4184}
+d3.zero = {rs6=1.0, s8=0.2990, doi="10.1039/C7CP04913G"}
+
+[parameter.o3lyp]
+d3.bj = {a1=0.0963, s8=1.8171, a2=5.9940}
+d3.zero = {rs6=1.4060, s8=1.8058, doi="10.1039/C7CP04913G"}
+
+[parameter.b97_1]
+d3.bj = {a1=0.0000, s8=0.4814, a2=6.2279}
+d3.zero = {rs6=3.7924, s8=1.6418, doi="10.1039/C7CP04913G"}
+d3.op = {s6=0.97388, s8=0.0, a1=0.150, a2=4.25, bet=6.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.b97_2]
+d3.bj = {a1=0.0000, s8=0.9448, a2=5.9940}
+d3.zero = {rs6=1.7066, s8=1.6418, doi="10.1039/C7CP04913G"}
+
+[parameter.b98]
+d3.bj = {a1=0.0000, s8=0.7086, a2=6.0672}
+d3.zero = {rs6=2.6895, s8=1.9078, doi="10.1039/C7CP04913G"}
+
+[parameter.hiss]
+d3.bj = {a1=0.0000, s8=1.6112, a2=7.3539}
+d3.zero = {rs6=1.3338, s8=0.7615, doi="10.1039/C7CP04913G"}
+
+[parameter.hse03]
+d3.bj = {a1=0.0000, s8=1.1243, a2=6.8889}
+d3.zero = {rs6=1.3944, s8=1.0156, doi="10.1039/C7CP04913G"}
+
+[parameter.revtpssh]
+d3.bj = {a1=0.2660, s8=1.4076, a2=5.3761}
+d3.zero = {rs6=1.3224, s8=1.2504, doi="10.1039/C7CP04913G"}
+d3.op = {s6=1.0, s8=0.12467, a1=0.575, a2=3.000, bet=10.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.revtpss0]
+d3.bj = {a1=0.2218, s8=1.6151, a2=5.7985}
+d3.zero = {rs6=1.2881, s8=1.0649, doi="10.1039/C7CP04913G"}
+
+[parameter.tpss1kcis]
+d3.bj = {a1=0.0000, s8=1.0542, a2=6.0201}
+d3.zero = {rs6=1.7729, s8=2.0902, doi="10.1039/C7CP04913G"}
+
+[parameter.tauhcthhyb]
+d3.bj = {a1=0.0000, s8=0.9585, a2=10.1389}
+d3.zero = {rs6=1.5001, s8=1.6302, doi="10.1039/C7CP04913G"}
+
+[parameter.m11]
+d3.bj = {a1=0.0000, s8=2.8112, a2=10.1389}
+
+[parameter.sogga11x]
+d3.bj = {a1=0.1330, s8=1.1426, a2=5.7381}
+
+[parameter.pkzb]
+d3.zero = {rs6=0.6327, s8=0.0, doi="10.1039/C7CP04913G"}
+
+[parameter.n12]
+d3.zero = {rs6=1.3493, s8=2.3916, doi="10.1039/C7CP04913G"}
+
+[parameter.n12sx]
+d3.bj = {a1=0.3283, s8=2.4900, a2=5.7898}
+
+[parameter.mn12sx]
+d3.bj = {a1=0.0983, s8=1.1674, a2=8.0259}
+
+[parameter.mn15]
+d3.bj = {a1=2.0971, s8=0.7862, a2=7.5923}
+
+[parameter.lc_whpbe]
+d3.bj = {a1=0.2746, s8=1.1908, a2=5.3157}
+
+[parameter.mpw2plyp]
+d3.bj = {s6=0.66, a1=0.4105, s8=0.6223, a2=5.0136}
+d3.zero = {s6=0.66, rs6=1.5527, s8=0.7529, doi="10.1039/C7CP04913G"}
+
+[parameter.ms2]
+d3.op = {s6=1.0, s8=0.90743, a1=0.700, a2=4.00, bet=2.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.ms2h]
+d3.op = {s6=1.0, s8=1.69464, a1=0.650, a2=4.75, bet=0.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.m05]
+d3.zero = {rs6=1.373, s8=0.595}
+
+[parameter.m052x]
+d3.zero = {rs6=1.417, s8=0.000}
+
+[parameter.m06l]
+d3.zero = {rs6=1.581, s8=0.000}
+
+[parameter.m06]
+d3.zero = {rs6=1.325, s8=0.000}
+
+[parameter.m062x]
+d3.zero = {rs6=1.619, s8=0.000}
+
+[parameter.m08hx]
+d3.zero = {rs6=1.6247, s8=0.0, doi="10.1039/C7CP04913G"}
+
+[parameter.m11l]
+d3.zero = {rs6=2.3933, s8=1.1129, doi="10.1039/C7CP04913G"}
+
+[parameter.mn15l]
+d3.zero = {rs6=3.3388, s8=0.0, doi="10.1039/C7CP04913G"}
+
+[parameter.pwp]
+d3.zero = {rs6=2.1040, s8=0.8747, doi="10.1039/C7CP04913G"}

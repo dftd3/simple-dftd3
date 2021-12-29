@@ -31,6 +31,7 @@ has_cc = add_languages('c', required: get_option('api') or get_option('python'))
 # General configuration information
 inc_dirs = []
 lib_deps = []
+exe_deps = []
 subdir('config')
 
 # Collect source of the project
@@ -53,6 +54,10 @@ sdftd3_dep = declare_dependency(
   link_with: sdftd3_lib,
   include_directories: sdftd3_inc,
   dependencies: lib_deps,
+)
+
+sdftd3_parameters = files(
+  'assets/parameters.toml',
 )
 
 # Add applications
@@ -105,6 +110,11 @@ if install
       )
     )
   endif
+
+  install_data(
+    sdftd3_parameters,
+    install_dir: get_option('datadir')/meson.project_name(),
+  )
 endif
 
 # Add the testsuite

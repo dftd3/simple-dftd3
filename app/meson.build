@@ -17,10 +17,14 @@
 sdftd3_exe = executable(
   meson.project_name(),
   sources: files(
+    'argument.f90',
+    'cli.f90',
+    'driver.f90',
     'help.f90',
     'main.f90',
+    'toml.f90',
   ),
-  dependencies: sdftd3_dep,
+  dependencies: [sdftd3_dep, exe_deps],
   install: install,
 )
 
@@ -29,6 +33,6 @@ if os != 'windows'
   test('help', sdftd3_exe, args: '--help', suite: 'app')
   test('noargs', sdftd3_exe, should_fail: true, suite: 'app')
   test('example', sdftd3_exe, args: files('example.xyz'), suite: 'app')
-  test('zero', sdftd3_exe, args: ['--json', '--zero-param', '1.0', '1.868', '1.613', files('example.xyz')], suite: 'app')
-  test('rational', sdftd3_exe, args: ['--bj-param', '1.0', '1.2576', '0.3768', '4.5865', files('example.xyz')], suite: 'app')
+  test('param-all', sdftd3_exe, args: ['param', sdftd3_parameters], suite: 'app')
+  test('param-select', sdftd3_exe, args: ['param', sdftd3_parameters, 'b2plyp'], suite: 'app')
 endif

@@ -2,4 +2,5 @@ $ORIGIN/01-tyr-xab.xyz
 --bj
 pbe
 --atm
+-v
 --noedisp

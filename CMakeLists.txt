@@ -44,9 +44,16 @@ endif()
 if(NOT TARGET "mstore::mstore" AND WITH_TESTS)
   find_package("mstore" REQUIRED)
 endif()
+if(NOT TARGET "toml-f::toml-f")
+  find_package("toml-f" REQUIRED)
+endif()
 set(
   lib-deps
   "mctc-lib::mctc-lib"
+)
+set(
+  exe-deps
+  "toml-f::toml-f"
 )
 
 # Collect source of the project

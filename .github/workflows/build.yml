@@ -368,6 +368,10 @@ jobs:
         tar xvf ${{ env.DFTD3_OUTPUT }}
         echo "DFTD3_PREFIX=$PWD/_dist" >> $GITHUB_ENV
 
+    - name: Copy parameter file
+      run: |
+        cp assets/parameters.toml python/dftd3
+
     - name: Install Python extension module (pip)
       run: pip3 install . --user
       working-directory: python

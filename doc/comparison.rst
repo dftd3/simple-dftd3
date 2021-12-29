@@ -21,7 +21,7 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
  `cresset-group/dftd3`_         GPL-1.0    Fortran              patched fork
  `loriab/dftd3`_                GPL-1.0    Fortran              patched fork, Windows
  `f3rmion/dftd3`_               GPL-1.0    Fortran              patched fork
- `bobbypation/pydftd3`_         MIT        Python               Gaussian
+ `bobbypaton/pydftd3`_          MIT        Python               Gaussian
 ============================== ========== ==================== ==========================
 
 .. _dftd3: http://mctc.uni-bonn.de/software/dft-d3
@@ -33,7 +33,7 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
 .. _cresset-group/dftd3: https://github.com/cresset-group/dftd3
 .. _loriab/dftd3: https://github.com/loriab/dftd3
 .. _f3rmion/dftd3: https://github.com/f3rmion/dftd3
-.. _bobbypation/pydftd3: https://github.com/bobbypaton/pyDFTD3
+.. _bobbypaton/pydftd3: https://github.com/bobbypaton/pyDFTD3
 
 Many more versions are probably around or redistributed in various quantum chemistry programs.
 

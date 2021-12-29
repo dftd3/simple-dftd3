@@ -26,6 +26,16 @@ tests = [
   '08-gradient-d3-bjm',
   '09-gradient-d3-zerom',
   '10-gradient-d3-op',
+  '11-pairwise-d3-bj',
+  '12-pairwise-d3-zero',
+  '13-pairwise-d3-bjm',
+  '14-pairwise-d3-zerom',
+  '15-pairwise-d3-op',
+  '16-db-d3-bj',
+  '17-db-d3-zero',
+  '18-db-d3-bjm',
+  '19-db-d3-zerom',
+  '20-db-d3-op',
 ]
 
 foreach t : tests

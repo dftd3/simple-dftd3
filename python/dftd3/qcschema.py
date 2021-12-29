@@ -29,7 +29,8 @@ Supported keywords are
  pair_resolved            False       Enable pairwise resolved dispersion energy
 ======================== =========== ============================================
 
-Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``, and ``"d3zerom"``.
+Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``, ``"d3zerom"``,
+and ``"d3op"``.
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided for rational damping, while s8 and rs6 are required in case
@@ -61,6 +62,20 @@ Parameters for (modified) zero damping are:
  alp                      14.0        Exponent of the zero damping
  bet                      None        Offset for damping radius (modified zero damping)
 ======================== =========== ===================================================
+
+Parameters for optimized power damping are:
+
+======================== =========== ============================================
+ Tweakable parameter      Default     Description
+======================== =========== ============================================
+ s6                       1.0         Scaling of the dipole-dipole dispersion
+ s8                       None        Scaling of the dipole-quadrupole dispersion
+ s9                       1.0         Scaling of the three-body dispersion energy
+ a1                       None        Scaling of the critical radii
+ a2                       None        Offset of the critical radii
+ alp                      14.0        Exponent of the zero damping (ATM only)
+ bet                      None        Power for the zero-damping component
+======================== =========== ============================================
 
 .. note::
 
@@ -101,6 +116,7 @@ from .interface import (
     ZeroDampingParam,
     ModifiedRationalDampingParam,
     ModifiedZeroDampingParam,
+    OptimizedPowerDampingParam,
 )
 from .library import get_api_version
 import numpy as np
@@ -117,6 +133,7 @@ _available_levels = [
     "d3zero",
     "d3bjm",
     "d3zerom",
+    "d3op",
 ]
 
 _damping_param = {
@@ -124,6 +141,7 @@ _damping_param = {
     "d3zero": ZeroDampingParam,
     "d3bjm": ModifiedRationalDampingParam,
     "d3zerom": ModifiedZeroDampingParam,
+    "d3op": OptimizedPowerDampingParam,
 }
 
 _clean_dashlevel = str.maketrans("", "", "()")

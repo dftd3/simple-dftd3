@@ -60,8 +60,10 @@ if install
     '__init__.py',
     'library.py',
     'interface.py',
+    'parameters.py',
     'test_library.py',
     'test_interface.py',
+    'test_parameters.py',
     subdir: 'dftd3',
   )
 endif

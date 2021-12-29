@@ -59,6 +59,9 @@ Use ATM three-body dispersion
 *--atm-scale* _s9_::
 Use scaled ATM three-body dispersion
 
+*--db* _file_::
+Load parameters from external data file
+
 *--noedisp*::
 Disable writing of dispersion energy to `.EDISP` file
 

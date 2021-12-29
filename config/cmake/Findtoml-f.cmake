@@ -14,30 +14,27 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-add_executable(
-  "${PROJECT_NAME}-exe"
-  "argument.f90"
-  "cli.f90"
-  "driver.f90"
-  "help.f90"
-  "main.f90"
-  "toml.f90"
-)
-set_target_properties(
-  "${PROJECT_NAME}-exe"
-  PROPERTIES
-  OUTPUT_NAME "${PROJECT_NAME}"
-)
-target_link_libraries(
-  "${PROJECT_NAME}-exe"
-  PRIVATE
-  "${PROJECT_NAME}-lib"
-  "${exe-deps}"
-)
+set(_lib "toml-f")
+set(_pkg "TOMLF")
+set(_url "https://github.com/toml-f/toml-f")
 
-install(
-  TARGETS
-  "${PROJECT_NAME}-exe"
-  DESTINATION
-  "${CMAKE_INSTALL_BINDIR}"
-)
+if(NOT DEFINED "${_pkg}_FIND_METHOD")
+  if(DEFINED "${PROJECT_NAME}-dependency-method")
+    set("${_pkg}_FIND_METHOD" "${${PROJECT_NAME}-dependency-method}")
+  else()
+    set("${_pkg}_FIND_METHOD" "cmake" "pkgconf" "subproject" "fetch")
+  endif()
+  set("_${_pkg}_FIND_METHOD")
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/s-dftd3-utils.cmake")
+
+sdftd3_find_package("${_lib}" "${${_pkg}_FIND_METHOD}" "${_url}")
+
+if(DEFINED "_${_pkg}_FIND_METHOD")
+  unset("${_pkg}_FIND_METHOD")
+  unset("_${_pkg}_FIND_METHOD")
+endif()
+unset(_lib)
+unset(_pkg)
+unset(_url)
