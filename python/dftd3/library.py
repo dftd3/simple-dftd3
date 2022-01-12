@@ -105,6 +105,9 @@ def new_d3_model(mol):
     return ffi.gc(error_check(lib.dftd3_new_d3_model)(mol), _delete_model)
 
 
+set_model_realspace_cutoff = error_check(lib.dftd3_set_model_realspace_cutoff)
+
+
 def _delete_param(param):
     """Delete a DFT-D3 damping parameteter object"""
     ptr = ffi.new("dftd3_param *")

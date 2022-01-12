@@ -150,6 +150,9 @@ test (void) {
    if (dftd3_check_error(error)) {return 1;}
    dftd3_delete_param(&param);
 
+   dftd3_set_model_realspace_cutoff(error, disp, 50.0, 30.0, 25.0);
+   if (dftd3_check_error(error)) {return 1;}
+
    // DSD-BLYP-D3(BJ)-ATM
    param = dftd3_load_rational_damping(error, "dsdblyp", true);
    if (dftd3_check_error(error)) {return 1;}

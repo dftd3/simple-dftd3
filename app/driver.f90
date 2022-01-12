@@ -239,7 +239,7 @@ subroutine run_driver(config, error)
       if (config%json) then
          open(file=config%json_output, newunit=unit)
          call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma, &
-            & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3)
+            & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3, param=param)
          close(unit)
          if (config%verbosity > 0) then
             write(output_unit, '(a)') &

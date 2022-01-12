@@ -109,7 +109,8 @@ subroutine test_d3bj_mb01(error)
       & "pbehpbe", "xlyp", "mpwpw", "hcth407", "revtpss", "tauhcth", "b3p", "b1p", &
       & "b1lyp", "mpw1pw", "mpw1kcis", "pbeh1pbe", "pbe1kcis", "x3lyp", "o3lyp", &
       & "b971", "b972", "b98", "hiss", "hse03", "revtpssh", "revtpss0", "tpss1kcis", &
-      & "tauhcthhyb", "mn15", "lcwhpbe", "mpw2plyp", "m11", "sogga11x", "n12sx", "mn12sx"]
+      & "tauhcthhyb", "mn15", "lcwhpbe", "mpw2plyp", "m11", "sogga11x", "n12sx", "mn12sx", &
+      & "r2scanh", "r2scan0", "r2scan50"]
    real(wp), parameter :: ref(*) = [&
       & -2.9551695097427895E-2_wp,-1.6638703327271943E-2_wp,-1.6725877952934207E-2_wp,&
       & -3.3014430058391525E-2_wp,-2.2051435529913663E-2_wp,-3.3481566296209062E-2_wp,&
@@ -140,7 +141,8 @@ subroutine test_d3bj_mb01(error)
       & -2.4751360991084652E-2_wp,-2.3986534077274996E-2_wp,-5.6113881174257106E-2_wp,&
       & -2.6879433404186437E-3_wp,-4.7068040531449457E-5_wp,-2.2830468001236413E-2_wp,&
       & -8.9046742259553460E-3_wp,-4.2882620142630961E-3_wp,-3.4182033229747014E-2_wp,&
-      & -1.7851924243396270E-2_wp,-7.2749943813437013E-3_wp]
+      & -1.7851924243396270E-2_wp,-7.2749943813437013E-3_wp,-5.9043781133339438E-3_wp,&
+      & -6.5370092691738940E-3_wp,-7.3564458297206018E-3_wp]
 
    call get_structure(mol, "MB16-43", "01")
    do ii = 1, size(func)
@@ -235,7 +237,8 @@ subroutine test_d3bjatm_mb17(error)
       & "olyp", "opbe", "otpss", "pbe", "pbe0", "pbeh3c", "pbesol", "ptpss", &
       & "pw1pw", "pw6b95", "pwb6k", "pwgga", "pwpb95", "revpbe", "revpbe0", &
       & "revpbe38", "revssb", "rpbe", "rpw86pbe", "ssb", "tpss", "tpss0", "tpssh", &
-      & "scan", "rscan", "r2scan", "b97m", "wb97m", "wb97x"]
+      & "scan", "rscan", "r2scan", "b97m", "wb97m", "wb97x", &
+      & "r2scanh", "r2scan0", "r2scan50"]
    real(wp), parameter :: ref(*) = [&
       & -2.3886025810397844E-2_wp,-1.2511386988136818E-2_wp,-1.4044660769381583E-2_wp,&
       & -2.8422911196001738E-2_wp,-1.9411342505549978E-2_wp,-2.9014209453188066E-2_wp,&
@@ -256,7 +259,8 @@ subroutine test_d3bjatm_mb17(error)
       & -3.9038612599902538E-2_wp,-2.0567214691452097E-2_wp,-2.1558425276809661E-2_wp,&
       & -1.9336394869980178E-2_wp,-3.7332351763594033E-3_wp,-5.8233053769766027E-3_wp,&
       & -4.8268740049936159E-3_wp,-4.5927347482312343E-2_wp,-1.9723673409687528E-2_wp,&
-      & -3.7824099948638522E-2_wp]
+      & -3.7824099948638522E-2_wp,-5.1862651978736860E-3_wp,-5.7275847018203926E-3_wp,&
+      & -6.4146050597618919E-3_wp]
 
    call get_structure(mol, "MB16-43", "17")
    do ii = 1, size(func)

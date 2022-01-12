@@ -16,12 +16,12 @@
 
 module test_model
    use mctc_env, only : wp
-   use mctc_env_testing, only : new_unittest, unittest_type, error_type, &
+   use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io_structure, only : structure_type
    use mstore, only : get_structure
    use dftd3_cutoff, only : get_lattice_points
-   use dftd3_data, only : get_covalent_rad
+   use dftd3_data, only : get_covalent_rad, get_vdw_rad, get_r4r2_val
    use dftd3_ncoord, only : get_coordination_number
    use dftd3_model
    implicit none
@@ -43,6 +43,9 @@ subroutine collect_model(testsuite)
    type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
    testsuite = [ &
+      & new_unittest("r4r2-val", test_r4r2_val), &
+      & new_unittest("cov-rad", test_cov_rad), &
+      & new_unittest("vdw-rad", test_vdw_rad), &
       & new_unittest("gw-mb01", test_gw_mb01), &
       & new_unittest("gw-mb02", test_gw_mb02), &
       & new_unittest("gw-mb03", test_gw_mb03), &
@@ -289,6 +292,49 @@ subroutine test_dgw_mb05(error)
    call test_dgw_gen(error, mol)
 
 end subroutine test_dgw_mb05
+
+
+subroutine test_r4r2_val(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   call check(error, get_r4r2_val("H"), get_r4r2_val(1))
+   if (allocated(error)) return
+   call check(error, get_r4r2_val("Og"), get_r4r2_val(118))
+   if (allocated(error)) return
+   call check(error, get_r4r2_val("X"), get_r4r2_val(-1))
+end subroutine test_r4r2_val
+
+
+subroutine test_cov_rad(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   call check(error, get_covalent_rad("C"), get_covalent_rad(6))
+   if (allocated(error)) return
+   call check(error, get_covalent_rad("Og"), get_covalent_rad(118))
+   if (allocated(error)) return
+   call check(error, get_covalent_rad("X"), get_covalent_rad(-1))
+end subroutine test_cov_rad
+
+
+subroutine test_vdw_rad(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   call check(error, get_vdw_rad("He", "Rn"), get_vdw_rad(2, 86))
+   if (allocated(error)) return
+   call check(error, get_vdw_rad("S", "Fl"), get_vdw_rad(16, 114))
+   if (allocated(error)) return
+   call check(error, get_vdw_rad("Am", "U"), get_vdw_rad(95, 92))
+   if (allocated(error)) return
+   call check(error, get_vdw_rad("Og", "Cn"), get_vdw_rad(118, 112))
+   if (allocated(error)) return
+   call check(error, get_vdw_rad("X", "X"), get_vdw_rad(-1, -1))
+end subroutine test_vdw_rad
 
 
 end module test_model

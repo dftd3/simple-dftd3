@@ -18,6 +18,7 @@ module dftd3_data_vdwrad
    use mctc_env, only : wp
    use mctc_io_convert, only : aatoau
    use mctc_io_symbols, only : to_number
+   use dftd3_data_covrad, only : get_covalent_rad
    implicit none
    private
 
@@ -594,14 +595,27 @@ elemental function get_vdw_rad_pair_num(num1, num2) result(rad)
    !> Van-der-Waals radius
    real(wp) :: rad
 
+   ! Magic number from ratio of van-der-Waals and covalent radii over element 1-94.
+   !
+   ! L. Trombach, S. Ehlert, S. Grimme, P Schwerdtfeger, J.-M. Mewes, PCCP, 2019.
+   ! DOI: 10.1039/c9cp02455g
+   real(wp), parameter :: cov2vdw = 1.45_wp
+
    if (num1 > 0 .and. num1 <= max_elem .and. num2 > 0 .and. num2 <= max_elem) then
       if (num1 > num2) then
          rad = vdwrad(num2 + num1*(num1-1)/2)
       else
          rad = vdwrad(num1 + num2*(num2-1)/2)
-      endif
+      end if
    else
-      rad = 0.0_wp
+      ! best estimate
+      if (num1 > 0 .and. num1 <= max_elem) then
+         rad = 0.5_wp * vdwrad(num1*(num1+1)/2) + cov2vdw * get_covalent_rad(num2)
+      else if (num2 > 0 .and. num2 <= max_elem) then
+         rad = 0.5_wp * vdwrad(num2*(num2+1)/2) + cov2vdw * get_covalent_rad(num1)
+      else
+         rad = cov2vdw * (get_covalent_rad(num1) + get_covalent_rad(num2))
+      end if
    end if
 
 end function get_vdw_rad_pair_num

@@ -103,6 +103,14 @@ SDFTD3_API_ENTRY dftd3_model SDFTD3_API_CALL
 dftd3_new_d3_model(dftd3_error /* error */,
                    dftd3_structure /* mol */) SDFTD3_API_SUFFIX__V_0_2;
 
+/// Set realspace cutoffs (quantities in Bohr)
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_model_realspace_cutoff(dftd3_error /* error */,
+                                 dftd3_model /* model */,
+                                 double /* disp2 */,
+                                 double /* disp3 */,
+                                 double /* cn */) SDFTD3_API_SUFFIX__V_0_5;
+
 /// Delete dispersion model
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
 dftd3_delete_model(dftd3_model* /* disp */) SDFTD3_API_SUFFIX__V_0_2;

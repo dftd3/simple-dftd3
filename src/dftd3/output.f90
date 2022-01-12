@@ -528,7 +528,7 @@ end subroutine getline
 
 
 subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6, &
-      & pairwise_energy2, pairwise_energy3)
+      & pairwise_energy2, pairwise_energy3, param)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
    real(wp), intent(in), optional :: energy
@@ -538,6 +538,7 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6, &
    real(wp), intent(in), optional :: c6(:, :)
    real(wp), intent(in), optional :: pairwise_energy2(:, :)
    real(wp), intent(in), optional :: pairwise_energy3(:, :)
+   class(damping_param), intent(in), optional :: param
    character(len=:), allocatable :: indent, version_string
    character(len=*), parameter :: jsonkey = "('""',a,'"":',1x)"
    real(wp), allocatable :: array(:)
@@ -599,11 +600,97 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6, &
       array = reshape(pairwise_energy3, [size(pairwise_energy3)])
       call write_json_array(unit, array, indent)
    end if
+   if (present(param)) then
+      write(unit, '(",")', advance='no')
+      if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+      write(unit, jsonkey, advance='no') 'damping parameters'
+      select type(param)
+      type is(rational_damping_param)
+         call write_json_param(unit, "rational", s6=param%s6, s8=param%s8, &
+            & s9=param%s9, a1=param%a1, a2=param%a2, alp=param%alp, indent=indent)
+      type is(zero_damping_param)
+         call write_json_param(unit, "zero", s6=param%s6, s8=param%s8, &
+            & s9=param%s9, rs6=param%rs6, rs8=param%rs8, alp=param%alp, indent=indent)
+      type is(mzero_damping_param)
+         call write_json_param(unit, "mzero", s6=param%s6, s8=param%s8, s9=param%s9, &
+            & rs6=param%rs6, rs8=param%rs8, alp=param%alp, bet=param%bet, indent=indent)
+      type is(optimizedpower_damping_param)
+         call write_json_param(unit, "optimizedpower", s6=param%s6, s8=param%s8, &
+            & s9=param%s9, a1=param%a1, a2=param%a2, alp=param%alp, bet=param%bet, &
+            & indent=indent)
+      class default
+         call write_json_param(unit, "unknown", indent=indent)
+      end select
+   end if
    if (allocated(indent)) write(unit, '(/)', advance='no')
    write(unit, '("}")')
 
 end subroutine json_results
 
+subroutine write_json_param(unit, damping, s6, s8, s9, a1, a2, rs6, rs8, alp, bet, indent)
+   integer, intent(in) :: unit
+   character(len=*), intent(in) :: damping
+   real(wp), intent(in), optional :: s6, s8, s9, a1, a2, rs6, rs8, alp, bet
+   character(len=:), allocatable, intent(in) :: indent
+   character(len=*), parameter :: jsonkeyval = "('""',a,'"":',1x,'""',a,'""')"
+
+   write(unit, '("{")', advance='no')
+
+   if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 2)
+   write(unit, jsonkeyval, advance='no') 'damping', damping
+
+   if (present(s6)) then
+      call write_json_keyval(unit, 's6', s6, indent)
+   end if
+
+   if (present(s8)) then
+      call write_json_keyval(unit, 's8', s8, indent)
+   end if
+
+   if (present(s9)) then
+      call write_json_keyval(unit, 's9', s9, indent)
+   end if
+
+   if (present(a1)) then
+      call write_json_keyval(unit, 'a1', a1, indent)
+   end if
+
+   if (present(a2)) then
+      call write_json_keyval(unit, 'a2', a2, indent)
+   end if
+
+   if (present(rs6)) then
+      call write_json_keyval(unit, 'rs6', rs6, indent)
+   end if
+
+   if (present(rs8)) then
+      call write_json_keyval(unit, 'rs8', rs8, indent)
+   end if
+
+   if (present(alp)) then
+      call write_json_keyval(unit, 'alp', alp, indent)
+   end if
+
+   if (present(bet)) then
+      call write_json_keyval(unit, 'bet', bet, indent)
+   end if
+
+   if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 1)
+   write(unit, '("}")', advance='no')
+end subroutine write_json_param
+
+subroutine write_json_keyval(unit, key, val, indent)
+   integer, intent(in) :: unit
+   character(len=*), intent(in) :: key
+   real(wp), intent(in) :: val
+   character(len=:), allocatable, intent(in) :: indent
+   character(len=*), parameter :: jsonkeyval = "('""',a,'"":',1x,es23.16)"
+
+   write(unit, '(",")', advance='no')
+   if (allocated(indent)) write(unit, '(/,a)', advance='no') repeat(indent, 2)
+   write(unit, jsonkeyval, advance='no') key, val
+
+end subroutine write_json_keyval
 
 subroutine write_json_array(unit, array, indent)
    integer, intent(in) :: unit

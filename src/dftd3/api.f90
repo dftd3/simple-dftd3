@@ -75,6 +75,8 @@ module dftd3_api
    type :: vp_model
       !> Actual payload
       type(d3_model) :: ptr
+      !> Additional real space cutoff
+      type(realspace_cutoff), allocatable :: cutoff
    end type vp_model
 
    !> Void pointer to damping parameters
@@ -302,6 +304,29 @@ function new_d3_model_api(verror, vmol) &
    vdisp = c_loc(disp)
 
 end function new_d3_model_api
+
+
+subroutine set_model_realspace_cutoff(verror, vdisp, disp2, disp3, cn) &
+      & bind(C, name=namespace//"set_model_realspace_cutoff")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   real(c_double), value, intent(in) :: disp2
+   real(c_double), value, intent(in) :: disp3
+   real(c_double), value, intent(in) :: cn
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "D3 dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   disp%cutoff = realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn)
+end subroutine set_model_realspace_cutoff
 
 
 !> Delete dispersion model
@@ -681,6 +706,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    real(wp), allocatable :: gradient(:, :)
    real(c_double), intent(out), optional :: c_sigma(3, 3)
    real(wp), allocatable :: sigma(:, :)
+   type(realspace_cutoff) :: cutoff
 
    if (.not.c_associated(verror)) return
    call c_f_pointer(verror, error)
@@ -716,7 +742,11 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       sigma = c_sigma(:3, :3)
    endif
 
-   call get_dispersion(mol%ptr, disp%ptr, param%ptr, realspace_cutoff(), &
+   cutoff = realspace_cutoff()
+   if (allocated(disp%cutoff)) then
+      cutoff = disp%cutoff
+   end if
+   call get_dispersion(mol%ptr, disp%ptr, param%ptr, cutoff, &
       & energy, gradient, sigma)
 
    if (present(c_gradient)) then
@@ -746,6 +776,7 @@ subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
    real(wp), pointer :: pair_energy2(:, :)
    type(c_ptr), value, intent(in) :: c_pair_energy3
    real(wp), pointer :: pair_energy3(:, :)
+   type(realspace_cutoff) :: cutoff
 
    if (.not.c_associated(verror)) return
    call c_f_pointer(verror, error)
@@ -776,7 +807,11 @@ subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
    call c_f_pointer(c_pair_energy2, pair_energy2, [mol%ptr%nat, mol%ptr%nat])
    call c_f_pointer(c_pair_energy3, pair_energy3, [mol%ptr%nat, mol%ptr%nat])
 
-   call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, realspace_cutoff(), &
+   cutoff = realspace_cutoff()
+   if (allocated(disp%cutoff)) then
+      cutoff = disp%cutoff
+   end if
+   call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, cutoff, &
       & pair_energy2, pair_energy3)
 
 end subroutine get_pairwise_dispersion_api

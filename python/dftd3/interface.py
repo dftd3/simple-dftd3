@@ -245,6 +245,7 @@ class ZeroDampingParam(DampingParam):
     of the dispersion energy a repulsive contribution to the gradient can arise, which
     is considered artificial.\ :footcite:`grimme2011`
     """
+
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
@@ -278,6 +279,7 @@ class ModifiedRationalDampingParam(DampingParam):
     from the library rather than the original one. Providing a full parameter set is
     functionally equivalent to using the `RationalDampingParam` constructor.
     """
+
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
@@ -311,6 +313,7 @@ class ModifiedZeroDampingParam(DampingParam):
 
        This damping function is identical to zero damping for ``bet=0.0``.
     """
+
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
@@ -345,6 +348,7 @@ class OptimizedPowerDampingParam(DampingParam):
     from the library rather than the original one. Providing the parameter `bet=0` is
     equivalent to using rational the `RationalDampingParam` constructor.
     """
+
     def __init__(self, **kwargs):
         DampingParam.__init__(self, **kwargs)
 
@@ -391,6 +395,11 @@ class DispersionModel(Structure):
         Structure.__init__(self, numbers, positions, lattice, periodic)
 
         self._disp = library.new_d3_model(self._mol)
+
+    def set_realspace_cutoff(self, disp2: float, disp3: float, cn: float):
+        """Set realspace cutoff for evaluation of interactions"""
+
+        library.set_model_realspace_cutoff(self._disp, disp2, disp3, cn)
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """Perform actual evaluation of the dispersion correction"""

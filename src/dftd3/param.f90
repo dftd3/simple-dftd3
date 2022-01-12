@@ -59,7 +59,8 @@ module dftd3_param
          & p_revtpss0_df, p_tpss1kcis_df, p_tauhcthhyb_df, p_mn15_df, p_lc_whpbe_df, &
          & p_mpw2plyp_df, p_m11_df, p_sogga11x_df, p_n12sx_df, p_mn12sx_df, &
          & p_ms2_df, p_ms2h_df, p_mpw1lyp_df, p_mpwkcis1k_df, p_pkzb_df, p_n12_df, &
-         & p_m08hx_df, p_m11l_df, p_mn15l_df, p_pwp_df
+         & p_m08hx_df, p_m11l_df, p_mn15l_df, p_pwp_df, p_r2scanh_df, p_r2scan0_df, &
+         & p_r2scan50_df
    end enum
 
 contains
@@ -168,6 +169,9 @@ function get_method_id(method) result(id)
    case("pwgga"); id = p_pwgga_df
    case("pwpb95"); id = p_pwpb95_df
    case("r2scan"); id = p_r2scan_df
+   case("r2scanh"); id = p_r2scanh_df
+   case("r2scan0"); id = p_r2scan0_df
+   case("r2scan50"); id = p_r2scan50_df
    case("revpbe"); id = p_revpbe_df
    case("revpbe0"); id = p_revpbe0_df
    case("revpbe38"); id = p_revpbe38_df
@@ -325,6 +329,12 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(a1=0.47023427_wp, s8=1.08859014_wp, a2=5.73408312_wp)
    case(p_r2scan_df)
       param = d3_param(a1=0.49484001_wp, s8=0.78981345_wp, a2=5.73083694_wp)
+   case(p_r2scanh_df)
+      param = d3_param(s8=1.1236_wp, a1=0.4709_wp, a2=5.9157_wp)
+   case(p_r2scan0_df)
+      param = d3_param(s8=1.1846_wp, a1=0.4534_wp, a2=5.8972_wp)
+   case(p_r2scan50_df)
+      param = d3_param(s8=1.3294_wp, a1=0.4311_wp, a2=5.9240_wp)
    case(p_wb97x_df)
       param = d3_param(a1=0.0000_wp, s8=0.2641_wp, a2=5.4959_wp)
    case(p_wb97m_df)
