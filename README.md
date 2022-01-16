@@ -58,11 +58,11 @@ Now you are ready to use ``s-dftd3``.
 
 To build this project from the source code in this repository you need to have
 a Fortran compiler supporting Fortran 2008 and one of the supported build systems:
-- [meson](https://mesonbuild.com) version 0.53 or newer, with
+- [meson](https://mesonbuild.com) version 0.55 or newer, with
   a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
 - [cmake](https://cmake.org) version 3.14 or newer, with
   a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.10 or newer
-- [fpm](https://github.com/fortran-lang/fpm) version 0.2.0 or newer
+- [fpm](https://github.com/fortran-lang/fpm) version 0.3.0 or newer
 
 Meson is the primary build system and provides feature-complete functionality of this project.
 CMake and fpm support is available but the functionality of the project is limited.

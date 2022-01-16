@@ -9,10 +9,10 @@ import dftd3
 
 project = "simple-dftd3"
 author = "Sebastian Ehlert"
-copyright = f"2019-2021, {author}"
+copyright = f"2019-2022, {author}"
 
 # The short X.Y version
-version = "0.4.2"
+version = "0.5.3"
 # The full version, including alpha/beta/rc tags
 release = version
 
