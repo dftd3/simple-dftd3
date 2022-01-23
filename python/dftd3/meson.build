@@ -61,9 +61,11 @@ if install
     'library.py',
     'interface.py',
     'parameters.py',
+    'qcschema.py',
     'test_library.py',
     'test_interface.py',
     'test_parameters.py',
+    'test_qcschema.py',
     subdir: 'dftd3',
   )
 endif

@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.14)
 project(
   "s-dftd3"
   LANGUAGES "Fortran"
-  VERSION "0.5.0"
+  VERSION "0.5.1"
   DESCRIPTION "Simple reimplementation of the DFT-D3 dispersion model"
 )
 

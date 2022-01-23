@@ -214,6 +214,7 @@ class RationalDampingParam(DampingParam):
     """
 
     def __init__(self, **kwargs):
+        _rename_kwargs(kwargs, "alpha6", "alp")
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
@@ -247,6 +248,9 @@ class ZeroDampingParam(DampingParam):
     """
 
     def __init__(self, **kwargs):
+        _rename_kwargs(kwargs, "sr6", "rs6")
+        _rename_kwargs(kwargs, "sr8", "rs8")
+        _rename_kwargs(kwargs, "alpha6", "alp")
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
@@ -281,6 +285,7 @@ class ModifiedRationalDampingParam(DampingParam):
     """
 
     def __init__(self, **kwargs):
+        _rename_kwargs(kwargs, "alpha6", "alp")
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
@@ -315,6 +320,10 @@ class ModifiedZeroDampingParam(DampingParam):
     """
 
     def __init__(self, **kwargs):
+        _rename_kwargs(kwargs, "sr6", "rs6")
+        _rename_kwargs(kwargs, "sr8", "rs8")
+        _rename_kwargs(kwargs, "alpha6", "alp")
+        _rename_kwargs(kwargs, "beta", "bet")
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
@@ -350,6 +359,8 @@ class OptimizedPowerDampingParam(DampingParam):
     """
 
     def __init__(self, **kwargs):
+        _rename_kwargs(kwargs, "alpha6", "alp")
+        _rename_kwargs(kwargs, "beta", "bet")
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
@@ -464,3 +475,9 @@ def _ref(ctype, value):
     ref = library.ffi.new(ctype + "*")
     ref[0] = value
     return ref
+
+
+def _rename_kwargs(kwargs, old_name, new_name):
+    if old_name in kwargs and new_name not in kwargs:
+        kwargs[new_name] = kwargs[old_name]
+        del kwargs[old_name]

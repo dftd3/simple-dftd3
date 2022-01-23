@@ -190,8 +190,9 @@ def test_gradient_tpss_d3zero():
         },
         keywords={
             "params_tweaks": {
-                "rs6": 1.166,
+                "sr6": 1.166,
                 "s8": 1.105,
+                "alpha6": 14.0,
             },
             "level_hint": "d3zero",
         },
