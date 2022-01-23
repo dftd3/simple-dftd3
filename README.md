@@ -269,10 +269,10 @@ The in-tree build is mainly meant for end users and packages.
 To build the Python API with the normal project set the ``python`` option in the configuration step with
 
 ```sh
-meson setup _build -Dpython=true -Dpython_version=3
+meson setup _build -Dpython=true -Dpython_version=$(which python3)
 ```
 
-The Python version can be used to select a different Python version, it defaults to `'3'`.
+The Python version can be used to select a different Python version, it defaults to `'python3'`.
 Python 2 is not supported with this project, the Python version key is meant to select between several local Python 3 versions.
 
 Proceed with the build as described before and install the projects to make the Python API available in the selected prefix.

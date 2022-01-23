@@ -55,9 +55,16 @@ ModifiedRationalDampingParam
 
 
 ModifiedZeroDampingParam
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: ModifiedZeroDampingParam
+   :members:
+
+
+OptimizedPowerDampingParam
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: OptimizedPowerDampingParam
    :members:
 
 

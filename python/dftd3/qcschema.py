@@ -29,8 +29,8 @@ Supported keywords are
  pair_resolved            False       Enable pairwise resolved dispersion energy
 ======================== =========== ============================================
 
-Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``, ``"d3zerom"``,
-and ``"d3op"``.
+Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``/``"d3mbj"``,
+``"d3mzero"``/``"d3zerom"``, and ``"d3op"``.
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided for rational damping, while s8 and rs6 are required in case
@@ -132,7 +132,9 @@ _available_levels = [
     "d3bj",
     "d3zero",
     "d3bjm",
+    "d3mbj",
     "d3zerom",
+    "d3mzero",
     "d3op",
 ]
 
@@ -140,7 +142,9 @@ _damping_param = {
     "d3bj": RationalDampingParam,
     "d3zero": ZeroDampingParam,
     "d3bjm": ModifiedRationalDampingParam,
+    "d3mbj": ModifiedRationalDampingParam,
     "d3zerom": ModifiedZeroDampingParam,
+    "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
 }
 
