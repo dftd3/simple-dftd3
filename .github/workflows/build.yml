@@ -41,7 +41,7 @@ jobs:
         version: [10]
 
         include:
-        - os: macos-latest
+        - os: ubuntu-latest
           build: cmake
           build-type: debug
           compiler: gnu

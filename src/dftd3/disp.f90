@@ -20,7 +20,7 @@ module dftd3_disp
    use dftd3_damping, only : damping_param
    use dftd3_data, only : get_covalent_rad
    use dftd3_model, only : d3_model
-   use dftd3_ncoord, only : get_coordination_number
+   use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
@@ -58,7 +58,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    logical :: grad
    integer :: mref
-   real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
+   real(wp), allocatable :: cn(:)
    real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
    real(wp), allocatable :: dEdcn(:), energies(:)
@@ -68,9 +68,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    grad = present(gradient).and.present(sigma)
 
    allocate(cn(mol%nat))
-   if (grad) allocate(dcndr(3, mol%nat, mol%nat), dcndL(3, 3, mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn, dcndr, dcndL)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
 
    allocate(gwvec(mref, mol%nat))
    if (grad) allocate(gwdcn(mref, mol%nat))
@@ -95,8 +94,8 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, c6, dc6dcn, &
       & energies, dEdcn, gradient, sigma)
    if (grad) then
-      call d3_gemv(dcndr, dEdcn, gradient, beta=1.0_wp)
-      call d3_gemv(dcndL, dEdcn, sigma, beta=1.0_wp)
+      call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
+         & gradient, sigma)
    end if
 
    energy = sum(energies)

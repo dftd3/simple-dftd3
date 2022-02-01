@@ -20,7 +20,7 @@ module dftd3_ncoord
    implicit none
    private
 
-   public :: get_coordination_number
+   public :: get_coordination_number, add_coordination_number_derivs
 
 
    !> Steepness of counting function
@@ -189,6 +189,66 @@ subroutine ncoord_dexp(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
    end do
 
 end subroutine ncoord_dexp
+
+
+subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, dEdcn, gradient, sigma)
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Covalent radius
+   real(wp), intent(in) :: rcov(:)
+
+   !> Derivative of expression with respect to the coordination number
+   real(wp), intent(in) :: dEdcn(:)
+
+   !> Derivative of the CN with respect to the Cartesian coordinates
+   real(wp), intent(inout) :: gradient(:, :)
+
+   !> Derivative of the CN with respect to strain deformations
+   real(wp), intent(inout) :: sigma(:, :)
+
+   integer :: iat, jat, izp, jzp, itr
+   real(wp) :: r2, r1, rc, rij(3), countf, countd(3), ds(3, 3), cutoff2
+
+   cutoff2 = cutoff**2
+
+   !$omp parallel do schedule(runtime) default(none) &
+   !$omp reduction(+:gradient, sigma) shared(mol, trans, cutoff2, rcov, dEdcn) &
+   !$omp private(jat, itr, izp, jzp, r2, rij, r1, rc, countd, ds)
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      do jat = 1, iat
+         jzp = mol%id(jat)
+
+         do itr = 1, size(trans, dim=2)
+            rij = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, itr))
+            r2 = sum(rij**2)
+            if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
+            r1 = sqrt(r2)
+
+            rc = rcov(izp) + rcov(jzp)
+
+            countd = dexp_count(kcn, r1, rc) * rij/r1
+
+            gradient(:, iat) = gradient(:, iat) + countd * (dEdcn(iat) + dEdcn(jat))
+            gradient(:, jat) = gradient(:, jat) - countd * (dEdcn(iat) + dEdcn(jat))
+
+            ds = spread(countd, 1, 3) * spread(rij, 2, 3)
+
+            sigma(:, :) = sigma(:, :) &
+               & + ds * (dEdcn(iat) + merge(dEdcn(jat), 0.0_wp, jat /= iat))
+         end do
+      end do
+   end do
+
+end subroutine add_coordination_number_derivs
 
 
 !> Exponential counting function for coordination number contributions.

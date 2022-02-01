@@ -28,7 +28,7 @@ module test_periodic
 
    real(wp), parameter :: thr = 100*epsilon(1.0_wp)
    real(wp), parameter :: thr2 = sqrt(epsilon(1.0_wp))
-   real(wp), parameter :: thr3 = 100*sqrt(epsilon(1.0_wp))
+   real(wp), parameter :: thr3 = 1000*sqrt(epsilon(1.0_wp))
    type(realspace_cutoff), parameter :: cutoff = &
       & realspace_cutoff(cn=30_wp, disp2=60.0_wp, disp3=15.0_wp)
 
