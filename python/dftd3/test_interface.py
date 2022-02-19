@@ -23,7 +23,7 @@ from dftd3.interface import (
     OptimizedPowerDampingParam,
     DispersionModel,
 )
-from pytest import approx, raises
+from pytest import approx, raises, mark
 import numpy as np
 
 
@@ -176,7 +176,8 @@ def test_structure():
         mol.update(np.zeros((24, 3)))
 
 
-def test_pbe0_d3_bj():
+@mark.parametrize("atm", [True, False])
+def test_pbe0_d3_bj(atm):
 
     numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
     positions = np.array(
@@ -199,12 +200,14 @@ def test_pbe0_d3_bj():
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
+    ref = -0.029489232932494884 if atm else -0.029589132634178342
     model = DispersionModel(numbers, positions)
-    res = model.get_dispersion(RationalDampingParam(method="pbe0"), grad=False)
-    assert approx(res.get("energy")) == -0.029489232932494884
+    res = model.get_dispersion(RationalDampingParam(method="pbe0", atm=atm), grad=False)
+    assert approx(res.get("energy")) == ref
 
 
-def test_b3lyp_d3_zero():
+@mark.parametrize("atm", [True, False])
+def test_b3lyp_d3_zero(atm):
 
     numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
     positions = np.array(
@@ -227,12 +230,14 @@ def test_b3lyp_d3_zero():
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
+    ref = -0.022714307913634844 if atm else -0.02281420761531831
     model = DispersionModel(numbers, positions)
-    res = model.get_dispersion(ZeroDampingParam(method="b3lyp"), grad=False)
-    assert approx(res.get("energy")) == -0.022714307913634844
+    res = model.get_dispersion(ZeroDampingParam(method="b3lyp", atm=atm), grad=False)
+    assert approx(res.get("energy")) == ref
 
 
-def test_pbe_d3_bjm():
+@mark.parametrize("atm", [True, False])
+def test_pbe_d3_bjm(atm):
 
     numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
     positions = np.array(
@@ -255,12 +260,14 @@ def test_pbe_d3_bjm():
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
+    ref = -0.06327406660942464 if atm else -0.06337396631110809
     model = DispersionModel(numbers, positions)
-    res = model.get_dispersion(ModifiedRationalDampingParam(method="pbe"), grad=False)
-    assert approx(res.get("energy")) == -0.06327406660942464
+    res = model.get_dispersion(ModifiedRationalDampingParam(method="pbe", atm=atm), grad=False)
+    assert approx(res.get("energy")) == ref
 
 
-def test_bp_d3_zerom():
+@mark.parametrize("atm", [True, False])
+def test_bp_d3_zerom(atm):
 
     numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
     positions = np.array(
@@ -283,12 +290,14 @@ def test_bp_d3_zerom():
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
+    ref = -0.02601335734255335 if atm else -0.026113257044236816
     model = DispersionModel(numbers, positions)
-    res = model.get_dispersion(ModifiedZeroDampingParam(method="bp"), grad=False)
-    assert approx(res.get("energy")) == -0.02601335734255335
+    res = model.get_dispersion(ModifiedZeroDampingParam(method="bp", atm=atm), grad=False)
+    assert approx(res.get("energy")) == ref
 
 
-def test_bp_d3_op():
+@mark.parametrize("atm", [True, False])
+def test_bp_d3_op(atm):
 
     numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
     positions = np.array(
@@ -311,9 +320,10 @@ def test_bp_d3_op():
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
+    ref = -0.07681029606751344 if atm else -0.07681029606751344
     model = DispersionModel(numbers, positions)
     res = model.get_dispersion(OptimizedPowerDampingParam(method="b97d"), grad=False)
-    assert approx(res.get("energy")) == -0.07681029606751344
+    assert approx(res.get("energy")) == ref
 
 
 def test_pair_resolved():

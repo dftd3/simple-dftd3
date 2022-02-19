@@ -15,13 +15,14 @@
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 
-from pytest import approx
+from pytest import approx, mark
 from dftd3.qcschema import run_qcschema
 import qcelemental as qcel
 import numpy as np
 
 
-def test_energy_r2scan_d3bj():
+@mark.parametrize("atm", [True, False])
+def test_energy_r2scan_d3bj(atm):
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
@@ -50,17 +51,25 @@ def test_energy_r2scan_d3bj():
         },
         driver="energy",
         model={
-            "method": "r2scan",
+            "method": "",
+        },
+        keywords={
+            "params_tweaks": {
+                "method": "r2scan",
+                "atm": atm,
+            },
         },
     )
+    ref = -0.005790963570050724 if atm else -0.005784012374055654
 
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result, abs=thr) == -0.005790963570050724
+    assert approx(atomic_result.return_result, abs=thr) == ref
 
 
-def test_energy_bp_d3zero():
+@mark.parametrize("atm", [True, False])
+def test_energy_bp_d3zero(atm):
     thr = 1e-9
 
     atomic_input = qcel.models.AtomicInput(
@@ -93,15 +102,17 @@ def test_energy_bp_d3zero():
             "params_tweaks": {
                 "s8": 1.683,
                 "rs6": 1.139,
+                "s9": 1.0 if atm else 0.0,
             },
             "level_hint": "d3zero",
         },
     )
+    ref = -0.014107242765881673 if atm else -0.014100291569886602
 
     atomic_result = run_qcschema(atomic_input)
 
     assert atomic_result.success
-    assert approx(atomic_result.return_result, abs=thr) == -0.014107242765881673
+    assert approx(atomic_result.return_result, abs=thr) == ref
 
 
 def test_gradient_b97d_d3bj():
@@ -244,15 +255,11 @@ def test_error_noargs():
         model={"method": ""},
         keywords={},
     )
-    error = qcel.models.ComputeError(
-        error_type="input error",
-        error_message="new_param() missing 3 required keyword-only arguments: 's8', 'a1', and 'a2'",
-    )
 
     atomic_result = run_qcschema(atomic_input)
 
     assert not atomic_result.success
-    assert atomic_result.error == error
+    assert atomic_result.error.error_type == "input error"
 
 
 def test_error_nomethod():

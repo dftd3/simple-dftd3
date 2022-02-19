@@ -106,7 +106,7 @@ Example
 ...
 >>> atomic_result = run_qcschema(atomic_input)
 >>> atomic_result.return_result
--0.0002667885779142513
+-0.0004204244108151285
 """
 
 from typing import Union

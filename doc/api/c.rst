@@ -101,10 +101,10 @@ An example wrapper to perform a DFT-D3(BJ)-ATM calculation is shown below.
      }
 
      // Always free the used memory
-     dftd3_delete_error(&error);
-     dftd3_delete_structure(&mol);
-     dftd3_delete_model(&disp);
-     dftd3_delete_param(&param);
+     dftd3_delete(error);
+     dftd3_delete(mol);
+     dftd3_delete(disp);
+     dftd3_delete(param);
 
      return stat;
    }

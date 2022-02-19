@@ -36,7 +36,7 @@ sdftd3_pp = configure_file(
 
 # This is the actual out-of-line API processing of the ffibuilder
 sdftd3_cffi_srcs = configure_file(
-  command: [python, files('..'/'build.py'), '@INPUT@', '@BASENAME@'],
+  command: [python, files('..'/'ffibuilder.py'), '@INPUT@', '@BASENAME@'],
   input: sdftd3_pp,
   output: '@BASENAME@.c',
 )

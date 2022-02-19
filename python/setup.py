@@ -17,6 +17,6 @@
 from setuptools import setup
 
 setup(
-    cffi_modules=["build.py:ffibuilder"],
+    cffi_modules=["ffibuilder.py:ffibuilder"],
     package_data={"dftd3": ["_libdftd3*.so", "parameters.toml"]},
 )

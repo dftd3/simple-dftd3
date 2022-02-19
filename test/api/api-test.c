@@ -56,12 +56,12 @@ test_uninitialized_structure (void)
    dftd3_update_structure(error, mol, xyz, NULL);
    if (!dftd3_check_error(error)) goto unexpected;
 
-   dftd3_delete_error(&error);
+   dftd3_delete(error);
    return 0;
 
 unexpected:
    printf("[Fatal] Unexpected pass for unititalized-structure test\n");
-   dftd3_delete_error(&error);
+   dftd3_delete(error);
    return 1;
 }
 
@@ -83,14 +83,14 @@ test_invalid_structure (void)
 
    show_error(error);
 
-   dftd3_delete_error(&error);
-   dftd3_delete_structure(&mol);
+   dftd3_delete(error);
+   dftd3_delete(mol);
    return 0;
 
 unexpected:
    printf("[Fatal] Unexpected pass for invalid-structure test\n");
-   dftd3_delete_error(&error);
-   dftd3_delete_structure(&mol);
+   dftd3_delete(error);
+   dftd3_delete(mol);
    return 1;
 }
 
@@ -138,7 +138,7 @@ test (void) {
    if (dftd3_check_error(error)) {return 1;}
    dftd3_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
    if (dftd3_check_error(error)) {return 1;}
-   dftd3_delete_param(&param);
+   dftd3_delete(param);
 
    // RPBE-D3(0)
    param = dftd3_load_zero_damping(error, "rpbe", false);
@@ -148,7 +148,7 @@ test (void) {
    if (dftd3_check_error(error)) {return 1;}
    dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
    if (dftd3_check_error(error)) {return 1;}
-   dftd3_delete_param(&param);
+   dftd3_delete(param);
 
    dftd3_set_model_realspace_cutoff(error, disp, 50.0, 30.0, 25.0);
    if (dftd3_check_error(error)) {return 1;}
@@ -161,7 +161,7 @@ test (void) {
    if (dftd3_check_error(error)) {return 1;}
    dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
    if (dftd3_check_error(error)) {return 1;}
-   dftd3_delete_param(&param);
+   dftd3_delete(param);
 
    // BLYP-D3(0)-ATM
    param = dftd3_new_zero_damping(error, 1.0, 1.682, 1.0, 1.094, 1.0, 14.0);
@@ -171,11 +171,11 @@ test (void) {
    if (dftd3_check_error(error)) {return 1;}
    dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
    if (dftd3_check_error(error)) {return 1;}
-   dftd3_delete_param(&param);
+   dftd3_delete(param);
 
-   dftd3_delete_model(&disp);
-   dftd3_delete_structure(&mol);
-   dftd3_delete_error(&error);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
 
    assert(!param);
    assert(!disp);

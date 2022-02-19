@@ -41,6 +41,17 @@ typedef struct _dftd3_model* dftd3_model;
 typedef struct _dftd3_param* dftd3_param;
 
 /*
+ * Type generic macro for convenience
+**/
+
+#define dftd3_delete(ptr) _Generic((ptr), \
+                       dftd3_error: dftd3_delete_error, \
+                   dftd3_structure: dftd3_delete_structure, \
+                       dftd3_model: dftd3_delete_model, \
+                       dftd3_param: dftd3_delete_param \
+                                  )(&ptr)
+
+/*
  * Global API queries
 **/
 
