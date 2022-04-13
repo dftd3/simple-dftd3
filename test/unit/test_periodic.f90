@@ -194,7 +194,7 @@ subroutine test_pbed3bj_acetic(error)
 
    call get_structure(mol, "X23", "acetic")
    call new_rational_damping(param, inp)
-   call test_dftd3_gen(error, mol, param, -6.673283761139015E-2_wp)
+   call test_dftd3_gen(error, mol, param, -6.6732836815486210E-2_wp)
 
 end subroutine test_pbed3bj_acetic
 
@@ -212,7 +212,7 @@ subroutine test_pbesold3bj_adaman(error)
 
    call get_structure(mol, "X23", "adaman")
    call new_rational_damping(param, inp)
-   call test_dftd3_gen(error, mol, param, -7.931351552127060E-2_wp)
+   call test_dftd3_gen(error, mol, param, -7.9313514714713124E-2_wp)
 
 end subroutine test_pbesold3bj_adaman
 
@@ -266,7 +266,7 @@ subroutine test_blypd3zero_benzene(error)
 
    call get_structure(mol, "X23", "benzene")
    call new_zero_damping(param, inp)
-   call test_dftd3_gen(error, mol, param, -0.16647369651118463_wp)
+   call test_dftd3_gen(error, mol, param, -0.16647358662571451_wp)
 
 end subroutine test_blypd3zero_benzene
 
@@ -284,7 +284,7 @@ subroutine test_m06ld3zero_cyanamide(error)
 
    call get_structure(mol, "X23", "cyanamide")
    call new_zero_damping(param, inp)
-   call test_dftd3_gen(error, mol, param, -2.3222572072479526E-2_wp)
+   call test_dftd3_gen(error, mol, param, -2.3222556050310025E-2_wp)
 
 end subroutine test_m06ld3zero_cyanamide
 
