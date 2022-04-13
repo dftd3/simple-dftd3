@@ -304,5 +304,7 @@ jobs:
         LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib
         DYLD_LIBRARY_PATH: ${{ env.DYLD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib
 
+    - run: pip3 install coverage
+
     - name: Upload coverage report
       uses: codecov/codecov-action@v1

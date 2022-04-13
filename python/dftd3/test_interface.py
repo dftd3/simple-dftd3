@@ -230,7 +230,7 @@ def test_b3lyp_d3_zero(atm):
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
-    ref = -0.022714307913634844 if atm else -0.02281420761531831
+    ref = -0.022714272555175656 if atm else -0.022814172019166058
     model = DispersionModel(numbers, positions)
     res = model.get_dispersion(ZeroDampingParam(method="b3lyp", atm=atm), grad=False)
     assert approx(res.get("energy")) == ref
@@ -290,7 +290,7 @@ def test_bp_d3_zerom(atm):
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
-    ref = -0.02601335734255335 if atm else -0.026113257044236816
+    ref = -0.026013316869036292 if atm else -0.026113216333026695
     model = DispersionModel(numbers, positions)
     res = model.get_dispersion(ModifiedZeroDampingParam(method="bp", atm=atm), grad=False)
     assert approx(res.get("energy")) == ref
