@@ -58,10 +58,12 @@ sdftd3_pyext = python.extension_module(
 if install
   python.install_sources(
     '__init__.py',
+    'ase.py',
     'library.py',
     'interface.py',
     'parameters.py',
     'qcschema.py',
+    'test_ase.py',
     'test_library.py',
     'test_interface.py',
     'test_parameters.py',

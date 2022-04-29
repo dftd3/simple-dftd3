@@ -299,7 +299,7 @@ jobs:
         PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD3_PREFIX }}/lib/pkgconfig
 
     - name: Test Python API
-      run: pytest --doctest-modules --pyargs dftd3 --cov=dftd3 -vv
+      run: pytest --pyargs dftd3 --cov=dftd3 -vv
       env:
         LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib
         DYLD_LIBRARY_PATH: ${{ env.DYLD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib

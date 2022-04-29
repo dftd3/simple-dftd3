@@ -74,6 +74,12 @@ QCSchema support
 .. automodule:: dftd3.qcschema
 
 
+ASE support
+-----------
+
+.. automodule:: dftd3.ase
+
+
 Literature
 ----------
 

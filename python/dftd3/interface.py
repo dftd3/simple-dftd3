@@ -415,7 +415,7 @@ class DispersionModel(Structure):
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """Perform actual evaluation of the dispersion correction"""
 
-        _energy = library.ffi.new("double *")
+        _energy = np.array(0.0)
         if grad:
             _gradient = np.zeros((len(self), 3))
             _sigma = np.zeros((3, 3))
@@ -427,12 +427,12 @@ class DispersionModel(Structure):
             self._mol,
             self._disp,
             param._param,
-            _energy,
+            _cast("double*", _energy),
             _cast("double*", _gradient),
             _cast("double*", _sigma),
         )
 
-        results = dict(energy=_energy[0])
+        results = dict(energy=_energy)
         if _gradient is not None:
             results.update(gradient=_gradient)
         if _sigma is not None:
