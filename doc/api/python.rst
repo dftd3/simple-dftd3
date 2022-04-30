@@ -80,6 +80,12 @@ ASE support
 .. automodule:: dftd3.ase
 
 
+PySCF support
+------------
+
+.. automodule:: dftd3.pyscf
+
+
 Literature
 ----------
 

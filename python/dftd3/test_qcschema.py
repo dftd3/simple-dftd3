@@ -14,13 +14,18 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-
-from pytest import approx, mark
-from dftd3.qcschema import run_qcschema
-import qcelemental as qcel
 import numpy as np
+import pytest
+from pytest import approx, mark
+
+try:
+    from dftd3.qcschema import run_qcschema
+    import qcelemental as qcel
+except ModuleNotFoundError:
+    qcel = None
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 @mark.parametrize("atm", [True, False])
 def test_energy_r2scan_d3bj(atm):
     thr = 1e-9
@@ -68,6 +73,7 @@ def test_energy_r2scan_d3bj(atm):
     assert approx(atomic_result.return_result, abs=thr) == ref
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 @mark.parametrize("atm", [True, False])
 def test_energy_bp_d3zero(atm):
     thr = 1e-9
@@ -115,6 +121,7 @@ def test_energy_bp_d3zero(atm):
     assert approx(atomic_result.return_result, abs=thr) == ref
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_gradient_b97d_d3bj():
     thr = 1e-9
 
@@ -178,6 +185,7 @@ def test_gradient_b97d_d3bj():
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_gradient_tpss_d3zero():
     thr = 1.0e-9
 
@@ -230,6 +238,7 @@ def test_gradient_tpss_d3zero():
     assert "virial" in atomic_result.extras["dftd3"]
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_error_noargs():
     thr = 1e-9
 
@@ -262,6 +271,7 @@ def test_error_noargs():
     assert atomic_result.error.error_type == "input error"
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_error_nomethod():
     thr = 1e-9
 
@@ -302,6 +312,7 @@ def test_error_nomethod():
     assert atomic_result.error == error
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_error_level():
     thr = 1e-9
 
@@ -342,6 +353,7 @@ def test_error_level():
     assert atomic_result.error == error
 
 
+@pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_ghost_pbe_d3bj():
     thr = 1e-9
 
