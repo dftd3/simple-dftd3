@@ -117,7 +117,18 @@ Adjust the ``PKG_CONFIG_PATH`` environment variable to include the correct direc
 Using pip
 ^^^^^^^^^
 
+.. image:: https://img.shields.io/pypi/v/dftd3
+   :target: https://pypi.org/project/dftd3/
+   :alt: PyPI
+
 This project support installation with pip as an easy way to build the Python API.
+Precompiled Python wheels for Linux are available on `pypi <https://pypi.org/project/dftd3/>`_ and can be installed with
+
+.. code:: sh
+
+   pip install dftd3
+
+Other platforms need to build from source, the following dependencies are required to do so
 
 - C compiler to build the C-API and compile the extension module (the compiler name should be exported in the ``CC`` environment variable)
 - Python 3.6 or newer
@@ -142,6 +153,7 @@ Install the project with pip
 If you already have a ``s-dftd3`` installation, *e.g.* from conda-forge, you can build the Python extension module directly without cloning this repository
 
 .. code:: sh
+
    pip install "https://github.com/awvwgk/simple-dftd3/archive/refs/heads/main.zip#egg=dftd3-python&subdirectory=python"
 
 
