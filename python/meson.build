@@ -17,8 +17,9 @@
 # Standalone build for Python-API of DFT-D4, requires a dftd4 library
 # in the PKG_CONFIG_PATH environment variable to work.
 project(
-  'dftd3-python',
+  'dftd3',
   'c',
+  version: '0.5.1',
   license: 'LGPL-3.0-or-later',
   meson_version: '>=0.53',
   default_options: [
@@ -27,7 +28,16 @@ project(
 )
 install = true
 
-sdftd3_dep = dependency('s-dftd3', version: '>=0.4')
+sdftd3_dep = dependency(
+  's-dftd3',
+  version: '>=@0@'.format(meson.project_version()),
+  fallback: ['s-dftd3', 'sdftd3_dep'],
+  default_options: [
+    'default_library=static',
+    'api=true',
+    'python=false',
+  ],
+)
 sdftd3_header = files('..'/'include'/'s-dftd3.h')
 
 subdir('dftd3')
