@@ -98,7 +98,7 @@ Now you are ready to use ``dftd3``, check if you can import it with
    >>> import dftd3
    >>> from dftd3.libdftd3 import get_api_version
    >>> get_api_version()
-   '0.5.1'
+   '0.6.0'
 
 
 Building the extension module

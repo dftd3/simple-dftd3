@@ -19,7 +19,7 @@
 project(
   'dftd3',
   'c',
-  version: '0.5.1',
+  version: '0.6.0',
   license: 'LGPL-3.0-or-later',
   meson_version: '>=0.53',
   default_options: [
