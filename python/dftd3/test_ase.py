@@ -14,13 +14,20 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-from dftd3.ase import DFTD3
-from ase.build import molecule
-from ase.calculators.emt import EMT
-from pytest import approx, raises
 import numpy as np
+import pytest
+from pytest import approx, raises
+
+try:
+    import ase
+    from dftd3.ase import DFTD3
+    from ase.build import molecule
+    from ase.calculators.emt import EMT
+except ModuleNotFoundError:
+    ase = None
 
 
+@pytest.mark.skipif(ase is None, reason="requires ase")
 def test_ase_scand4():
     thr = 1.0e-6
 
@@ -51,6 +58,7 @@ def test_ase_scand4():
     assert energies == approx([-0.03880921894019244, 3.684105315180033], abs=thr)
 
 
+@pytest.mark.skipif(ase is None, reason="requires ase")
 def test_ase_tpssd4():
     thr = 1.0e-6
 

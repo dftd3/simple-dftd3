@@ -70,6 +70,130 @@ If the QCElemental package is installed the ``dftd3.qcschema`` module becomes im
    # => -0.0004204244108151285
 
 
+ASE Integration
+---------------
+
+To integrate with `ASE <https://wiki.fysik.dtu.dk/ase/>`_ this interface implements an ASE Calculator.
+The ``DFTD3`` calculator becomes importable if an ASE installation is available.
+
+.. code:: python
+
+   >>> from ase.build import molecule
+   >>> from dftd3.ase import DFTD3
+   >>> atoms = molecule('H2O')
+   >>> atoms.calc = DFTD3(method="TPSS", damping="d3bj")
+   >>> atoms.get_potential_energy()
+   -0.0114416338147162
+   >>> atoms.calc.set(method="PBE")
+   {'method': 'PBE'}
+   >>> atoms.get_potential_energy()
+   -0.009781913226281063
+   >>> atoms.get_forces()
+   array([[-0.00000000e+00 -0.00000000e+00  9.56568982e-05]
+          [-0.00000000e+00 -4.06046858e-05 -4.78284491e-05]
+          [-0.00000000e+00  4.06046858e-05 -4.78284491e-05]])
+
+To use the ``DFTD3`` calculator as dispersion correction the calculator can be combined using the `SumCalculator <https://wiki.fysik.dtu.dk/ase/ase/calculators/mixing.html>`_ from the ``ase.calculators.mixing`` module.
+
+.. code:: python
+
+   >>> from ase.build import molecule
+   >>> from ase.calculators.mixing import SumCalculator
+   >>> from ase.calculators.nwchem import NWChem
+   >>> from dftd3.ase import DFTD3
+   >>> atoms = molecule('H2O')
+   >>> atoms.calc = SumCalculator([DFTD3(method="PBE", damping="d3bj"), NWChem(xc="PBE")])
+
+For convenience ``DFTD3`` allows to combine itself with another calculator by using the ``add_calculator`` method which returns a SumCalculator:
+
+.. code:: python
+
+   >>> from ase.build import molecule
+   >>> from ase.calculators.emt import EMT
+   >>> from dftd4.ase import DFTD3
+   >>> atoms = molecule("C60")
+   >>> atoms.calc = DFTD3(method="pbe", damping="d3bj").add_calculator(EMT())
+   >>> atoms.get_potential_energy()
+   7.513593999944228
+   >>> [calc.get_potential_energy() for calc in atoms.calc.calcs]
+   [-4.850025823367818, 12.363619823312046]
+
+The individual contributions are available by iterating over the list of calculators in ``calc.calcs``.
+Note that ``DFTD3`` will always place itself as first calculator in the list.
+
+
+PySCF support
+~~~~~~~~~~~~~
+
+Integration with `PySCF <https://pyscf.org>`_ is possible by using the ``dftd3.pyscf`` module.
+The module provides a ``DFTD3Dispersion`` class to construct a PySCF compatible calculator for evaluating the dispersion energy and gradients.
+
+.. code:: python
+
+   >>> from pyscf import gto
+   >>> import dftd3.pyscf as disp
+   >>> mol = gto.M(
+   ...     atom="""
+   ...          C   -0.189833176  -0.645396435   0.069807761
+   ...          C    1.121636324  -0.354065576   0.439096514
+   ...          C    1.486520953   0.962572632   0.712107225
+   ...          C    0.549329390   1.989209324   0.617868956
+   ...          C   -0.757627135   1.681862630   0.246856908
+   ...          C   -1.138190460   0.370551816  -0.028582325
+   ...          Br  -2.038462778   3.070459841   0.115165429
+   ...          H    1.852935245  -1.146434699   0.514119204
+   ...          H    0.825048723   3.012176989   0.829385472
+   ...          H    2.502259769   1.196433556   1.000317333
+   ...          H   -2.157140187   0.151608161  -0.313181471
+   ...          H   -0.480820487  -1.664983631  -0.142918416
+   ...          S   -4.157443472   5.729584377  -0.878761129
+   ...          H   -4.823791426   4.796089466  -1.563433338
+   ...          C   -2.828338520   5.970593053  -2.091189515
+   ...          H   -2.167577293   6.722356639  -1.668621815
+   ...          H   -2.264954814   5.054835899  -2.240198499
+   ...          H   -3.218524904   6.337447714  -3.035087058
+   ...          """
+   ... )
+   >>> d3 = disp.DFTD3Dispersion(mol, xc="PW6B95", version="d3bj")
+   >>> d3.kernel()[0]
+   array(-0.01009386)
+   >>> d3.version = "d3zero"  # Change to zero damping
+   >>> d3.kernel()[0]
+   array(-0.00574098)
+   >>> d3.atm = True  # Activate three-body dispersion
+   >>> d3.kernel()[0]
+   array(-0.00574289)
+
+To make use of the dispersion correction together with other calculators, the ``energy`` method allows to apply a dispersion correction to an existing calculator.
+
+.. code:: python
+
+   >>> from pyscf import gto, scf
+   >>> import dftd3.pyscf as disp
+   >>> mol = gto.M(
+   ...     atom="""
+   ...          O  -1.65542061  -0.12330038   0.00000000
+   ...          O   1.24621244   0.10268870   0.00000000
+   ...          H  -0.70409026   0.03193167   0.00000000
+   ...          H  -2.03867273   0.75372294   0.00000000
+   ...          H   1.57598558  -0.38252146  -0.75856129
+   ...          H   1.57598558  -0.38252146   0.75856129
+   ...          """
+   ... )
+   >>> grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
+   converged SCF energy = -149.947191000075
+   >>> g = grad.kernel()
+   --------------- DFTD3 gradients ---------------
+            x                y                z
+   0 O     0.0171886976     0.0506606246     0.0000000000
+   1 O     0.0383596853    -0.0459057549     0.0000000000
+   2 H    -0.0313133974    -0.0125865676    -0.0000000000
+   3 H     0.0066705789    -0.0380501872     0.0000000000
+   4 H    -0.0154527822     0.0229409425     0.0215141991
+   5 H    -0.0154527822     0.0229409425    -0.0215141991
+   ----------------------------------------------
+
+
 Installing
 ----------
 
