@@ -198,7 +198,6 @@ def energy(mf):
 
     Examples
     --------
-    The dispersion correction can be applied by using the `energy` method
     >>> from pyscf import gto, scf
     >>> import dftd3.pyscf as disp
     >>> mol = gto.M(
@@ -283,8 +282,6 @@ def grad(scf_grad):
 
     Examples
     --------
-    For gradient calculations the energy expression can be constructed
-    and than queried for producing a nuclear gradient method as in
     >>> from pyscf import gto, scf
     >>> import dftd3.pyscf as disp
     >>> mol = gto.M(

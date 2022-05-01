@@ -81,9 +81,10 @@ ASE support
 
 
 PySCF support
-------------
+-------------
 
 .. automodule:: dftd3.pyscf
+   :members:
 
 
 Literature

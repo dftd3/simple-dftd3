@@ -123,7 +123,7 @@ Note that ``DFTD3`` will always place itself as first calculator in the list.
 
 
 PySCF support
-~~~~~~~~~~~~~
+-------------
 
 Integration with `PySCF <https://pyscf.org>`_ is possible by using the ``dftd3.pyscf`` module.
 The module provides a ``DFTD3Dispersion`` class to construct a PySCF compatible calculator for evaluating the dispersion energy and gradients.
