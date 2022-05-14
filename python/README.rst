@@ -278,7 +278,7 @@ If you already have a ``s-dftd3`` installation, *e.g.* from conda-forge, you can
 
 .. code:: sh
 
-   pip install "https://github.com/awvwgk/simple-dftd3/archive/refs/heads/main.zip#egg=dftd3-python&subdirectory=python"
+   pip install "https://github.com/dftd3/simple-dftd3/archive/refs/heads/main.zip#egg=dftd3-python&subdirectory=python"
 
 
 

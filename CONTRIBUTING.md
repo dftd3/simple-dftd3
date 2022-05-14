@@ -66,7 +66,7 @@ If you never created a pull request before, welcome :tada:.
 You can learn how from [this great tutorial](https://app.egghead.io/courses/how-to-contribute-to-an-open-source-project-on-github)
 
 Don't know where to start?
-You can start by looking through the [open issues](https://github.com/awvwgk/simple-dftd3/issues).
+You can start by looking through the [open issues](https://github.com/dftd3/simple-dftd3/issues).
 Feel free to just comment on an issue you are interested in working and ask for pointers on how begin.
 
 

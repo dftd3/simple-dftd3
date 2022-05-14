@@ -1,8 +1,8 @@
 ---
 project: Simple DFT-D3
 summary: A simple reimplementation of the DFT-D3 dispersion model
-project_github: https://github.com/awvwgk/simple-dftd3
-project_download: https://github.com/awvwgk/simple-dftd3/releases
+project_github: https://github.com/dftd3/simple-dftd3
+project_download: https://github.com/dftd3/simple-dftd3/releases
 author: Sebastian Ehlert
 github: https://github.com/awvwgk
 src_dir: ./src
@@ -174,7 +174,7 @@ Create a new meson project and include `s-dftd3` either as git-submodule in your
 ```ini
 [wrap-git]
 directory = s-dftd3
-url = https://github.com/awvwgk/simple-dftd3
+url = https://github.com/dftd3/simple-dftd3
 revision = head
 ```
 
@@ -221,5 +221,5 @@ Just add it to the dependencies in your `fpm.toml` file:
 ```toml
 [dependencies]
 [dependencies.s-dftd3]
-git = "https://github.com/awvwgk/s-dftd3"
+git = "https://github.com/dftd3/s-dftd3"
 ```

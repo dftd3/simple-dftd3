@@ -1,10 +1,10 @@
 # The D3 dispersion model
 
-[![Latest Version](https://img.shields.io/github/v/release/awvwgk/simple-dftd3)](https://github.com/awvwgk/simple-dftd3/releases/latest)
-[![LGPL-3.0-or-later](https://img.shields.io/github/license/awvwgk/simple-dftd3)](COPYING)
-[![CI](https://github.com/awvwgk/simple-dftd3/workflows/CI/badge.svg)](https://github.com/awvwgk/simple-dftd3/actions)
-[![docs](https://github.com/awvwgk/simple-dftd3/workflows/docs/badge.svg)](https://awvwgk.github.io/simple-dftd3/)
-[![codecov](https://codecov.io/gh/awvwgk/simple-dftd3/branch/main/graph/badge.svg)](https://codecov.io/gh/awvwgk/simple-dftd3)
+[![Latest Version](https://img.shields.io/github/v/release/dftd3/simple-dftd3)](https://github.com/dftd3/simple-dftd3/releases/latest)
+[![LGPL-3.0-or-later](https://img.shields.io/github/license/dftd3/simple-dftd3)](COPYING)
+[![CI](https://github.com/dftd3/simple-dftd3/workflows/CI/badge.svg)](https://github.com/dftd3/simple-dftd3/actions)
+[![docs](https://github.com/dftd3/simple-dftd3/workflows/docs/badge.svg)](https://dftd3.github.io/simple-dftd3/)
+[![codecov](https://codecov.io/gh/dftd3/simple-dftd3/branch/main/graph/badge.svg)](https://codecov.io/gh/dftd3/simple-dftd3)
 
 A simple drop-in replacement for ``dftd3``.
 
@@ -104,7 +104,7 @@ To include ``s-dftd3`` in your project add the following wrap file to your subpr
 ```ini
 [wrap-git]
 directory = s-dftd3
-url = https://github.com/awvwgk/simple-dftd3
+url = https://github.com/dftd3/simple-dftd3
 revision = head
 ```
 
@@ -141,7 +141,7 @@ To include ``s-dftd3`` in your CMake project retrieve it using the ``FetchConten
 
 ```cmake
 if(NOT TARGET s-dftd3)
-  set("s-dftd3-url" "https://github.com/awvwgk/simple-dftd3")
+  set("s-dftd3-url" "https://github.com/dftd3/simple-dftd3")
   message(STATUS "Retrieving s-dftd3 from ${s-dftd3-url}")
   include(FetchContent)
   FetchContent_Declare(
@@ -184,7 +184,7 @@ To use ``s-dftd3`` for testing include it as dependency in your package manifest
 
 ```toml
 [dependencies]
-s-dftd3.git = "https://github.com/awvwgk/simple-dftd3"
+s-dftd3.git = "https://github.com/dftd3/simple-dftd3"
 ```
 
 
@@ -262,7 +262,7 @@ The user is responsible for creating and deleting the objects to avoid memory le
 
 ### Python API
 
-[![LGTM](https://img.shields.io/lgtm/grade/python/g/awvwgk/simple-dftd3.svg)](https://lgtm.com/projects/g/awvwgk/simple-dftd3/context:python)
+[![LGTM](https://img.shields.io/lgtm/grade/python/g/dftd3/simple-dftd3.svg)](https://lgtm.com/projects/g/dftd3/simple-dftd3/context:python)
 
 The Python API is disabled by default and can be built in-tree or out-of-tree.
 The in-tree build is mainly meant for end users and packages.

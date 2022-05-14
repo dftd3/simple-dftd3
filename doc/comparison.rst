@@ -13,7 +13,7 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
  repository                     license    APIs                 notes
 ============================== ========== ==================== ==========================
  `dftd3`_                       GPL-1.0    Fortran              reference implementation
- `awvwgk/simple-dftd3`_         LGPL-3.0   Fortran, C, Python
+ `dftd3/simple-dftd3`_          LGPL-3.0   Fortran, C, Python
  `dftbplus/dftd3-lib`_          GPL-1.0    Fortran              patched fork
  `ehermes/ased3`_               LGPL-3.0   Python               f2py, ASE
  `pfnet-research/torch-dftd`_   MIT        Python               torch
@@ -25,7 +25,7 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
 ============================== ========== ==================== ==========================
 
 .. _dftd3: http://mctc.uni-bonn.de/software/dft-d3
-.. _awvwgk/simple-dftd3: https://github.com/awvwgk/simple-dftd3
+.. _dftd3/simple-dftd3: https://github.com/dftd3/simple-dftd3
 .. _dftbplus/dftd3-lib: https://github.com/dftbplus/dftd3-lib
 .. _ehermes/ased3: https://github.com/ehermes/ased3
 .. _pfnet-research/torch-dftd: https://github.com/pfnet-research/torch-dftd
