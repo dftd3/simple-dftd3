@@ -14,6 +14,9 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 """
+PySCF Support
+=============
+
 Compatibility layer for supporting DFT-D3 in `pyscf <https://pyscf.org/>`_.
 """
 
@@ -48,6 +51,24 @@ _damping_param = {
 class DFTD3Dispersion(lib.StreamObject):
     """
     Implementation of the interface for using DFT-D3 in pyscf.
+    The `xc` functional can be provided in the constructor together with the
+    `version` of the DFT-D3 damping function to use.
+    Possible damping functions are
+
+    ``"d3bj"``: (default)
+        For rational damping function
+    ``"d3zero"``
+        For zero damping function
+    ``"d3mbj"``
+        Modified damping parameters for the rational damping function
+    ``"d3mzero"``
+        Modified version of the zero damping function
+    ``"d3op"``
+        Optimized power damping function
+
+    The version of the damping can be changed after constructing the dispersion correction.
+    With the `atm` boolean the three-body dispersion energy can be enabled, which is
+    generally recommended.
 
     Examples
     --------
@@ -92,8 +113,6 @@ class DFTD3Dispersion(lib.StreamObject):
         self.xc = xc
         self.atm = atm
         self.version = version
-        self.edisp = None
-        self.grads = None
 
     def dump_flags(self, verbose=None):
         """
@@ -156,9 +175,7 @@ class DFTD3Dispersion(lib.StreamObject):
 
         res = disp.get_dispersion(param=param, grad=True)
 
-        self.edisp = res.get("energy")
-        self.grads = res.get("gradient")
-        return self.edisp, self.grads
+        return res.get("energy"), res.get("gradient")
 
     def reset(self, mol):
         """Reset mol and clean up relevant attributes for scanner mode"""
@@ -186,6 +203,8 @@ def energy(mf):
     """
     Apply DFT-D3 corrections to SCF or MCSCF methods by returning an
     instance of a new class built from the original instances class.
+    The dispersion correction is stored in the `with_dftd3` attribute of
+    the class.
 
     Parameters
     ----------
@@ -270,6 +289,8 @@ def grad(scf_grad):
     """
     Apply DFT-D3 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
+    The dispersion correction is stored in the `with_dftd3` attribute of
+    the class.
 
     Parameters
     ----------

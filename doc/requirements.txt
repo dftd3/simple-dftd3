@@ -1,4 +1,6 @@
-pydata-sphinx-theme
+sphinx-book-theme
+sphinx-copybutton
+sphinx-design
 sphinxcontrib-bibtex
 numpy
 ase

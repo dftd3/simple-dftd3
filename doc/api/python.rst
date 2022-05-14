@@ -6,6 +6,13 @@ Python API
 .. automodule:: dftd3
 
 
+.. toctree::
+
+   ase
+   qcschema
+   pyscf
+
+
 Library interface
 -----------------
 
@@ -71,20 +78,26 @@ OptimizedPowerDampingParam
 QCSchema support
 ----------------
 
-.. automodule:: dftd3.qcschema
+.. note::
+
+   For more information on using the DFT-D3 with QCSchema input see :mod:`dftd3.qcschema`.
 
 
 ASE support
 -----------
 
-.. automodule:: dftd3.ase
+.. note::
+
+   For more information on using the DFT-D3 as ASE calculator see :mod:`dftd3.ase`.
+
 
 
 PySCF support
 -------------
 
-.. automodule:: dftd3.pyscf
-   :members:
+.. note::
+
+   For more information on integrating DFT-D3 with PySCF see :mod:`dftd3.pyscf`.
 
 
 Literature

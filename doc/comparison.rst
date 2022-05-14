@@ -43,7 +43,18 @@ Users of this library
 
 A list of projects currently using this DFT-D3 implementation is given here.
 
-- `tblite <https://github.com/awvwgk/tblite>`_:
+`tblite <https://github.com/tblite/tblite>`_: (since 0.1.0)
   Light-weight tight-binding framework
+`DFTB+ <https://github.com/dftbplus/dftbplus>`_: (since 21.2)
+  General package for performing fast atomistic calculations
+`DFT-FE <https://github.com/dftfeDevelopers/dftfe>`_:
+  Real-space DFT calculations using Finite Elements
+`QCEngine <https://github.com/molssi/qcengine>`_: (WIP)
+  Quantum chemistry program executor and IO standardizer.
+  For current status see `qcegine#343 <https://github.com/MolSSI/QCEngine/pull/343>`_
+`Siesta <https://gitlab.com/siesta-project/siesta>`_: (WIP)
+  A first-principles materials simulation code using DFT.
+  For current status see `siesta!70 <https://gitlab.com/siesta-project/siesta/-/merge_requests/70>`_
+
 
 If your project is using *s-dftd3* feel free to add your project to this list.
