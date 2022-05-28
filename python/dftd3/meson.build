@@ -28,7 +28,19 @@ python_dep = python.dependency(required: true)
 # Python's CFFI is horrible in working with preprocessor statements,
 # therefore, we have to preprocess the header before passing it to the ffibuilder
 sdftd3_pp = configure_file(
-  command: [cc, '-E', '@INPUT@'],
+  command: [
+    cc,
+    '-I@0@'.format(
+      sdftd3_dep.get_variable(
+        pkgconfig: 'includedir',
+        cmake: 's-dftd3_INCLUDE_DIRS',
+        internal: 'includedir',
+      ).split().get(0)
+    ),
+    '-DSDFTD3_CFFI',
+    '-E',
+    '@INPUT@',
+  ],
   input: sdftd3_header[0],
   output: '_libdftd3.h',
   capture: true,
@@ -55,21 +67,29 @@ sdftd3_pyext = python.extension_module(
   subdir: 'dftd3',
 )
 
+pysrcs = files(
+  '__init__.py',
+  'ase.py',
+  'library.py',
+  'interface.py',
+  'parameters.py',
+  'pyscf.py',
+  'qcschema.py',
+  'test_ase.py',
+  'test_library.py',
+  'test_interface.py',
+  'test_parameters.py',
+  'test_pyscf.py',
+  'test_qcschema.py',
+)
+fs = import('fs')
+if fs.exists('parameters.toml')
+  pysrcs += files('parameters.toml')
+endif
+
 if install
   python.install_sources(
-    '__init__.py',
-    'ase.py',
-    'library.py',
-    'interface.py',
-    'parameters.py',
-    'pyscf.py',
-    'qcschema.py',
-    'test_ase.py',
-    'test_library.py',
-    'test_interface.py',
-    'test_parameters.py',
-    'test_pyscf.py',
-    'test_qcschema.py',
+    pysrcs,
     subdir: 'dftd3',
   )
 endif

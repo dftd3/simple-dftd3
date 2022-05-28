@@ -20,7 +20,9 @@
 #define SDFTD3_API_ENTRY extern "C"
 #else
 #define SDFTD3_API_ENTRY extern
+#ifndef SDFTD3_CFFI
 #include <stdbool.h>
+#endif
 #endif
 #define SDFTD3_API_CALL
 #define SDFTD3_API_SUFFIX__V_0_2
