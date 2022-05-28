@@ -55,6 +55,7 @@ sdftd3_dep = declare_dependency(
   link_with: sdftd3_lib,
   include_directories: sdftd3_inc,
   dependencies: lib_deps,
+  variables: {'includedir': meson.current_source_dir() / 'include'},
 )
 
 sdftd3_parameters = files(

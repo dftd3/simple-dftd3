@@ -38,6 +38,6 @@ sdftd3_dep = dependency(
     'python=false',
   ],
 )
-sdftd3_header = files('..'/'include'/'s-dftd3.h')
+sdftd3_header = files('include'/'_dftd3.h')
 
 subdir('dftd3')
