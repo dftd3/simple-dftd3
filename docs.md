@@ -7,7 +7,7 @@ author: Sebastian Ehlert
 github: https://github.com/awvwgk
 src_dir: ./src
          ./app
-output_dir: ./ford-docs
+output_dir: ./_docs
 exclude_dir: ./test
 docmark: <
 predocmark: >
