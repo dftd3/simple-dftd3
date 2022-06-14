@@ -16,8 +16,13 @@
 
 !> Interface to BLAS library, in case DFT-D3 is not linked against BLAS this
 !> module provides redistributed reference BLAS implementations instead.
+
+#ifndef IK
+#define IK i4
+#endif
+
 module dftd3_blas
-   use mctc_env, only : sp, dp
+   use mctc_env, only : sp, dp, ik => IK
    implicit none
    private
 
@@ -49,32 +54,32 @@ module dftd3_blas
    interface blas_gemv
 #ifdef WITH_BLAS
       pure subroutine sgemv(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
-         import :: sp
+         import :: sp, ik
+         integer(ik), intent(in) :: lda
          real(sp), intent(in) :: a(lda, *)
          real(sp), intent(in) :: x(*)
          real(sp), intent(inout) :: y(*)
          real(sp), intent(in) :: alpha
          real(sp), intent(in) :: beta
          character(len=1), intent(in) :: trans
-         integer, intent(in) :: incx
-         integer, intent(in) :: incy
-         integer, intent(in) :: m
-         integer, intent(in) :: n
-         integer, intent(in) :: lda
+         integer(ik), intent(in) :: incx
+         integer(ik), intent(in) :: incy
+         integer(ik), intent(in) :: m
+         integer(ik), intent(in) :: n
       end subroutine sgemv
       pure subroutine dgemv(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
-         import :: dp
+         import :: dp, ik
+         integer(ik), intent(in) :: lda
          real(dp), intent(in) :: a(lda, *)
          real(dp), intent(in) :: x(*)
          real(dp), intent(inout) :: y(*)
          real(dp), intent(in) :: alpha
          real(dp), intent(in) :: beta
          character(len=1), intent(in) :: trans
-         integer, intent(in) :: incx
-         integer, intent(in) :: incy
-         integer, intent(in) :: m
-         integer, intent(in) :: n
-         integer, intent(in) :: lda
+         integer(ik), intent(in) :: incx
+         integer(ik), intent(in) :: incy
+         integer(ik), intent(in) :: m
+         integer(ik), intent(in) :: n
       end subroutine dgemv
 #else
       module procedure :: sgemv
@@ -195,7 +200,7 @@ pure subroutine d3_sgemv(amat, xvec, yvec, alpha, beta, trans)
    character(len=1), intent(in), optional :: trans
    real(sp) :: a, b
    character(len=1) :: tra
-   integer :: incx, incy, m, n, lda
+   integer(ik) :: incx, incy, m, n, lda
    if (present(alpha)) then
       a = alpha
    else
@@ -229,7 +234,7 @@ pure subroutine d3_dgemv(amat, xvec, yvec, alpha, beta, trans)
    character(len=1), intent(in), optional :: trans
    real(dp) :: a, b
    character(len=1) :: tra
-   integer :: incx, incy, m, n, lda
+   integer(ik) :: incx, incy, m, n, lda
    if (present(alpha)) then
       a = alpha
    else
@@ -264,11 +269,11 @@ pure subroutine sgemv(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
    ! Scalar Arguments
    real(sp), intent(in) :: alpha
    real(sp), intent(in) :: beta
-   integer, intent(in) :: incx
-   integer, intent(in) :: incy
-   integer, intent(in) :: lda
-   integer, intent(in) :: m
-   integer, intent(in) :: n
+   integer(ik), intent(in) :: incx
+   integer(ik), intent(in) :: incy
+   integer(ik), intent(in) :: lda
+   integer(ik), intent(in) :: m
+   integer(ik), intent(in) :: n
    character, intent(in) :: trans
    ! Array Arguments
    real(sp), intent(in) :: a(lda, *)
@@ -281,7 +286,7 @@ pure subroutine sgemv(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
 
    ! Local Scalars
    real(sp) :: temp
-   integer :: i, info, ix, iy, j, jx, jy, kx, ky, lenx, leny
+   integer(ik) :: i, info, ix, iy, j, jx, jy, kx, ky, lenx, leny
 
    ! Intrinsic Functions
    intrinsic :: max
@@ -422,11 +427,11 @@ pure subroutine dgemv(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
    ! Scalar Arguments
    real(dp), intent(in) :: alpha
    real(dp), intent(in) :: beta
-   integer, intent(in) :: incx
-   integer, intent(in) :: incy
-   integer, intent(in) :: lda
-   integer, intent(in) :: m
-   integer, intent(in) :: n
+   integer(ik), intent(in) :: incx
+   integer(ik), intent(in) :: incy
+   integer(ik), intent(in) :: lda
+   integer(ik), intent(in) :: m
+   integer(ik), intent(in) :: n
    character, intent(in) :: trans
    ! Array Arguments
    real(dp), intent(in) :: a(lda, *)
@@ -439,7 +444,7 @@ pure subroutine dgemv(trans, m, n, alpha, a, lda, x, incx, beta, y, incy)
 
    ! Local Scalars
    real(dp) :: temp
-   integer :: i, info, ix, iy, j, jx, jy, kx, ky, lenx, leny
+   integer(ik) :: i, info, ix, iy, j, jx, jy, kx, ky, lenx, leny
 
    ! Intrinsic Functions
    intrinsic :: max

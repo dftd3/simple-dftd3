@@ -46,16 +46,39 @@ endif
 if get_option('blas') != 'none'
   add_project_arguments('-DWITH_BLAS', language: 'fortran')
 endif
+
+if get_option('ilp64')
+  ilp64 = true
+  add_project_arguments('-DIK=i8', language:'fortran')
+else
+  ilp64 = false
+  add_project_arguments('-DIK=i4', language:'fortran')
+endif
+
 if get_option('blas') == 'netlib'
-  blas_dep = dependency('blas', required: false)
+  blas_dep = ilp64 ? dependency('blas64', required: false) : dependency('blas', required: false)
   if not blas_dep.found()
-    blas_dep = fc.find_library('blas', required: true)
+    blas_dep = ilp64 ? fc.find_library('blas64', required: true) : fc.find_library('blas', required: false)
   endif
   lib_deps += blas_dep
 elif get_option('blas') == 'custom'
-  foreach lib: get_option('blas_libs')
-    lib_deps += fc.find_library(lib)
-  endforeach
+  blas_dep = []
+  libs = get_option('blas_libs')
+  if libs[0].startswith('-L')
+    foreach lib: libs
+      if lib != libs[0]
+        blas_dep += fc.find_library(lib, dirs: libs[0].substring(2))
+      endif
+    endforeach
+  else
+    foreach lib: libs
+      blas_dep += fc.find_library(lib)
+    endforeach
+  endif
+  if (not fc.links('external dsytrs; call dgemm(); end', dependencies: [blas_dep,omp_dep]))
+    error('Custom BLAS libraries do not link')
+  endif
+  lib_deps += blas_dep
 endif
 
 # Create the tool chain library as subproject
