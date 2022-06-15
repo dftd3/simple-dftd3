@@ -56,9 +56,9 @@ else
 endif
 
 if get_option('blas') == 'netlib'
-  blas_dep = ilp64 ? dependency('blas64', required: false) : dependency('blas', required: false)
+  blas_dep = dependency(ilp64 ? 'blas64' : 'blas', required: false)
   if not blas_dep.found()
-    blas_dep = ilp64 ? fc.find_library('blas64', required: true) : fc.find_library('blas', required: false)
+    blas_dep = fc.find_library(ilp64 ? 'blas64' : 'blas', required: true)
   endif
   lib_deps += blas_dep
 elif get_option('blas') == 'custom'
