@@ -238,7 +238,7 @@ subroutine test_d3bjatm_mb17(error)
       & "pw1pw", "pw6b95", "pwb6k", "pwgga", "pwpb95", "revpbe", "revpbe0", &
       & "revpbe38", "revssb", "rpbe", "rpw86pbe", "ssb", "tpss", "tpss0", "tpssh", &
       & "scan", "rscan", "r2scan", "b97m", "wb97m", "wb97x", &
-      & "r2scanh", "r2scan0", "r2scan50"]
+      & "r2scanh", "r2scan0", "r2scan50", "b973c"]
    real(wp), parameter :: ref(*) = [&
       &-2.3886024757749025E-2_wp,-1.2511386468651674E-2_wp,-1.4044660238061260E-2_wp, &
       &-2.8422909990177846E-2_wp,-1.9411341783127211E-2_wp,-2.9014208237027887E-2_wp, &
@@ -260,7 +260,7 @@ subroutine test_d3bjatm_mb17(error)
       &-1.9336394133874998E-2_wp,-3.7332351753141214E-3_wp,-5.8233052775258781E-3_wp, &
       &-4.8268739519799772E-3_wp,-4.5927344991332809E-2_wp,-1.9723672704756907E-2_wp, &
       &-3.7824098003146032E-2_wp,-5.1862651268351767E-3_wp,-5.7275846053051168E-3_wp, &
-      &-6.4146049302302843E-3_wp]
+      &-6.4146049302302843E-3_wp,-3.6643019717926037E-2_wp]
 
    call get_structure(mol, "MB16-43", "17")
    do ii = 1, size(func)
