@@ -91,5 +91,6 @@ if install
   python.install_sources(
     pysrcs,
     subdir: 'dftd3',
+    pure: false,
   )
 endif

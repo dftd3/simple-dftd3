@@ -6,7 +6,11 @@ jobs:
   sdist:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
     - name: Reorganize repository
       run: |
         git config user.email ""
@@ -16,7 +20,8 @@ jobs:
         git mv python/{mesonpep517,pyproject}.toml
         git commit -m "Python dist"
     - run: |
-        pipx run build python/ --sdist --outdir .
+        pip install meson-python 'meson==0.62.*' cffi numpy build
+        python -m build python/ --sdist --outdir . -n
     - uses: actions/upload-artifact@v3
       with:
         name: dftd3-python-sdist
