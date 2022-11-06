@@ -5,12 +5,18 @@ on: [push, workflow_dispatch]
 jobs:
   sdist:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
     steps:
     - uses: actions/checkout@v3
     - name: Setup Python
-      uses: actions/setup-python@v4
+      uses: mamba-org/provision-with-micromamba@main
       with:
-        python-version: '3.x'
+        environment-file: assets/ci/python-env.yaml
+        extra-specs: |
+          meson-python
+          python-build
     - name: Reorganize repository
       run: |
         git config user.email ""
@@ -20,7 +26,6 @@ jobs:
         git mv python/{mesonpep517,pyproject}.toml
         git commit -m "Python dist"
     - run: |
-        pip install meson-python 'meson==0.62.*' cffi numpy build
         python -m build python/ --sdist --outdir . -n
     - uses: actions/upload-artifact@v3
       with:
