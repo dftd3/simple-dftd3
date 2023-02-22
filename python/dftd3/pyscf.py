@@ -269,7 +269,9 @@ def energy(mf):
         def energy_nuc(self):
             enuc = mf.__class__.energy_nuc(self)
             if self.with_dftd3:
-                enuc += self.with_dftd3.kernel()[0]
+                edisp = self.with_dftd3.kernel()[0]
+                mf.scf_summary["dispersion"] = edisp
+                enuc += edisp
             return enuc
 
         def reset(self, mol=None):
