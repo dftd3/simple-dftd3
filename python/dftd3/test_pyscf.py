@@ -121,6 +121,7 @@ def test_energy_hf():
     )
     mf = disp.energy(scf.RHF(mol))
     assert mf.kernel() == approx(-110.93260361702605, abs=1.0e-8)
+    assert "dispersion" in mf.scf_summary
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
