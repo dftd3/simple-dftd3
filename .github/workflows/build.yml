@@ -18,7 +18,7 @@ jobs:
         version: [10]
 
         include:
-        - os: ubuntu-latest
+        - os: ubuntu-20.04
           build: cmake
           build-type: debug
           compiler: gnu
@@ -28,7 +28,7 @@ jobs:
           build: cmake
           build-type: debug
           compiler: gnu
-          version: 9
+          version: 10
 
         - os: ubuntu-latest
           build: meson
@@ -48,7 +48,7 @@ jobs:
           compiler: gnu
           version: 11
 
-        - os: ubuntu-latest
+        - os: ubuntu-20.04
           build: meson
           build-type: debug
           compiler: intel
