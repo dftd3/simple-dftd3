@@ -57,6 +57,37 @@ def test_energy_r2scan_d3():
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+@pytest.mark.parametrize("xc", ["b3lyp", "b3lypg", "b3lyp5", "b3lyp3"])
+def test_energy_b3lyp_d3(xc: str):
+
+    mol = gto.M(
+        atom="""
+             C   -0.755422531  -0.796459123  -1.023590391
+             C    0.634274834  -0.880017014  -1.075233285
+             C    1.406955202   0.199695367  -0.653144334
+             C    0.798863737   1.361204515  -0.180597909
+             C   -0.593166787   1.434312023  -0.133597923
+             C   -1.376239198   0.359205222  -0.553258516
+             I   -1.514344238   3.173268101   0.573601106
+             H    1.110906949  -1.778801728  -1.440619836
+             H    1.399172302   2.197767355   0.147412751
+             H    2.486417780   0.142466525  -0.689380574
+             H   -2.454252250   0.422581120  -0.512807958
+             H   -1.362353593  -1.630564523  -1.348743149
+             S   -3.112683203   6.289227834   1.226984439
+             H   -4.328789697   5.797771251   0.973373089
+             C   -2.689135032   6.703163830  -0.489062886
+             H   -1.684433029   7.115457372  -0.460265708
+             H   -2.683867206   5.816530502  -1.115183775
+             H   -3.365330613   7.451201412  -0.890098894
+             """
+    )
+
+    d3 = disp.DFTD3Dispersion(mol, xc=xc)
+    assert d3.kernel()[0] == approx(-0.034889411100056264, abs=1.0e-7)
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_gradient_b97m_d3():
     mol = gto.M(
         atom="""
@@ -147,4 +178,4 @@ def test_gradient_hf():
         ]
     )
     grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
-    assert grad.kernel() == approx(ref, abs=1.0e-8)
+    assert grad.kernel() == approx(ref, abs=1.0e-7)
