@@ -116,7 +116,7 @@ class DFTD3Dispersion(lib.StreamObject):
 
     def dump_flags(self, verbose=None):
         """
-        Show options used for the DFT-D4 dispersion correction.
+        Show options used for the DFT-D3 dispersion correction.
         """
         lib.logger.info(self, "** DFTD3 parameter **")
         lib.logger.info(self, "func %s", self.xc)
@@ -127,7 +127,7 @@ class DFTD3Dispersion(lib.StreamObject):
 
     def kernel(self) -> Tuple[float, np.ndarray]:
         """
-        Compute the DFT-D4 dispersion correction.
+        Compute the DFT-D3 dispersion correction.
 
         The dispersion model as well as the parameters are created locally and
         not part of the state of the instance.
