@@ -26,7 +26,7 @@ except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
 
 import numpy as np
-from typing import Tuple
+from typing import Optional, Tuple
 
 from .interface import (
     DispersionModel,
@@ -107,14 +107,22 @@ class DFTD3Dispersion(lib.StreamObject):
     array(-0.00574289)
     """
 
-    def __init__(self, mol, xc="hf", version="d3bj", atm=False):
+    def __init__(
+        self,
+        mol: gto.Mole,
+        xc: str = "hf",
+        version: str = "d3bj",
+        atm: bool = False,
+        param: Optional[Dict[str, float]] = None,
+    ):
         self.mol = mol
         self.verbose = mol.verbose
         self.xc = xc
+        self.param = param
         self.atm = atm
         self.version = version
 
-    def dump_flags(self, verbose=None):
+    def dump_flags(self, verbose: Optional[bool] = None):
         """
         Show options used for the DFT-D3 dispersion correction.
         """
@@ -168,16 +176,19 @@ class DFTD3Dispersion(lib.StreamObject):
             mol.atom_coords(),
         )
 
-        param = _damping_param[self.version](
-            method=self.xc,
-            atm=self.atm,
-        )
+        if self.param is not None:
+            param = _damping_param[self.version](**self.param)
+        else:
+            param = _damping_param[self.version](
+                method=self.xc,
+                atm=self.atm,
+            )
 
         res = disp.get_dispersion(param=param, grad=True)
 
         return res.get("energy"), res.get("gradient")
 
-    def reset(self, mol):
+    def reset(self, mol: gto.Mole):
         """Reset mol and clean up relevant attributes for scanner mode"""
         self.mol = mol
         return self
@@ -199,7 +210,7 @@ class _DFTD3Grad:
     pass
 
 
-def energy(mf):
+def energy(mf: scf.hf.Scf, **kwargs) -> scf.hf.Scf:
     """
     Apply DFT-D3 corrections to SCF or MCSCF methods by returning an
     instance of a new class built from the original instances class.
@@ -248,6 +259,7 @@ def energy(mf):
         xc="hf"
         if isinstance(mf, casci.CASCI)
         else getattr(mf, "xc", "HF").upper().replace(" ", ""),
+        **kwargs,
     )
 
     if isinstance(mf, _DFTD3):
@@ -287,7 +299,7 @@ def energy(mf):
     return DFTD3(mf, with_dftd3)
 
 
-def grad(scf_grad):
+def grad(scf_grad, **kwargs):
     """
     Apply DFT-D3 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
@@ -337,7 +349,7 @@ def grad(scf_grad):
 
     # Ensure that the zeroth order results include DFTD3 corrections
     if not getattr(scf_grad.base, "with_dftd3", None):
-        scf_grad.base = dftd3(scf_grad.base)
+        scf_grad.base = energy(scf_grad.base, **kwargs)
 
     class DFTD3Grad(_DFTD3Grad, scf_grad.__class__):
         def grad_nuc(self, mol=None, atmlst=None):
