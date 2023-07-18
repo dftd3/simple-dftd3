@@ -21,12 +21,13 @@ Compatibility layer for supporting DFT-D3 in `pyscf <https://pyscf.org/>`_.
 """
 
 try:
-    from pyscf import lib, gto
+    from pyscf import gto, lib, mcscf, scf
+    from pyscf.grad import rhf as rhf_grad
 except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
 
 import numpy as np
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 
 from .interface import (
     DispersionModel,
@@ -65,6 +66,52 @@ class DFTD3Dispersion(lib.StreamObject):
         Modified version of the zero damping function
     ``"d3op"``
         Optimized power damping function
+
+    Custom parameters can be provided with the `param` dictionary.
+    The `param` dict contains the damping parameters, at least s8, a1 and a2
+    must be provided for rational damping, while s8 and rs6 are required in case
+    of zero damping.
+
+    Parameters for (modified) rational damping are:
+
+    ======================== =========== ============================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ============================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s8                       None        Scaling of the dipole-quadrupole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    a1                       None        Scaling of the critical radii
+    a2                       None        Offset of the critical radii
+    alp                      14.0        Exponent of the zero damping (ATM only)
+    ======================== =========== ============================================
+
+    Parameters for (modified) zero damping are:
+
+    ======================== =========== ===================================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ===================================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s8                       None        Scaling of the dipole-quadrupole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    rs6                      None        Scaling of the dipole-dipole damping
+    rs8                      1.0         Scaling of the dipole-quadrupole damping
+    alp                      14.0        Exponent of the zero damping
+    bet                      None        Offset for damping radius (modified zero damping)
+    ======================== =========== ===================================================
+
+    Parameters for optimized power damping are:
+
+    ======================== =========== ============================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ============================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s8                       None        Scaling of the dipole-quadrupole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    a1                       None        Scaling of the critical radii
+    a2                       None        Offset of the critical radii
+    alp                      14.0        Exponent of the zero damping (ATM only)
+    bet                      None        Power for the zero-damping component
+    ======================== =========== ============================================
 
     The version of the damping can be changed after constructing the dispersion correction.
     With the `atm` boolean the three-body dispersion energy can be enabled, which is
@@ -107,14 +154,22 @@ class DFTD3Dispersion(lib.StreamObject):
     array(-0.00574289)
     """
 
-    def __init__(self, mol, xc="hf", version="d3bj", atm=False):
+    def __init__(
+        self,
+        mol: gto.Mole,
+        xc: str = "hf",
+        version: str = "d3bj",
+        atm: bool = False,
+        param: Optional[Dict[str, float]] = None,
+    ):
         self.mol = mol
         self.verbose = mol.verbose
         self.xc = xc
+        self.param = param
         self.atm = atm
         self.version = version
 
-    def dump_flags(self, verbose=None):
+    def dump_flags(self, verbose: Optional[bool] = None):
         """
         Show options used for the DFT-D3 dispersion correction.
         """
@@ -168,16 +223,19 @@ class DFTD3Dispersion(lib.StreamObject):
             mol.atom_coords(),
         )
 
-        param = _damping_param[self.version](
-            method=self.xc,
-            atm=self.atm,
-        )
+        if self.param is not None:
+            param = _damping_param[self.version](**self.param)
+        else:
+            param = _damping_param[self.version](
+                method=self.xc,
+                atm=self.atm,
+            )
 
         res = disp.get_dispersion(param=param, grad=True)
 
         return res.get("energy"), res.get("gradient")
 
-    def reset(self, mol):
+    def reset(self, mol: gto.Mole):
         """Reset mol and clean up relevant attributes for scanner mode"""
         self.mol = mol
         return self
@@ -199,7 +257,7 @@ class _DFTD3Grad:
     pass
 
 
-def energy(mf):
+def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     """
     Apply DFT-D3 corrections to SCF or MCSCF methods by returning an
     instance of a new class built from the original instances class.
@@ -208,8 +266,10 @@ def energy(mf):
 
     Parameters
     ----------
-    mf
+    mf: scf.hf.SCF
         The method to which DFT-D3 corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `DFTD3Dispersion` class.
 
     Returns
     -------
@@ -237,17 +297,15 @@ def energy(mf):
     -110.93260361702605
     """
 
-    from pyscf.scf import hf
-    from pyscf.mcscf import casci
-
-    if not isinstance(mf, (hf.SCF, casci.CASCI)):
+    if not isinstance(mf, (scf.hf.SCF, mcscf.casci.CASCI)):
         raise TypeError("mf must be an instance of SCF or CASCI")
 
     with_dftd3 = DFTD3Dispersion(
         mf.mol,
         xc="hf"
-        if isinstance(mf, casci.CASCI)
+        if isinstance(mf, mcscf.casci.CASCI)
         else getattr(mf, "xc", "HF").upper().replace(" ", ""),
+        **kwargs,
     )
 
     if isinstance(mf, _DFTD3):
@@ -287,7 +345,7 @@ def energy(mf):
     return DFTD3(mf, with_dftd3)
 
 
-def grad(scf_grad):
+def grad(scf_grad: rhf_grad.Gradients, **kwargs):
     """
     Apply DFT-D3 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
@@ -296,8 +354,10 @@ def grad(scf_grad):
 
     Parameters
     ----------
-    mfgrad
+    scf_grad: rhf_grad.Gradients
         The method to which DFT-D3 corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `DFTD3Dispersion` class.
 
     Returns
     -------
@@ -330,14 +390,13 @@ def grad(scf_grad):
     5 H    -0.0154527822     0.0229409425    -0.0215141991
     ----------------------------------------------
     """
-    from pyscf.grad import rhf as rhf_grad
 
     if not isinstance(scf_grad, rhf_grad.Gradients):
         raise TypeError("scf_grad must be an instance of Gradients")
 
     # Ensure that the zeroth order results include DFTD3 corrections
     if not getattr(scf_grad.base, "with_dftd3", None):
-        scf_grad.base = dftd3(scf_grad.base)
+        scf_grad.base = energy(scf_grad.base, **kwargs)
 
     class DFTD3Grad(_DFTD3Grad, scf_grad.__class__):
         def grad_nuc(self, mol=None, atmlst=None):
