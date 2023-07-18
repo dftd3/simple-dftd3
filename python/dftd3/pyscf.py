@@ -67,6 +67,52 @@ class DFTD3Dispersion(lib.StreamObject):
     ``"d3op"``
         Optimized power damping function
 
+    Custom parameters can be provided with the `param` dictionary.
+    The `param` dict contains the damping parameters, at least s8, a1 and a2
+    must be provided for rational damping, while s8 and rs6 are required in case
+    of zero damping.
+
+    Parameters for (modified) rational damping are:
+
+    ======================== =========== ============================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ============================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s8                       None        Scaling of the dipole-quadrupole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    a1                       None        Scaling of the critical radii
+    a2                       None        Offset of the critical radii
+    alp                      14.0        Exponent of the zero damping (ATM only)
+    ======================== =========== ============================================
+
+    Parameters for (modified) zero damping are:
+
+    ======================== =========== ===================================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ===================================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s8                       None        Scaling of the dipole-quadrupole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    rs6                      None        Scaling of the dipole-dipole damping
+    rs8                      1.0         Scaling of the dipole-quadrupole damping
+    alp                      14.0        Exponent of the zero damping
+    bet                      None        Offset for damping radius (modified zero damping)
+    ======================== =========== ===================================================
+
+    Parameters for optimized power damping are:
+
+    ======================== =========== ============================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ============================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s8                       None        Scaling of the dipole-quadrupole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    a1                       None        Scaling of the critical radii
+    a2                       None        Offset of the critical radii
+    alp                      14.0        Exponent of the zero damping (ATM only)
+    bet                      None        Power for the zero-damping component
+    ======================== =========== ============================================
+
     The version of the damping can be changed after constructing the dispersion correction.
     With the `atm` boolean the three-body dispersion energy can be enabled, which is
     generally recommended.
@@ -220,8 +266,10 @@ def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
 
     Parameters
     ----------
-    mf
+    mf: scf.hf.SCF
         The method to which DFT-D3 corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `DFTD3Dispersion` class.
 
     Returns
     -------
@@ -297,7 +345,7 @@ def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     return DFTD3(mf, with_dftd3)
 
 
-def grad(scf_grad, **kwargs):
+def grad(scf_grad: rhf_grad.Gradients, **kwargs):
     """
     Apply DFT-D3 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
@@ -306,8 +354,10 @@ def grad(scf_grad, **kwargs):
 
     Parameters
     ----------
-    mfgrad
+    scf_grad: rhf_grad.Gradients
         The method to which DFT-D3 corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `DFTD3Dispersion` class.
 
     Returns
     -------
