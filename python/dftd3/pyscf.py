@@ -21,12 +21,13 @@ Compatibility layer for supporting DFT-D3 in `pyscf <https://pyscf.org/>`_.
 """
 
 try:
-    from pyscf import lib, gto
+    from pyscf import gto, lib, mcscf, scf
+    from pyscf.grad import rhf as rhf_grad
 except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
 
 import numpy as np
-from typing import Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from .interface import (
     DispersionModel,
@@ -210,7 +211,7 @@ class _DFTD3Grad:
     pass
 
 
-def energy(mf: scf.hf.Scf, **kwargs) -> scf.hf.Scf:
+def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     """
     Apply DFT-D3 corrections to SCF or MCSCF methods by returning an
     instance of a new class built from the original instances class.
@@ -248,16 +249,13 @@ def energy(mf: scf.hf.Scf, **kwargs) -> scf.hf.Scf:
     -110.93260361702605
     """
 
-    from pyscf.scf import hf
-    from pyscf.mcscf import casci
-
-    if not isinstance(mf, (hf.SCF, casci.CASCI)):
+    if not isinstance(mf, (scf.hf.SCF, mcscf.casci.CASCI)):
         raise TypeError("mf must be an instance of SCF or CASCI")
 
     with_dftd3 = DFTD3Dispersion(
         mf.mol,
         xc="hf"
-        if isinstance(mf, casci.CASCI)
+        if isinstance(mf, mcscf.casci.CASCI)
         else getattr(mf, "xc", "HF").upper().replace(" ", ""),
         **kwargs,
     )
@@ -342,7 +340,6 @@ def grad(scf_grad, **kwargs):
     5 H    -0.0154527822     0.0229409425    -0.0215141991
     ----------------------------------------------
     """
-    from pyscf.grad import rhf as rhf_grad
 
     if not isinstance(scf_grad, rhf_grad.Gradients):
         raise TypeError("scf_grad must be an instance of Gradients")
