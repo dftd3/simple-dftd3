@@ -27,10 +27,77 @@ module dftd3_disp
    implicit none
    private
 
-   public :: get_dispersion, get_pairwise_dispersion
+   public :: get_dispersion_atomic, get_dispersion, get_pairwise_dispersion
 
 
 contains
+
+
+subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d3_model), intent(in) :: disp
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Dispersion energy
+   real(wp), intent(out) :: energies(:)
+
+   !> Dispersion gradient
+   real(wp), intent(out), contiguous, optional :: gradient(:, :)
+
+   !> Dispersion virial
+   real(wp), intent(out), contiguous, optional :: sigma(:, :)
+
+   logical :: grad
+   integer :: mref
+   real(wp), allocatable :: cn(:)
+   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
+   real(wp), allocatable :: dEdcn(:)
+   real(wp), allocatable :: lattr(:, :)
+
+   mref = maxval(disp%ref)
+   grad = present(gradient).and.present(sigma)
+
+   allocate(cn(mol%nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
+
+   allocate(gwvec(mref, mol%nat))
+   if (grad) allocate(gwdcn(mref, mol%nat))
+   call disp%weight_references(mol, cn, gwvec, gwdcn)
+
+   allocate(c6(mol%nat, mol%nat))
+   if (grad) allocate(dc6dcn(mol%nat, mol%nat))
+   call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
+
+   energies(:) = 0.0_wp
+   if (grad) then
+      allocate(dEdcn(mol%nat))
+      dEdcn(:) = 0.0_wp
+      gradient(:, :) = 0.0_wp
+      sigma(:, :) = 0.0_wp
+   end if
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
+   call param%get_dispersion2(mol, lattr, cutoff%disp2, disp%rvdw, disp%r4r2, c6, dc6dcn, &
+      & energies, dEdcn, gradient, sigma)
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
+   call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, c6, dc6dcn, &
+      & energies, dEdcn, gradient, sigma)
+   if (grad) then
+      call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
+         & gradient, sigma)
+   end if
+
+end subroutine get_dispersion_atomic
 
 
 subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
@@ -56,47 +123,11 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
    !> Dispersion virial
    real(wp), intent(out), contiguous, optional :: sigma(:, :)
 
-   logical :: grad
-   integer :: mref
-   real(wp), allocatable :: cn(:)
-   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
-   real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
-   real(wp), allocatable :: dEdcn(:), energies(:)
-   real(wp), allocatable :: lattr(:, :)
-
-   mref = maxval(disp%ref)
-   grad = present(gradient).and.present(sigma)
-
-   allocate(cn(mol%nat))
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
-
-   allocate(gwvec(mref, mol%nat))
-   if (grad) allocate(gwdcn(mref, mol%nat))
-   call disp%weight_references(mol, cn, gwvec, gwdcn)
-
-   allocate(c6(mol%nat, mol%nat))
-   if (grad) allocate(dc6dcn(mol%nat, mol%nat))
-   call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
+   real(wp), allocatable :: energies(:)
 
    allocate(energies(mol%nat))
-   energies(:) = 0.0_wp
-   if (grad) then
-      allocate(dEdcn(mol%nat))
-      dEdcn(:) = 0.0_wp
-      gradient(:, :) = 0.0_wp
-      sigma(:, :) = 0.0_wp
-   end if
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-   call param%get_dispersion2(mol, lattr, cutoff%disp2, disp%rvdw, disp%r4r2, c6, dc6dcn, &
-      & energies, dEdcn, gradient, sigma)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, c6, dc6dcn, &
-      & energies, dEdcn, gradient, sigma)
-   if (grad) then
-      call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
-         & gradient, sigma)
-   end if
+
+   call get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma)
 
    energy = sum(energies)
 

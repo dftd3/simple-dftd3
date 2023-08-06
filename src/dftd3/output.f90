@@ -30,6 +30,7 @@ module dftd3_output
    private
 
    public :: ascii_atomic_radii, ascii_atomic_references, ascii_system_properties
+   public :: ascii_energy_atom
    public :: ascii_results, ascii_damping_param, ascii_pairwise
    public :: turbomole_gradient, turbomole_gradlatt
    public :: json_results, tagged_result
@@ -139,6 +140,34 @@ subroutine ascii_system_properties(unit, mol, disp, cn, c6)
 end subroutine ascii_system_properties
 
 
+subroutine ascii_energy_atom(unit, mol, energies)
+
+   !> Unit for output
+   integer, intent(in) :: unit
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Atom-resolved dispersion energies
+   real(wp), allocatable, intent(in) :: energies(:)
+
+   integer :: iat, isp
+
+   write(unit, '(a,":")') "Atom-resolved dispersion energies"
+   write(unit, '(50("-"))')
+   write(unit, '(a6,1x,a4,1x,4x,a15,1x,a15)') "#", "Z", "[Hartree]", "[kcal/mol]"
+   write(unit, '(50("-"))')
+   do iat = 1, mol%nat
+      isp = mol%id(iat)
+      write(unit, '(i6,1x,i4,1x,a4,e15.8,1x,f15.8)') &
+         & iat, mol%num(isp), mol%sym(isp), energies(iat), energies(iat)*autokcal
+   end do
+   write(unit, '(50("-"))')
+   write(unit, '(a)')
+
+end subroutine ascii_energy_atom
+
+   
 subroutine ascii_results(unit, mol, energy, gradient, sigma)
 
    !> Unit for output
