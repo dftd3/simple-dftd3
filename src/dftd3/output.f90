@@ -140,6 +140,7 @@ subroutine ascii_system_properties(unit, mol, disp, cn, c6)
 end subroutine ascii_system_properties
 
 
+!> Print atom-resolved dispersion energies
 subroutine ascii_energy_atom(unit, mol, energies)
 
    !> Unit for output

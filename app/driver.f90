@@ -177,7 +177,7 @@ subroutine run_driver(config, error)
    end if
 
    if (allocated(param)) then
-      call get_dispersion_atomic(mol, d3, param, realspace_cutoff(), energies,&
+      call get_dispersion(mol, d3, param, realspace_cutoff(), energies, &
          & gradient, sigma)
       energy = sum(energies)
 

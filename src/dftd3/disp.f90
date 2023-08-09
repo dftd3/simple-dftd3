@@ -27,12 +27,19 @@ module dftd3_disp
    implicit none
    private
 
-   public :: get_dispersion_atomic, get_dispersion, get_pairwise_dispersion
+   public :: get_dispersion, get_pairwise_dispersion
 
+
+   !> Calculate dispersion energy
+   interface get_dispersion
+      module procedure :: get_dispersion_atomic
+      module procedure :: get_dispersion_scalar
+   end interface get_dispersion
 
 contains
 
 
+!> Calculate atom-resolved dispersion energies.
 subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma)
 
    !> Molecular structure data
@@ -100,7 +107,8 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
 end subroutine get_dispersion_atomic
 
 
-subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
+!> Calculate scalar dispersion energy.
+subroutine get_dispersion_scalar(mol, disp, param, cutoff, energy, gradient, sigma)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -131,7 +139,7 @@ subroutine get_dispersion(mol, disp, param, cutoff, energy, gradient, sigma)
 
    energy = sum(energies)
 
-end subroutine get_dispersion
+end subroutine get_dispersion_scalar
 
 
 !> Wrapper to handle the evaluation of pairwise representation of the dispersion energy
