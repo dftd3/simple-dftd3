@@ -51,9 +51,10 @@ subroutine run_driver(config, error)
    class(damping_param), allocatable :: param
    type(d3_param) :: inp
    type(d3_model) :: d3
-   real(wp), allocatable :: energy, gradient(:, :), sigma(:, :)
+   real(wp), allocatable :: energies(:), gradient(:, :), sigma(:, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: s9
+   real(wp) :: energy
    integer :: stat, unit
    logical :: exist
 
@@ -163,7 +164,7 @@ subroutine run_driver(config, error)
    end if
 
    if (allocated(param)) then
-      energy = 0.0_wp
+      allocate(energies(mol%nat))
       if (config%grad) then
          allocate(gradient(3, mol%nat), sigma(3, 3))
       end if
@@ -176,14 +177,19 @@ subroutine run_driver(config, error)
    end if
 
    if (allocated(param)) then
-      call get_dispersion(mol, d3, param, realspace_cutoff(), energy, gradient, &
-         & sigma)
+      call get_dispersion(mol, d3, param, realspace_cutoff(), energies, &
+         & gradient, sigma)
+      energy = sum(energies)
+
       if (config%pair_resolved) then
          allocate(pair_disp2(mol%nat, mol%nat), pair_disp3(mol%nat, mol%nat))
          call get_pairwise_dispersion(mol, d3, param, realspace_cutoff(), pair_disp2, &
             & pair_disp3)
       end if
       if (config%verbosity > 0) then
+         if (config%verbosity > 2) then
+            call ascii_energy_atom(output_unit, mol, energies)
+         end if
          call ascii_results(output_unit, mol, energy, gradient, sigma)
          if (config%pair_resolved) then
             call ascii_pairwise(output_unit, mol, pair_disp2, pair_disp3)
