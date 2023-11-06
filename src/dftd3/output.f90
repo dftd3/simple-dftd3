@@ -95,7 +95,8 @@ subroutine ascii_atomic_references(unit, mol, disp)
       do iref = 1, disp%ref(isp)
          write(unit, '(i4, 1x, f7.4, 1x, f9.4)', advance='no') &
             iref, disp%cn(iref, isp), disp%c6(iref, iref, isp, isp)
-         if (iref == 3 .and. disp%ref(isp) > 3) then
+         if ((iref == 3 .and. disp%ref(isp) > 3) .or. &
+             (iref == 6 .and. disp%ref(isp) > 6)) then
             write(unit, '(/,9x)', advance='no')
          end if
       end do
@@ -126,16 +127,16 @@ subroutine ascii_system_properties(unit, mol, disp, cn, c6)
    integer :: iat, isp
 
    write(unit, '(a,":")') "Dispersion properties (in atomic units)"
-   write(unit, '(50("-"))')
-   write(unit, '(a6,1x,a4,5x,*(1x,a10))') "#", "Z", "CN", "C6(AA)", "C8(AA)"
-   write(unit, '(50("-"))')
+   write(unit, '(56("-"))')
+   write(unit, '(a6,1x,a4,5x,*(1x,a12))') "#", "Z", "CN", "C6(AA)", "C8(AA)"
+   write(unit, '(56("-"))')
    do iat = 1, mol%nat
       isp = mol%id(iat)
-      write(unit, '(i6,1x,i4,1x,a4,*(1x,f10.4))') &
+      write(unit, '(i6,1x,i4,1x,a4,*(1x,f12.4))') &
          & iat, mol%num(isp), mol%sym(isp), cn(iat), c6(iat, iat), &
          & c6(iat, iat)*3*disp%r4r2(isp)**2
    end do
-   write(unit, '(50("-"))')
+   write(unit, '(56("-"))')
 
 end subroutine ascii_system_properties
 

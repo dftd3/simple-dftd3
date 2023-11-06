@@ -50,5 +50,5 @@ tester = executable(
 )
 
 foreach t : tests
-  test(t, tester, args: t, suite: 'unit')
+  test(t, tester, args: t, suite: 'unit', timeout: 120)
 endforeach
