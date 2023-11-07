@@ -49,6 +49,7 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-mb01", test_gw_mb01), &
       & new_unittest("gw-mb02", test_gw_mb02), &
       & new_unittest("gw-mb03", test_gw_mb03), &
+      & new_unittest("gw-amf3", test_gw_amf3), &
       & new_unittest("dgw-mb04", test_dgw_mb04), &
       & new_unittest("dgw-mb05", test_dgw_mb05) &
       & ]
@@ -74,7 +75,7 @@ subroutine test_gw_gen(error, mol, ref)
 
    call new_d3_model(d3, mol)
 
-   allocate(rcov(mol%nid), cn(mol%nat), gwvec(maxval(d3%ref), mol%nat))
+   allocate(rcov(mol%nid), cn(mol%nat), gwvec(7, mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
@@ -180,6 +181,56 @@ subroutine test_gw_mb01(error)
       & 3.64404060381414E-41_wp, 1.64269207706493E-24_wp, 4.50618875164815E-11_wp, &
       & 9.99999999954938E-01_wp, 0.00000000000000E+00_wp], shape(ref))
 
+      !real(wp), parameter :: ref(7, 16) = reshape([&
+      ! & 4.61254014807976E-13_wp, 9.99999999999539E-01_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 9.78431945472983E-01_wp, 2.15680545270172E-02_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 9.33252077840319E-08_wp, 1.55830681937747E-02_wp, 9.84416838481017E-01_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 9.99424904108747E-01_wp, 5.75095891252906E-04_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 1.35771400228363E-02_wp, 9.86422859977164E-01_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 9.82992148346892E-01_wp, 1.70078516531077E-02_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 9.99519469064248E-01_wp, 4.80530935751615E-04_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 1.13181694792597E-07_wp, 1.71503960869602E-02_wp, 9.82849490731345E-01_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 1.25926325849160E-25_wp, 6.73263145629432E-14_wp, 1.94165275506323E-05_wp, &
+      ! & 9.99980583472382E-01_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 9.86403420777318E-01_wp, 1.35965792226822E-02_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 9.83377538259043E-01_wp, 1.66224617409573E-02_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 6.63636803493899E-06_wp, 9.99993363631965E-01_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 4.78432084484299E-38_wp, 4.72470789879862E-24_wp, 2.64845507076682E-13_wp, &
+      ! & 7.08386079833514E-06_wp, 9.99992916138937E-01_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 5.57929648633356E-26_wp, 1.48261370770972E-14_wp, 2.19715394953033E-06_wp, &
+      ! & 1.59978977357256E-01_wp, 8.40018825488779E-01_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 1.11473605172390E-26_wp, 1.33471958830444E-14_wp, 8.80046323582265E-06_wp, &
+      ! & 9.99991199536751E-01_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      ! & 0.00000000000000E+00_wp, &
+      ! & 3.64404060381414E-41_wp, 1.64269207706493E-24_wp, 4.50618875164815E-11_wp, &
+      ! & 9.99999999954938E-01_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 
+      ! & 0.00000000000000E+00_wp], shape(ref))
+
    call get_structure(mol, "MB16-43", "01")
    call test_gw_gen(error, mol, ref)
 
@@ -267,6 +318,41 @@ subroutine test_gw_mb03(error)
 
 end subroutine test_gw_mb03
 
+subroutine test_gw_amf3(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   real(wp), parameter :: ref(7, 4) = reshape([&
+      & 3.01777419522501E-16_wp, 3.48560287705282E-08_wp, 6.05573875449400E-03_wp, &
+      & 9.93942098041223E-01_wp, 2.12834822159420E-06_wp, 3.22312554200316E-14_wp, &
+      & 0.00000000000000E+00_wp, 1.83164825589304E-02_wp, 9.81683517441070E-01_wp, &
+      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 1.83168129150391E-02_wp, &
+      & 9.81683187084961E-01_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 1.83165559699980E-02_wp, 9.81683444030002E-01_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp], shape(ref))
+
+   !> Molecular structure data 
+   mol%nat = 4
+   mol%nid = 2
+   mol%id = [1, 2, 2, 2]
+   mol%num = [95, 9]
+   mol%xyz = reshape([ &
+      & -1.13163973200000_wp, -2.17446990100000_wp, +1.10012477100000_wp, &
+      & -4.66377948900000_wp, -3.12947883400000_wp, -0.36987606800000_wp, &
+      & -0.19032564300000_wp, +1.36339950600000_wp, -0.36521789300000_wp, &
+      & +1.46283310800000_wp, -4.75734549200000_wp, -0.36503081000000_wp], &
+      & [3, 4])
+   mol%periodic = [.false.]
+
+   call test_gw_gen(error, mol, ref)
+
+end subroutine test_gw_amf3
+
 
 subroutine test_dgw_mb04(error)
 
@@ -304,6 +390,7 @@ subroutine test_r4r2_val(error)
    call check(error, get_r4r2_val("Og"), get_r4r2_val(118))
    if (allocated(error)) return
    call check(error, get_r4r2_val("X"), get_r4r2_val(-1))
+
 end subroutine test_r4r2_val
 
 
@@ -314,9 +401,12 @@ subroutine test_cov_rad(error)
 
    call check(error, get_covalent_rad("C"), get_covalent_rad(6))
    if (allocated(error)) return
+   call check(error, get_covalent_rad("Am"), get_covalent_rad(95))
+   if (allocated(error)) return
    call check(error, get_covalent_rad("Og"), get_covalent_rad(118))
    if (allocated(error)) return
    call check(error, get_covalent_rad("X"), get_covalent_rad(-1))
+
 end subroutine test_cov_rad
 
 
@@ -334,6 +424,7 @@ subroutine test_vdw_rad(error)
    call check(error, get_vdw_rad("Og", "Cn"), get_vdw_rad(118, 112))
    if (allocated(error)) return
    call check(error, get_vdw_rad("X", "X"), get_vdw_rad(-1, -1))
+
 end subroutine test_vdw_rad
 
 
