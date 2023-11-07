@@ -42,17 +42,17 @@ subroutine collect_ncoord(testsuite)
    type(unittest_type), allocatable, intent(out) :: testsuite(:)
 
    testsuite = [ &
-      ! & new_unittest("cn-mb01", test_cn_mb01), &
-      ! & new_unittest("cn-mb02", test_cn_mb02), &
-      ! & new_unittest("cn-mb03", test_cn_mb03), &
-      ! & new_unittest("cn-acetic", test_cn_acetic), &
-      & new_unittest("cn-amf3", test_cn_amf3) &
-      ! & new_unittest("dcndr-mb04", test_dcndr_mb04), &
-      ! & new_unittest("dcndr-mb05", test_dcndr_mb05), &
-      ! & new_unittest("dcndr-ammonia", test_dcndr_ammonia), &
-      ! & new_unittest("dcndL-mb06", test_dcndL_mb06), &
-      ! & new_unittest("dcndL-mb07", test_dcndL_mb07), &
-      ! & new_unittest("dcndL-antracene", test_dcndL_anthracene) &
+      & new_unittest("cn-mb01", test_cn_mb01), &
+      & new_unittest("cn-mb02", test_cn_mb02), &
+      & new_unittest("cn-mb03", test_cn_mb03), &
+      & new_unittest("cn-acetic", test_cn_acetic), &
+      & new_unittest("cn-amf3", test_cn_amf3), &
+      & new_unittest("dcndr-mb04", test_dcndr_mb04), &
+      & new_unittest("dcndr-mb05", test_dcndr_mb05), &
+      & new_unittest("dcndr-ammonia", test_dcndr_ammonia), &
+      & new_unittest("dcndL-mb06", test_dcndL_mb06), &
+      & new_unittest("dcndL-mb07", test_dcndL_mb07), &
+      & new_unittest("dcndL-antracene", test_dcndL_anthracene) &
       & ]
 
 end subroutine collect_ncoord
