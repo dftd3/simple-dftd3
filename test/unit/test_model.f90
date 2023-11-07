@@ -75,7 +75,7 @@ subroutine test_gw_gen(error, mol, ref)
 
    call new_d3_model(d3, mol)
 
-   allocate(rcov(mol%nid), cn(mol%nat), gwvec(7, mol%nat))
+   allocate(rcov(mol%nid), cn(mol%nat), gwvec(maxval(d3%ref), mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
@@ -274,17 +274,15 @@ subroutine test_gw_amf3(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   real(wp), parameter :: ref(7, 4) = reshape([&
+   real(wp), parameter :: ref(6, 4) = reshape([&
       & 3.01777419522501E-16_wp, 3.48560287705282E-08_wp, 6.05573875449400E-03_wp, &
-      & 9.93942098041223E-01_wp, 2.12834822159420E-06_wp, 3.22312554200316E-14_wp, &
-      & 0.00000000000000E+00_wp, 1.83164825589304E-02_wp, 9.81683517441070E-01_wp, &
-      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
-      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 1.83168129150391E-02_wp, &
-      & 9.81683187084961E-01_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 9.93942098041223E-01_wp, 2.12834822159420E-06_wp, 3.22312554200316E-14_wp, & 
+      & 1.83164825589304E-02_wp, 9.81683517441070E-01_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp, 0.0000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 1.83168129150391E-02_wp, 9.81683187084961E-01_wp, 0.00000000000000E+00_wp, &
       & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
       & 1.83165559699980E-02_wp, 9.81683444030002E-01_wp, 0.00000000000000E+00_wp, &
-      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
-      & 0.00000000000000E+00_wp], shape(ref))
+      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp], shape(ref))
 
    !> Molecular structure data 
    mol%nat = 4
