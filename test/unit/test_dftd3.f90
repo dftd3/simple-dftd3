@@ -77,7 +77,8 @@ subroutine collect_dftd3(testsuite)
       & new_unittest("B97-D3(0M)", test_b97dd3zerom_mb35), &
       & new_unittest("lc-wPBE-D3(0M)", test_lcwpbed3zerom_mb36), &
       & new_unittest("B97h-D3(op)", test_b97hd3op_mb37), &
-      & new_unittest("TPSSh-D3(op)", test_tpsshd3op_mb38) &
+      & new_unittest("TPSSh-D3(op)", test_tpsshd3op_mb38), &
+      & new_unittest("PBE-D3(BJ) Actinides", test_pbed3bj_actinides) &
       & ]
 
 end subroutine collect_dftd3
@@ -888,5 +889,49 @@ subroutine test_tpsshd3op_mb38(error)
 
 end subroutine test_tpsshd3op_mb38
 
+
+subroutine test_pbed3bj_actinides(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
+      & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
+
+   !> Molecular structure data 
+   mol%nat = 17
+   mol%nid = 17
+   mol%id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, &
+      & 12, 13, 14, 15, 16, 17]
+   mol%num = [87, 88, 89, 90, 91, 92, 93, 94, 95, 96, 97, &
+      & 98, 99, 100, 101, 102, 103]
+   mol%xyz = reshape([ &
+      & 0.98692316414074_wp, 6.12727238368797_wp,-6.67861597188102_wp, &
+      & 3.63898862390869_wp, 5.12109301182962_wp, 3.01908613326278_wp, &
+      & 5.14503571563551_wp,-3.97172984617710_wp, 3.82011791828867_wp, &
+      & 6.71986847575494_wp, 1.71382138402812_wp, 3.92749159076307_wp, &
+      & 4.13783589704826_wp,-2.10695793491818_wp, 0.19753203068899_wp, &
+      & 8.97685097698326_wp,-3.08813636191844_wp,-4.45568615593938_wp, &
+      & 12.5486412940776_wp,-1.77128765259458_wp, 0.59261498922861_wp, &
+      & 7.82051475868325_wp,-3.97159756604558_wp,-0.53637703616916_wp, &
+      &-0.43444574624893_wp,-1.69696511583960_wp,-1.65898182093050_wp, &
+      &-4.71270645149099_wp,-0.11534827468942_wp, 2.84863373521297_wp, &
+      &-2.52061680335614_wp, 1.82937752749537_wp,-2.10366982879172_wp, &
+      & 0.13551154616576_wp, 7.99805359235043_wp,-1.55508522619903_wp, &
+      & 3.91594542499717_wp,-1.72975169129597_wp,-5.07944366756113_wp, &
+      &-1.03393930231679_wp, 4.69307230054046_wp, 0.02656940927472_wp, &
+      & 6.20675384557240_wp, 4.24490721493632_wp,-0.71004195169885_wp, &
+      & 7.04586341131562_wp, 5.20053667939076_wp,-7.51972863675876_wp, &
+      & 2.01082807362334_wp, 1.34838807211157_wp,-4.70482633508447_wp],&
+      & [3, 17])
+   mol%periodic = [.false.]
+
+   call new_rational_damping(param, inp)
+   call test_dftd3_gen(error, mol, param, -1.4131143363689097E-001_wp)
+
+end subroutine test_pbed3bj_actinides
 
 end module test_dftd3
