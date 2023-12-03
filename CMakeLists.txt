@@ -33,6 +33,10 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
+if(WITH_ILP64)
+  message(STATUS "Using LAPACK/BLAS ILP64 interface")
+endif()
+
 if(NOT TARGET "BLAS::BLAS" AND WITH_BLAS)
   find_package("custom-blas" REQUIRED)
 endif()
@@ -98,6 +102,17 @@ if(WITH_BLAS)
     "WITH_BLAS=1"
   )
 endif()
+
+if(WITH_ILP64)
+  target_compile_definitions(
+    "${PROJECT_NAME}-lib"
+    PUBLIC -DIK=i8)
+else()
+  target_compile_definitions(
+    "${PROJECT_NAME}-lib"
+    PUBLIC -DIK=i4)
+endif()
+
 target_include_directories(
   "${PROJECT_NAME}-lib"
   PUBLIC
