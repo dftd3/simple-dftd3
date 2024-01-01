@@ -391,7 +391,7 @@ def grad(scf_grad: rhf_grad.Gradients, **kwargs):
     ----------------------------------------------
     """
 
-    if not isinstance(scf_grad, rhf_grad.Gradients):
+    if not isinstance(scf_grad, rhf_grad.GradientsBase):
         raise TypeError("scf_grad must be an instance of Gradients")
 
     # Ensure that the zeroth order results include DFTD3 corrections
