@@ -5,20 +5,30 @@ on: [push, pull_request]
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
     steps:
     - id: deploy-on-push
       run:
         echo "::set-output name=result::${{ env.DEPLOY_BRANCH }}"
       env:
         DEPLOY_BRANCH: ${{ secrets.DEPLOY_BRANCH && contains(github.ref, secrets.DEPLOY_BRANCH) && 1 || 0 }}
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v1
+
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
         python-version: '3.x'
+
     - name: Install dependencies
       run: pip install ford
+
     - name: Build Documentation
       run: ford docs.md
+
     - uses: JamesIves/github-pages-deploy-action@4.1.6
       if: ${{ github.event_name == 'push' && steps.deploy-on-push.outputs.result != 0 }}
       with:
