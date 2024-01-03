@@ -7,7 +7,7 @@ import dftd3
 
 project = "s-dftd3"
 author = "Sebastian Ehlert"
-copyright = f"2019-2022, {author}"
+copyright = f"2019-2024, {author}"
 
 version = dftd3.__version__
 release = version
