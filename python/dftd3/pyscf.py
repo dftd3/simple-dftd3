@@ -38,6 +38,8 @@ from .interface import (
     OptimizedPowerDampingParam,
 )
 
+GradientsBase = getattr(rhf_grad, "GradientsBase", rhf_grad.Gradients)
+
 _damping_param = {
     "d3bj": RationalDampingParam,
     "d3zero": ZeroDampingParam,
@@ -345,7 +347,7 @@ def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     return DFTD3(mf, with_dftd3)
 
 
-def grad(scf_grad: rhf_grad.Gradients, **kwargs):
+def grad(scf_grad: GradientsBase, **kwargs):
     """
     Apply DFT-D3 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
@@ -391,7 +393,7 @@ def grad(scf_grad: rhf_grad.Gradients, **kwargs):
     ----------------------------------------------
     """
 
-    if not isinstance(scf_grad, rhf_grad.Gradients):
+    if not isinstance(scf_grad, GradientsBase):
         raise TypeError("scf_grad must be an instance of Gradients")
 
     # Ensure that the zeroth order results include DFTD3 corrections
