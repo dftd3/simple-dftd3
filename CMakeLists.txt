@@ -34,6 +34,10 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
 endif()
 
 if(NOT TARGET "BLAS::BLAS" AND WITH_BLAS)
+  if(BLA_VENDOR MATCHES "^Intel")
+    # For detection of MKL we need a C compiler
+    enable_language("C")
+  endif()
   find_package("custom-blas" REQUIRED)
 endif()
 
