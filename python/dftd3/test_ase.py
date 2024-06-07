@@ -14,6 +14,8 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Iterator
+
 import numpy as np
 import pytest
 from pytest import approx, raises
@@ -25,6 +27,12 @@ try:
     from ase.calculators.emt import EMT
 except ModuleNotFoundError:
     ase = None
+
+
+def get_calcs(calc) -> Iterator[ase.calculators.calculator.Calculator]:
+    if hasattr(calc, "mixer"):
+        calc = calc.mixer
+    yield from calc.calcs
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")
@@ -54,7 +62,7 @@ def test_ase_scand4():
 
     atoms.calc = DFTD3(method="SCAN", damping="d3bj").add_calculator(EMT())
     assert atoms.get_potential_energy() == approx(3.6452960962398406, abs=thr)
-    energies = [calc.get_potential_energy() for calc in atoms.calc.calcs]
+    energies = [calc.get_potential_energy() for calc in get_calcs(atoms.calc)]
     assert energies == approx([-0.03880921894019244, 3.684105315180033], abs=thr)
 
 
@@ -87,5 +95,5 @@ def test_ase_tpssd4():
 
     atoms.calc = DFTD3(method="TPSS", damping="d3zero").add_calculator(EMT())
     assert atoms.get_potential_energy() == approx(4.963774668847532, abs=thr)
-    energies = [calc.get_potential_energy() for calc in atoms.calc.calcs]
+    energies = [calc.get_potential_energy() for calc in get_calcs(atoms.calc)]
     assert energies == approx([-0.14230914516094673, 5.106083814008478], abs=thr)
