@@ -33,14 +33,6 @@ if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
-if(NOT TARGET "BLAS::BLAS" AND WITH_BLAS)
-  if(BLA_VENDOR MATCHES "^Intel")
-    # For detection of MKL we need a C compiler
-    enable_language("C")
-  endif()
-  find_package("custom-blas" REQUIRED)
-endif()
-
 # Collect subprojects
 if(NOT TARGET "mctc-lib::mctc-lib")
   find_package("mctc-lib" REQUIRED)
@@ -88,18 +80,6 @@ if(WITH_OpenMP)
     "${PROJECT_NAME}-lib"
     PUBLIC
     "OpenMP::OpenMP_Fortran"
-  )
-endif()
-if(WITH_BLAS)
-  target_link_libraries(
-    "${PROJECT_NAME}-lib"
-    PUBLIC
-    "BLAS::BLAS"
-  )
-  target_compile_definitions(
-    "${PROJECT_NAME}-lib"
-    PRIVATE
-    "WITH_BLAS=1"
   )
 endif()
 target_include_directories(

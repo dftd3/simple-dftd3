@@ -75,7 +75,6 @@ To setup a build the following software is required
 
 Optional dependencies are
 
-- a linear algebra backend, like MKL or OpenBLAS
 - `asciidoctor`_, to build the manual pages
 - A C compiler to test the C API and compile the Python extension module
 - Python 3.6 or newer with the `CFFI`_ package installed to build the Python API
@@ -90,22 +89,10 @@ The Fortran and C compiler can be selected with the ``FC`` and ``CC`` environmen
 The installation location is selected using the ``--prefix`` option.
 The required Fortran modules will be fetched automatically from the upstream repositories and checked out in the *subprojects* directory.
 
-.. note::
-
-   By default a redistributed version of the reference BLAS routines are used for matrix vector operations.
-   To use a different BLAS library, the ``-Dblas`` option can be set.
-
-   For example, to use Intel MKL the custom option should be used and the libraries explicitly provided as in
-
-   .. code:: text
-
-      meson setup _build --prefix=$HOME/.local -Dblas=custom -Dblas_libs="mkl_rt"
 
 .. tip::
 
    To produce statically linked binaries set ``--default-library=static`` and add ``-Dfortran_link_args=-static`` as well.
-   To link statically against the MKL library, use the ``-Dblas_libs`` option to specify the required library names (``-Dblas_libs=mkl_intel_lb64,mkl_intel_thread,mkl_core``)
-   If meson cannot find the ``mkl_intel_thread`` library, append ``-qopenmp`` to the ``-Dfortran_link_args`` option.
 
 To compile the project run
 

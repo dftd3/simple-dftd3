@@ -15,7 +15,6 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_disp
-   use dftd3_blas, only : d3_gemv
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_damping, only : damping_param
    use dftd3_data, only : get_covalent_rad
