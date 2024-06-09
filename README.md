@@ -3,7 +3,8 @@
 [![Latest Version](https://img.shields.io/github/v/release/dftd3/simple-dftd3)](https://github.com/dftd3/simple-dftd3/releases/latest)
 [![LGPL-3.0-or-later](https://img.shields.io/github/license/dftd3/simple-dftd3)](COPYING)
 [![CI](https://github.com/dftd3/simple-dftd3/workflows/CI/badge.svg)](https://github.com/dftd3/simple-dftd3/actions)
-[![docs](https://github.com/dftd3/simple-dftd3/workflows/docs/badge.svg)](https://dftd3.github.io/simple-dftd3/)
+[![Documentation](https://readthedocs.org/projects/dftd3/badge/?version=latest)](https://dftd3.readthedocs.io/en/latest/)
+[![docs](https://github.com/dftd3/simple-dftd3/actions/workflows/docs.yml/badge.svg)](https://dftd3.github.io/simple-dftd3/)
 [![codecov](https://codecov.io/gh/dftd3/simple-dftd3/branch/main/graph/badge.svg)](https://codecov.io/gh/dftd3/simple-dftd3)
 
 A simple drop-in replacement for ``dftd3``.
@@ -261,8 +262,6 @@ The user is responsible for creating and deleting the objects to avoid memory le
 
 
 ### Python API
-
-[![LGTM](https://img.shields.io/lgtm/grade/python/g/dftd3/simple-dftd3.svg)](https://lgtm.com/projects/g/dftd3/simple-dftd3/context:python)
 
 The Python API is disabled by default and can be built in-tree or out-of-tree.
 The in-tree build is mainly meant for end users and packages.
