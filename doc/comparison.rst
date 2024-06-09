@@ -48,21 +48,27 @@ A list of projects currently using this DFT-D3 implementation is given here.
 `tblite <https://github.com/tblite/tblite>`_: (since 0.1.0)
   Light-weight tight-binding framework
 `DFTB+ <https://github.com/dftbplus/dftbplus>`_: (since 21.2)
-  General package for performing fast atomistic calculations
+  General package for performing fast atomistic calculations.\ :footcite:`hourahine2020`
 `DFT-FE <https://github.com/dftfeDevelopers/dftfe>`_:
-  Real-space DFT calculations using Finite Elements
+  Real-space DFT calculations using Finite Elements.\ :footcite:`motamarri2020`
 `QCEngine <https://github.com/molssi/qcengine>`_: (since 0.24.0)
-  Quantum chemistry program executor and IO standardizer.
+  Quantum chemistry program executor and IO standardizer.\ :footcite:`smith2021`
 `Siesta <https://gitlab.com/siesta-project/siesta>`_: (since 5.0.0)
-  A first-principles materials simulation code using DFT.
+  A first-principles materials simulation code using DFT.\ :footcite:`garcia2020`
 `Psi4 <https://github.com/psi4/psi4>`_: (since 1.9.0)
-  Open-Source Quantum Chemistry - an electronic structure package in C++ driven by Python.
-`PySCF <https://github.com/pyscf/pyscf>`:
-  Python-based Simulations of Chemistry Framework
+  Open-Source Quantum Chemistry - an electronic structure package in C++ driven by Python.\ :footcite:`smith2020`
+`PySCF <https://github.com/pyscf/pyscf>`_:
+  Python-based Simulations of Chemistry Framework.\ :footcite:`sun2020`
 `Caracal <https://github.com/Trebonius91/Caracal>`_:
-  Ring polymer molecular dynamics and rate constant calculations on black-box potential energy surfaces.
+  Ring polymer molecular dynamics and rate constant calculations on black-box potential energy surfaces.\ :footcite:`steffen2023`
 `Curcuma <https://github.com/conradhuebler/curcuma>`_:
-  Simple small molecular docking and conformation filtering tool.
+  Simple small molecular docking and conformation filtering tool.\ :footcite:`hubler2020`
 
 
 If your project is using *s-dftd3* feel free to add your project to this list.
+
+
+Literature
+----------
+
+.. footbibliography::
