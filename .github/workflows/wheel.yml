@@ -13,16 +13,16 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup Python
-      uses: mamba-org/provision-with-micromamba@main
+      uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: assets/ci/build-env.yaml
     - run: |
         meson setup _build
         meson dist -C _build --no-tests --include-subprojects
         mv _build/meson-dist/*.tar.xz .
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: dftd3-source
         path: ./*.tar.xz
@@ -34,12 +34,12 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Setup Python
-      uses: mamba-org/provision-with-micromamba@main
+      uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: assets/ci/python-env.yaml
-        extra-specs: |
+        create-args: |
           meson-python
           python-build
     - name: Reorganize repository
@@ -52,7 +52,7 @@ jobs:
         git commit -m "Python dist"
     - run: |
         python -m build python/ --sdist --outdir . -n
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: dftd3-python-sdist
         path: ./*.tar.gz
@@ -66,7 +66,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        python: ['3.7', '3.8', '3.9', '3.10', '3.11']
 
     defaults:
       run:
@@ -93,7 +93,7 @@ jobs:
         unzip
         wheel
     - name: Download sdist
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4
       with:
         name: dftd3-python-sdist
     - name: Build wheel
@@ -106,7 +106,7 @@ jobs:
         auditwheel repair -w . dftd3-*/dist/*.whl --plat ${{ env.plat }}
       env:
         plat: manylinux${{ matrix.python == '3.6' && '2010' || '_2_12' }}_x86_64
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: dftd3-python-${{ matrix.python }}
         path: ./*.whl
@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           path: ${{ github.workspace }}  # This will download all files
 
