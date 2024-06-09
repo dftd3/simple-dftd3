@@ -73,7 +73,6 @@ This project is currently tested with GCC 9 on Ubuntu, MacOS and Windows as well
 #### Building with meson
 
 Optional dependencies are
-- BLAS (enabled with `-Dblas=netlib`)
 - asciidoctor to build the manual page
 - FORD to build the developer documentation
 - Python 3.6 or newer with the CFFI package installed to build the Python API
