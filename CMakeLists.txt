@@ -19,7 +19,7 @@ cmake_minimum_required(VERSION 3.14)
 project(
   "s-dftd3"
   LANGUAGES "Fortran"
-  VERSION "0.6.0"
+  VERSION "1.0.0"
   DESCRIPTION "Simple reimplementation of the DFT-D3 dispersion model"
 )
 
@@ -38,6 +38,10 @@ if(WITH_ILP64)
 endif()
 
 if(NOT TARGET "BLAS::BLAS" AND WITH_BLAS)
+  if(BLA_VENDOR MATCHES "^Intel")
+    # For detection of MKL we need a C compiler
+    enable_language("C")
+  endif()
   find_package("custom-blas" REQUIRED)
 endif()
 

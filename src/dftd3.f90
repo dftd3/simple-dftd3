@@ -31,7 +31,8 @@ module dftd3
    implicit none
    private
 
-   public :: get_dispersion, get_pairwise_dispersion, get_coordination_number
+   public :: get_dispersion, get_pairwise_dispersion
+   public :: get_coordination_number
    public :: realspace_cutoff, get_lattice_points
    public :: damping_param, d3_param
    public :: get_rational_damping, get_zero_damping

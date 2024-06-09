@@ -40,7 +40,7 @@ module dftd3_param
    enum, bind(C)
       enumerator :: p_invalid, &
          & p_bp_df, p_blyp_df, p_revpbe_df, p_rpbe_df, p_b97d_df, p_pbe_df, &
-         & p_rpw86pbe_df, p_b3lyp_df, p_tpss_df, p_hf_df, p_tpss0_df, &
+         & p_rpw86pbe_df, p_b3lyp_df, p_b3lyp_g_df, p_tpss_df, p_hf_df, p_tpss0_df, &
          & p_pbe0_df, p_hse06_df, p_revpbe38_df, p_pw6b95_df, p_b2plyp_df, &
          & p_dsdblyp_df, p_dsdblypfc_df, p_bop_df, p_mpwlyp_df, p_olyp_df, &
          & p_pbesol_df, p_bpbe_df, p_opbe_df, p_ssb_df, p_revssb_df, p_otpss_df, &
@@ -60,7 +60,7 @@ module dftd3_param
          & p_mpw2plyp_df, p_m11_df, p_sogga11x_df, p_n12sx_df, p_mn12sx_df, &
          & p_ms2_df, p_ms2h_df, p_mpw1lyp_df, p_mpwkcis1k_df, p_pkzb_df, p_n12_df, &
          & p_m08hx_df, p_m11l_df, p_mn15l_df, p_pwp_df, p_r2scanh_df, p_r2scan0_df, &
-         & p_r2scan50_df
+         & p_r2scan50_df, p_b973c_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df
    end enum
 
 contains
@@ -90,13 +90,15 @@ function get_method_id(method) result(id)
    case("b1p", "b1p86"); id = p_b1p_df
    case("b2gpplyp"); id = p_b2gpplyp_df
    case("b2plyp"); id = p_b2plyp_df
-   case("b3lyp"); id = p_b3lyp_df
+   case("b3lyp", "b3lyp5"); id = p_b3lyp_df
+   case("b3lypg", "b3lyp3"); id = p_b3lyp_g_df
    case("b3lyp/631gd"); id = p_b3lyp_631gd_df
    case("b3p", "b3p86"); id = p_b3p_df
    case("b3pw91"); id = p_b3pw91_df
    case("b971"); id = p_b97_1_df
    case("b972"); id = p_b97_2_df
    case("b97d"); id = p_b97d_df
+   case("b973c"); id = p_b973c_df
    case("b97m"); id = p_b97m_df
    case("b98"); id = p_b98_df
    case("bhlyp"); id = p_bhlyp_df
@@ -107,6 +109,10 @@ function get_method_id(method) result(id)
    case("bpbe"); id = p_bpbe_df
    case("camb3lyp"); id = p_camb3lyp_df
    case("dftb3"); id = p_dftb3_df
+   case("dm21"); id = p_dm21_df
+   case("dm21m"); id = p_dm21m_df
+   case("dm21mc"); id = p_dm21mc_df
+   case("dm21mu"); id = p_dm21mu_df
    case("dsdblyp"); id = p_dsdblyp_df
    case("dsdblypfc"); id = p_dsdblypfc_df
    case("hcth120"); id = p_hcth120_df
@@ -229,11 +235,13 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(a1=0.1820_wp, s8=0.8318_wp, a2=4.0094_wp)
    case(p_b97d_df)
       param = d3_param(a1=0.5545_wp, s8=2.2609_wp, a2=3.2297_wp)
+   case(p_b973c_df)
+      param = d3_param(a1=0.37_wp, s8=1.50_wp, a2=4.10_wp)
    case(p_pbe_df)
       param = d3_param(a1=0.4289_wp, s8=0.7875_wp, a2=4.4407_wp)
    case(p_rpw86pbe_df)
       param = d3_param(a1=0.4613_wp, s8=1.3845_wp, a2=4.5062_wp)
-   case(p_b3lyp_df)
+   case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(a1=0.3981_wp, s8=1.9889_wp, a2=4.4211_wp)
    case(p_tpss_df)
       param = d3_param(a1=0.4535_wp, s8=1.9435_wp, a2=4.4752_wp)
@@ -440,6 +448,8 @@ subroutine get_zero_damping(param, method, error, s9)
       param = d3_param(rs6=1.139_wp, s8=1.683_wp)
    case(p_b97d_df)
       param = d3_param(rs6=0.892_wp, s8=0.909_wp)
+   case(p_b973c_df)
+      param = d3_param(rs6=1.06_wp, s8=1.50_wp)
    case(p_revpbe_df)
       param = d3_param(rs6=0.923_wp, s8=1.010_wp)
    case(p_pbe_df)
@@ -452,7 +462,7 @@ subroutine get_zero_damping(param, method, error, s9)
       param = d3_param(rs6=0.872_wp, s8=0.514_wp)
    case(p_tpss_df)
       param = d3_param(rs6=1.166_wp, s8=1.105_wp)
-   case(p_b3lyp_df)
+   case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(rs6=1.261_wp, s8=1.703_wp)
    case(p_pbe0_df)
       param = d3_param(rs6=1.287_wp, s8=0.928_wp)
@@ -629,7 +639,7 @@ subroutine get_mrational_damping(param, method, error, s9)
       return
    case(p_b2plyp_df)
       param = d3_param(a1=0.486434_wp, s8=0.672820_wp, a2=3.656466_wp, s6=0.640000_wp)
-   case(p_b3lyp_df)
+   case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(a1=0.278672_wp, s8=1.466677_wp, a2=4.606311_wp)
    case(p_b97d_df)
       param = d3_param(a1=0.240184_wp, s8=1.206988_wp, a2=3.864426_wp)
@@ -672,7 +682,7 @@ subroutine get_mzero_damping(param, method, error, s9)
       return
    case(p_b2plyp_df)
       param = d3_param(rs6=1.313134_wp, s8=0.717543_wp, bet=0.016035_wp, s6=0.640000_wp)
-   case(p_b3lyp_df)
+   case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(rs6=1.338153_wp, s8=1.532981_wp, bet=0.013988_wp)
    case(p_b97d_df)
       param = d3_param(rs6=1.151808_wp, s8=1.020078_wp, bet=0.035964_wp)
@@ -723,7 +733,7 @@ subroutine get_optimizedpower_damping(param, method, error, s9)
       param = d3_param(s6=1.0_wp, s8=0.12467_wp, a1=0.575_wp, a2=3.000_wp, bet=10.0_wp)
    case(p_blyp_df)
       param = d3_param(s6=1.0_wp, s8=1.31867_wp, a1=0.425_wp, a2=3.50_wp, bet=2.0_wp)
-   case(p_b3lyp_df)
+   case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(s6=1.0_wp, s8=0.78311_wp, a1=0.300_wp, a2=4.25_wp, bet=4.0_wp)
    case(p_b97d_df)
       param = d3_param(s6=1.0_wp, s8=1.46861_wp, a1=0.600_wp, a2=2.50_wp, bet=0.0_wp)

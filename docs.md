@@ -3,7 +3,9 @@ project: Simple DFT-D3
 summary: A simple reimplementation of the DFT-D3 dispersion model
 project_github: https://github.com/dftd3/simple-dftd3
 project_download: https://github.com/dftd3/simple-dftd3/releases
+project_website: https://dftd3.readthedocs.io
 author: Sebastian Ehlert
+author_description: Quantum chemistry researcher developing semi-empirical quantum chemistry in Fortran and Python.
 github: https://github.com/awvwgk
 src_dir: ./src
          ./app

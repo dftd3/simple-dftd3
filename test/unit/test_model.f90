@@ -49,6 +49,7 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-mb01", test_gw_mb01), &
       & new_unittest("gw-mb02", test_gw_mb02), &
       & new_unittest("gw-mb03", test_gw_mb03), &
+      & new_unittest("gw-amf3", test_gw_amf3), &
       & new_unittest("dgw-mb04", test_dgw_mb04), &
       & new_unittest("dgw-mb05", test_dgw_mb05) &
       & ]
@@ -267,6 +268,39 @@ subroutine test_gw_mb03(error)
 
 end subroutine test_gw_mb03
 
+subroutine test_gw_amf3(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   real(wp), parameter :: ref(6, 4) = reshape([&
+      & 3.01777419522501E-16_wp, 3.48560287705282E-08_wp, 6.05573875449400E-03_wp, &
+      & 9.93942098041223E-01_wp, 2.12834822159420E-06_wp, 3.22312554200316E-14_wp, & 
+      & 1.83164825589304E-02_wp, 9.81683517441070E-01_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp, 0.0000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 1.83168129150391E-02_wp, 9.81683187084961E-01_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, &
+      & 1.83165559699980E-02_wp, 9.81683444030002E-01_wp, 0.00000000000000E+00_wp, &
+      & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp], shape(ref))
+
+   !> Molecular structure data 
+   mol%nat = 4
+   mol%nid = 2
+   mol%id = [1, 2, 2, 2]
+   mol%num = [95, 9]
+   mol%xyz = reshape([ &
+      & -1.13163973200000_wp, -2.17446990100000_wp, +1.10012477100000_wp, &
+      & -4.66377948900000_wp, -3.12947883400000_wp, -0.36987606800000_wp, &
+      & -0.19032564300000_wp, +1.36339950600000_wp, -0.36521789300000_wp, &
+      & +1.46283310800000_wp, -4.75734549200000_wp, -0.36503081000000_wp], &
+      & [3, 4])
+   mol%periodic = [.false.]
+
+   call test_gw_gen(error, mol, ref)
+
+end subroutine test_gw_amf3
+
 
 subroutine test_dgw_mb04(error)
 
@@ -304,6 +338,7 @@ subroutine test_r4r2_val(error)
    call check(error, get_r4r2_val("Og"), get_r4r2_val(118))
    if (allocated(error)) return
    call check(error, get_r4r2_val("X"), get_r4r2_val(-1))
+
 end subroutine test_r4r2_val
 
 
@@ -314,9 +349,12 @@ subroutine test_cov_rad(error)
 
    call check(error, get_covalent_rad("C"), get_covalent_rad(6))
    if (allocated(error)) return
+   call check(error, get_covalent_rad("Am"), get_covalent_rad(95))
+   if (allocated(error)) return
    call check(error, get_covalent_rad("Og"), get_covalent_rad(118))
    if (allocated(error)) return
    call check(error, get_covalent_rad("X"), get_covalent_rad(-1))
+
 end subroutine test_cov_rad
 
 
@@ -334,6 +372,7 @@ subroutine test_vdw_rad(error)
    call check(error, get_vdw_rad("Og", "Cn"), get_vdw_rad(118, 112))
    if (allocated(error)) return
    call check(error, get_vdw_rad("X", "X"), get_vdw_rad(-1, -1))
+
 end subroutine test_vdw_rad
 
 

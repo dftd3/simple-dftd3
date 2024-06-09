@@ -9,23 +9,25 @@ It is however not the only project providing an implementation of DFT-D3, many f
 
 A non-comprehensive list of DFT-D3 implementations is provided here:
 
-============================== ========== ==================== ==========================
- repository                     license    APIs                 notes
-============================== ========== ==================== ==========================
- `dftd3`_                       GPL-1.0    Fortran              reference implementation
- `dftd3/simple-dftd3`_          LGPL-3.0   Fortran, C, Python
- `dftbplus/dftd3-lib`_          GPL-1.0    Fortran              patched fork
- `ehermes/ased3`_               LGPL-3.0   Python               f2py, ASE
- `pfnet-research/torch-dftd`_   MIT        Python               torch
- `cuanto/libdftd3`_             GPL-3.0    Fortran, Python      ctypes, pyscf
- `cresset-group/dftd3`_         GPL-1.0    Fortran              patched fork
- `loriab/dftd3`_                GPL-1.0    Fortran              patched fork, Windows
- `f3rmion/dftd3`_               GPL-1.0    Fortran              patched fork
- `bobbypaton/pydftd3`_          MIT        Python               Gaussian
-============================== ========== ==================== ==========================
+============================== =========== ==================== ==========================
+ repository                     license     APIs                 notes
+============================== =========== ==================== ==========================
+ `dftd3`_                       GPL-1.0     Fortran              reference implementation
+ `dftd3/simple-dftd3`_          LGPL-3.0    Fortran, C, Python
+ `dftd3/tad-dftd3`_             Apache-2.0  Python               torch
+ `dftbplus/dftd3-lib`_          GPL-1.0     Fortran              patched fork (archived)
+ `ehermes/ased3`_               LGPL-3.0    Python               f2py, ASE
+ `pfnet-research/torch-dftd`_   MIT         Python               torch
+ `cuanto/libdftd3`_             GPL-3.0     Fortran, Python      ctypes, pyscf
+ `cresset-group/dftd3`_         GPL-1.0     Fortran              patched fork
+ `loriab/dftd3`_                GPL-1.0     Fortran              patched fork, Windows
+ `f3rmion/dftd3`_               GPL-1.0     Fortran              patched fork
+ `bobbypaton/pydftd3`_          MIT         Python               Gaussian
+============================== =========== ==================== ==========================
 
 .. _dftd3: http://mctc.uni-bonn.de/software/dft-d3
 .. _dftd3/simple-dftd3: https://github.com/dftd3/simple-dftd3
+.. _dftd3/tad-dftd3: https://github.com/dftd3/tad-dftd3
 .. _dftbplus/dftd3-lib: https://github.com/dftbplus/dftd3-lib
 .. _ehermes/ased3: https://github.com/ehermes/ased3
 .. _pfnet-research/torch-dftd: https://github.com/pfnet-research/torch-dftd
@@ -49,12 +51,18 @@ A list of projects currently using this DFT-D3 implementation is given here.
   General package for performing fast atomistic calculations
 `DFT-FE <https://github.com/dftfeDevelopers/dftfe>`_:
   Real-space DFT calculations using Finite Elements
-`QCEngine <https://github.com/molssi/qcengine>`_: (WIP)
+`QCEngine <https://github.com/molssi/qcengine>`_: (since 0.24.0)
   Quantum chemistry program executor and IO standardizer.
-  For current status see `qcegine#343 <https://github.com/MolSSI/QCEngine/pull/343>`_
-`Siesta <https://gitlab.com/siesta-project/siesta>`_: (WIP)
+`Siesta <https://gitlab.com/siesta-project/siesta>`_: (since 5.0.0)
   A first-principles materials simulation code using DFT.
-  For current status see `siesta!70 <https://gitlab.com/siesta-project/siesta/-/merge_requests/70>`_
+`Psi4 <https://github.com/psi4/psi4>`_: (since 1.9.0)
+  Open-Source Quantum Chemistry - an electronic structure package in C++ driven by Python.
+`PySCF <https://github.com/pyscf/pyscf>`:
+  Python-based Simulations of Chemistry Framework
+`Caracal <https://github.com/Trebonius91/Caracal>`_:
+  Ring polymer molecular dynamics and rate constant calculations on black-box potential energy surfaces.
+`Curcuma <https://github.com/conradhuebler/curcuma>`_:
+  Simple small molecular docking and conformation filtering tool.
 
 
 If your project is using *s-dftd3* feel free to add your project to this list.

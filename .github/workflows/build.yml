@@ -18,17 +18,17 @@ jobs:
         version: [10]
 
         include:
-        - os: ubuntu-latest
+        - os: ubuntu-20.04
           build: cmake
           build-type: debug
           compiler: gnu
           version: 8
 
-        - os: macos-latest
+        - os: macos-12
           build: cmake
           build-type: debug
           compiler: gnu
-          version: 9
+          version: 10
 
         - os: ubuntu-latest
           build: meson
@@ -36,7 +36,7 @@ jobs:
           compiler: gnu
           version: 9
 
-        - os: macos-latest
+        - os: macos-12
           build: meson
           build-type: debug
           compiler: gnu
@@ -48,7 +48,7 @@ jobs:
           compiler: gnu
           version: 11
 
-        - os: ubuntu-latest
+        - os: ubuntu-20.04
           build: meson
           build-type: debug
           compiler: intel
@@ -176,7 +176,7 @@ jobs:
          --suite s-dftd3
          -t 2
       env:
-        OMP_NUM_THREADS: 2,1,1
+        OMP_NUM_THREADS: 1,2,1
 
     - name: Run benchmarks
       if: ${{ matrix.build == 'meson' }}
@@ -196,7 +196,7 @@ jobs:
          ctest --output-on-failure --parallel 2
       working-directory: ${{ env.BUILD_DIR }}
       env:
-        OMP_NUM_THREADS: 2,1,1
+        OMP_NUM_THREADS: 1,2,1
 
     - name: Create coverage report
       if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
@@ -242,7 +242,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         gcc_v: [10]
-        python_v: ['3.7', '3.8', '3.9', '3.10']
+        python_v: ['3.8', '3.9', '3.10', '3.11', '3.12']
 
     env:
       FC: gfortran

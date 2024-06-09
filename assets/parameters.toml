@@ -2,11 +2,11 @@
 d3 = ["bj", "zero"]
 
 [default.parameter]
-d3.bj = {s6=1.0, s9=0.0, alp=14.0, damping="rational"}
-d3.zero = {s6=1.0, s9=0.0, rs8=1.0, alp=14.0, damping="zero"}
-d3.bjm = {s6=1.0, s9=0.0, alp=14.0, damping="rational"}
-d3.zerom = {s6=1.0, s9=0.0, rs8=1.0, alp=14.0, damping="mzero"}
-d3.op = {s9=0.0, alp=14.0, damping="optimizedpower"}
+d3.bj = {s6=1.0, s9=1.0, alp=14.0, damping="rational"}
+d3.zero = {s6=1.0, s9=1.0, rs8=1.0, alp=14.0, damping="zero"}
+d3.bjm = {s6=1.0, s9=1.0, alp=14.0, damping="rational"}
+d3.zerom = {s6=1.0, s9=1.0, rs8=1.0, alp=14.0, damping="mzero"}
+d3.op = {s9=1.0, alp=14.0, damping="optimizedpower"}
 
 [parameter.bp]
 d3.bj = {a1=0.3946, s8=3.2822, a2=4.8516}
@@ -36,6 +36,10 @@ d3.zero = {rs6=0.892, s8=0.909, doi="10.1063/1.3382344"}
 d3.bjm = {a1=0.240184, s8=1.206988, a2=3.864426, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=1.151808, s8=1.020078, bet=0.035964, doi="10.1021/acs.jpclett.6b00780"}
 d3.op = {s6=1.0, s8=1.46861, a1=0.600, a2=2.50, bet=0.0, doi="10.1021/acs.jctc.7b00176"}
+
+[parameter.b973c]
+d3.bj = {a1=0.37, s8=1.50, a2=4.10, doi="10.1063/1.5012601"}
+d3.zero = {rs6=1.06, s8=1.50, doi="10.1063/1.5012601"}
 
 [parameter.pbe]
 d3.bj = {a1=0.4289, s8=0.7875, a2=4.4407}
