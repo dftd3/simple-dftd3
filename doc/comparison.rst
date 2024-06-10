@@ -62,7 +62,7 @@ A list of projects currently using this DFT-D3 implementation is given here.
 `Caracal <https://github.com/Trebonius91/Caracal>`_:
   Ring polymer molecular dynamics and rate constant calculations on black-box potential energy surfaces.\ :footcite:`steffen2023`
 `Curcuma <https://github.com/conradhuebler/curcuma>`_:
-  Simple small molecular docking and conformation filtering tool.\ :footcite:`hubler2020`
+  Simple small molecular docking and conformation filtering tool.
 
 
 If your project is using *s-dftd3* feel free to add your project to this list.
