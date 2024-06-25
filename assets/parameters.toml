@@ -100,6 +100,42 @@ d3.zero = {rs6=1.569, s8=0.705, s6=0.5}
 [parameter.dsdblypfc]
 d3.bj = {a1=0.0009, s8=0.2112, a2=5.9807, s6=0.50}
 
+[parameter.dsdpbep86]
+d3.bj = {s6=0.48, a1=0.0, s8=0.0, a2=5.6, doi="10.1002/jcc.23391"}
+
+[parameter.dsdpbeb95]
+d3.bj = {s6=0.61, a1=0.0, s8=0.0, a2=6.2, doi="10.1002/jcc.23391"}
+
+[parameter.dsdpbe]
+d3.bj = {s6=0.78, a1=0.0, s8=0.0, a2=6.1, doi="10.1002/jcc.23391"}
+
+[parameter.dodscan66]
+d3.bj = {s6=0.3152, a1=0.0, s8=0.0, a2=5.75, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdsdblyp]
+d3.bj = {s6=0.5451, a1=0.0, s8=0.0, a2=5.2, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdsdpbep86]
+d3.bj = {s6=0.4377, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdsdpbeb95]
+d3.bj = {s6=0.3686, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdsdpbe]
+d3.bj = {s6=0.5746, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdodblyp]
+d3.bj = {s6=0.6145, a1=0.0, s8=0.0, a2=5.2, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdodpbep86]
+d3.bj = {s6=0.4770, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdodpbeb95]
+d3.bj = {s6=0.4107, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
+
+[parameter.revdodpbe]
+d3.bj = {s6=0.6067, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
+
 [parameter.bop]
 d3.bj = {a1=0.4870, s8=3.2950, a2=3.5043}
 
