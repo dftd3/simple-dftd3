@@ -20,7 +20,7 @@ from pytest import approx, raises
 
 try:
     import pyscf
-    from pyscf import lib, gto, scf, pbc
+    from pyscf import gto, scf, pbc
     import dftd3.pyscf as disp
 except ModuleNotFoundError:
     pyscf = None
