@@ -222,9 +222,9 @@ class DFTD3Dispersion(lib.StreamObject):
 
         lattice = None
         periodic = None
-        if callable(getattr(mol, 'lattice_vectors')):
+        if hasattr(mol, 'lattice_vectors'):
             lattice = mol.lattice_vectors()
-            periodic = np.array([True,True,True], dtype=bool)
+            periodic = np.array([True, True, True], dtype=bool)
 
         disp = DispersionModel(
             np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
