@@ -14,7 +14,7 @@ authors:
 affiliations:
   - name: Microsoft Research, AI for Science, The Netherlands
     index: 1
-date: 7 July 2024
+date: 27 July 2024
 bibliography: _static/references.bib
 ---
 
@@ -36,13 +36,14 @@ A command line interface is also available for standalone usage.
 
 # Usage
 
-The ``simple-dftd3`` library has been successfully adopted by several electronic structure software packages, such as DFTB+ (since version 21.2) [@hourahine2020], Psi4 (since version 1.9.0) [@smith2020], and Siesta (since version 5.0.0) [@garcia2020].
+The ``simple-dftd3`` library has been successfully adopted by several electronic structure software packages, such as DFTB+ (since version 21.2) [@hourahine2020], Psi4 (since version 1.9.0) [@smith2020], and Siesta (since version 5.0.0) [@garcia2020], including recently published packages like Accelerated DFT [@ju2024] and gpu4pyscf [@wu2024].
 Additionally, the Python API provides interfaces for usage in ASE [@larsen2017], PySCF [@sun2020], and QCEngine [@smith2021].
 Given the accessibility of the code base, new method improvements, like the recent extension of the D3 method to actinide elements [@wittmann2024], are easily integrated.
+The package is already cited as tool for example in benchmark studies [@gorges2022] or for supporting experimental studies [@yu2024].
 With its simplicity and availability, the library is a valuable tool for the community to include dispersion corrections in their electronic structure calculations.
 
 # Acknowledgements
 
-S.E. acknowledges contributions from Robert Cohn, Marvin Friede, Kjell Jorner, Eisuke Kawashima, Qiming Sun, Thijs Vogels, Shirong Wang, and Lukas Wittmann to the project.
+S.E. acknowledges contributions from Robert Cohn, Marvin Friede, Alex Izvorski, Kjell Jorner, Eisuke Kawashima, Qiming Sun, Thijs Vogels, Shirong Wang, and Lukas Wittmann to the project.
 
 # References
