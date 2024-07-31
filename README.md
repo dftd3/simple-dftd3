@@ -1,5 +1,6 @@
 # The D3 dispersion model
 
+[![status](https://joss.theoj.org/papers/1a0f4b4571b8a362d596bd5759572d7f/status.svg)](https://joss.theoj.org/papers/1a0f4b4571b8a362d596bd5759572d7f)
 [![Latest Version](https://img.shields.io/github/v/release/dftd3/simple-dftd3)](https://github.com/dftd3/simple-dftd3/releases/latest)
 [![LGPL-3.0-or-later](https://img.shields.io/github/license/dftd3/simple-dftd3)](COPYING)
 [![JOSS](https://joss.theoj.org/papers/1a0f4b4571b8a362d596bd5759572d7f/status.svg)](https://joss.theoj.org/papers/1a0f4b4571b8a362d596bd5759572d7f)
