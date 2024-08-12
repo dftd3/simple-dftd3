@@ -289,11 +289,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      if ( abs(param%s9) > 0 ) then
+      if (abs(param%s9) > 0) then
          write(unit, '(a)') "D3(0)-ATM"
       else
          write(unit, '(a)') "D3(0)"
-      endif
+      end if
       write(unit, '(20("-"))')
       write(unit, '(a4, t10, f10.4)') &
          & "s6", param%s6, &
