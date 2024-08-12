@@ -309,11 +309,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      if ( abs(param%s9) > 0 ) then
+      if (abs(param%s9) > 0) then
          write(unit, '(a)') "D3(0M)-ATM"
       else
          write(unit, '(a)') "D3(0M)"
-      endif
+      end if
       write(unit, '(20("-"))')
       write(unit, '(a5, t10, f10.4)') &
          & "s6", param%s6, &
@@ -330,11 +330,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      if ( abs(param%s9) > 0 ) then
+      if (abs(param%s9) > 0) then
          write(unit, '(a)') "D3(op)-ATM"
       else
          write(unit, '(a)') "D3(op)"
-      endif
+      end if
       write(unit, '(20("-"))')
       write(unit, '(a5, t10, f10.4)') &
          & "s6", param%s6, &
@@ -351,11 +351,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      if ( abs(param%s9) > 0 ) then
+      if (abs(param%s9) > 0) then
          write(unit, '(a)') "D3(BJ)-ATM"
       else
          write(unit, '(a)') "D3(BJ)"
-      endif
+      end if
       write(unit, '(21("-"))')
       write(unit, '(a4, t10, f10.4)') &
          & "s6", param%s6, &
