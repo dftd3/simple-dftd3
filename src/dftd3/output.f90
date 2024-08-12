@@ -289,8 +289,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      write(unit, '(a)') &
-         & trim(merge("D3(0)-ATM", "D3(0)    ", abs(param%s9) > 0))
+      if ( abs(param%s9) > 0 ) then
+         write(unit, '(a)') "D3(0)-ATM"
+      else
+         write(unit, '(a)') "D3(0)"
+      endif
       write(unit, '(20("-"))')
       write(unit, '(a4, t10, f10.4)') &
          & "s6", param%s6, &
@@ -306,8 +309,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      write(unit, '(a)') &
-         & trim(merge("D3(0M)-ATM", "D3(0M)    ", abs(param%s9) > 0))
+      if ( abs(param%s9) > 0 ) then
+         write(unit, '(a)') "D3(0M)-ATM"
+      else
+         write(unit, '(a)') "D3(0M)"
+      endif
       write(unit, '(20("-"))')
       write(unit, '(a5, t10, f10.4)') &
          & "s6", param%s6, &
@@ -324,8 +330,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      write(unit, '(a)') &
-         & trim(merge("D3(op)-ATM", "D3(op)    ", abs(param%s9) > 0))
+      if ( abs(param%s9) > 0 ) then
+         write(unit, '(a)') "D3(op)-ATM"
+      else
+         write(unit, '(a)') "D3(op)"
+      endif
       write(unit, '(20("-"))')
       write(unit, '(a5, t10, f10.4)') &
          & "s6", param%s6, &
@@ -342,8 +351,11 @@ subroutine ascii_damping_param(unit, param, method)
       if (present(method)) then
          write(unit, '(a, "-")', advance="no") method
       end if
-      write(unit, '(a)') &
-         & trim(merge("D3(BJ)-ATM", "D3(BJ)    ", abs(param%s9) > 0))
+      if ( abs(param%s9) > 0 ) then
+         write(unit, '(a)') "D3(BJ)-ATM"
+      else
+         write(unit, '(a)') "D3(BJ)"
+      endif
       write(unit, '(21("-"))')
       write(unit, '(a4, t10, f10.4)') &
          & "s6", param%s6, &
