@@ -148,7 +148,7 @@ module dftd3_reference
          & +0.0000_wp, +0.9710_wp, +1.9564_wp, +2.9515_wp, +3.9353_wp, -1.0000_wp, -1.0000_wp, &   ! Md
          & +0.0000_wp, +0.9722_wp, +1.9605_wp, +2.9452_wp, +3.9296_wp, +4.2582_wp, +4.5511_wp, &   ! No
          & +0.0000_wp, +0.9569_wp, +1.9215_wp, +2.8958_wp, +3.7644_wp, +4.6808_wp, +5.5939_wp],&   ! Lr
-      & (/max_ref,max_elem/))
+         & [max_ref, max_elem])
 
 
    real(wp), allocatable :: reference_c6(:, :, :)
