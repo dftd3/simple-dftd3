@@ -199,7 +199,7 @@ class DampingParam:
 
 
 class RationalDampingParam(DampingParam):
-    """
+    r"""
     Rational damping function for DFT-D3.
     The original scheme was proposed by Becke and Johnson\ :footcite:`becke2005,johnson2005,johnson2006`
     and implemented in a slightly adjusted form using only the C8/C6 ratio in the critical
@@ -238,7 +238,7 @@ class RationalDampingParam(DampingParam):
 
 
 class ZeroDampingParam(DampingParam):
-    """
+    r"""
     Original DFT-D3 damping function,\ :footcite:`grimme2010` based on a variant proposed by
     Chai and Head-Gordon.\ :footcite:`chai2008`
     Since it is damping the dispersion energy to zero at short distances it is usually
@@ -309,7 +309,7 @@ class ModifiedRationalDampingParam(DampingParam):
 
 
 class ModifiedZeroDampingParam(DampingParam):
-    """
+    r"""
     Modified zero damping function for DFT-D3.\ :footcite:`smith2016`
     This scheme adds an additional offset parameter to the zero damping scheme
     of the original DFT-D3.
@@ -348,7 +348,7 @@ class ModifiedZeroDampingParam(DampingParam):
 
 
 class OptimizedPowerDampingParam(DampingParam):
-    """
+    r"""
     Optimized power version of the rational damping parameters.\ :footcite:`witte2017`
     The functional form of the damping function is modified by adding an additional
     zero-damping like power function.
