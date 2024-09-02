@@ -116,6 +116,7 @@ def test_optimized_power_damping_noargs():
 def test_structure():
     """check if the molecular structure data is working as expected."""
 
+    rng = np.random.default_rng()
     numbers = np.array(
         [6, 7, 6, 7, 6, 6, 6, 8, 7, 6, 8, 7, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     )
@@ -158,18 +159,18 @@ def test_structure():
 
     # Also check for sane coordinate input
     with raises(ValueError, match="Expected tripels"):
-        Structure(numbers, np.random.rand(7))
+        Structure(numbers, rng.random(7))
 
     # Construct real molecule
     mol = Structure(numbers, positions)
 
     # Try to update a structure with missmatched coordinates
     with raises(ValueError, match="Dimension missmatch for positions"):
-        mol.update(np.random.rand(7))
+        mol.update(rng.random(7))
 
     # Try to add a missmatched lattice
     with raises(ValueError, match="Invalid lattice provided"):
-        mol.update(positions, np.random.rand(7))
+        mol.update(positions, rng.random(7))
 
     # Try to update a structure with nuclear fusion coordinates
     with raises(RuntimeError, match="Too close interatomic distances found"):
