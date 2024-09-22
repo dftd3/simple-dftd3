@@ -389,7 +389,7 @@ subroutine get_run_arguments(config, list, start, error)
       return
    end if
 
-   if (config%grad.and. .not.config%json) then
+   if (config%grad.and. .not.config%json .and. .not.allocated(config%grad_output)) then
       config%grad_output = "dftd3.txt"
    end if
 
