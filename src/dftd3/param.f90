@@ -64,7 +64,7 @@ module dftd3_param
          & p_dsdpbep86_df, p_dsdpbeb95_df, p_dsdpbe_df, p_dodscan66_df, &
          & p_revdsdblyp_df, p_revdsdpbep86_df, p_revdsdpbeb95_df, p_revdsdpbe_df, &
          & p_revdodblyp_df, p_revdodpbep86_df, p_revdodpbeb95_df, p_revdodpbe_df, &
-         & p_pw91_df
+         & p_pw91_df, p_drpa75_df
    end enum
 
 contains
@@ -117,6 +117,7 @@ function get_method_id(method) result(id)
    case("dm21m"); id = p_dm21m_df
    case("dm21mc"); id = p_dm21mc_df
    case("dm21mu"); id = p_dm21mu_df
+   case("drpa75"); id = p_drpa75_df
    case("dsdblyp"); id = p_dsdblyp_df
    case("dsdblypfc"); id = p_dsdblypfc_df
    case("dsdpbe"); id = p_dsdpbe_df
@@ -456,6 +457,8 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(s6=0.4107_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
    case(p_revdodpbe_df)
       param = d3_param(s6=0.6067_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+   case(p_drpa75_df)
+      param = d3_param(s6=0.3754_wp, a1=0.0_wp, s8=0.0_wp, a2 = 4.5048_wp)
    end select
 
    if (present(s9)) then
