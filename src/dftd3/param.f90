@@ -62,8 +62,10 @@ module dftd3_param
          & p_m08hx_df, p_m11l_df, p_mn15l_df, p_pwp_df, p_r2scanh_df, p_r2scan0_df, &
          & p_r2scan50_df, p_b973c_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df, &
          & p_dsdpbep86_df, p_dsdpbeb95_df, p_dsdpbe_df, p_dodscan66_df, &
-         & p_revdsdblyp_df, p_revdsdpbep86_df, p_revdsdpbeb95_df, p_revdsdpbe_df, & 
-         & p_revdodblyp_df, p_revdodpbep86_df, p_revdodpbeb95_df, p_revdodpbe_df
+         & p_revdsdblyp_df, p_revdsdpbep86_df, p_revdsdpbeb95_df, p_revdsdpbe_df, &
+         & p_revdodblyp_df, p_revdodpbep86_df, p_revdodpbeb95_df, p_revdodpbe_df, &
+         & p_pw91_df, p_drpa75_df, p_scs_drpa75_df, p_optscs_drpa75_df, &
+         & p_dsd_pbe_drpa75_df, p_dsd_pbep86_drpa75_df
    end enum
 
 contains
@@ -116,10 +118,13 @@ function get_method_id(method) result(id)
    case("dm21m"); id = p_dm21m_df
    case("dm21mc"); id = p_dm21mc_df
    case("dm21mu"); id = p_dm21mu_df
+   case("drpa75"); id = p_drpa75_df
    case("dsdblyp"); id = p_dsdblyp_df
    case("dsdblypfc"); id = p_dsdblypfc_df
    case("dsdpbe"); id = p_dsdpbe_df
+   case("dsdpbedrpa75"); id = p_dsd_pbe_drpa75_df
    case("dsdpbep86"); id = p_dsdpbep86_df
+   case("dsdpbep86drpa75"); id = p_dsd_pbep86_drpa75_df
    case("dsdpbeb95"); id = p_dsdpbeb95_df
    case("dodscan66"); id = p_dodscan66_df
    case("hcth120"); id = p_hcth120_df
@@ -164,6 +169,7 @@ function get_method_id(method) result(id)
    case("o3lyp"); id = p_o3lyp_df
    case("olyp"); id = p_olyp_df
    case("opbe"); id = p_opbe_df
+   case("optscsdrpa75"); id = p_optscs_drpa75_df
    case("otpss"); id = p_otpss_df
    case("pbe"); id = p_pbe_df
    case("pbe0"); id = p_pbe0_df
@@ -178,6 +184,7 @@ function get_method_id(method) result(id)
    case("pwp", "pw91p86"); id = p_pwp_df
    case("pw1pw"); id = p_pw1pw_df
    case("pw6b95"); id = p_pw6b95_df
+   case("pw91"); id = p_pw91_df
    case("pwb6k"); id = p_pwb6k_df
    case("pwgga"); id = p_pwgga_df
    case("pwpb95"); id = p_pwpb95_df
@@ -204,6 +211,7 @@ function get_method_id(method) result(id)
    case("rpw86pbe"); id = p_rpw86pbe_df
    case("rscan"); id = p_rscan_df
    case("scan"); id = p_scan_df
+   case("scsdrpa75"); id = p_scs_drpa75_df
    case("slaterdiracexchange"); id = p_slaterdiracexchange_df
    case("sogga11x"); id = p_sogga11x_df
    case("ssb"); id = p_ssb_df
@@ -322,6 +330,8 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(a1=0.0000_wp, s8=0.2804_wp, a2=6.5745_wp, s6=0.750_wp)
    case(p_pwpb95_df)
       param = d3_param(a1=0.0000_wp, s8=0.2904_wp, a2=7.3141_wp, s6=0.820_wp)
+   case(p_pw91_df)
+      param = d3_param(a1=0.6319_wp, s8=1.9598_wp, a2=4.5718_wp)
    case(p_hf_mixed_df)
       param = d3_param(a1=0.5607_wp, s8=3.9027_wp, a2=4.5622_wp)
    case(p_hf_sv_df)
@@ -452,6 +462,16 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(s6=0.4107_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
    case(p_revdodpbe_df)
       param = d3_param(s6=0.6067_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+   case(p_drpa75_df)
+      param = d3_param(s6=0.3754_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5048_wp)
+   case(p_scs_drpa75_df)
+      param = d3_param(s6=0.2528_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+   case(p_optscs_drpa75_df)
+      param = d3_param(s6=0.2546_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+   case(p_dsd_pbe_drpa75_df)
+      param = d3_param(s6=0.3223_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+   case(p_dsd_pbep86_drpa75_df)
+      param = d3_param(s6=0.3012_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
    end select
 
    if (present(s9)) then
