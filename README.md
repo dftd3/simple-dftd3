@@ -7,49 +7,43 @@
 [![docs](https://github.com/dftd3/simple-dftd3/actions/workflows/docs.yml/badge.svg)](https://dftd3.github.io/simple-dftd3/)
 [![codecov](https://codecov.io/gh/dftd3/simple-dftd3/branch/main/graph/badge.svg)](https://codecov.io/gh/dftd3/simple-dftd3)
 
-A simple drop-in replacement for ``dftd3``.
-
-This program provides a small and easy to use implementation of the DFT-D3
-dispersion correction
+This package provides a library first implementation of the DFT-D3 dispersion correction
 (see [*JCP* **132**, 154104 (2010)](https://dx.doi.org/10.1063/1.3382344)
 and [*JCC* **32**, 1456 (2011)](https://dx.doi.org/10.1002/jcc.21759) for details).
-
-It is mostly based on the [`dftd4`](https://github.com/dftd4/dftd4) program and
-borrows one or two ideas from the implementation in [`ased3`](https://github.com/ehermes/ased3).
+Usable via the command line interface of the [`s-dftd3` executable](man/s-dftd3.1.adoc),
+in Fortran via the [`dftd3` module](https://dftd3.readthedocs.io/en/latest/api/fortran.html),
+with the C interface by including the [`dftd3.h` header](https://dftd3.readthedocs.io/en/latest/api/c.html),
+or in Python by using the [`dftd3` module](https://dftd3.readthedocs.io/en/latest/api/python.html).
 
 
 ## Installation
 
+A full guide for installing this package or building from source can be found in the
+[installation guide](https://dftd3.readthedocs.io/en/latest/installation.html).
 
 ### Conda package
 
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/simple-dftd3.svg?label=simple-dftd3)](https://anaconda.org/conda-forge/simple-dftd3)
 [![Conda Version](https://img.shields.io/conda/vn/conda-forge/dftd3-python.svg?label=dftd3-python)](https://anaconda.org/conda-forge/dftd3-python)
 
-This project is packaged for the *conda* package manager and available on the *conda-forge* channel.
-To install the *conda* package manager we recommend the [miniforge](https://github.com/conda-forge/miniforge/releases) installer.
-If the *conda-forge* channel is not yet enabled, add it to your channels with
+The preferred way of installing this package is from the *conda-forge* distribution via the *mamba* package manager.
+To install the *mamba* package manager the [miniforge](https://github.com/conda-forge/miniforge/releases) installer can be used.
+If you already have the *mamba* package manager installed add the *conda-forge* channel if it is not yet enabled:
 
 ```
-conda config --add channels conda-forge
+mamba config --add channels conda-forge
 ```
 
 Once the *conda-forge* channel has been enabled, this project can be installed with:
 
 ```
-conda install simple-dftd3
+mamba install simple-dftd3
 ```
 
 If you want to enable the Python API as well install
 
 ```
-conda install dftd3-python
-```
-
-It is possible to list all of the versions available on your platform with:
-
-```
-conda search simple-dftd3 --channel conda-forge
+mamba install dftd3-python
 ```
 
 Now you are ready to use ``s-dftd3``.
@@ -57,33 +51,44 @@ Now you are ready to use ``s-dftd3``.
 
 ### Building from Source
 
-To build this project from the source code in this repository you need to have
-a Fortran compiler supporting Fortran 2008 and one of the supported build systems:
-- [meson](https://mesonbuild.com) version 0.55 or newer, with
+To build this project from the source code in this repository you need a Fortran compiler supporting
+at least the Fortran 2008 standard.
+If a C compiler is available the C interface tests will be build with this compiler.
+For building the Python bindings a C compiler is required to build the Python extension module.
+
+For building from source the
+
+- [meson](https://mesonbuild.com) version 0.58 or newer, with
   a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.7 or newer
-- [cmake](https://cmake.org) version 3.14 or newer, with
-  a build-system backend, *i.e.* [ninja](https://ninja-build.org) version 1.10 or newer
-- [fpm](https://github.com/fortran-lang/fpm) version 0.3.0 or newer
+- [asciidoctor](https://asciidoctor.org/) to build the manual page (optional)
+- [FORD](https://forddocs.readthedocs.io/en/stable/) to build the developer documentation (optional)
+- Python 3.7 or newer with the [CFFI](https://cffi.readthedocs.io/en/latest/), [NumPy](https://numpy.org/) and [setuptools](https://setuptools.pypa.io/en/latest/index.html) package installed to build the Python API
 
-Meson is the primary build system and provides feature-complete functionality of this project.
-CMake and fpm support is available but the functionality of the project is limited.
-This project is currently tested with GCC 9 on Ubuntu, MacOS and Windows as well as Intel Fortran on Ubuntu.
+This project builds on many existing Fortran packages, the following ones are used as dependencies
 
+- [mctc-lib](https://github.com/grimme-lab/mctc-lib):
+  For reading geometry files in a wide range of formats
+  (like xyz, PBD, mol, SDF, Turbomole, DFTB+, Vasp, FHI-aims, Gaussian, QChem, QCSchema JSON, Chemical JSON)
+- [toml-f](https://toml-f.readthedocs.org)
+  For reading the parameter file with all damping parameters
+  (see [`assets/`](assets/parameters.toml))
+- [mstore](https://github.com/grimme-lab/mstore)
+  For molecule fixtures to use when defining unit tests
+  (testing only)
+- [test-drive](https://github.com/fortran-lang/test-drive)
+  Unit testing framework
+  (testing only)
 
-#### Building with meson
+If these Fortran packages are not available, the build system will automatically fetch them and build
+them as part of this project.
 
-Optional dependencies are
-- asciidoctor to build the manual page
-- FORD to build the developer documentation
-- Python 3.6 or newer with the CFFI package installed to build the Python API
-
-Setup a build with
+To setup a build use
 
 ```
-meson setup _build
+meson setup _build --prefix=/path/to/install
 ```
 
-You can select the Fortran compiler by the `FC` environment variable.
+You can select the Fortran compiler by the `FC` environment variable, similarly the C compiler is selected from the `CC` environment variable.
 To compile and run the projects testsuite use
 
 ```
@@ -93,99 +98,14 @@ meson test -C _build --print-errorlogs
 If the testsuite passes you can install with
 
 ```
-meson configure _build --prefix=/path/to/install
 meson install -C _build
 ```
 
 This might require administrator access depending on the chosen install prefix.
 
-To include ``s-dftd3`` in your project add the following wrap file to your subprojects directory:
-
-```ini
-[wrap-git]
-directory = s-dftd3
-url = https://github.com/dftd3/simple-dftd3
-revision = head
-```
-
-You can retrieve the dependency from the wrap fallback with
-
-```meson
-sdftd3_dep = dependency('s-dftd3', fallback: ['s-dftd3', 'sdftd3_dep'])
-```
-
-and add it as dependency to your targets.
-
-
-#### Building with CMake
-
-Alternatively, this project can be build with CMake (in this case ninja 1.10 or newer is required):
-
-```
-cmake -B _build -G Ninja
-```
-
-To compile the project with CMake run
-
-```
-cmake --build _build
-```
-
-You can run the project testsuite with
-
-```
-pushd _build && ctest && popd
-```
-
-To include ``s-dftd3`` in your CMake project retrieve it using the ``FetchContent`` module:
-
-```cmake
-if(NOT TARGET s-dftd3)
-  set("s-dftd3-url" "https://github.com/dftd3/simple-dftd3")
-  message(STATUS "Retrieving s-dftd3 from ${s-dftd3-url}")
-  include(FetchContent)
-  FetchContent_Declare(
-    "s-dftd3"
-    GIT_REPOSITORY "${s-dftd3-url}"
-    GIT_TAG "HEAD"
-  )
-  FetchContent_MakeAvailable("s-dftd3")
-endif()
-```
-
-And link against the ``"s-dftd3"`` interface library.
-
-```cmake
-target_link_libraries("${PROJECT_NAME}-lib" PUBLIC "s-dftd3")
-```
-
-
-#### Building with fpm
-
-Invoke fpm in the project root with
-
-```
-fpm build
-```
-
-To run the testsuite use
-
-```
-fpm test
-```
-
-You can access the ``s-dftd3`` program using the run subcommand
-
-```
-fpm run -- --help
-```
-
-To use ``s-dftd3`` for testing include it as dependency in your package manifest
-
-```toml
-[dependencies]
-s-dftd3.git = "https://github.com/dftd3/simple-dftd3"
-```
+Meson is the primary build system and provides feature-complete functionality of this project.
+If you for any reason cannot use meson, this project also supports CMake and fpm as build systems.
+For more details checkout the [installation guide](https://dftd3.readthedocs.io/en/latest/installation.html#building-from-source).
 
 
 ## Usage
@@ -201,7 +121,7 @@ In case you want to access the DFT-D3 results from other programs, dump the resu
 (the ``--noedisp`` flag prevents the ``.EDISP`` file generation):
 
 ```
-s-dftd3 --bj pbe0 --atm --json --noedisp --grad struct.xyz
+s-dftd3 --bj pbe0 --atm --json --noedisp --grad -- struct.xyz
 ```
 
 Dispersion related properties can be calculated as well:
