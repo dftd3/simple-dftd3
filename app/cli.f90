@@ -222,14 +222,16 @@ subroutine get_run_arguments(config, list, start, error)
          config%wrap = .false.
       case("--grad")
          config%grad = .true.
-         iarg = iarg + 1
-         call list%get(iarg, arg)
-         if (allocated(arg)) then
-            if (arg(1:1) == "-") then
-               iarg = iarg - 1
-               cycle
+         if (.not.config%json) then
+            iarg = iarg + 1
+            call list%get(iarg, arg)
+            if (allocated(arg)) then
+               if (arg(1:1) == "-") then
+                  iarg = iarg - 1
+                  cycle
+               end if
+               call move_alloc(arg, config%grad_output)
             end if
-            call move_alloc(arg, config%grad_output)
          end if
       case("--atm")
          config%inp%s9 = 1.0_wp
