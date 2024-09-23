@@ -124,7 +124,7 @@ function get_method_id(method) result(id)
    case("dsdpbe"); id = p_dsdpbe_df
    case("dsdpbedrpa75"); id = p_dsd_pbe_drpa75_df
    case("dsdpbep86"); id = p_dsdpbep86_df
-   case("dsdpbeb86drpa75"); id = p_dsd_pbep86_drpa75_df
+   case("dsdpbep86drpa75"); id = p_dsd_pbep86_drpa75_df
    case("dsdpbeb95"); id = p_dsdpbeb95_df
    case("dodscan66"); id = p_dodscan66_df
    case("hcth120"); id = p_hcth120_df

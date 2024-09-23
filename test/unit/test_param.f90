@@ -114,7 +114,7 @@ subroutine test_d3bj_mb01(error)
       & "dm21", "dm21m", "dm21mc", "dm21mu", "dsdpbep86", "dsdpbeb95", "dsdpbe", &
       & "dodscan66", "revdsdblyp", "revdsdpbep86", "revdsdpbeb95", "revdsdpbe", &
       & "revdodblyp", "revdodpbep86", "revdodpbeb95", "revdodpbe", "pw91", "drpa75", &
-      & "scsdrpa75", "optscsdrpa75", "dsdpbedrpa75", "dsdpbeb86drpa75"]
+      & "scsdrpa75", "optscsdrpa75", "dsdpbedrpa75", "dsdpbep86drpa75"]
    real(wp), parameter :: ref(*) = [&
       &-2.9551694676908012E-2_wp,-1.6638703086788331E-2_wp,-1.6725877716130381E-2_wp, &
       &-3.3014429592265318E-2_wp,-2.2051435219996540E-2_wp,-3.3481565825316001E-2_wp, &
