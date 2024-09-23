@@ -453,3 +453,21 @@ d3.zero = {rs6=3.3388, s8=0.0, doi="10.1039/C7CP04913G"}
 
 [parameter.pwp]
 d3.zero = {rs6=2.1040, s8=0.8747, doi="10.1039/C7CP04913G"}
+
+[parameter.pw91]
+d3.bj = {a1=0.6319, s8=1.9598, a2=4.5718, doi="10.1073/pnas.1516984112"}
+
+[parameter.drpa75]
+d3.bj = {s6=0.3754, a1=0.0, s8=0.0, a2=4.5048, doi="10.1039/C6CP00688D"}
+
+[parameter.scsdrpa75]
+d3.bj = {s6=0.2528, a1=0.0, s8=0.0, a2=4.5050, doi="10.1021/acs.jpca.1c01295"}
+
+[parameter.optscsdrpa75]
+d3.bj = {s6=0.2546, a1=0.0, s8=0.0, a2=4.5050, doi="10.1021/acs.jpca.1c01295"}
+
+[parameter.dsdpbedrpa75]
+d3.bj = {s6=0.3223, a1=0.0, s8=0.0, a2=4.5050, doi="10.1021/acs.jpca.1c01295"}
+
+[parameter.dsdpbep86drpa75]
+d3.bj = {s6=0.3012, a1=0.0, s8=0.0, a2=4.5050, doi="10.1021/acs.jpca.1c01295"}
