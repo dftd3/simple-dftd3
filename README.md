@@ -108,6 +108,65 @@ If you for any reason cannot use meson, this project also supports CMake and fpm
 For more details checkout the [installation guide](https://dftd3.readthedocs.io/en/latest/installation.html#building-from-source).
 
 
+## Generating docs
+
+The documentation is generated using [sphinx](https://www.sphinx-doc.org) for the general documentation and the Python API,
+[FORD](https://forddocs.readthedocs.io) for the Fortran API documentation,
+and [asciidoctor](https://asciidoctor.org/) for the command line interface manpage.
+
+
+### Documentation pages (Sphinx)
+
+[![Documentation](https://readthedocs.org/projects/dftd3/badge/?version=latest)](https://dftd3.readthedocs.io/en/latest/)
+
+For generating the main documentation pages, install the documentation dependencies with
+
+```
+pip install -f doc/requirements.txt
+```
+
+The pages can be built with
+
+```
+sphinx-build doc _docs -b html
+```
+
+To view the final pages you can start a HTTP server via
+
+```
+python -m http.server -d _docs
+```
+
+And open the shown URL in a browser.
+The documentation is automatically deployed from the main branch and can be viewed on [readthedocs](https://dftd3.readthedocs.io/).
+
+
+### API documentation (Ford)
+
+[![docs](https://github.com/dftd3/simple-dftd3/actions/workflows/docs.yml/badge.svg)](https://dftd3.github.io/simple-dftd3/)
+
+To generate the API documentation of the Fortran library install ford via
+
+```
+mamba install ford
+```
+
+The API documentation can be generated with
+
+```
+ford docs.md -o _api
+```
+
+To view the final pages you can start a HTTP server via
+
+```
+python -m http.server -d _docs
+```
+
+And open the shown URL in a browser.
+The API documentation is automatically deployed from the main branch and can be viewed on [GitHub pages](https://dftd3.github.io/simple-dftd3).
+
+
 ## Usage
 
 DFT-D3 calculations can be performed with the ``s-dftd3`` executable.
