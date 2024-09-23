@@ -81,7 +81,7 @@ subroutine test_dftd3_gen(error, mol, param, ref)
 
    call check(error, energy, ref, thr=thr)
    if (allocated(error)) then
-      print *,energy
+      print '(ES23.16)', energy
    end if
 
 end subroutine test_dftd3_gen
