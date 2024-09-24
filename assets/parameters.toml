@@ -471,3 +471,6 @@ d3.bj = {s6=0.3223, a1=0.0, s8=0.0, a2=4.5050, doi="10.1021/acs.jpca.1c01295"}
 
 [parameter.dsdpbep86drpa75]
 d3.bj = {s6=0.3012, a1=0.0, s8=0.0, a2=4.5050, doi="10.1021/acs.jpca.1c01295"}
+
+[parameter.dsdpbep86_km11]
+d3.bj = {s6=0.418, a1=0.0, s8=0.0, a2=5.65, doi="10.1039/c1cp22592h"}
