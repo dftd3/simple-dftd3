@@ -581,3 +581,24 @@ d3.bj = {s6=0.39, a1=0.0, s8=0.0, a2=4.8, doi="10.1002/jcc.23391"}
 
 [parameter.dsdhcth407]
 d3.bj = {s6=0.53, a1=0.0, s8=0.0, a2=5.0, doi="10.1002/jcc.23391"}
+
+[parameter.dodsvwn5]
+d3.bj = {s6=0.57, a1=0.0, s8=0.0, a2=5.6, doi="10.1002/jcc.23391"}
+
+[parameter.dodblyp]
+d3.bj = {s6=0.96, a1=0.0, s8=0.0, a2=5.1, doi="10.1002/jcc.23391"}
+
+[parameter.dodpbe]
+d3.bj = {s6=0.91, a1=0.0, s8=0.0, a2=5.9, doi="10.1002/jcc.23391"}
+
+[parameter.dodpbep86]
+d3.bj = {s6=0.72, a1=0.0, s8=0.0, a2=5.4, doi="10.1002/jcc.23391"}
+
+[parameter.dodpbeb95]
+d3.bj = {s6=0.71, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}
+
+[parameter.dodhsep86]
+d3.bj = {s6=0.69, a1=0.0, s8=0.0, a2=5.4, doi="10.1002/jcc.23391"}
+
+[parameter.dodpbehb95]
+d3.bj = {s6=0.67, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}

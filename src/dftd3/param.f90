@@ -75,7 +75,8 @@ module dftd3_param
          & p_dsd_hsepbe_df, p_dsd_hsepw91_df, p_dsd_hsep86_df, p_dsd_hselyp_df, &
          & p_dsd_tpss_df, p_dsd_tpssb95_df, p_dsd_olyp_df, p_dsd_xlyp_df, &
          & p_dsd_xb95_df, p_dsd_b98_df, p_dsd_bmk_df, p_dsd_thcth_df, &
-         & p_dsd_hcth407_df
+         & p_dsd_hcth407_df, p_dod_svwn5_df, p_dod_blyp_df, p_dod_pbe_df, &
+         & p_dod_pbep86_df, p_dod_pbeb95_df, p_dod_hsep86_df, p_dod_pbehb95_df
    end enum
 
 contains
@@ -171,6 +172,13 @@ function get_method_id(method) result(id)
    case("dsdolyp"); id = p_dsd_olyp_df
    case("dsdxlyp"); id = p_dsd_xlyp_df
    case("dsdxb95"); id = p_dsd_xb95_df
+   case("dodsvwn5"); id = p_dod_svwn5_df
+   case("dodblyp"); id = p_dod_blyp_df
+   case("dodpbe", "dodpbepbe"); id = p_dod_pbe_df
+   case("dodpbep86"); id = p_dod_pbep86_df
+   case("dodpbeb95"); id = p_dod_pbeb95_df
+   case("dodhsep86"); id = p_dod_hsep86_df
+   case("dodpbehb95"); id = p_dod_pbehb95_df
    case("dodscan66"); id = p_dodscan66_df
    case("hcth120"); id = p_hcth120_df
    case("hcth407", "hcth/407"); id = p_hcth407_df
@@ -590,6 +598,20 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(s6=0.39_wp, a1=0.0_wp, s8=0.0_wp, a2=4.8_wp)
    case(p_dsd_hcth407_df)
       param = d3_param(s6=0.53_wp, a1=0.0_wp, s8=0.0_wp, a2=5.0_wp)
+   case(p_dod_svwn5_df)
+      param = d3_param(s6=0.57_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+   case(p_dod_blyp_df)
+      param = d3_param(s6=0.96_wp, a1=0.0_wp, s8=0.0_wp, a2=5.1_wp)
+   case(p_dod_pbe_df)
+      param = d3_param(s6=0.91_wp, a1=0.0_wp, s8=0.0_wp, a2=5.9_wp)
+   case(p_dod_pbep86_df)
+      param = d3_param(s6=0.72_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+   case(p_dod_pbeb95_df)
+      param = d3_param(s6=0.71_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+   case(p_dod_hsep86_df)
+      param = d3_param(s6=0.69_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+   case(p_dod_pbehb95_df)
+      param = d3_param(s6=0.67_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
    end select
 
    if (present(s9)) then
