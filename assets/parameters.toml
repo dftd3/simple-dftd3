@@ -482,3 +482,15 @@ d3.bj = {s6=0.375, a1=0.0, s8=0.0, a2=4.505}
 # SCS-dRPA75-D3(BJ) from MRCC source code
 [parameter.scsdrpa75_mrcc]
 d3.bj = {s6=0.375, a1=0.0, s8=0.0, a2=4.505}
+
+[parameter.dsdsvwn5]
+d3.bj = {s6=0.46, a1=0.0, s8=0.0, a2=5.6, doi="10.1002/jcc.23391"}
+
+[parameter.dsdsp86]
+d3.bj = {s6=0.30, a1=0.0, s8=0.0, a2=5.8, doi="10.1002/jcc.23391"}
+
+[parameter.dsdslyp]
+d3.bj = {s6=0.30, a1=0.0, s8=0.0, a2=5.6, doi="10.1002/jcc.23391"}
+
+[parameter.dsdspbe]
+d3.bj = {s6=0.40, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}
