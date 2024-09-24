@@ -117,7 +117,8 @@ subroutine test_d3bj_mb01(error)
       & "scsdrpa75", "optscsdrpa75", "dsdpbedrpa75", "dsdpbep86drpa75", "dsdpbep86_km11", &
       & "drpa75_mrcc", "scsdrpa75_mrcc", "dsdsvwn5", "dsdsp86", "dsdslyp", "dsdspbe", &
       & "dsdbvwn5", "dsdblyp_km13", "dsdbpbe", "dsdbp86", "dsdbpw91", "dsdbb95", &
-      & "dsdpbevwn5", "dsdpbelyp", "dsdpbepw91", "dsdpbehb95", "dsdpbehp86"]
+      & "dsdpbevwn5", "dsdpbelyp", "dsdpbepw91", "dsdpbehb95", "dsdpbehp86", &
+      & "dsdmpwlyp", "dsdmpwpw91", "dsdmpwp86", "dsdmpwpbe", "dsdmpwb95"]
    real(wp), parameter :: ref(*) = [&
       &-2.9551694676908012E-2_wp,-1.6638703086788331E-2_wp,-1.6725877716130381E-2_wp, &
       &-3.3014429592265318E-2_wp,-2.2051435219996540E-2_wp,-3.3481565825316001E-2_wp, &
@@ -164,7 +165,8 @@ subroutine test_d3bj_mb01(error)
       &-2.1623262868629957E-2_wp,-1.9597764351264244E-2_wp,-1.8581716550343332E-2_wp, &
       &-1.9615520517321777E-2_wp,-1.4301725581560211E-2_wp,-2.5702259085751418E-2_wp, &
       &-1.8966070619925963E-2_wp,-1.7848227739145565E-2_wp,-1.2302357180476200E-2_wp, &
-      &-1.5040699501291648E-2_wp]
+      &-1.5040699501291648E-2_wp,-1.9629301479961281E-2_wp,-1.9089864590394103E-2_wp, &
+      &-1.6663654510626937E-2_wp,-1.8981014496672229E-2_wp,-1.3172267842653015E-2_wp]
 
    call get_structure(mol, "MB16-43", "01")
    do ii = 1, size(func)
