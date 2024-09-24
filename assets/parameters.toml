@@ -521,3 +521,9 @@ d3.bj = {s6=0.73, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}
 
 [parameter.dsdpbeb95]
 d3.bj = {s6=0.61, a1=0.0, s8=0.0, a2=6.2, doi="10.1002/jcc.23391"}
+
+[parameter.dsdpbehb95]
+d3.bj = {s6=0.58, a1=0.0, s8=0.0, a2=6.2, doi="10.1002/jcc.23391"}
+
+[parameter.dsdpbehp86]
+d3.bj = {s6=0.46, a1=0.0, s8=0.0, a2=5.6, doi="10.1002/jcc.23391"}
