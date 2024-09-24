@@ -569,3 +569,15 @@ d3.bj = {s6=0.51, a1=0.0, s8=0.0, a2=5.3, doi="10.1002/jcc.23391"}
 
 [parameter.dsdxb95]
 d3.bj = {s6=0.92, a1=0.0, s8=0.0, a2=6.7, doi="10.1002/jcc.23391"}
+
+[parameter.dsdb98]
+d3.bj = {s6=0.07, a1=0.0, s8=0.0, a2=3.7, doi="10.1002/jcc.23391"}
+
+[parameter.dsdbmk]
+d3.bj = {s6=0.17, a1=0.0, s8=0.0, a2=3.9, doi="10.1002/jcc.23391"}
+
+[parameter.dsdthcth]
+d3.bj = {s6=0.39, a1=0.0, s8=0.0, a2=4.8, doi="10.1002/jcc.23391"}
+
+[parameter.dsdhcth407]
+d3.bj = {s6=0.53, a1=0.0, s8=0.0, a2=5.0, doi="10.1002/jcc.23391"}
