@@ -73,7 +73,8 @@ module dftd3_param
          & p_dsd_pbepw91_df, p_dsd_pbehb95_df, p_dsd_pbehp86_df, p_dsd_mpwlyp_df, &
          & p_dsd_mpwpw91_df, p_dsd_mpwp86_df, p_dsd_mpwpbe_df, p_dsd_mpwb95_df, &
          & p_dsd_hsepbe_df, p_dsd_hsepw91_df, p_dsd_hsep86_df, p_dsd_hselyp_df, &
-         & p_dsd_tpss_df, p_dsd_tpssb95_df
+         & p_dsd_tpss_df, p_dsd_tpssb95_df, p_dsd_olyp_df, p_dsd_xlyp_df, &
+         & p_dsd_xb95_df
    end enum
 
 contains
@@ -162,6 +163,9 @@ function get_method_id(method) result(id)
    case("dsdhselyp"); id = p_dsd_hselyp_df
    case("dsdtpss", "dsdtpsstpss"); id = p_dsd_tpss_df
    case("dsdtpssb95"); id = p_dsd_tpssb95_df
+   case("dsdolyp"); id = p_dsd_olyp_df
+   case("dsdxlyp"); id = p_dsd_xlyp_df
+   case("dsdxb95"); id = p_dsd_xb95_df
    case("dodscan66"); id = p_dodscan66_df
    case("hcth120"); id = p_hcth120_df
    case("hcth407", "hcth/407"); id = p_hcth407_df
@@ -567,6 +571,12 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(s6=0.72_wp, a1=0.0_wp, s8=0.0_wp, a2=6.5_wp)
    case(p_dsd_tpssb95_df)
       param = d3_param(s6=0.91_wp, a1=0.0_wp, s8=0.0_wp, a2=7.9_wp)
+   case(p_dsd_olyp_df)
+      param = d3_param(s6=0.93_wp, a1=0.0_wp, s8=0.0_wp, a2=5.8_wp)
+   case(p_dsd_xlyp_df)
+      param = d3_param(s6=0.51_wp, a1=0.0_wp, s8=0.0_wp, a2=5.3_wp)
+   case(p_dsd_xb95_df)
+      param = d3_param(s6=0.92_wp, a1=0.0_wp, s8=0.0_wp, a2=6.7_wp)
    end select
 
    if (present(s9)) then
