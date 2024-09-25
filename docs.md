@@ -16,6 +16,7 @@ predocmark: >
 source: true
 graph: false
 sort: alpha
+preprocess: false
 print_creation_date: true
 extra_mods: iso_fortran_env:https://gcc.gnu.org/onlinedocs/gfortran/ISO_005fFORTRAN_005fENV.html
             mctc_io:https://grimme-lab.github.io/mctc-lib/modules/mctc_io.html
@@ -60,7 +61,7 @@ subroutine calc_dftd3(mol, method, energy, gradient, sigma, error)
    type(error_type), allocatable, intent(out) :: error
    type(d3_model) :: disp
    type(d3_param) :: inp
-   class(damping_param), allocatable :: param
+   type(rational_damping_param), allocatable :: param
 
    call get_rational_damping(inp, method, error, s9=1.0_wp)
    if (allocated(error)) return
@@ -222,6 +223,5 @@ Just add it to the dependencies in your `fpm.toml` file:
 
 ```toml
 [dependencies]
-[dependencies.s-dftd3]
-git = "https://github.com/dftd3/s-dftd3"
+s-dftd3.git = "https://github.com/dftd3/simple-dftd3"
 ```
