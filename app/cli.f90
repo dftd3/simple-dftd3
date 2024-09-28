@@ -55,6 +55,8 @@ module dftd3_app_cli
       logical :: has_param = .false.
       integer :: verbosity = 2
       logical :: pair_resolved = .false.
+      logical :: citation = .false.
+      character(len=:), allocatable :: citation_output
       !> Parameter data base
       character(len=:), allocatable :: db
    end type run_config
@@ -211,6 +213,18 @@ subroutine get_run_arguments(config, list, start, error)
                cycle
             end if
             call move_alloc(arg, config%json_output)
+         end if
+      case("--citation")
+         config%citation = .true.
+         config%citation_output = "dftd3.bib"
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (allocated(arg)) then
+            if (arg(1:1) == "-") then
+               iarg = iarg - 1
+               cycle
+            end if
+            call move_alloc(arg, config%citation_output)
          end if
       case("--property")
          config%properties = .true.

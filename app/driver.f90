@@ -21,6 +21,7 @@ module dftd3_app_driver
    use dftd3
    use dftd3_output
    use dftd3_utils
+   use dftd3_citation, only : format_bibtex
    use dftd3_app_help, only : header
    use dftd3_app_cli, only : app_config, run_config, param_config, get_arguments
    use dftd3_app_toml, only : param_database
@@ -55,7 +56,8 @@ subroutine run_driver(config, error)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: s9
    real(wp) :: energy
-   integer :: stat, unit
+   character(len=:), allocatable :: output
+   integer :: stat, unit, idx
    logical :: exist
 
    if (config%verbosity > 1) then
@@ -253,6 +255,17 @@ subroutine run_driver(config, error)
          end if
       end if
 
+   end if
+
+   if (config%citation .and. allocated(inp%citation)) then
+      open(file=config%citation_output, newunit=unit)
+      call format_bibtex(output, inp%citation)
+      if (allocated(output)) write(unit, '(a)') output
+      close(unit)
+      if (config%verbosity > 0) then
+         write(output_unit, '(a)') &
+            & "[Info] Citation information written to '"//config%citation_output//"'"
+      end if
    end if
 
 end subroutine run_driver
