@@ -9,20 +9,20 @@ d3.zerom = {s6=1.0, s9=1.0, rs8=1.0, alp=14.0, damping="mzero"}
 d3.op = {s9=1.0, alp=14.0, damping="optimizedpower"}
 
 [parameter.bp]
-d3.bj = {a1=0.3946, s8=3.2822, a2=4.8516}
+d3.bj = {a1=0.3946, s8=3.2822, a2=4.8516, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.139, s8=1.683, doi="10.1063/1.3382344"}
 d3.bjm = {a1=0.821850, s8=3.140281, a2=2.728151, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=1.233460, s8=1.945174, bet=0.000000, doi="10.1021/acs.jpclett.6b00780"}
 
 [parameter.blyp]
-d3.bj = {a1=0.4298, s8=2.6996, a2=4.2359}
+d3.bj = {a1=0.4298, s8=2.6996, a2=4.2359, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.094, s8=1.682, doi="10.1063/1.3382344"}
 d3.bjm = {a1=0.448486, s8=1.875007, a2=3.610679, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=1.279637, s8=1.841686, bet=0.014370, doi="10.1021/acs.jpclett.6b00780"}
 d3.op = {s6=1.0, s8=1.31867, a1=0.425, a2=3.50, bet=2.0, doi="10.1021/acs.jctc.7b00176"}
 
 [parameter.revpbe]
-d3.bj = {a1=0.5238, s8=2.3550, a2=3.5016}
+d3.bj = {a1=0.5238, s8=2.3550, a2=3.5016, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=0.923, s8=1.010, doi="10.1063/1.3382344"}
 d3.op = {s6=1.0, s8=1.44765, a1=0.600, a2=2.50, bet=0.0, doi="10.1021/acs.jctc.7b00176"}
 
@@ -31,7 +31,7 @@ d3.bj = {a1=0.1820, s8=0.8318, a2=4.0094}
 d3.zero = {rs6=0.872, s8=0.514}
 
 [parameter.b97d]
-d3.bj = {a1=0.5545, s8=2.2609, a2=3.2297}
+d3.bj = {a1=0.5545, s8=2.2609, a2=3.2297, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=0.892, s8=0.909, doi="10.1063/1.3382344"}
 d3.bjm = {a1=0.240184, s8=1.206988, a2=3.864426, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=1.151808, s8=1.020078, bet=0.035964, doi="10.1021/acs.jpclett.6b00780"}
@@ -42,36 +42,36 @@ d3.bj = {a1=0.37, s8=1.50, a2=4.10, doi="10.1063/1.5012601"}
 d3.zero = {rs6=1.06, s8=1.50, doi="10.1063/1.5012601"}
 
 [parameter.pbe]
-d3.bj = {a1=0.4289, s8=0.7875, a2=4.4407}
+d3.bj = {a1=0.4289, s8=0.7875, a2=4.4407, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.217, s8=0.722, doi="10.1063/1.3382344"}
 d3.bjm = {a1=0.012092, s8=0.358940, a2=5.938951, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=2.340218, s8=0.000000, bet=0.129434, doi="10.1021/acs.jpclett.6b00780"}
 d3.op = {s6=0.91826, s8=0.0, a1=0.200, a2=4.750, bet=6.0, doi="10.1021/acs.jctc.7b00176"}
 
 [parameter.rpw86pbe]
-d3.bj = {a1=0.4613, s8=1.3845, a2=4.5062}
+d3.bj = {a1=0.4613, s8=1.3845, a2=4.5062, doi="10.1002/jcc.21759"}
 
 [parameter.b3lyp]
-d3.bj = {a1=0.3981, s8=1.9889, a2=4.4211}
+d3.bj = {a1=0.3981, s8=1.9889, a2=4.4211, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.261, s8=1.703, doi="10.1063/1.3382344"}
 d3.bjm = {a1=0.278672, s8=1.466677, a2=4.606311, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=1.338153, s8=1.532981, bet=0.013988, doi="10.1021/acs.jpclett.6b00780"}
 d3.op = {s6=1.0, s8=0.78311, a1=0.300, a2=4.25, bet=4.0, doi="10.1021/acs.jctc.7b00176"}
 
 [parameter.tpss]
-d3.bj = {a1=0.4535, s8=1.9435, a2=4.4752}
+d3.bj = {a1=0.4535, s8=1.9435, a2=4.4752, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.166, s8=1.105, doi="10.1063/1.3382344"}
 d3.op = {s6=1.0, s8=0.51581, a1=0.575, a2=3.00, bet=8.0, doi="10.1021/acs.jctc.7b00176"}
 
 [parameter.hf]
-d3.bj = {a1=0.3385, s8=0.9171, a2=2.8830}
+d3.bj = {a1=0.3385, s8=0.9171, a2=2.8830, doi="10.1002/jcc.21759"}
 
 [parameter.tpss0]
-d3.bj = {a1=0.3768, s8=1.2576, a2=4.5865}
+d3.bj = {a1=0.3768, s8=1.2576, a2=4.5865, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.252, s8=1.242, doi="10.1063/1.3382344"}
 
 [parameter.pbe0]
-d3.bj = {a1=0.4145, s8=1.2177, a2=4.8593}
+d3.bj = {a1=0.4145, s8=1.2177, a2=4.8593, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.287, s8=0.928, doi="10.1063/1.3382344"}
 d3.bjm = {a1=0.007912, s8=0.528823, a2=6.162326, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=2.077949, s8=0.000081, bet=0.116755, doi="10.1021/acs.jpclett.6b00780"}
@@ -82,23 +82,23 @@ d3.bj = {a1=0.383, s8=2.310, a2=5.685}
 d3.zero = {rs6=1.129, s8=0.109}
 
 [parameter.revpbe38]
-d3.bj = {a1=0.4309, s8=1.4760, a2=3.9446}
+d3.bj = {a1=0.4309, s8=1.4760, a2=3.9446, doi="10.1039/c0cp02984j"}
 
 [parameter.pw6b95]
-d3.bj = {a1=0.2076, s8=0.7257, a2=6.3750}
+d3.bj = {a1=0.2076, s8=0.7257, a2=6.3750, doi="10.1039/c0cp02984j"}
 
 [parameter.b2plyp]
-d3.bj = {a1=0.3065, s8=0.9147, a2=5.0570, s6=0.64}
+d3.bj = {a1=0.3065, s8=0.9147, a2=5.0570, s6=0.64, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.427, s8=1.022, s6=0.64}
 d3.bjm = {a1=0.486434, s8=0.672820, a2=3.656466, s6=0.64, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=1.313134, s8=0.717543, bet=0.016035, s6=0.64, doi="10.1021/acs.jpclett.6b00780"}
 
 [parameter.dsdblyp]
-d3.bj = {a1=0.0000, s8=0.2130, a2=6.0519, s6=0.50}
-d3.zero = {rs6=1.569, s8=0.705, s6=0.5}
+d3.bj = {a1=0.0000, s8=0.2130, a2=6.0519, s6=0.50, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.569, s8=0.705, s6=0.5, doi="10.1039/c0cp02984j"}
 
 [parameter.dsdblypfc]
-d3.bj = {a1=0.0009, s8=0.2112, a2=5.9807, s6=0.50}
+d3.bj = {a1=0.0009, s8=0.2112, a2=5.9807, s6=0.50, doi="10.1039/c0cp02984j"}
 
 [parameter.dodscan66]
 d3.bj = {s6=0.3152, a1=0.0, s8=0.0, a2=5.75, doi="10.1021/acs.jpca.9b03157"}
@@ -128,98 +128,98 @@ d3.bj = {s6=0.4107, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
 d3.bj = {s6=0.6067, a1=0.0, s8=0.0, a2=5.5, doi="10.1021/acs.jpca.9b03157"}
 
 [parameter.bop]
-d3.bj = {a1=0.4870, s8=3.2950, a2=3.5043}
+d3.bj = {a1=0.4870, s8=3.2950, a2=3.5043, doi="10.1039/c0cp02984j"}
 
 [parameter.mpwlyp]
-d3.bj = {a1=0.4831, s8=2.0077, a2=4.5323}
+d3.bj = {a1=0.4831, s8=2.0077, a2=4.5323, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.239, s8=1.098}
 
 [parameter.olyp]
-d3.bj = {a1=0.5299, s8=2.6205, a2=2.8065}
+d3.bj = {a1=0.5299, s8=2.6205, a2=2.8065, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=0.806, s8=1.764}
 
 [parameter.pbesol]
-d3.bj = {a1=0.4466, s8=2.9491, a2=6.1742}
+d3.bj = {a1=0.4466, s8=2.9491, a2=6.1742, doi="10.1039/c0cp02984j"}
 
 [parameter.bpbe]
-d3.bj = {a1=0.4567, s8=4.0728, a2=4.3908}
+d3.bj = {a1=0.4567, s8=4.0728, a2=4.3908, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.087, s8=2.033}
 
 [parameter.opbe]
-d3.bj = {a1=0.5512, s8=3.3816, a2=2.9444}
+d3.bj = {a1=0.5512, s8=3.3816, a2=2.9444, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=0.837, s8=2.033}
 
 [parameter.ssb]
-d3.bj = {a1=-0.0952, s8=-0.1744, a2=5.2170}
+d3.bj = {a1=-0.0952, s8=-0.1744, a2=5.2170, doi="10.1039/c0cp02984j"}
 
 [parameter.revssb]
-d3.bj = {a1=0.4720, s8=0.4389, a2=4.0986}
+d3.bj = {a1=0.4720, s8=0.4389, a2=4.0986, doi="10.1039/c0cp02984j"}
 
 [parameter.otpss]
-d3.bj = {a1=0.4634, s8=2.7495, a2=4.3153}
+d3.bj = {a1=0.4634, s8=2.7495, a2=4.3153, doi="10.1039/c0cp02984j"}
 
 [parameter.b3pw91]
-d3.bj = {a1=0.4312, s8=2.8524, a2=4.4693}
+d3.bj = {a1=0.4312, s8=2.8524, a2=4.4693, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.176, s8=1.775}
 
 [parameter.bhlyp]
-d3.bj = {a1=0.2793, s8=1.0354, a2=4.9615}
+d3.bj = {a1=0.2793, s8=1.0354, a2=4.9615, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.370, s8=1.442}
 
 [parameter.revpbe0]
-d3.bj = {a1=0.4679, s8=1.7588, a2=3.7619}
+d3.bj = {a1=0.4679, s8=1.7588, a2=3.7619, doi="10.1039/c0cp02984j"}
 d3.op = {s6=1.0, s8=1.25684, a1=0.725, a2=2.25, bet=0.0, doi="10.1021/acs.jctc.7b00176"}
 
 [parameter.tpssh]
-d3.bj = {a1=0.4529, s8=2.2382, a2=4.6550}
+d3.bj = {a1=0.4529, s8=2.2382, a2=4.6550, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.223, s8=1.219}
 d3.op = {s6=1.0, s8=0.43185, a1=0.575, a2=3.00, bet=8.0, doi="10.1021/acs.jctc.7b00176"}
 
 [parameter.mpw1b95]
-d3.bj = {a1=0.1955, s8=1.0508, a2=6.4177}
+d3.bj = {a1=0.1955, s8=1.0508, a2=6.4177, doi="10.1039/c0cp02984j"}
 
 [parameter.pwb6k]
-d3.bj = {a1=0.1805, s8=0.9383, a2=7.7627}
+d3.bj = {a1=0.1805, s8=0.9383, a2=7.7627, doi="10.1039/c0cp02984j"}
 
 [parameter.b1b95]
-d3.bj = {a1=0.2092, s8=1.4507, a2=5.5545}
+d3.bj = {a1=0.2092, s8=1.4507, a2=5.5545, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.613, s8=1.868}
 
 [parameter.bmk]
-d3.bj = {a1=0.1940, s8=2.0860, a2=5.9197}
+d3.bj = {a1=0.1940, s8=2.0860, a2=5.9197, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.931, s8=2.168}
 
 [parameter.camb3lyp]
-d3.bj = {a1=0.3708, s8=2.0674, a2=5.4743}
+d3.bj = {a1=0.3708, s8=2.0674, a2=5.4743, doi="10.1039/c0cp02984j"}
 
 [parameter.lcwpbe]
-d3.bj = {a1=0.3919, s8=1.8541, a2=5.0897}
+d3.bj = {a1=0.3919, s8=1.8541, a2=5.0897, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.355, s8=1.279}
 d3.bjm = {a1=0.563761, s8=0.906564, a2=3.593680, doi="10.1021/acs.jpclett.6b00780"}
 d3.zerom = {rs6=1.366361, s8=1.280619, bet=0.003160, doi="10.1021/acs.jpclett.6b00780"}
 
 [parameter.b2gpplyp]
-d3.bj = {a1=0.0000, s8=0.2597, a2=6.3332, s6=0.560}
+d3.bj = {a1=0.0000, s8=0.2597, a2=6.3332, s6=0.560, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.586, s8=0.760, s6=0.56}
 
 [parameter.ptpss]
 d3.bj = {a1=0.0000, s8=0.2804, a2=6.5745, s6=0.750}
 
 [parameter.pwpb95]
-d3.bj = {a1=0.0000, s8=0.2904, a2=7.3141, s6=0.820}
+d3.bj = {a1=0.0000, s8=0.2904, a2=7.3141, s6=0.820, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.557, s8=0.705, s6=0.82}
 
 [parameter.hf_mixed]
-d3.bj = {a1=0.5607, s8=3.9027, a2=4.5622}
+d3.bj = {a1=0.5607, s8=3.9027, a2=4.5622, doi="10.1063/1.3700154"}
 
 [parameter.hf_sv]
-d3.bj = {a1=0.4249, s8=2.1849, a2=4.2783}
+d3.bj = {a1=0.4249, s8=2.1849, a2=4.2783, doi="10.1063/1.3700154"}
 
 [parameter.hf_minis]
-d3.bj = {a1=0.1702, s8=0.9841, a2=3.8506}
+d3.bj = {a1=0.1702, s8=0.9841, a2=3.8506, doi="10.1063/1.3700154"}
 
 [parameter.b3lyp_631gd]
-d3.bj = {a1=0.5014, s8=4.0672, a2=4.8409}
+d3.bj = {a1=0.5014, s8=4.0672, a2=4.8409, doi="10.1063/1.3700154"}
 
 [parameter.hcth120]
 d3.bj = {a1=0.3563, s8=1.0821, a2=4.3359}
@@ -238,32 +238,32 @@ d3.bj = {a1=0.2211, s8=2.6910, a2=6.7278}
 d3.bj = {a1=0.4650, s8=2.9215, a2=6.2003}
 
 [parameter.hf3c]
-d3.bj = {a1=0.4171, s8=0.8777, a2=2.9149}
+d3.bj = {a1=0.4171, s8=0.8777, a2=2.9149, doi="10.1002/jcc.23317"}
 
 [parameter.hf3cv]
-d3.bj = {a1=0.3063, s8=0.5022, a2=3.9856}
+d3.bj = {a1=0.3063, s8=0.5022, a2=3.9856, doi="10.1002/jcc.23317"}
 
 [parameter.pbeh3c]
-d3.bj = {a1=0.4860, s8=0.0000, a2=4.5000}
+d3.bj = {a1=0.4860, s8=0.0000, a2=4.5000, doi="10.1063/1.4927476"}
 
 [parameter.scan]
-d3.bj = {a1=0.5380, s8=0.0000, a2=5.4200}
-d3.zero = {rs6=1.324, s8=0.000}
+d3.bj = {a1=0.5380, s8=0.0000, a2=5.4200, doi="10.1103/PhysRevB.94.115144"}
+d3.zero = {rs6=1.324, s8=0.000, doi="10.1103/PhysRevB.94.115144"}
 
 [parameter.rscan]
-d3.bj = {a1=0.47023427, s8=1.08859014, a2=5.73408312}
+d3.bj = {a1=0.47023427, s8=1.08859014, a2=5.73408312, doi="10.1063/5.0041008"}
 
 [parameter.r2scan]
-d3.bj = {a1=0.49484001, s8=0.78981345, a2=5.73083694}
+d3.bj = {a1=0.49484001, s8=0.78981345, a2=5.73083694, doi="10.1063/5.0041008"}
 
 [parameter.r2scanh]
-d3.bj = {s8=1.1236, a1=0.4709, a2=5.9157}
+d3.bj = {s8=1.1236, a1=0.4709, a2=5.9157, doi="10.1063/5.0086040"}
 
 [parameter.r2scan0]
-d3.bj = {s8=1.1846, a1=0.4534, a2=5.8972}
+d3.bj = {s8=1.1846, a1=0.4534, a2=5.8972, doi="10.1063/5.0086040"}
 
 [parameter.r2scan50]
-d3.bj = {s8=1.3294, a1=0.4311, a2=5.9240}
+d3.bj = {s8=1.3294, a1=0.4311, a2=5.9240, doi="10.1063/5.0086040"}
 
 [parameter.wb97x]
 d3.bj = {a1=0.0000, s8=0.2641, a2=5.4959}
@@ -602,3 +602,205 @@ d3.bj = {s6=0.69, a1=0.0, s8=0.0, a2=5.4, doi="10.1002/jcc.23391"}
 
 [parameter.dodpbehb95]
 d3.bj = {s6=0.67, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}
+
+[citation."10.1063/1.3382344"]  # DFT-D3(0)
+title = "A consistent and accurate ab initio parametrization of density functional dispersion correction (DFT-D) for the 94 elements H-Pu"
+author = ["Stefan Grimme", "Jens Antony", "Stephan Ehrlich", "Helge Krieg"]
+journal = "J. Chem. Phys."
+volume = "132"
+pages = "154104"
+year = "2010"
+published = 2010-04-16
+
+[citation."10.1002/jcc.21759"]  # DFT-D3(BJ)
+title = "Effect of the damping function in dispersion corrected density functional theory"
+author = ["Stefan Grimme", "Stephan Ehrlich", "Lars Goerigk"]
+journal = "J. Comput. Chem."
+issue = "7"
+volume = "32"
+pages = "1456-1465"
+year = "2011"
+published = 2011-03-01
+
+[citation."10.1021/acs.jpclett.6b00780"]  # DFT-D3M
+title = "Revised Damping Parameters for the D3 Dispersion Correction to Density Functional Theory"
+author = ["Daniel G. A. Smith", "Lori A. Burns", "Konrad Patkowski", "C. David Sherrill"]
+journal = "J. Phys. Chem. Lett."
+issue = "12"
+volume = "7"
+pages = "2197–2203"
+year = "2016"
+published = 2016-05-20
+
+[citation."10.1021/acs.jctc.7b00176"]  # DFT-D3(op)
+title = "Assessing DFT-D3 Damping Functions Across Widely Used Density Functionals: Can We Do Better?"
+author = ["Jonathon Witte", "Narbe Mardirossian", "Jeffrey B. Neaton", "Martin Head-Gordon"]
+journal = "J. Chem. Theory Comput."
+issue = "5"
+volume = "13"
+pages = "2043–2052"
+year = "2017"
+published = 2017-04-10
+
+[citation."10.1039/c0cp02984j"]  # GMTKN30
+title = "A thorough benchmark of density functional methods for general main group thermochemistry, kinetics, and noncovalent interactions"
+author = ["Lars Goerigk", "Stefan Grimme"]
+journal = "Phys. Chem. Chem. Phys."
+issue = "14"
+volume = "13"
+pages = "6670-6688"
+year = "2011"
+published = 2011-03-07
+
+[citation."10.1039/c7cp04913g"]  # GMTKN55
+title = "A look at the density functional theory zoo with the advanced GMTKN55 database for general main group thermochemistry, kinetics and noncovalent interactions"
+author = ["Lars Goerigk", "Andreas Hansen", "Christoph Bauer", "Stephan Ehrlich", "Asim Najibi", "Stefan Grimme"]
+journal = "Phys. Chem. Chem. Phys."
+issue = "48"
+volume = "19"
+pages = "32184-32215"
+year = "2017"
+published = 2017-10-26
+
+[citation."10.1002/jcc.23391"]  # DSD functionals
+title = "Spin-component-scaled double hybrids: An extensive search for the best fifth-rung functionals blending DFT and perturbation theory"
+author = ["Sebastian Kozuch", "Jan M. L. Martin"]
+journal = "J. Comput. Chem."
+issue = "27"
+volume = "34"
+pages = "2327-2344"
+year = "2013"
+published = 2013-08-26
+
+[citation."10.1039/c1cp22592h"]  # DSD-PBEP86
+title = "DSD-PBEP86: in search of the best double-hybrid DFT with spin-component scaled MP2 and dispersion corrections"
+author = ["Sebastian Kozuch", "Jan M. L. Martin"]
+journal = "Phys. Chem. Chem. Phys."
+issue = "45"
+volume = "13"
+pages = "20104-20107"
+year = "2011"
+published = 2011-10-12
+
+[citation."10.1021/acs.jpca.1c01295"]  # dRPA
+title = "Exploring Avenues beyond Revised DSD Functionals: II. Random-Phase Approximation and Scaled MP3 Corrections"
+author = ["Golokesh Santra", "Emmanouil Semidalas", "Jan M. L. Martin"]
+journal = "J. Phys. Chem. A"
+issue = "21"
+volume = "125"
+pages = "4628-4638"
+year = "2021"
+published = 2021-05-21
+
+[citation."10.1021/acs.jpca.9b03157"]  # revDSD / revDOD
+title = "Minimally Empirical Double-Hybrid Functionals Trained against the GMTKN55 Database: revDSD-PBEP86-D4, revDOD-PBE-D4, and DOD-SCAN-D4"
+author = ["Golokesh Santra", "Nitai Sylvetsky", "Jan M. L. Martin"]
+journal = "J. Phys. Chem. A"
+issue = "24"
+volume = "123"
+pages = "5129-5143"
+year = " 2019"
+published = 2019-05-28
+
+[citation."10.1073/pnas.1516984112"]  # PW91-D3
+title = "A priori calculations of the free energy of formation from solution of polymorphic self-assembled monolayers"
+author = ["Jeffrey R. Reimers", "Dwi Panduwinata", "Johan Visser" "Maxwell J. Crossley"]
+journal = "Proc. Natl. Acad. Sci."
+issue = "45"
+volume = "112"
+pages = "E6101-E6110"
+year = "2015"
+published = 2015-10-28
+
+[citation."10.1063/5.0041008"]  # r2SCAN-D4
+title = "r²SCAN-D4: Dispersion corrected meta-generalized gradient approximation for general chemical applications"
+author = ["Sebastian Ehlert", "Uwe Huniar", "Jinliang Ning", "James W. Furness", "Jianwei Sun", "Aaron D. Kaplan", "John P. Perdew", "Jan Gerit Brandenburg"]
+journal = "J. Chem. Phys."
+volume = "154"
+pages = "061101"
+year = "2021"
+published = 2021-02-09
+
+[citation."10.1103/PhysRevB.94.115144"]  # SCAN-D3
+title = "Benchmark tests of a strongly constrained semilocal functional with a long-range dispersion correction"
+author = ["J. G. Brandenburg", "J. E. Bates", "J. Sun", "J. P. Perdew"]
+journal = "Phys. Rev. B"
+volume = "94"
+pages = "115144"
+year = "2016"
+published = 2016-09-21
+
+[citation."10.1063/1.4927476"]  # PBEh-3c
+title = "Consistent structures and interactions by density functional theory with small atomic orbital basis sets"
+author = ["Stefan Grimme", "Jan Gerit Brandenburg", "Christoph Bannwarth", "Andreas Hansen"]
+journal = "J. Chem. Phys."
+volume = "143"
+pages = "054107"
+year = "2015"
+published = 2015-08-05
+
+[citation."10.1039/C6CP01697A"]  # HSE-3c
+title = "Screened exchange hybrid density functional for accurate and efficient structures and interaction energies"
+author = ["Jan Gerit Brandenburg", "Eike Caldeweyher", "Stefan Grimme"]
+journal = "Phys. Chem. Chem. Phys."
+issue = "23"
+volume = "18"
+pages = "15519-15523"
+year = "2016"
+published = 2016-05-24
+
+[citation."10.1063/1.5012601"]  # B97-3c
+title = "B97-3c: A revised low-cost variant of the B97-D density functional method"
+author = ["Jan Gerit Brandenburg", "Christoph Bannwarth", "Andreas Hansen", "Stefan Grimme"]
+journal = "J. Chem. Phys."
+volume = " 148"
+pages = "064104"
+year = "2018"
+published = 2018-02-09
+
+[citation."10.1002/jcc.23317"]  # HF-3c
+title = "Corrected small basis set Hartree-Fock method for large systems"
+author = ["Rebecca Sure", "Stefan Grimme"]
+journal = "J. Comput. Chem."
+issue = "19"
+volume = "34"
+pages = "1672-1685"
+year = "2013"
+published = 2013-06-15
+
+[citation."10.1063/1.3700154"]  # gCP
+title = "A geometrical correction for the inter- and intra-molecular basis set superposition error in Hartree-Fock and density functional theory calculations for large systems"
+author = ["Holger Kruse", "Stefan Grimme"]
+journal = "J. Chem. Phys."
+volume = "136"
+pages = "154101"
+year = "2012"
+published = 2012-04-16
+
+[citation."10.1002/cphc.201100521"]  # D3 PBC
+title = "System-Dependent Dispersion Coefficients for the DFT-D3 Treatment of Adsorption Processes on Ionic Surfaces"
+author = ["Stephan Ehrlich", "Jonas Moellmann", "Werner Reckien", "Thomas Bredow", "Stefan Grimme"]
+journal = "ChemPhysChem"
+issue = "17"
+volume = "12"
+pages = "3414"
+year = "2011"
+published = 2011-10-19
+
+[citation."10.1063/5.0086040"]  # r2SCAN hybrids
+title = "Dispersion corrected r²SCAN based global hybrid functionals: r²SCANh, r²SCAN0, and r²SCAN50"
+author = ["Markus Bursch", "Hagen Neugebauer", "Sebastian Ehlert", "Stefan Grimme"]
+journal = "J. Chem. Phys."
+volume = "156"
+pages = "134105"
+year = "2022"
+published = 2022-04-04
+
+[citation."10.1063/5.0174988"]  # r2SCAN double hybrids
+title = "Dispersion-corrected r²SCAN based double-hybrid functionals"
+author = ["Lukas Wittmann", "Hagen Neugebauer", "Stefan Grimme", "Markus Bursch"]
+journal = "J. Chem. Phys."
+volume = "159"
+pages = "224103"
+year = "2023"
+published = 2023-12-08
