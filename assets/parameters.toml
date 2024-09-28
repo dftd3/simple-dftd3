@@ -428,7 +428,7 @@ d3.zero = {rs6=1.373, s8=0.595, doi="10.1039/c0cp02984j"}
 d3.zero = {rs6=1.417, s8=0.000, doi="10.1039/c0cp02984j"}
 
 [parameter.m06l]
-d3.zero = {rs6=1.581, s8=0.000, doi=""10.1039/c0cp02984j""}
+d3.zero = {rs6=1.581, s8=0.000, doi="10.1039/c0cp02984j"}
 
 [parameter.m06]
 d3.zero = {rs6=1.325, s8=0.000, doi="10.1039/c0cp02984j"}
