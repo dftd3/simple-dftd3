@@ -65,7 +65,17 @@ module dftd3_param
          & p_revdsdblyp_df, p_revdsdpbep86_df, p_revdsdpbeb95_df, p_revdsdpbe_df, &
          & p_revdodblyp_df, p_revdodpbep86_df, p_revdodpbeb95_df, p_revdodpbe_df, &
          & p_pw91_df, p_drpa75_df, p_scs_drpa75_df, p_optscs_drpa75_df, &
-         & p_dsd_pbe_drpa75_df, p_dsd_pbep86_drpa75_df
+         & p_dsd_pbe_drpa75_df, p_dsd_pbep86_drpa75_df, p_dsdpbep86_2011_df, &
+         & p_dsd_svwn5_df, p_dsd_sp86_df, p_dsd_slyp_df, p_dsd_spbe_df, &
+         & p_dsd_bvwn5_df, p_dsd_blyp_2013_df, p_dsd_bpbe_df, p_dsd_bp86_df, &
+         & p_dsd_bpw91_df, p_dsd_bb95_df, p_dsd_pbevwn5_df, p_dsd_pbelyp_df, &
+         & p_dsd_pbepw91_df, p_dsd_pbehb95_df, p_dsd_pbehp86_df, p_dsd_mpwlyp_df, &
+         & p_dsd_mpwpw91_df, p_dsd_mpwp86_df, p_dsd_mpwpbe_df, p_dsd_mpwb95_df, &
+         & p_dsd_hsepbe_df, p_dsd_hsepw91_df, p_dsd_hsep86_df, p_dsd_hselyp_df, &
+         & p_dsd_tpss_df, p_dsd_tpssb95_df, p_dsd_olyp_df, p_dsd_xlyp_df, &
+         & p_dsd_xb95_df, p_dsd_b98_df, p_dsd_bmk_df, p_dsd_thcth_df, &
+         & p_dsd_hcth407_df, p_dod_svwn5_df, p_dod_blyp_df, p_dod_pbe_df, &
+         & p_dod_pbep86_df, p_dod_pbeb95_df, p_dod_hsep86_df, p_dod_pbehb95_df
    end enum
 
 contains
@@ -119,13 +129,54 @@ function get_method_id(method) result(id)
    case("dm21mc"); id = p_dm21mc_df
    case("dm21mu"); id = p_dm21mu_df
    case("drpa75"); id = p_drpa75_df
+   case("dsdsvwn5"); id = p_dsd_svwn5_df
+   case("dsdsp86"); id = p_dsd_sp86_df
+   case("dsdslyp"); id = p_dsd_slyp_df
+   case("dsdspbe"); id = p_dsd_spbe_df
+   case("dsdbvwn5"); id = p_dsd_bvwn5_df
    case("dsdblyp"); id = p_dsdblyp_df
+   case("dsdblyp_2013"); id = p_dsd_blyp_2013_df
    case("dsdblypfc"); id = p_dsdblypfc_df
-   case("dsdpbe"); id = p_dsdpbe_df
+   case("dsdbpbe"); id = p_dsd_bpbe_df
+   case("dsdbp86"); id = p_dsd_bp86_df
+   case("dsdbpw91"); id = p_dsd_bpw91_df
+   case("dsdbb95"); id = p_dsd_bb95_df
+   case("dsdpbevwn5"); id = p_dsd_pbevwn5_df
+   case("dsdpbelyp"); id = p_dsd_pbelyp_df
+   case("dsdpbe", "dsdpbepbe"); id = p_dsdpbe_df
    case("dsdpbedrpa75"); id = p_dsd_pbe_drpa75_df
    case("dsdpbep86"); id = p_dsdpbep86_df
+   case("dsdpbep86_2011"); id = p_dsdpbep86_2011_df
    case("dsdpbep86drpa75"); id = p_dsd_pbep86_drpa75_df
+   case("dsdpbepw91"); id = p_dsd_pbepw91_df
    case("dsdpbeb95"); id = p_dsdpbeb95_df
+   case("dsdpbehb95"); id = p_dsd_pbehb95_df
+   case("dsdpbehp86"); id = p_dsd_pbehp86_df
+   case("dsdmpwlyp"); id = p_dsd_mpwlyp_df
+   case("dsdmpwpw91"); id = p_dsd_mpwpw91_df
+   case("dsdmpwp86"); id = p_dsd_mpwp86_df
+   case("dsdmpwpbe"); id = p_dsd_mpwpbe_df
+   case("dsdmpwb95"); id = p_dsd_mpwb95_df
+   case("dsdhsepbe"); id = p_dsd_hsepbe_df
+   case("dsdhsepw91"); id = p_dsd_hsepw91_df
+   case("dsdhsep86"); id = p_dsd_hsep86_df
+   case("dsdhselyp"); id = p_dsd_hselyp_df
+   case("dsdtpss", "dsdtpsstpss"); id = p_dsd_tpss_df
+   case("dsdtpssb95"); id = p_dsd_tpssb95_df
+   case("dsdolyp"); id = p_dsd_olyp_df
+   case("dsdxlyp"); id = p_dsd_xlyp_df
+   case("dsdxb95"); id = p_dsd_xb95_df
+   case("dsdb98"); id = p_dsd_b98_df
+   case("dsdbmk"); id = p_dsd_bmk_df
+   case("dsdthcth"); id = p_dsd_thcth_df
+   case("dsdhcth407"); id = p_dsd_hcth407_df
+   case("dodsvwn5"); id = p_dod_svwn5_df
+   case("dodblyp"); id = p_dod_blyp_df
+   case("dodpbe", "dodpbepbe"); id = p_dod_pbe_df
+   case("dodpbep86"); id = p_dod_pbep86_df
+   case("dodpbeb95"); id = p_dod_pbeb95_df
+   case("dodhsep86"); id = p_dod_hsep86_df
+   case("dodpbehb95"); id = p_dod_pbehb95_df
    case("dodscan66"); id = p_dodscan66_df
    case("hcth120"); id = p_hcth120_df
    case("hcth407", "hcth/407"); id = p_hcth407_df
@@ -440,12 +491,6 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(s6=0.66_wp, a1=0.4105_wp, s8=0.6223_wp, a2=5.0136_wp)
    case(p_dodscan66_df)
       param = d3_param(s6=0.3152_wp, a1=0.0_wp, s8=0.0_wp, a2=5.75_wp)
-   case(p_dsdpbep86_df)
-      param = d3_param(s6=0.48_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
-   case(p_dsdpbeb95_df)
-      param = d3_param(s6=0.61_wp, a1=0.0_wp, s8=0.0_wp, a2=6.2_wp)
-   case(p_dsdpbe_df)
-      param = d3_param(s6=0.78_wp, a1=0.0_wp, s8=0.0_wp, a2=6.1_wp)
    case(p_revdsdblyp_df)
       param = d3_param(s6=0.5451_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
    case(p_revdsdpbep86_df)
@@ -472,6 +517,94 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(s6=0.3223_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
    case(p_dsd_pbep86_drpa75_df)
       param = d3_param(s6=0.3012_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+   case(p_dsdpbep86_2011_df)
+      param = d3_param(s6=0.418_wp, a1=0.0_wp, s8=0.0_wp, a2=5.65_wp)
+   case(p_dsd_svwn5_df)
+      param = d3_param(s6=0.46_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+   case(p_dsd_sp86_df)
+      param = d3_param(s6=0.30_wp, a1=0.0_wp, s8=0.0_wp, a2=5.8_wp)
+   case(p_dsd_slyp_df)
+      param = d3_param(s6=0.30_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+   case(p_dsd_spbe_df)
+      param = d3_param(s6=0.40_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+   case(p_dsd_bvwn5_df)
+      param = d3_param(s6=0.61_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+   case(p_dsd_blyp_2013_df)
+      param = d3_param(s6=0.57_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+   case(p_dsd_bpbe_df)
+      param = d3_param(s6=1.22_wp, a1=0.0_wp, s8=0.0_wp, a2=6.6_wp)
+   case(p_dsd_bp86_df)
+      param = d3_param(s6=0.76_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+   case(p_dsd_bpw91_df)
+      param = d3_param(s6=1.14_wp, a1=0.0_wp, s8=0.0_wp, a2=6.5_wp)
+   case(p_dsd_bb95_df)
+      param = d3_param(s6=1.02_wp, a1=0.0_wp, s8=0.0_wp, a2=6.8_wp)
+   case(p_dsd_pbevwn5_df)
+      param = d3_param(s6=0.54_wp, a1=0.0_wp, s8=0.0_wp, a2=5.1_wp)
+   case(p_dsd_pbelyp_df)
+      param = d3_param(s6=0.43_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+   case(p_dsdpbe_df)
+      param = d3_param(s6=0.78_wp, a1=0.0_wp, s8=0.0_wp, a2=6.1_wp)
+   case(p_dsdpbep86_df)
+      param = d3_param(s6=0.48_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+   case(p_dsd_pbepw91_df)
+      param = d3_param(s6=0.73_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+   case(p_dsdpbeb95_df)
+      param = d3_param(s6=0.61_wp, a1=0.0_wp, s8=0.0_wp, a2=6.2_wp)
+   case(p_dsd_pbehb95_df)
+      param = d3_param(s6=0.58_wp, a1=0.0_wp, s8=0.0_wp, a2=6.2_wp)
+   case(p_dsd_pbehp86_df)
+      param = d3_param(s6=0.46_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+   case(p_dsd_mpwlyp_df)
+      param = d3_param(s6=0.48_wp, a1=0.0_wp, s8=0.0_wp, a2=5.3_wp)
+   case(p_dsd_mpwpw91_df)
+      param = d3_param(s6=0.90_wp, a1=0.0_wp, s8=0.0_wp, a2=6.2_wp)
+   case(p_dsd_mpwp86_df)
+      param = d3_param(s6=0.59_wp, a1=0.0_wp, s8=0.0_wp, a2=5.8_wp)
+   case(p_dsd_mpwpbe_df)
+      param = d3_param(s6=0.96_wp, a1=0.0_wp, s8=0.0_wp, a2=6.3_wp)
+   case(p_dsd_mpwb95_df)
+      param = d3_param(s6=0.82_wp, a1=0.0_wp, s8=0.0_wp, a2=6.6_wp)
+   case(p_dsd_hsepbe_df)
+      param = d3_param(s6=0.79_wp, a1=0.0_wp, s8=0.0_wp, a2=6.1_wp)
+   case(p_dsd_hsepw91_df)
+      param = d3_param(s6=0.74_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+   case(p_dsd_hsep86_df)
+      param = d3_param(s6=0.46_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+   case(p_dsd_hselyp_df)
+      param = d3_param(s6=0.40_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+   case(p_dsd_tpss_df)
+      param = d3_param(s6=0.72_wp, a1=0.0_wp, s8=0.0_wp, a2=6.5_wp)
+   case(p_dsd_tpssb95_df)
+      param = d3_param(s6=0.91_wp, a1=0.0_wp, s8=0.0_wp, a2=7.9_wp)
+   case(p_dsd_olyp_df)
+      param = d3_param(s6=0.93_wp, a1=0.0_wp, s8=0.0_wp, a2=5.8_wp)
+   case(p_dsd_xlyp_df)
+      param = d3_param(s6=0.51_wp, a1=0.0_wp, s8=0.0_wp, a2=5.3_wp)
+   case(p_dsd_xb95_df)
+      param = d3_param(s6=0.92_wp, a1=0.0_wp, s8=0.0_wp, a2=6.7_wp)
+   case(p_dsd_b98_df)
+      param = d3_param(s6=0.07_wp, a1=0.0_wp, s8=0.0_wp, a2=3.7_wp)
+   case(p_dsd_bmk_df)
+      param = d3_param(s6=0.17_wp, a1=0.0_wp, s8=0.0_wp, a2=3.9_wp)
+   case(p_dsd_thcth_df)
+      param = d3_param(s6=0.39_wp, a1=0.0_wp, s8=0.0_wp, a2=4.8_wp)
+   case(p_dsd_hcth407_df)
+      param = d3_param(s6=0.53_wp, a1=0.0_wp, s8=0.0_wp, a2=5.0_wp)
+   case(p_dod_svwn5_df)
+      param = d3_param(s6=0.57_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+   case(p_dod_blyp_df)
+      param = d3_param(s6=0.96_wp, a1=0.0_wp, s8=0.0_wp, a2=5.1_wp)
+   case(p_dod_pbe_df)
+      param = d3_param(s6=0.91_wp, a1=0.0_wp, s8=0.0_wp, a2=5.9_wp)
+   case(p_dod_pbep86_df)
+      param = d3_param(s6=0.72_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+   case(p_dod_pbeb95_df)
+      param = d3_param(s6=0.71_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+   case(p_dod_hsep86_df)
+      param = d3_param(s6=0.69_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+   case(p_dod_pbehb95_df)
+      param = d3_param(s6=0.67_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
    end select
 
    if (present(s9)) then
