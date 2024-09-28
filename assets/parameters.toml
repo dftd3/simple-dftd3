@@ -851,7 +851,7 @@ published = 2012-11-05
 [citation."10.1021/jp501237c"]  # HSE06-D3
 title = "DFT-D3 Study of Some Molecular Crystals"
 author = ["Jonas Moellmann", "Stefan Grimme"]
-journal = "J. Phys. Chem. C 2014, 118, 14, "
+journal = "J. Phys. Chem. C"
 issue = "14"
 volume = "118"
 pages = "7615-7621"
