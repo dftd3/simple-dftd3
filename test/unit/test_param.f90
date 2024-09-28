@@ -114,9 +114,9 @@ subroutine test_d3bj_mb01(error)
       & "dm21", "dm21m", "dm21mc", "dm21mu", "dsdpbep86", "dsdpbeb95", "dsdpbe", &
       & "dodscan66", "revdsdblyp", "revdsdpbep86", "revdsdpbeb95", "revdsdpbe", &
       & "revdodblyp", "revdodpbep86", "revdodpbeb95", "revdodpbe", "pw91", "drpa75", &
-      & "scsdrpa75", "optscsdrpa75", "dsdpbedrpa75", "dsdpbep86drpa75", "dsdpbep86_km11", &
+      & "scsdrpa75", "optscsdrpa75", "dsdpbedrpa75", "dsdpbep86drpa75", "dsdpbep86_2011", &
       & "drpa75_mrcc", "scsdrpa75_mrcc", "dsdsvwn5", "dsdsp86", "dsdslyp", "dsdspbe", &
-      & "dsdbvwn5", "dsdblyp_km13", "dsdbpbe", "dsdbp86", "dsdbpw91", "dsdbb95", &
+      & "dsdbvwn5", "dsdblyp_2013", "dsdbpbe", "dsdbp86", "dsdbpw91", "dsdbb95", &
       & "dsdpbevwn5", "dsdpbelyp", "dsdpbepw91", "dsdpbehb95", "dsdpbehp86", &
       & "dsdmpwlyp", "dsdmpwpw91", "dsdmpwp86", "dsdmpwpbe", "dsdmpwb95", "dsdhsepbe", &
       & "dsdhsepw91", "dsdhsep86", "dsdhselyp", "dsdtpss", "dsdtpsstpss", "dsdtpssb95", &
