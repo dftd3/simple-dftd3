@@ -65,8 +65,7 @@ module dftd3_param
          & p_revdsdblyp_df, p_revdsdpbep86_df, p_revdsdpbeb95_df, p_revdsdpbe_df, &
          & p_revdodblyp_df, p_revdodpbep86_df, p_revdodpbeb95_df, p_revdodpbe_df, &
          & p_pw91_df, p_drpa75_df, p_scs_drpa75_df, p_optscs_drpa75_df, &
-         & p_dsd_pbe_drpa75_df, p_dsd_pbep86_drpa75_df, &
-         & p_dsdpbep86_2011_df, p_drpa75_mrcc_df, p_scs_drpa75_mrcc_df, &
+         & p_dsd_pbe_drpa75_df, p_dsd_pbep86_drpa75_df, p_dsdpbep86_2011_df, &
          & p_dsd_svwn5_df, p_dsd_sp86_df, p_dsd_slyp_df, p_dsd_spbe_df, &
          & p_dsd_bvwn5_df, p_dsd_blyp_2013_df, p_dsd_bpbe_df, p_dsd_bp86_df, &
          & p_dsd_bpw91_df, p_dsd_bb95_df, p_dsd_pbevwn5_df, p_dsd_pbelyp_df, &
@@ -130,7 +129,6 @@ function get_method_id(method) result(id)
    case("dm21mc"); id = p_dm21mc_df
    case("dm21mu"); id = p_dm21mu_df
    case("drpa75"); id = p_drpa75_df
-   case("drpa75_mrcc"); id = p_drpa75_mrcc_df
    case("dsdsvwn5"); id = p_dsd_svwn5_df
    case("dsdsp86"); id = p_dsd_sp86_df
    case("dsdslyp"); id = p_dsd_slyp_df
@@ -265,7 +263,6 @@ function get_method_id(method) result(id)
    case("rscan"); id = p_rscan_df
    case("scan"); id = p_scan_df
    case("scsdrpa75"); id = p_scs_drpa75_df
-   case("scsdrpa75_mrcc"); id = p_scs_drpa75_mrcc_df
    case("slaterdiracexchange"); id = p_slaterdiracexchange_df
    case("sogga11x"); id = p_sogga11x_df
    case("ssb"); id = p_ssb_df
@@ -522,10 +519,6 @@ subroutine get_rational_damping(param, method, error, s9)
       param = d3_param(s6=0.3012_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
    case(p_dsdpbep86_2011_df)
       param = d3_param(s6=0.418_wp, a1=0.0_wp, s8=0.0_wp, a2=5.65_wp)
-   case(p_drpa75_mrcc_df)
-      param = d3_param(s6=0.375_wp, a1=0.0_wp, s8=0.0_wp, a2=4.505_wp)
-   case(p_scs_drpa75_mrcc_df)
-      param = d3_param(s6=0.375_wp, a1=0.0_wp, s8=0.0_wp, a2=4.505_wp)
    case(p_dsd_svwn5_df)
       param = d3_param(s6=0.46_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
    case(p_dsd_sp86_df)

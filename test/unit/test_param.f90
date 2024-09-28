@@ -114,14 +114,14 @@ subroutine test_d3bj_mb01(error)
       & "dm21", "dm21m", "dm21mc", "dm21mu", "dsdpbep86", "dsdpbeb95", "dsdpbe", &
       & "dodscan66", "revdsdblyp", "revdsdpbep86", "revdsdpbeb95", "revdsdpbe", &
       & "revdodblyp", "revdodpbep86", "revdodpbeb95", "revdodpbe", "pw91", "drpa75", &
-      & "scsdrpa75", "optscsdrpa75", "dsdpbedrpa75", "dsdpbep86drpa75", "dsdpbep86_2011", &
-      & "drpa75_mrcc", "scsdrpa75_mrcc", "dsdsvwn5", "dsdsp86", "dsdslyp", "dsdspbe", &
-      & "dsdbvwn5", "dsdblyp_2013", "dsdbpbe", "dsdbp86", "dsdbpw91", "dsdbb95", &
-      & "dsdpbevwn5", "dsdpbelyp", "dsdpbepw91", "dsdpbehb95", "dsdpbehp86", &
-      & "dsdmpwlyp", "dsdmpwpw91", "dsdmpwp86", "dsdmpwpbe", "dsdmpwb95", "dsdhsepbe", &
-      & "dsdhsepw91", "dsdhsep86", "dsdhselyp", "dsdtpss", "dsdtpsstpss", "dsdtpssb95", &
-      & "dsdolyp", "dsdxlyp", "dsdxb95", "dsdb98", "dsdbmk", "dsdthcth", "dsdhcth407", &
-      & "dodsvwn5", "dodblyp", "dodpbe", "dodpbep86", "dodpbeb95", "dodhsep86", "dodpbehb95"]
+      & "scsdrpa75", "optscsdrpa75", "dsdpbedrpa75", "dsdpbep86drpa75", &
+      & "dsdsvwn5", "dsdsp86", "dsdslyp", "dsdspbe", "dsdbvwn5", "dsdblyp_2013", "dsdbpbe", &
+      & "dsdbp86", "dsdbpw91", "dsdbb95", "dsdpbevwn5", "dsdpbelyp", "dsdpbepw91", &
+      & "dsdpbehb95", "dsdpbehp86", "dsdmpwlyp", "dsdmpwpw91", "dsdmpwp86", "dsdmpwpbe", &
+      & "dsdmpwb95", "dsdhsepbe", "dsdhsepw91", "dsdhsep86", "dsdhselyp", "dsdtpss", &
+      & "dsdtpsstpss", "dsdtpssb95", "dsdolyp", "dsdxlyp", "dsdxb95", "dsdb98", "dsdbmk", &
+      & "dsdthcth", "dsdhcth407", "dodsvwn5", "dodblyp", "dodpbe", "dodpbep86", &
+      & "dodpbeb95", "dodhsep86", "dodpbehb95", "dsdpbep86_2011"]
    real(wp), parameter :: ref(*) = [&
       &-2.9551694676908012E-2_wp,-1.6638703086788331E-2_wp,-1.6725877716130381E-2_wp, &
       &-3.3014429592265318E-2_wp,-2.2051435219996540E-2_wp,-3.3481565825316001E-2_wp, &
@@ -162,8 +162,7 @@ subroutine test_d3bj_mb01(error)
       &-2.7103838130103503E-2_wp,-1.6794975103307797E-2_wp,-1.4460579192722246E-2_wp, &
       &-2.1361659109385409E-2_wp,-9.7460845051874183E-3_wp,-2.8391262582808205E-2_wp, &
       &-1.9116077511614916E-2_wp,-1.9252188823010906E-2_wp,-2.4371486479404614E-2_wp, &
-      &-2.2775959440262707E-2_wp,-1.3173453514111508E-2_wp,-2.8356523207498388E-2_wp, &
-      &-2.8356523207498388E-2_wp,-1.5040699501291652E-2_wp,-8.4730446664204769E-3_wp, &
+      &-2.2775959440262707E-2_wp,-1.5040699501291652E-2_wp,-8.4730446664204769E-3_wp, &
       &-9.8091518486684674E-3_wp,-9.7798508159701748E-3_wp,-2.6905355995708924E-2_wp, &
       &-2.1623262868629957E-2_wp,-1.9597764351264244E-2_wp,-1.8581716550343332E-2_wp, &
       &-1.9615520517321777E-2_wp,-1.4301725581560211E-2_wp,-2.5702259085751418E-2_wp, &
@@ -176,7 +175,8 @@ subroutine test_d3bj_mb01(error)
       &-1.3803848373701565E-2_wp,-1.0144589478429857E-2_wp,-2.0904528949713987E-2_wp, &
       &-2.3395356334306699E-2_wp,-2.7235779991786224E-2_wp,-1.8637388512470085E-2_wp, &
       &-4.5692905041335857E-2_wp,-2.3906657015347409E-2_wp,-2.7313595202479946E-2_wp, &
-      &-1.7359235198347055E-2_wp,-2.6175528735709948E-2_wp,-1.6381250116750040E-2_wp]
+      &-1.7359235198347055E-2_wp,-2.6175528735709948E-2_wp,-1.6381250116750040E-2_wp, &
+      &-1.3173453514111508E-2_wp]
 
    call get_structure(mol, "MB16-43", "01")
    do ii = 1, size(func)
