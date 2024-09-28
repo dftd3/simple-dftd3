@@ -66,9 +66,9 @@ module dftd3_param
          & p_revdodblyp_df, p_revdodpbep86_df, p_revdodpbeb95_df, p_revdodpbe_df, &
          & p_pw91_df, p_drpa75_df, p_scs_drpa75_df, p_optscs_drpa75_df, &
          & p_dsd_pbe_drpa75_df, p_dsd_pbep86_drpa75_df, &
-         & p_dsdpbep86_km11_df, p_drpa75_mrcc_df, p_scs_drpa75_mrcc_df, &
+         & p_dsdpbep86_2011_df, p_drpa75_mrcc_df, p_scs_drpa75_mrcc_df, &
          & p_dsd_svwn5_df, p_dsd_sp86_df, p_dsd_slyp_df, p_dsd_spbe_df, &
-         & p_dsd_bvwn5_df, p_dsd_blyp_km13_df, p_dsd_bpbe_df, p_dsd_bp86_df, &
+         & p_dsd_bvwn5_df, p_dsd_blyp_2013_df, p_dsd_bpbe_df, p_dsd_bp86_df, &
          & p_dsd_bpw91_df, p_dsd_bb95_df, p_dsd_pbevwn5_df, p_dsd_pbelyp_df, &
          & p_dsd_pbepw91_df, p_dsd_pbehb95_df, p_dsd_pbehp86_df, p_dsd_mpwlyp_df, &
          & p_dsd_mpwpw91_df, p_dsd_mpwp86_df, p_dsd_mpwpbe_df, p_dsd_mpwb95_df, &
@@ -137,7 +137,7 @@ function get_method_id(method) result(id)
    case("dsdspbe"); id = p_dsd_spbe_df
    case("dsdbvwn5"); id = p_dsd_bvwn5_df
    case("dsdblyp"); id = p_dsdblyp_df
-   case("dsdblyp_km13"); id = p_dsd_blyp_km13_df
+   case("dsdblyp_2013"); id = p_dsd_blyp_2013_df
    case("dsdblypfc"); id = p_dsdblypfc_df
    case("dsdbpbe"); id = p_dsd_bpbe_df
    case("dsdbp86"); id = p_dsd_bp86_df
@@ -148,7 +148,7 @@ function get_method_id(method) result(id)
    case("dsdpbe", "dsdpbepbe"); id = p_dsdpbe_df
    case("dsdpbedrpa75"); id = p_dsd_pbe_drpa75_df
    case("dsdpbep86"); id = p_dsdpbep86_df
-   case("dsdpbep86_km11"); id = p_dsdpbep86_km11_df
+   case("dsdpbep86_2011"); id = p_dsdpbep86_2011_df
    case("dsdpbep86drpa75"); id = p_dsd_pbep86_drpa75_df
    case("dsdpbepw91"); id = p_dsd_pbepw91_df
    case("dsdpbeb95"); id = p_dsdpbeb95_df
