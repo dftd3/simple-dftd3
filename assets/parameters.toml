@@ -8,6 +8,9 @@ d3.bjm = {s6=1.0, s9=1.0, alp=14.0, damping="rational"}
 d3.zerom = {s6=1.0, s9=1.0, rs8=1.0, alp=14.0, damping="mzero"}
 d3.op = {s9=1.0, alp=14.0, damping="optimizedpower"}
 
+[parameter.slaterdirac]
+d3.zero = {rs6=0.999, s8=-1.957, rs8=0.697}
+
 [parameter.bp]
 d3.bj = {a1=0.3946, s8=3.2822, a2=4.8516, doi="10.1002/jcc.21759"}
 d3.zero = {rs6=1.139, s8=1.683, doi="10.1063/1.3382344"}
@@ -50,6 +53,7 @@ d3.op = {s6=0.91826, s8=0.0, a1=0.200, a2=4.750, bet=6.0, doi="10.1021/acs.jctc.
 
 [parameter.rpw86pbe]
 d3.bj = {a1=0.4613, s8=1.3845, a2=4.5062, doi="10.1002/jcc.21759"}
+d3.zero = {rs6=1.224, s8=0.901}
 
 [parameter.b3lyp]
 d3.bj = {a1=0.3981, s8=1.9889, a2=4.4211, doi="10.1002/jcc.21759"}
@@ -65,6 +69,7 @@ d3.op = {s6=1.0, s8=0.51581, a1=0.575, a2=3.00, bet=8.0, doi="10.1021/acs.jctc.7
 
 [parameter.hf]
 d3.bj = {a1=0.3385, s8=0.9171, a2=2.8830, doi="10.1002/jcc.21759"}
+d3.zero = {rs6=1.158, s8=1.746}
 
 [parameter.tpss0]
 d3.bj = {a1=0.3768, s8=1.2576, a2=4.5865, doi="10.1002/jcc.21759"}
@@ -83,9 +88,11 @@ d3.zero = {rs6=1.129, s8=0.109, doi="10.1021/jp501237c"}
 
 [parameter.revpbe38]
 d3.bj = {a1=0.4309, s8=1.4760, a2=3.9446, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.021, s8=0.862}
 
 [parameter.pw6b95]
 d3.bj = {a1=0.2076, s8=0.7257, a2=6.3750, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.532, s8=0.862}
 
 [parameter.b2plyp]
 d3.bj = {a1=0.3065, s8=0.9147, a2=5.0570, s6=0.64, doi="10.1039/c0cp02984j"}
@@ -151,12 +158,15 @@ d3.zero = {rs6=0.837, s8=2.033, doi="10.1039/c0cp02984j"}
 
 [parameter.ssb]
 d3.bj = {a1=-0.0952, s8=-0.1744, a2=5.2170, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.215, s8=0.663, doi="10.1039/c0cp02984j"}
 
 [parameter.revssb]
 d3.bj = {a1=0.4720, s8=0.4389, a2=4.0986, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.221, s8=0.560, doi="10.1039/c0cp02984j"}
 
 [parameter.otpss]
 d3.bj = {a1=0.4634, s8=2.7495, a2=4.3153, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.128, s8=1.494, doi="10.1039/c0cp02984j"}
 
 [parameter.b3pw91]
 d3.bj = {a1=0.4312, s8=2.8524, a2=4.4693, doi="10.1039/c0cp02984j"}
@@ -177,9 +187,11 @@ d3.op = {s6=1.0, s8=0.43185, a1=0.575, a2=3.00, bet=8.0, doi="10.1021/acs.jctc.7
 
 [parameter.mpw1b95]
 d3.bj = {a1=0.1955, s8=1.0508, a2=6.4177, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.605, s8=1.118, doi="10.1039/c0cp02984j"}
 
 [parameter.pwb6k]
 d3.bj = {a1=0.1805, s8=0.9383, a2=7.7627, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.660, s8=0.550, doi="10.1039/c0cp02984j"}
 
 [parameter.b1b95]
 d3.bj = {a1=0.2092, s8=1.4507, a2=5.5545, doi="10.1039/c0cp02984j"}
@@ -191,6 +203,7 @@ d3.zero = {rs6=1.931, s8=2.168, doi="10.1039/c0cp02984j"}
 
 [parameter.camb3lyp]
 d3.bj = {a1=0.3708, s8=2.0674, a2=5.4743, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.378, s8=1.217, doi="10.1039/c0cp02984j"}
 
 [parameter.lcwpbe]
 d3.bj = {a1=0.3919, s8=1.8541, a2=5.0897, doi="10.1039/c0cp02984j"}
@@ -204,6 +217,7 @@ d3.zero = {rs6=1.586, s8=0.760, s6=0.56, doi="10.1021/ct100466k"}
 
 [parameter.ptpss]
 d3.bj = {a1=0.0000, s8=0.2804, a2=6.5745, s6=0.750, doi="10.1039/c0cp02984j"}
+d3.zero = {rs6=1.541, s8=0.879, s6=0.75, doi="10.1021/ct100466k"}
 
 [parameter.pwpb95]
 d3.bj = {a1=0.0000, s8=0.2904, a2=7.3141, s6=0.820, doi="10.1039/c0cp02984j"}
@@ -228,8 +242,8 @@ d3.bj = {a1=0.3563, s8=1.0821, a2=4.3359}
 d3.bj = {a1=0.5719, s8=0.5883, a2=3.6017}
 
 [parameter.pw1pw]
-d3.bj = {a1=0.3807, s8=2.3363, a2=5.8844}
-d3.zero = {rs6=1.4968, s8=1.1786, doi="10.1039/C7CP04913G"}
+d3.bj = {a1=0.3807, s8=2.3363, a2=5.8844, doi="10.1039/c7cp04913g"}
+d3.zero = {rs6=1.4968, s8=1.1786, doi="10.1039/c7cp04913g"}
 
 [parameter.pwgga]
 d3.bj = {a1=0.2211, s8=2.6910, a2=6.7278}
@@ -413,7 +427,7 @@ d3.bj = {a1=0.2746, s8=1.1908, a2=5.3157, doi="10.1039/c7cp04913g"}
 
 [parameter.mpw2plyp]
 d3.bj = {s6=0.66, a1=0.4105, s8=0.6223, a2=5.0136, doi="10.1039/c7cp04913g"}
-d3.zero = {s6=0.66, rs6=1.5527, s8=0.7529, doi="10.1039/C7CP04913G"}
+d3.zero = {s6=0.66, rs6=1.5527, s8=0.7529, doi="10.1039/c7cp04913g"}
 
 [parameter.ms2]
 d3.op = {s6=1.0, s8=0.90743, a1=0.700, a2=4.00, bet=2.0, doi="10.1021/acs.jctc.7b00176"}
@@ -468,14 +482,6 @@ d3.bj = {s6=0.3012, a1=0.0, s8=0.0, a2=4.5050, doi="10.1021/acs.jpca.1c01295"}
 
 [parameter.dsdpbep86_2011]
 d3.bj = {s6=0.418, a1=0.0, s8=0.0, a2=5.65, doi="10.1039/c1cp22592h"}
-
-# dRPA75-D3(BJ) from MRCC source code
-[parameter.drpa75_mrcc]
-d3.bj = {s6=0.375, a1=0.0, s8=0.0, a2=4.505}
-
-# SCS-dRPA75-D3(BJ) from MRCC source code
-[parameter.scsdrpa75_mrcc]
-d3.bj = {s6=0.375, a1=0.0, s8=0.0, a2=4.505}
 
 [parameter.dsdsvwn5]
 d3.bj = {s6=0.46, a1=0.0, s8=0.0, a2=5.6, doi="10.1002/jcc.23391"}

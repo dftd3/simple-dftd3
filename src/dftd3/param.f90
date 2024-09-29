@@ -16,6 +16,13 @@
 
 module dftd3_param
    use mctc_env, only : wp, error_type, fatal_error
+   use dftd3_citation, only : citation_type, author_name, new_citation, &
+      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
+      & doi_gmtkn30_0, doi_gmtkn30_bj, doi_gmtkn55, doi_dsd, doi_dsdpbep86, &
+      & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
+      & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
+      & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
+      & doi_wb97x_d3, doi_hse06_d3
    implicit none
 
    public :: d3_param
@@ -57,7 +64,7 @@ module dftd3_param
          & p_mpw1kcis_df, p_pbeh1pbe_df, p_pbe1kcis_df, p_x3lyp_df, p_o3lyp_df, &
          & p_b97_1_df, p_b97_2_df, p_b98_df, p_hiss_df, p_hse03_df, p_revtpssh_df, &
          & p_revtpss0_df, p_tpss1kcis_df, p_tauhcthhyb_df, p_mn15_df, p_lc_whpbe_df, &
-         & p_mpw2plyp_df, p_m11_df, p_sogga11x_df, p_n12sx_df, p_mn12sx_df, &
+         & p_mpw2plyp_df, p_m11_df, p_sogga11x_df, p_n12sx_df, p_mn12sx_df, p_mn12l_df, &
          & p_ms2_df, p_ms2h_df, p_mpw1lyp_df, p_mpwkcis1k_df, p_pkzb_df, p_n12_df, &
          & p_m08hx_df, p_m11l_df, p_mn15l_df, p_pwp_df, p_r2scanh_df, p_r2scan0_df, &
          & p_r2scan50_df, p_b973c_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df, &
@@ -201,6 +208,7 @@ function get_method_id(method) result(id)
    case("m08hx"); id = p_m08hx_df
    case("m11"); id = p_m11_df
    case("m11l"); id = p_m11l_df
+   case("mn12l"); id = p_mn12l_df
    case("mn12sx"); id = p_mn12sx_df
    case("mn15"); id = p_mn15_df
    case("mn15l"); id = p_mn15l_df
@@ -281,7 +289,7 @@ function get_method_id(method) result(id)
 end function get_method_id
 
 
-subroutine get_rational_damping(param, method, error, s9)
+subroutine get_rational_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -292,8 +300,13 @@ subroutine get_rational_damping(param, method, error, s9)
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
 
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
+
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
+
+   character(len=:), allocatable :: doi
 
    select case(get_method_id(method))
    case default
@@ -301,311 +314,470 @@ subroutine get_rational_damping(param, method, error, s9)
       return
    case(p_bp_df)
       param = d3_param(a1=0.3946_wp, s8=3.2822_wp, a2=4.8516_wp)
+      doi = doi_dftd3_bj
    case(p_blyp_df)
       param = d3_param(a1=0.4298_wp, s8=2.6996_wp, a2=4.2359_wp)
+      doi = doi_dftd3_bj
    case(p_revpbe_df)
       param = d3_param(a1=0.5238_wp, s8=2.3550_wp, a2=3.5016_wp)
+      doi = doi_dftd3_bj
    case(p_rpbe_df)
       param = d3_param(a1=0.1820_wp, s8=0.8318_wp, a2=4.0094_wp)
+      ! TODO: find reference (it is not GMTKN55)
    case(p_b97d_df)
       param = d3_param(a1=0.5545_wp, s8=2.2609_wp, a2=3.2297_wp)
+      doi = doi_dftd3_bj
    case(p_b973c_df)
       param = d3_param(a1=0.37_wp, s8=1.50_wp, a2=4.10_wp)
+      doi = doi_b973c
    case(p_pbe_df)
       param = d3_param(a1=0.4289_wp, s8=0.7875_wp, a2=4.4407_wp)
+      doi = doi_dftd3_bj
    case(p_rpw86pbe_df)
       param = d3_param(a1=0.4613_wp, s8=1.3845_wp, a2=4.5062_wp)
+      doi = doi_dftd3_bj
    case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(a1=0.3981_wp, s8=1.9889_wp, a2=4.4211_wp)
+      doi = doi_dftd3_bj
    case(p_tpss_df)
       param = d3_param(a1=0.4535_wp, s8=1.9435_wp, a2=4.4752_wp)
+      doi = doi_dftd3_bj
    case(p_hf_df)
       param = d3_param(a1=0.3385_wp, s8=0.9171_wp, a2=2.8830_wp)
+      doi = doi_dftd3_bj
    case(p_tpss0_df)
       param = d3_param(a1=0.3768_wp, s8=1.2576_wp, a2=4.5865_wp)
+      doi = doi_dftd3_bj
    case(p_pbe0_df)
       param = d3_param(a1=0.4145_wp, s8=1.2177_wp, a2=4.8593_wp)
+      doi = doi_dftd3_bj
    case(p_hse06_df)
       param = d3_param(a1=0.383_wp, s8=2.310_wp, a2=5.685_wp)
+      doi = doi_hse06_d3
    case(p_revpbe38_df)
       param = d3_param(a1=0.4309_wp, s8=1.4760_wp, a2=3.9446_wp)
+      doi = doi_gmtkn30_bj
    case(p_pw6b95_df)
       param = d3_param(a1=0.2076_wp, s8=0.7257_wp, a2=6.3750_wp)
+      doi = doi_gmtkn30_bj
    case(p_b2plyp_df)
       param = d3_param(a1=0.3065_wp, s8=0.9147_wp, a2=5.0570_wp, s6=0.64_wp)
+      doi = doi_gmtkn30_bj
    case(p_dsdblyp_df)
       param = d3_param(a1=0.0000_wp, s8=0.2130_wp, a2=6.0519_wp, s6=0.50_wp)
+      doi = doi_gmtkn30_bj
    case(p_dsdblypfc_df)
       param = d3_param(a1=0.0009_wp, s8=0.2112_wp, a2=5.9807_wp, s6=0.50_wp)
+      doi = doi_gmtkn30_bj
    case(p_bop_df)
       param = d3_param(a1=0.4870_wp, s8=3.2950_wp, a2=3.5043_wp)
+      doi = doi_gmtkn30_bj
    case(p_mpwlyp_df)
       param = d3_param(a1=0.4831_wp, s8=2.0077_wp, a2=4.5323_wp)
+      doi = doi_gmtkn30_bj
    case(p_olyp_df)
       param = d3_param(a1=0.5299_wp, s8=2.6205_wp, a2=2.8065_wp)
+      doi = doi_gmtkn30_bj
    case(p_pbesol_df)
       param = d3_param(a1=0.4466_wp, s8=2.9491_wp, a2=6.1742_wp)
+      doi = doi_gmtkn30_bj
    case(p_bpbe_df)
       param = d3_param(a1=0.4567_wp, s8=4.0728_wp, a2=4.3908_wp)
+      doi = doi_gmtkn30_bj
    case(p_opbe_df)
       param = d3_param(a1=0.5512_wp, s8=3.3816_wp, a2=2.9444_wp)
+      doi = doi_gmtkn30_bj
    case(p_ssb_df)
       param = d3_param(a1=-0.0952_wp, s8=-0.1744_wp, a2=5.2170_wp)
+      doi = doi_gmtkn30_bj
    case(p_revssb_df)
       param = d3_param(a1=0.4720_wp, s8=0.4389_wp, a2=4.0986_wp)
+      doi = doi_gmtkn30_bj
    case(p_otpss_df)
       param = d3_param(a1=0.4634_wp, s8=2.7495_wp, a2=4.3153_wp)
+      doi = doi_gmtkn30_bj
    case(p_b3pw91_df)
       param = d3_param(a1=0.4312_wp, s8=2.8524_wp, a2=4.4693_wp)
+      doi = doi_gmtkn30_bj
    case(p_bhlyp_df)
       param = d3_param(a1=0.2793_wp, s8=1.0354_wp, a2=4.9615_wp)
+      doi = doi_gmtkn30_bj
    case(p_revpbe0_df)
       param = d3_param(a1=0.4679_wp, s8=1.7588_wp, a2=3.7619_wp)
+      doi = doi_gmtkn30_bj
    case(p_tpssh_df)
       param = d3_param(a1=0.4529_wp, s8=2.2382_wp, a2=4.6550_wp)
+      doi = doi_gmtkn30_bj
    case(p_mpw1b95_df)
       param = d3_param(a1=0.1955_wp, s8=1.0508_wp, a2=6.4177_wp)
+      doi = doi_gmtkn30_bj
    case(p_pwb6k_df)
       param = d3_param(a1=0.1805_wp, s8=0.9383_wp, a2=7.7627_wp)
+      doi = doi_gmtkn30_bj
    case(p_b1b95_df)
       param = d3_param(a1=0.2092_wp, s8=1.4507_wp, a2=5.5545_wp)
+      doi = doi_gmtkn30_bj
    case(p_bmk_df)
       param = d3_param(a1=0.1940_wp, s8=2.0860_wp, a2=5.9197_wp)
+      doi = doi_gmtkn30_bj
    case(p_camb3lyp_df)
       param = d3_param(a1=0.3708_wp, s8=2.0674_wp, a2=5.4743_wp)
+      doi = doi_gmtkn30_bj
    case(p_lcwpbe_df)
       param = d3_param(a1=0.3919_wp, s8=1.8541_wp, a2=5.0897_wp)
+      doi = doi_gmtkn30_bj
    case(p_b2gpplyp_df)
       param = d3_param(a1=0.0000_wp, s8=0.2597_wp, a2=6.3332_wp, s6=0.560_wp)
+      doi = doi_gmtkn30_bj
    case(p_ptpss_df)
       param = d3_param(a1=0.0000_wp, s8=0.2804_wp, a2=6.5745_wp, s6=0.750_wp)
+      doi = doi_gmtkn30_bj
    case(p_pwpb95_df)
       param = d3_param(a1=0.0000_wp, s8=0.2904_wp, a2=7.3141_wp, s6=0.820_wp)
+      doi = doi_gmtkn30_bj
    case(p_pw91_df)
       param = d3_param(a1=0.6319_wp, s8=1.9598_wp, a2=4.5718_wp)
+      doi = doi_pw91_d3
    case(p_hf_mixed_df)
       param = d3_param(a1=0.5607_wp, s8=3.9027_wp, a2=4.5622_wp)
+      doi = doi_gcp
    case(p_hf_sv_df)
       param = d3_param(a1=0.4249_wp, s8=2.1849_wp, a2=4.2783_wp)
+      doi = doi_gcp
    case(p_hf_minis_df)
       param = d3_param(a1=0.1702_wp, s8=0.9841_wp, a2=3.8506_wp)
+      doi = doi_gcp
    case(p_b3lyp_631gd_df)
       param = d3_param(a1=0.5014_wp, s8=4.0672_wp, a2=4.8409_wp)
+      doi = doi_gcp
    case(p_hcth120_df)
       param = d3_param(a1=0.3563_wp, s8=1.0821_wp, a2=4.3359_wp)
+      ! TODO: find reference
    case(p_dftb3_df)
       param = d3_param(a1=0.5719_wp, s8=0.5883_wp, a2=3.6017_wp)
+      ! TODO: find reference
    case(p_pw1pw_df)
       param = d3_param(a1=0.3807_wp, s8=2.3363_wp, a2=5.8844_wp)
+      doi = doi_gmtkn55
    case(p_pwgga_df)
       param = d3_param(a1=0.2211_wp, s8=2.6910_wp, a2=6.7278_wp)
+      ! TODO: find reference
    case(p_hsesol_df)
       param = d3_param(a1=0.4650_wp, s8=2.9215_wp, a2=6.2003_wp)
+      ! TODO: find reference
    case(p_hf3c_df)
       param = d3_param(a1=0.4171_wp, s8=0.8777_wp, a2=2.9149_wp)
+      doi = doi_hf3c
    case(p_hf3cv_df)
       param = d3_param(a1=0.3063_wp, s8=0.5022_wp, a2=3.9856_wp)
+      doi = doi_hf3c
    case(p_pbeh3c_df)
       param = d3_param(a1=0.4860_wp, s8=0.0000_wp, a2=4.5000_wp)
+      doi = doi_pbeh3c
    case(p_scan_df)
       param = d3_param(a1=0.5380_wp, s8=0.0000_wp, a2=5.4200_wp)
+      doi = doi_scan_d3
    case(p_rscan_df)
       param = d3_param(a1=0.47023427_wp, s8=1.08859014_wp, a2=5.73408312_wp)
+      doi = doi_r2scan_d4
    case(p_r2scan_df)
       param = d3_param(a1=0.49484001_wp, s8=0.78981345_wp, a2=5.73083694_wp)
+      doi = doi_r2scan_d4
    case(p_r2scanh_df)
       param = d3_param(s8=1.1236_wp, a1=0.4709_wp, a2=5.9157_wp)
+      doi = doi_r2scan_hyb
    case(p_r2scan0_df)
       param = d3_param(s8=1.1846_wp, a1=0.4534_wp, a2=5.8972_wp)
+      doi = doi_r2scan_hyb
    case(p_r2scan50_df)
       param = d3_param(s8=1.3294_wp, a1=0.4311_wp, a2=5.9240_wp)
+      doi = doi_r2scan_hyb
    case(p_wb97x_df)
       param = d3_param(a1=0.0000_wp, s8=0.2641_wp, a2=5.4959_wp)
+      ! TODO: find reference
    case(p_wb97m_df)
       param = d3_param(a1=0.5660_wp, s8=0.3908_wp, a2=3.1280_wp)
+      doi = doi_b97m_d3
    case(p_b97m_df)
       param = d3_param(a1=-0.0780_wp, s8=0.1384_wp, a2=5.5946_wp)
+      doi = doi_b97m_d3
    case(p_pbehpbe_df)
       param = d3_param(a1=0.0000_wp, s8=1.1152_wp, a2=6.7184_wp)
+      doi = doi_gmtkn55
    case(p_xlyp_df)
       param = d3_param(a1=0.0809_wp, s8=1.5669_wp, a2=5.3166_wp)
+      doi = doi_gmtkn55
    case(p_mpwpw_df)
       param = d3_param(a1=0.3168_wp, s8=1.7974_wp, a2=4.7732_wp)
+      doi = doi_gmtkn55
    case(p_hcth407_df)
       param = d3_param(a1=0.0000_wp, s8=0.6490_wp, a2=4.8162_wp)
+      doi = doi_gmtkn55
    case(p_revtpss_df)
       param = d3_param(a1=0.4326_wp, s8=1.4023_wp, a2=4.4723_wp)
+      doi = doi_gmtkn55
    case(p_tauhcth_df)
       param = d3_param(a1=0.0000_wp, s8=1.2626_wp, a2=5.6162_wp)
+      doi = doi_gmtkn55
    case(p_b3p_df)
       param = d3_param(a1=0.4601_wp, s8=3.3211_wp, a2=4.9858_wp)
+      doi = doi_gmtkn55
    case(p_b1p_df)
       param = d3_param(a1=0.4724_wp, s8=3.5681_wp, a2=4.9858_wp)
+      doi = doi_gmtkn55
    case(p_b1lyp_df)
       param = d3_param(a1=0.1986_wp, s8=2.1167_wp, a2=5.3875_wp)
+      doi = doi_gmtkn55
    case(p_mpwb1k_df)
       param = d3_param(a1=0.1474_wp, s8=0.9499_wp, a2=6.6223_wp)
+      doi = doi_gmtkn55
    case(p_mpw1pw_df)
       param = d3_param(a1=0.3342_wp, s8=1.8744_wp, a2=4.9819_wp)
+      doi = doi_gmtkn55
    case(p_mpw1kcis_df)
       param = d3_param(a1=0.0576_wp, s8=1.0893_wp, a2=5.5314_wp)
+      doi = doi_gmtkn55
    case(p_pbeh1pbe_df)
       param = d3_param(a1=0.0000_wp, s8=1.4877_wp, a2=7.0385_wp)
+      doi = doi_gmtkn55
    case(p_pbe1kcis_df)
       param = d3_param(a1=0.0000_wp, s8=0.7688_wp, a2=6.2794_wp)
+      doi = doi_gmtkn55
    case(p_x3lyp_df)
       param = d3_param(a1=0.2022_wp, s8=1.5744_wp, a2=5.4184_wp)
+      doi = doi_gmtkn55
    case(p_o3lyp_df)
       param = d3_param(a1=0.0963_wp, s8=1.8171_wp, a2=5.9940_wp)
+      doi = doi_gmtkn55
    case(p_b97_1_df)
       param = d3_param(a1=0.0000_wp, s8=0.4814_wp, a2=6.2279_wp)
+      doi = doi_gmtkn55
    case(p_b97_2_df)
       param = d3_param(a1=0.0000_wp, s8=0.9448_wp, a2=5.9940_wp)
+      doi = doi_gmtkn55
    case(p_b98_df)
       param = d3_param(a1=0.0000_wp, s8=0.7086_wp, a2=6.0672_wp)
+      doi = doi_gmtkn55
    case(p_hiss_df)
       param = d3_param(a1=0.0000_wp, s8=1.6112_wp, a2=7.3539_wp)
+      doi = doi_gmtkn55
    case(p_hse03_df)
       param = d3_param(a1=0.0000_wp, s8=1.1243_wp, a2=6.8889_wp)
+      doi = doi_gmtkn55
    case(p_revtpssh_df)
       param = d3_param(a1=0.2660_wp, s8=1.4076_wp, a2=5.3761_wp)
+      doi = doi_gmtkn55
    case(p_revtpss0_df)
       param = d3_param(a1=0.2218_wp, s8=1.6151_wp, a2=5.7985_wp)
+      doi = doi_gmtkn55
    case(p_tpss1kcis_df)
       param = d3_param(a1=0.0000_wp, s8=1.0542_wp, a2=6.0201_wp)
+      doi = doi_gmtkn55
    case(p_tauhcthhyb_df)
       param = d3_param(a1=0.0000_wp, s8=0.9585_wp, a2=10.1389_wp)
+      doi = doi_gmtkn55
    case(p_m11_df)
       param = d3_param(a1=0.0000_wp, s8=2.8112_wp, a2=10.1389_wp)
+      doi = doi_minnesota_d3
    case(p_sogga11x_df)
       param = d3_param(a1=0.1330_wp, s8=1.1426_wp, a2=5.7381_wp)
+      doi = doi_minnesota_d3
    case(p_n12sx_df)
       param = d3_param(a1=0.3283_wp, s8=2.4900_wp, a2=5.7898_wp)
+      doi = doi_minnesota_d3
    case(p_mn12sx_df)
       param = d3_param(a1=0.0983_wp, s8=1.1674_wp, a2=8.0259_wp)
+      doi = doi_minnesota_d3
+   case(p_mn12l_df)
+      param = d3_param(a1=0.0000_wp, s8=2.2674_wp, a2=9.1494_wp)
+      doi = doi_minnesota_d3
    case(p_mn15_df)
       param = d3_param(a1=2.0971_wp, s8=0.7862_wp, a2=7.5923_wp)
+      doi = doi_gmtkn55
    case(p_lc_whpbe_df)
       param = d3_param(a1=0.2746_wp, s8=1.1908_wp, a2=5.3157_wp)
+      doi = doi_gmtkn55
    case(p_mpw2plyp_df)
       param = d3_param(s6=0.66_wp, a1=0.4105_wp, s8=0.6223_wp, a2=5.0136_wp)
+      doi = doi_gmtkn55
    case(p_dodscan66_df)
       param = d3_param(s6=0.3152_wp, a1=0.0_wp, s8=0.0_wp, a2=5.75_wp)
+      doi = doi_revdsd
    case(p_revdsdblyp_df)
       param = d3_param(s6=0.5451_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+      doi = doi_revdsd
    case(p_revdsdpbep86_df)
       param = d3_param(s6=0.4377_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+      doi = doi_revdsd
    case(p_revdsdpbeb95_df)
       param = d3_param(s6=0.3686_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+      doi = doi_revdsd
    case(p_revdsdpbe_df)
       param = d3_param(s6=0.5746_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+      doi = doi_revdsd
    case(p_revdodblyp_df)
       param = d3_param(s6=0.6145_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+      doi = doi_revdsd
    case(p_revdodpbep86_df)
       param = d3_param(s6=0.4770_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+      doi = doi_revdsd
    case(p_revdodpbeb95_df)
       param = d3_param(s6=0.4107_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+      doi = doi_revdsd
    case(p_revdodpbe_df)
       param = d3_param(s6=0.6067_wp, a1=0.0_wp, s8=0.0_wp, a2=5.5_wp)
+      doi = doi_revdsd
    case(p_drpa75_df)
       param = d3_param(s6=0.3754_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5048_wp)
+      doi = doi_drpa
    case(p_scs_drpa75_df)
       param = d3_param(s6=0.2528_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+      doi = doi_drpa
    case(p_optscs_drpa75_df)
       param = d3_param(s6=0.2546_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+      doi = doi_drpa
    case(p_dsd_pbe_drpa75_df)
       param = d3_param(s6=0.3223_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+      doi = doi_drpa
    case(p_dsd_pbep86_drpa75_df)
       param = d3_param(s6=0.3012_wp, a1=0.0_wp, s8=0.0_wp, a2=4.5050_wp)
+      doi = doi_drpa
    case(p_dsdpbep86_2011_df)
       param = d3_param(s6=0.418_wp, a1=0.0_wp, s8=0.0_wp, a2=5.65_wp)
+      doi = doi_dsd
    case(p_dsd_svwn5_df)
       param = d3_param(s6=0.46_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+      doi = doi_dsd
    case(p_dsd_sp86_df)
       param = d3_param(s6=0.30_wp, a1=0.0_wp, s8=0.0_wp, a2=5.8_wp)
+      doi = doi_dsd
    case(p_dsd_slyp_df)
       param = d3_param(s6=0.30_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+      doi = doi_dsd
    case(p_dsd_spbe_df)
       param = d3_param(s6=0.40_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+      doi = doi_dsd
    case(p_dsd_bvwn5_df)
       param = d3_param(s6=0.61_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+      doi = doi_dsd
    case(p_dsd_blyp_2013_df)
       param = d3_param(s6=0.57_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+      doi = doi_dsd
    case(p_dsd_bpbe_df)
       param = d3_param(s6=1.22_wp, a1=0.0_wp, s8=0.0_wp, a2=6.6_wp)
+      doi = doi_dsd
    case(p_dsd_bp86_df)
       param = d3_param(s6=0.76_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+      doi = doi_dsd
    case(p_dsd_bpw91_df)
       param = d3_param(s6=1.14_wp, a1=0.0_wp, s8=0.0_wp, a2=6.5_wp)
+      doi = doi_dsd
    case(p_dsd_bb95_df)
       param = d3_param(s6=1.02_wp, a1=0.0_wp, s8=0.0_wp, a2=6.8_wp)
+      doi = doi_dsd
    case(p_dsd_pbevwn5_df)
       param = d3_param(s6=0.54_wp, a1=0.0_wp, s8=0.0_wp, a2=5.1_wp)
+      doi = doi_dsd
    case(p_dsd_pbelyp_df)
       param = d3_param(s6=0.43_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+      doi = doi_dsd
    case(p_dsdpbe_df)
       param = d3_param(s6=0.78_wp, a1=0.0_wp, s8=0.0_wp, a2=6.1_wp)
+      doi = doi_dsd
    case(p_dsdpbep86_df)
       param = d3_param(s6=0.48_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+      doi = doi_dsd
    case(p_dsd_pbepw91_df)
       param = d3_param(s6=0.73_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+      doi = doi_dsd
    case(p_dsdpbeb95_df)
       param = d3_param(s6=0.61_wp, a1=0.0_wp, s8=0.0_wp, a2=6.2_wp)
+      doi = doi_dsd
    case(p_dsd_pbehb95_df)
       param = d3_param(s6=0.58_wp, a1=0.0_wp, s8=0.0_wp, a2=6.2_wp)
+      doi = doi_dsd
    case(p_dsd_pbehp86_df)
       param = d3_param(s6=0.46_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+      doi = doi_dsd
    case(p_dsd_mpwlyp_df)
       param = d3_param(s6=0.48_wp, a1=0.0_wp, s8=0.0_wp, a2=5.3_wp)
+      doi = doi_dsd
    case(p_dsd_mpwpw91_df)
       param = d3_param(s6=0.90_wp, a1=0.0_wp, s8=0.0_wp, a2=6.2_wp)
+      doi = doi_dsd
    case(p_dsd_mpwp86_df)
       param = d3_param(s6=0.59_wp, a1=0.0_wp, s8=0.0_wp, a2=5.8_wp)
+      doi = doi_dsd
    case(p_dsd_mpwpbe_df)
       param = d3_param(s6=0.96_wp, a1=0.0_wp, s8=0.0_wp, a2=6.3_wp)
+      doi = doi_dsd
    case(p_dsd_mpwb95_df)
       param = d3_param(s6=0.82_wp, a1=0.0_wp, s8=0.0_wp, a2=6.6_wp)
+      doi = doi_dsd
    case(p_dsd_hsepbe_df)
       param = d3_param(s6=0.79_wp, a1=0.0_wp, s8=0.0_wp, a2=6.1_wp)
+      doi = doi_dsd
    case(p_dsd_hsepw91_df)
       param = d3_param(s6=0.74_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+      doi = doi_dsd
    case(p_dsd_hsep86_df)
       param = d3_param(s6=0.46_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+      doi = doi_dsd
    case(p_dsd_hselyp_df)
       param = d3_param(s6=0.40_wp, a1=0.0_wp, s8=0.0_wp, a2=5.2_wp)
+      doi = doi_dsd
    case(p_dsd_tpss_df)
       param = d3_param(s6=0.72_wp, a1=0.0_wp, s8=0.0_wp, a2=6.5_wp)
+      doi = doi_dsd
    case(p_dsd_tpssb95_df)
       param = d3_param(s6=0.91_wp, a1=0.0_wp, s8=0.0_wp, a2=7.9_wp)
+      doi = doi_dsd
    case(p_dsd_olyp_df)
       param = d3_param(s6=0.93_wp, a1=0.0_wp, s8=0.0_wp, a2=5.8_wp)
+      doi = doi_dsd
    case(p_dsd_xlyp_df)
       param = d3_param(s6=0.51_wp, a1=0.0_wp, s8=0.0_wp, a2=5.3_wp)
+      doi = doi_dsd
    case(p_dsd_xb95_df)
       param = d3_param(s6=0.92_wp, a1=0.0_wp, s8=0.0_wp, a2=6.7_wp)
+      doi = doi_dsd
    case(p_dsd_b98_df)
       param = d3_param(s6=0.07_wp, a1=0.0_wp, s8=0.0_wp, a2=3.7_wp)
+      doi = doi_dsd
    case(p_dsd_bmk_df)
       param = d3_param(s6=0.17_wp, a1=0.0_wp, s8=0.0_wp, a2=3.9_wp)
+      doi = doi_dsd
    case(p_dsd_thcth_df)
       param = d3_param(s6=0.39_wp, a1=0.0_wp, s8=0.0_wp, a2=4.8_wp)
+      doi = doi_dsd
    case(p_dsd_hcth407_df)
       param = d3_param(s6=0.53_wp, a1=0.0_wp, s8=0.0_wp, a2=5.0_wp)
+      doi = doi_dsd
    case(p_dod_svwn5_df)
       param = d3_param(s6=0.57_wp, a1=0.0_wp, s8=0.0_wp, a2=5.6_wp)
+      doi = doi_dsd
    case(p_dod_blyp_df)
       param = d3_param(s6=0.96_wp, a1=0.0_wp, s8=0.0_wp, a2=5.1_wp)
+      doi = doi_dsd
    case(p_dod_pbe_df)
       param = d3_param(s6=0.91_wp, a1=0.0_wp, s8=0.0_wp, a2=5.9_wp)
+      doi = doi_dsd
    case(p_dod_pbep86_df)
       param = d3_param(s6=0.72_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+      doi = doi_dsd
    case(p_dod_pbeb95_df)
       param = d3_param(s6=0.71_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+      doi = doi_dsd
    case(p_dod_hsep86_df)
       param = d3_param(s6=0.69_wp, a1=0.0_wp, s8=0.0_wp, a2=5.4_wp)
+      doi = doi_dsd
    case(p_dod_pbehb95_df)
       param = d3_param(s6=0.67_wp, a1=0.0_wp, s8=0.0_wp, a2=6.0_wp)
+      doi = doi_dsd
    end select
+
+   if (.not.allocated(doi)) doi = doi_dftd3_bj
+   if (present(citation)) citation = get_citation(doi)
 
    if (present(s9)) then
       param%s9 = s9
@@ -614,7 +786,7 @@ subroutine get_rational_damping(param, method, error, s9)
 end subroutine get_rational_damping
 
 
-subroutine get_zero_damping(param, method, error, s9)
+subroutine get_zero_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -625,8 +797,13 @@ subroutine get_zero_damping(param, method, error, s9)
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
 
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
+
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
+
+   character(len=:), allocatable :: doi
 
    select case(get_method_id(method))
    case default
@@ -636,16 +813,22 @@ subroutine get_zero_damping(param, method, error, s9)
       param = d3_param(rs6=0.999_wp, s8=-1.957_wp, rs8=0.697_wp)
    case(p_blyp_df)
       param = d3_param(rs6=1.094_wp, s8=1.682_wp)
+      doi = doi_dftd3_0
    case(p_bp_df)
       param = d3_param(rs6=1.139_wp, s8=1.683_wp)
+      doi = doi_dftd3_0
    case(p_b97d_df)
       param = d3_param(rs6=0.892_wp, s8=0.909_wp)
+      doi = doi_dftd3_0
    case(p_b973c_df)
       param = d3_param(rs6=1.06_wp, s8=1.50_wp)
+      doi = doi_b973c
    case(p_revpbe_df)
       param = d3_param(rs6=0.923_wp, s8=1.010_wp)
+      doi = doi_dftd3_0
    case(p_pbe_df)
       param = d3_param(rs6=1.217_wp, s8=0.722_wp)
+      doi = doi_dftd3_0
    case(p_pbesol_df)
       param = d3_param(rs6=1.345_wp, s8=0.612_wp)
    case(p_rpw86pbe_df)
@@ -654,155 +837,230 @@ subroutine get_zero_damping(param, method, error, s9)
       param = d3_param(rs6=0.872_wp, s8=0.514_wp)
    case(p_tpss_df)
       param = d3_param(rs6=1.166_wp, s8=1.105_wp)
+      doi = doi_dftd3_0
    case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(rs6=1.261_wp, s8=1.703_wp)
+      doi = doi_dftd3_0
    case(p_pbe0_df)
       param = d3_param(rs6=1.287_wp, s8=0.928_wp)
+      doi = doi_dftd3_0
    case(p_hse06_df)
       param = d3_param(rs6=1.129_wp, s8=0.109_wp)
+      doi = doi_hse06_d3
    case(p_revpbe38_df)
       param = d3_param(rs6=1.021_wp, s8=0.862_wp)
+      doi = doi_gmtkn30_0
    case(p_pw6b95_df)
       param = d3_param(rs6=1.532_wp, s8=0.862_wp)
    case(p_tpss0_df)
       param = d3_param(rs6=1.252_wp, s8=1.242_wp)
+      doi = doi_dftd3_0
    case(p_b2plyp_df)
       param = d3_param(rs6=1.427_wp, s8=1.022_wp, s6=0.64_wp)
+      doi = doi_gmtkn30_0
    case(p_pwpb95_df)
       param = d3_param(rs6=1.557_wp, s8=0.705_wp, s6=0.82_wp)
+      doi = doi_gmtkn30_0
    case(p_b2gpplyp_df)
       param = d3_param(rs6=1.586_wp, s8=0.760_wp, s6=0.56_wp)
+      doi = doi_gmtkn30_0
    case(p_ptpss_df)
       param = d3_param(rs6=1.541_wp, s8=0.879_wp, s6=0.75_wp)
+      doi = doi_gmtkn30_0
    case(p_hf_df)
       param = d3_param(rs6=1.158_wp, s8=1.746_wp)
+      doi = doi_gmtkn30_bj
    case(p_mpwlyp_df)
       param = d3_param(rs6=1.239_wp, s8=1.098_wp)
+      doi = doi_gmtkn30_bj
    case(p_bpbe_df)
       param = d3_param(rs6=1.087_wp, s8=2.033_wp)
+      doi = doi_gmtkn30_bj
    case(p_bhlyp_df)
       param = d3_param(rs6=1.370_wp, s8=1.442_wp)
+      doi = doi_gmtkn30_bj
    case(p_tpssh_df)
       param = d3_param(rs6=1.223_wp, s8=1.219_wp)
    case(p_pwb6k_df)
       param = d3_param(rs6=1.660_wp, s8=0.550_wp)
+      doi = doi_gmtkn30_bj
    case(p_b1b95_df)
       param = d3_param(rs6=1.613_wp, s8=1.868_wp)
+      doi = doi_gmtkn30_bj
    case(p_bop_df)
       param = d3_param(rs6=0.929_wp, s8=1.975_wp)
+      doi = doi_gmtkn30_bj
    case(p_olyp_df)
       param = d3_param(rs6=0.806_wp, s8=1.764_wp)
+      doi = doi_gmtkn30_bj
    case(p_opbe_df)
       param = d3_param(rs6=0.837_wp, s8=2.055_wp)
+      doi = doi_gmtkn30_bj
    case(p_ssb_df)
       param = d3_param(rs6=1.215_wp, s8=0.663_wp)
+      doi = doi_gmtkn30_bj
    case(p_revssb_df)
       param = d3_param(rs6=1.221_wp, s8=0.560_wp)
+      doi = doi_gmtkn30_bj
    case(p_otpss_df)
       param = d3_param(rs6=1.128_wp, s8=1.494_wp)
+      doi = doi_gmtkn30_bj
    case(p_b3pw91_df)
       param = d3_param(rs6=1.176_wp, s8=1.775_wp)
+      doi = doi_gmtkn30_bj
    case(p_revpbe0_df)
       param = d3_param(rs6=0.949_wp, s8=0.792_wp)
+      doi = doi_gmtkn30_bj
    case(p_pbe38_df)
       param = d3_param(rs6=1.333_wp, s8=0.998_wp)
+      doi = doi_gmtkn30_bj
    case(p_mpw1b95_df)
       param = d3_param(rs6=1.605_wp, s8=1.118_wp)
+      doi = doi_gmtkn30_bj
    case(p_mpwb1k_df)
       param = d3_param(rs6=1.671_wp, s8=1.061_wp)
+      doi = doi_gmtkn30_bj
    case(p_bmk_df)
       param = d3_param(rs6=1.931_wp, s8=2.168_wp)
+      doi = doi_gmtkn30_bj
    case(p_camb3lyp_df)
       param = d3_param(rs6=1.378_wp, s8=1.217_wp)
+      doi = doi_gmtkn30_bj
    case(p_lcwpbe_df)
       param = d3_param(rs6=1.355_wp, s8=1.279_wp)
+      doi = doi_gmtkn30_bj
    case(p_m05_df)
       param = d3_param(rs6=1.373_wp, s8=0.595_wp)
+      doi = doi_gmtkn30_bj
    case(p_m052x_df)
       param = d3_param(rs6=1.417_wp, s8=0.000_wp)
+      doi = doi_gmtkn30_bj
    case(p_m06l_df)
       param = d3_param(rs6=1.581_wp, s8=0.000_wp)
+      doi = doi_gmtkn30_bj
    case(p_m06_df)
       param = d3_param(rs6=1.325_wp, s8=0.000_wp)
+      doi = doi_gmtkn30_bj
    case(p_m062x_df)
       param = d3_param(rs6=1.619_wp, s8=0.000_wp)
+      doi = doi_gmtkn30_bj
    case(p_m06hf_df)
       param = d3_param(rs6=1.446_wp, s8=0.000_wp)
+      doi = doi_gmtkn30_bj
    case(p_hcth120_df)
       param = d3_param(rs6=1.221_wp, s8=1.206_wp)
    case(p_scan_df)
       param = d3_param(rs6=1.324_wp, s8=0.000_wp)
+      doi = doi_scan_d3
    case(p_wb97x_df)
       param = d3_param(rs6=1.281_wp, s8=1.0_wp, rs8=1.094_wp)
+      doi = doi_wb97x_d3
    case(p_pw1pw_df)
       param = d3_param(rs6=1.4968_wp, s8=1.1786_wp)
+      doi = doi_gmtkn55
    case(p_pbehpbe_df)
       param = d3_param(rs6=1.5703_wp, s8=1.4010_wp)
+      doi = doi_gmtkn55
    case(p_xlyp_df)
       param = d3_param(rs6=0.9384_wp, s8=0.7447_wp)
+      doi = doi_gmtkn55
    case(p_mpwpw_df)
       param = d3_param(rs6=1.3725_wp, s8=1.9467_wp)
+      doi = doi_gmtkn55
    case(p_hcth407_df)
       param = d3_param(rs6=4.0426_wp, s8=2.7694_wp)
+      doi = doi_gmtkn55
    case(p_revtpss_df)
       param = d3_param(rs6=1.3491_wp, s8=1.3666_wp)
+      doi = doi_gmtkn55
    case(p_tauhcth_df)
       param = d3_param(rs6=0.9320_wp, s8=0.5662_wp)
+      doi = doi_gmtkn55
    case(p_b3p_df)
       param = d3_param(rs6=1.1897_wp, s8=1.1961_wp)
+      doi = doi_gmtkn55
    case(p_b1p_df)
       param = d3_param(rs6=1.1815_wp, s8=1.1209_wp)
+      doi = doi_gmtkn55
    case(p_b1lyp_df)
       param = d3_param(rs6=1.3725_wp, s8=1.9467_wp)
+      doi = doi_gmtkn55
    case(p_mpw1lyp_df)
       param = d3_param(rs6=2.0512_wp, s8=1.9529_wp)
+      doi = doi_gmtkn55
    case(p_mpw1pw_df)
       param = d3_param(rs6=1.2892_wp, s8=1.4758_wp)
+      doi = doi_gmtkn55
    case(p_mpw1kcis_df)
       param = d3_param(rs6=1.7231_wp, s8=2.2917_wp)
+      doi = doi_gmtkn55
    case(p_mpwkcis1k_df)
       param = d3_param(rs6=1.4853_wp, s8=1.7553_wp)
+      doi = doi_gmtkn55
    case(p_pbeh1pbe_df)
       param = d3_param(rs6=1.3719_wp, s8=1.0430_wp)
+      doi = doi_gmtkn55
    case(p_pbe1kcis_df)
       param = d3_param(rs6=3.6355_wp, s8=1.7934_wp)
+      doi = doi_gmtkn55
    case(p_x3lyp_df)
       param = d3_param(rs6=1.0_wp, s8=0.2990_wp)
+      doi = doi_gmtkn55
    case(p_o3lyp_df)
       param = d3_param(rs6=1.4060_wp, s8=1.8058_wp)
+      doi = doi_gmtkn55
    case(p_b97_1_df)
       param = d3_param(rs6=3.7924_wp, s8=1.6418_wp)
+      doi = doi_gmtkn55
    case(p_b97_2_df)
       param = d3_param(rs6=1.7066_wp, s8=1.6418_wp)
+      doi = doi_gmtkn55
    case(p_b98_df)
       param = d3_param(rs6=2.6895_wp, s8=1.9078_wp)
+      doi = doi_gmtkn55
    case(p_hiss_df)
       param = d3_param(rs6=1.3338_wp, s8=0.7615_wp)
+      doi = doi_gmtkn55
    case(p_hse03_df)
       param = d3_param(rs6=1.3944_wp, s8=1.0156_wp)
+      doi = doi_gmtkn55
    case(p_revtpssh_df)
       param = d3_param(rs6=1.3224_wp, s8=1.2504_wp)
+      doi = doi_gmtkn55
    case(p_revtpss0_df)
       param = d3_param(rs6=1.2881_wp, s8=1.0649_wp)
+      doi = doi_gmtkn55
    case(p_tpss1kcis_df)
       param = d3_param(rs6=1.7729_wp, s8=2.0902_wp)
+      doi = doi_gmtkn55
    case(p_tauhcthhyb_df)
       param = d3_param(rs6=1.5001_wp, s8=1.6302_wp)
+      doi = doi_gmtkn55
    case(p_pkzb_df)
       param = d3_param(rs6=0.6327_wp, s8=0.0_wp)
+      doi = doi_gmtkn55
    case(p_n12_df)
       param = d3_param(rs6=1.3493_wp, s8=2.3916_wp)
+      doi = doi_gmtkn55
    case(p_mpw2plyp_df)
       param = d3_param(s6=0.66_wp, rs6=1.5527_wp, s8=0.7529_wp)
+      doi = doi_gmtkn55
    case(p_m08hx_df)
       param = d3_param(rs6=1.6247_wp, s8=0.0_wp)
+      doi = doi_gmtkn55
    case(p_m11l_df)
       param = d3_param(rs6=2.3933_wp, s8=1.1129_wp)
+      doi = doi_minnesota_d3
    case(p_mn15l_df)
       param = d3_param(rs6=3.3388_wp, s8=0.0_wp)
+      doi = doi_gmtkn55
    case(p_pwp_df)
       param = d3_param(rs6=2.1040_wp, s8=0.8747_wp)
+      doi = doi_gmtkn55
    end select
+
+   if (.not.allocated(doi)) doi = doi_dftd3_0
+   if (present(citation)) citation = get_citation(doi)
 
    if (present(s9)) then
       param%s9 = s9
@@ -811,7 +1069,7 @@ subroutine get_zero_damping(param, method, error, s9)
 end subroutine get_zero_damping
 
 
-subroutine get_mrational_damping(param, method, error, s9)
+subroutine get_mrational_damping(param, method, error, s9,citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -821,6 +1079,9 @@ subroutine get_mrational_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -847,6 +1108,8 @@ subroutine get_mrational_damping(param, method, error, s9)
       param = d3_param(a1=0.563761_wp, s8=0.906564_wp, a2=3.593680_wp)
    end select
 
+   if (present(citation)) citation = get_citation(doi_dftd3_m)
+
    if (present(s9)) then
       param%s9 = s9
    end if
@@ -854,7 +1117,7 @@ subroutine get_mrational_damping(param, method, error, s9)
 end subroutine get_mrational_damping
 
 
-subroutine get_mzero_damping(param, method, error, s9)
+subroutine get_mzero_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -864,6 +1127,9 @@ subroutine get_mzero_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -890,6 +1156,8 @@ subroutine get_mzero_damping(param, method, error, s9)
       param = d3_param(rs6=1.366361_wp, s8=1.280619_wp, bet=0.003160_wp)
    end select
 
+   if (present(citation)) citation = get_citation(doi_dftd3_m)
+
    if (present(s9)) then
       param%s9 = s9
    end if
@@ -897,7 +1165,7 @@ subroutine get_mzero_damping(param, method, error, s9)
 end subroutine get_mzero_damping
 
 
-subroutine get_optimizedpower_damping(param, method, error, s9)
+subroutine get_optimizedpower_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -907,6 +1175,9 @@ subroutine get_optimizedpower_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -945,6 +1216,8 @@ subroutine get_optimizedpower_damping(param, method, error, s9)
       param = d3_param(s6=1.0_wp, s8=1.69464_wp, a1=0.650_wp, a2=4.75_wp, bet=0.0_wp)
    end select
 
+   if (present(citation)) citation = get_citation(doi_dftd3_op)
+
    if (present(s9)) then
       param%s9 = s9
    end if
@@ -982,6 +1255,5 @@ pure function lowercase(str) result(lcstr)
    enddo
 
 end function lowercase
-
 
 end module dftd3_param

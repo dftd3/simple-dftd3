@@ -79,6 +79,9 @@ Evaluate dispersion related properties
 *--pair-resolved*::
 Calculate pairwise representation of dispersion energy
 
+*--citation* [_file_]::
+Write citations as bibtex (default: `dftd3.bib`)
+
 *-v, --verbose*::
 Show more, can be used multiple times
 

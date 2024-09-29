@@ -18,9 +18,20 @@ module dftd3_app_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type, read_structure, filetype, get_filetype
-   use dftd3
-   use dftd3_output
-   use dftd3_utils
+   use dftd3, only : damping_param, d3_param, d3_model, get_coordination_number, &
+      & get_dispersion, get_zero_damping, zero_damping_param, new_zero_damping, &
+      & get_rational_damping, rational_damping_param, new_rational_damping, &
+      & get_mzero_damping, mzero_damping_param, new_mzero_damping, get_mrational_damping, &
+      & get_optimizedpower_damping, optimizedpower_damping_param, &
+      & new_optimizedpower_damping, new_d3_model, get_pairwise_dispersion, &
+      & realspace_cutoff, get_lattice_points
+   use dftd3_output, only : ascii_damping_param, ascii_atomic_radii, &
+      & ascii_atomic_references, ascii_system_properties, ascii_energy_atom, &
+      & ascii_results, ascii_pairwise, tagged_result, json_results, &
+      & turbomole_gradient, turbomole_gradlatt
+   use dftd3_utils, only : wrap_to_central_cell
+   use dftd3_citation, only : format_bibtex, is_citation_present, citation_type, &
+      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, same_citation
    use dftd3_app_help, only : header
    use dftd3_app_cli, only : app_config, run_config, param_config, get_arguments
    use dftd3_app_toml, only : param_database
@@ -55,8 +66,10 @@ subroutine run_driver(config, error)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: s9
    real(wp) :: energy
-   integer :: stat, unit
+   character(len=:), allocatable :: output
+   integer :: stat, unit, idx
    logical :: exist
+   type(citation_type) :: citation, param_citation
 
    if (config%verbosity > 1) then
       call header(output_unit)
@@ -79,11 +92,12 @@ subroutine run_driver(config, error)
    if (config%has_param) inp = config%inp
    if (config%atm) s9 = config%inp%s9
    if (config%zero) then
+      citation = get_citation(doi_dftd3_0)
       if (.not.config%has_param) then
          if (allocated(config%db)) then
             call from_db(param, config%db, config%method, "zero", error)
          else
-            call get_zero_damping(inp, config%method, error, s9)
+            call get_zero_damping(inp, config%method, error, s9, param_citation)
          end if
          if (allocated(error)) return
       end if
@@ -97,11 +111,12 @@ subroutine run_driver(config, error)
       end if
    end if
    if (config%mzero) then
+      citation = get_citation(doi_dftd3_m)
       if (.not.config%has_param) then
          if (allocated(config%db)) then
             call from_db(param, config%db, config%method, "zerom", error)
          else
-            call get_mzero_damping(inp, config%method, error, s9)
+            call get_mzero_damping(inp, config%method, error, s9, param_citation)
          end if
          if (allocated(error)) return
       end if
@@ -115,18 +130,23 @@ subroutine run_driver(config, error)
       end if
    end if
    if (config%rational .or. config%mrational) then
+      if (config%rational) then
+         citation = get_citation(doi_dftd3_bj)
+      else
+         citation = get_citation(doi_dftd3_m)
+      end if
       if (.not.config%has_param) then
          if (config%mrational) then
             if (allocated(config%db)) then
                call from_db(param, config%db, config%method, "bjm", error)
             else
-               call get_mrational_damping(inp, config%method, error, s9)
+               call get_mrational_damping(inp, config%method, error, s9, param_citation)
             end if
          else
             if (allocated(config%db)) then
                call from_db(param, config%db, config%method, "bj", error)
             else
-               call get_rational_damping(inp, config%method, error, s9)
+               call get_rational_damping(inp, config%method, error, s9, param_citation)
             end if
          end if
          if (allocated(error)) return
@@ -141,11 +161,12 @@ subroutine run_driver(config, error)
       end if
    end if
    if (config%optimizedpower) then
+      citation = get_citation(doi_dftd3_op)
       if (.not.config%has_param) then
          if (allocated(config%db)) then
             call from_db(param, config%db, config%method, "op", error)
          else
-            call get_optimizedpower_damping(inp, config%method, error, s9)
+            call get_optimizedpower_damping(inp, config%method, error, s9, param_citation)
          end if
          if (allocated(error)) return
       end if
@@ -253,6 +274,21 @@ subroutine run_driver(config, error)
          end if
       end if
 
+   end if
+
+   if (config%citation) then
+      open(file=config%citation_output, newunit=unit)
+      if (.not.same_citation(citation, param_citation)) then
+         call format_bibtex(output, citation)
+         if (allocated(output)) write(unit, '(a)') output
+      end if
+      call format_bibtex(output, param_citation)
+      if (allocated(output)) write(unit, '(a)') output
+      close(unit)
+      if (config%verbosity > 0) then
+         write(output_unit, '(a)') &
+            & "[Info] Citation information written to '"//config%citation_output//"'"
+      end if
    end if
 
 end subroutine run_driver

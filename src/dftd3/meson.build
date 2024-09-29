@@ -18,6 +18,7 @@ subdir('damping')
 subdir('data')
 
 srcs += files(
+  'citation.f90',
   'cutoff.f90',
   'damping.f90',
   'data.f90',
