@@ -1156,7 +1156,7 @@ subroutine get_mzero_damping(param, method, error, s9, citation)
       param = d3_param(rs6=1.366361_wp, s8=1.280619_wp, bet=0.003160_wp)
    end select
 
-   citation = get_citation(doi_dftd3_m)
+   if (present(citation)) citation = get_citation(doi_dftd3_m)
 
    if (present(s9)) then
       param%s9 = s9
