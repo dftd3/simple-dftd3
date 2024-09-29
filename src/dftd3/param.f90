@@ -777,7 +777,7 @@ subroutine get_rational_damping(param, method, error, s9, citation)
    end select
 
    if (.not.allocated(doi)) doi = doi_dftd3_bj
-   citation = get_citation(doi)
+   if (present(citation)) citation = get_citation(doi)
 
    if (present(s9)) then
       param%s9 = s9
