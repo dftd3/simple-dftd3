@@ -41,7 +41,6 @@ module dftd3_param
       real(wp) :: a2 = 5.0_wp
       real(wp) :: alp = 14.0_wp
       real(wp) :: bet = 0.0_wp
-      type(citation_type) :: citation
    end type d3_param
 
 
@@ -290,7 +289,7 @@ function get_method_id(method) result(id)
 end function get_method_id
 
 
-subroutine get_rational_damping(param, method, error, s9)
+subroutine get_rational_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -300,6 +299,9 @@ subroutine get_rational_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -775,7 +777,7 @@ subroutine get_rational_damping(param, method, error, s9)
    end select
 
    if (.not.allocated(doi)) doi = doi_dftd3_bj
-   param%citation = get_citation(doi)
+   citation = get_citation(doi)
 
    if (present(s9)) then
       param%s9 = s9
@@ -784,7 +786,7 @@ subroutine get_rational_damping(param, method, error, s9)
 end subroutine get_rational_damping
 
 
-subroutine get_zero_damping(param, method, error, s9)
+subroutine get_zero_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -794,6 +796,9 @@ subroutine get_zero_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -1055,7 +1060,7 @@ subroutine get_zero_damping(param, method, error, s9)
    end select
 
    if (.not.allocated(doi)) doi = doi_dftd3_0
-   param%citation = get_citation(doi)
+   citation = get_citation(doi)
 
    if (present(s9)) then
       param%s9 = s9
@@ -1064,7 +1069,7 @@ subroutine get_zero_damping(param, method, error, s9)
 end subroutine get_zero_damping
 
 
-subroutine get_mrational_damping(param, method, error, s9)
+subroutine get_mrational_damping(param, method, error, s9,citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -1074,6 +1079,9 @@ subroutine get_mrational_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -1100,7 +1108,7 @@ subroutine get_mrational_damping(param, method, error, s9)
       param = d3_param(a1=0.563761_wp, s8=0.906564_wp, a2=3.593680_wp)
    end select
 
-   param%citation = get_citation(doi_dftd3_m)
+   citation = get_citation(doi_dftd3_m)
 
    if (present(s9)) then
       param%s9 = s9
@@ -1109,7 +1117,7 @@ subroutine get_mrational_damping(param, method, error, s9)
 end subroutine get_mrational_damping
 
 
-subroutine get_mzero_damping(param, method, error, s9)
+subroutine get_mzero_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -1119,6 +1127,9 @@ subroutine get_mzero_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -1145,7 +1156,7 @@ subroutine get_mzero_damping(param, method, error, s9)
       param = d3_param(rs6=1.366361_wp, s8=1.280619_wp, bet=0.003160_wp)
    end select
 
-   param%citation = get_citation(doi_dftd3_m)
+   citation = get_citation(doi_dftd3_m)
 
    if (present(s9)) then
       param%s9 = s9
@@ -1154,7 +1165,7 @@ subroutine get_mzero_damping(param, method, error, s9)
 end subroutine get_mzero_damping
 
 
-subroutine get_optimizedpower_damping(param, method, error, s9)
+subroutine get_optimizedpower_damping(param, method, error, s9, citation)
 
    !> Loaded parameter record
    type(d3_param), intent(out) :: param
@@ -1164,6 +1175,9 @@ subroutine get_optimizedpower_damping(param, method, error, s9)
 
    !> Overwrite s9
    real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -1202,7 +1216,7 @@ subroutine get_optimizedpower_damping(param, method, error, s9)
       param = d3_param(s6=1.0_wp, s8=1.69464_wp, a1=0.650_wp, a2=4.75_wp, bet=0.0_wp)
    end select
 
-   param%citation = get_citation(doi_dftd3_op)
+   citation = get_citation(doi_dftd3_op)
 
    if (present(s9)) then
       param%s9 = s9

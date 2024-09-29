@@ -69,7 +69,7 @@ subroutine run_driver(config, error)
    character(len=:), allocatable :: output
    integer :: stat, unit, idx
    logical :: exist
-   type(citation_type) :: citation
+   type(citation_type) :: citation, param_citation
 
    if (config%verbosity > 1) then
       call header(output_unit)
@@ -97,7 +97,7 @@ subroutine run_driver(config, error)
          if (allocated(config%db)) then
             call from_db(param, config%db, config%method, "zero", error)
          else
-            call get_zero_damping(inp, config%method, error, s9)
+            call get_zero_damping(inp, config%method, error, s9, param_citation)
          end if
          if (allocated(error)) return
       end if
@@ -116,7 +116,7 @@ subroutine run_driver(config, error)
          if (allocated(config%db)) then
             call from_db(param, config%db, config%method, "zerom", error)
          else
-            call get_mzero_damping(inp, config%method, error, s9)
+            call get_mzero_damping(inp, config%method, error, s9, param_citation)
          end if
          if (allocated(error)) return
       end if
@@ -140,13 +140,13 @@ subroutine run_driver(config, error)
             if (allocated(config%db)) then
                call from_db(param, config%db, config%method, "bjm", error)
             else
-               call get_mrational_damping(inp, config%method, error, s9)
+               call get_mrational_damping(inp, config%method, error, s9, param_citation)
             end if
          else
             if (allocated(config%db)) then
                call from_db(param, config%db, config%method, "bj", error)
             else
-               call get_rational_damping(inp, config%method, error, s9)
+               call get_rational_damping(inp, config%method, error, s9, param_citation)
             end if
          end if
          if (allocated(error)) return
@@ -166,7 +166,7 @@ subroutine run_driver(config, error)
          if (allocated(config%db)) then
             call from_db(param, config%db, config%method, "op", error)
          else
-            call get_optimizedpower_damping(inp, config%method, error, s9)
+            call get_optimizedpower_damping(inp, config%method, error, s9, param_citation)
          end if
          if (allocated(error)) return
       end if
@@ -278,11 +278,11 @@ subroutine run_driver(config, error)
 
    if (config%citation) then
       open(file=config%citation_output, newunit=unit)
-      if (.not.same_citation(citation, inp%citation)) then
+      if (.not.same_citation(citation, param_citation)) then
          call format_bibtex(output, citation)
          if (allocated(output)) write(unit, '(a)') output
       end if
-      call format_bibtex(output, inp%citation)
+      call format_bibtex(output, param_citation)
       if (allocated(output)) write(unit, '(a)') output
       close(unit)
       if (config%verbosity > 0) then
