@@ -1108,7 +1108,7 @@ subroutine get_mrational_damping(param, method, error, s9,citation)
       param = d3_param(a1=0.563761_wp, s8=0.906564_wp, a2=3.593680_wp)
    end select
 
-   citation = get_citation(doi_dftd3_m)
+   if (present(citation)) citation = get_citation(doi_dftd3_m)
 
    if (present(s9)) then
       param%s9 = s9
