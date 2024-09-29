@@ -1216,7 +1216,7 @@ subroutine get_optimizedpower_damping(param, method, error, s9, citation)
       param = d3_param(s6=1.0_wp, s8=1.69464_wp, a1=0.650_wp, a2=4.75_wp, bet=0.0_wp)
    end select
 
-   citation = get_citation(doi_dftd3_op)
+   if (present(citation)) citation = get_citation(doi_dftd3_op)
 
    if (present(s9)) then
       param%s9 = s9
