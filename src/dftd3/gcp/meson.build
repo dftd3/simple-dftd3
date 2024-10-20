@@ -14,25 +14,7 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-subdir('damping')
-subdir('data')
-subdir('gcp')
-
 srcs += files(
-  'citation.f90',
-  'cutoff.f90',
-  'damping.f90',
   'data.f90',
-  'disp.f90',
-  'gcp.f90',
-  'model.f90',
-  'ncoord.f90',
-  'output.f90',
   'param.f90',
-  'reference.f90',
-  'utils.f90',
-  'version.f90',
 )
-if get_option('api') or get_option('python')
-  srcs += files('api.f90')
-endif

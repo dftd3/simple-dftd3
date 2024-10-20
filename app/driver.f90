@@ -25,15 +25,16 @@ module dftd3_app_driver
       & get_optimizedpower_damping, optimizedpower_damping_param, &
       & new_optimizedpower_damping, new_d3_model, get_pairwise_dispersion, &
       & realspace_cutoff, get_lattice_points
+   use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_output, only : ascii_damping_param, ascii_atomic_radii, &
       & ascii_atomic_references, ascii_system_properties, ascii_energy_atom, &
       & ascii_results, ascii_pairwise, tagged_result, json_results, &
-      & turbomole_gradient, turbomole_gradlatt
+      & turbomole_gradient, turbomole_gradlatt, ascii_gcp_param
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_citation, only : format_bibtex, is_citation_present, citation_type, &
       & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, same_citation
    use dftd3_app_help, only : header
-   use dftd3_app_cli, only : app_config, run_config, param_config, get_arguments
+   use dftd3_app_cli, only : app_config, run_config, param_config, gcp_config, get_arguments
    use dftd3_app_toml, only : param_database
    implicit none
    private
@@ -51,6 +52,8 @@ subroutine app_driver(config, error)
       call run_driver(config, error)
    type is(param_config)
       call param_driver(config, error)
+   type is(gcp_config)
+      call gcp_driver(config, error)
    end select
 end subroutine app_driver
 
@@ -62,6 +65,7 @@ subroutine run_driver(config, error)
    class(damping_param), allocatable :: param
    type(d3_param) :: inp
    type(d3_model) :: d3
+   type(gcp_param) :: gcp
    real(wp), allocatable :: energies(:), gradient(:, :), sigma(:, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: s9
@@ -179,9 +183,15 @@ subroutine run_driver(config, error)
          end block
       end if
    end if
+   if (config%gcp) then
+      call get_gcp_param(gcp, mol, config%method, config%basis)
+   end if
 
-   if (allocated(param) .and. config%verbosity > 0) then
-      call ascii_damping_param(output_unit, param, config%method)
+   if (config%verbosity > 0) then
+      if (allocated(param)) &
+         call ascii_damping_param(output_unit, param, config%method)
+      if (config%gcp) &
+         call ascii_gcp_param(output_unit, mol, gcp)
    end if
 
    if (allocated(param)) then
@@ -200,6 +210,9 @@ subroutine run_driver(config, error)
    if (allocated(param)) then
       call get_dispersion(mol, d3, param, realspace_cutoff(), energies, &
          & gradient, sigma)
+      if (config%gcp) then
+         call get_geometric_counterpoise(mol, gcp, energies, gradient, sigma)
+      end if
       energy = sum(energies)
 
       if (config%pair_resolved) then
@@ -217,50 +230,15 @@ subroutine run_driver(config, error)
          end if
       end if
       if (config%tmer) then
-         if (config%verbosity > 0) then
-            write(output_unit, '(a)') "[Info] Dispersion energy written to .EDISP"
-         end if
-         open(file=".EDISP", newunit=unit)
-         write(unit, '(f24.14)') energy
-         close(unit)
+         call tmer_writer(".EDISP", energy, "Dispersion", config%verbosity)
       end if
       if (config%grad) then
          if (allocated(config%grad_output)) then
-            open(file=config%grad_output, newunit=unit)
-            call tagged_result(unit, energy, gradient, sigma)
-            close(unit)
-            if (config%verbosity > 0) then
-               write(output_unit, '(a)') &
-                  & "[Info] Dispersion results written to '"//config%grad_output//"'"
-            end if
+            call results_writer(config%grad_output, energy, gradient, sigma, &
+               & "Dispersion", config%verbosity)
          end if
 
-         inquire(file="gradient", exist=exist)
-         if (exist) then
-            call turbomole_gradient(mol, "gradient", energy, gradient, stat)
-            if (config%verbosity > 0) then
-               if (stat == 0) then
-                  write(output_unit, '(a)') &
-                     & "[Info] Dispersion gradient added to Turbomole gradient file"
-               else
-                  write(output_unit, '(a)') &
-                     & "[Warn] Could not add to Turbomole gradient file"
-               end if
-            end if
-         end if
-         inquire(file="gradlatt", exist=exist)
-         if (exist) then
-            call turbomole_gradlatt(mol, "gradlatt", energy, sigma, stat)
-            if (config%verbosity > 0) then
-               if (stat == 0) then
-                  write(output_unit, '(a)') &
-                     & "[Info] Dispersion virial added to Turbomole gradlatt file"
-               else
-                  write(output_unit, '(a)') &
-                     & "[Warn] Could not add to Turbomole gradlatt file"
-               end if
-            end if
-         end if
+         call turbomole_writer(mol, energy, gradient, sigma, config%verbosity, "Dispersion")
       end if
 
       if (config%json) then
@@ -373,5 +351,186 @@ subroutine from_db(param, input, method, damping, error)
       return
    end if
 end subroutine from_db
+
+subroutine gcp_driver(config, error)
+   type(gcp_config), intent(in) :: config
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(gcp_param) :: param
+   integer :: unit
+   real(wp) :: energy
+   real(wp), allocatable :: energies(:), gradient(:, :), sigma(:, :)
+
+   if (config%verbosity > 1) then
+      call header(output_unit)
+   end if
+
+   if (config%input == "-") then
+      if (.not.allocated(config%input_format)) then
+         call read_structure(mol, input_unit, filetype%xyz, error)
+      else
+         call read_structure(mol, input_unit, config%input_format, error)
+      end if
+   else
+      call read_structure(mol, config%input, error, config%input_format)
+   end if
+   if (allocated(error)) return
+   if (config%wrap) then
+      call wrap_to_central_cell(mol%xyz, mol%lattice, mol%periodic)
+   end if
+
+   call get_gcp_param(param, mol, config%method, config%basis)
+   if (config%verbosity > 0) then
+      call ascii_gcp_param(output_unit, mol, param)
+   end if
+
+   allocate(energies(mol%nat), source=0.0_wp)
+   if (config%grad) then
+      allocate(gradient(3, mol%nat), source=0.0_wp)
+      allocate(sigma(3, 3), source=0.0_wp)
+   end if
+
+   call get_geometric_counterpoise(mol, param, energies, gradient, sigma)
+   energy = sum(energies)
+
+   if (config%verbosity > 0) then
+      if (config%verbosity > 2) then
+         call ascii_energy_atom(output_unit, mol, energies, label="counter-poise")
+      end if
+      call ascii_results(output_unit, mol, energy, gradient, sigma, label="Counter-poise")
+   end if
+
+   if (config%tmer) then
+      call tmer_writer(".CPC", energy, "Counter-poise", config%verbosity)
+   end if
+
+   if (config%grad) then
+      if (allocated(config%grad_output)) then
+         call results_writer(config%grad_output, energy, gradient, sigma, &
+            & "Counter-poise", config%verbosity)
+      end if
+
+      call turbomole_writer(mol, energy, gradient, sigma, config%verbosity, "Counter-poise")
+   end if
+
+   if (config%json) then
+      open(file=config%json_output, newunit=unit)
+      call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma)
+      close(unit)
+      if (config%verbosity > 0) then
+         write(output_unit, '(a)') &
+            & "[Info] JSON dump of results written to '"//config%json_output//"'"
+      end if
+   end if
+end subroutine gcp_driver
+
+!> Write the energy to a file
+subroutine tmer_writer(filename, energy, label, verbosity)
+   !> File name to write to
+   character(len=*), intent(in) :: filename
+
+   !> Energy to write
+   real(wp), intent(in) :: energy
+
+   !> Label for the output
+   character(len=*), intent(in) :: label
+
+   !> Printout verbosity
+   integer, intent(in) :: verbosity
+
+   integer :: unit
+
+   if (verbosity > 0) then
+      if (verbosity > 1) then
+         write(output_unit, '(a)') "[Info] Writing "//label//" energy to '"//filename//"'"
+      end if
+      open(file=filename, newunit=unit)
+      write(unit, '(f24.14)') energy
+      close(unit)
+   end if
+end subroutine tmer_writer
+
+!> Write the results to a file
+subroutine results_writer(filename, energy, gradient, sigma, label, verbosity)
+   !> File name to write to
+   character(len=*), intent(in) :: filename
+
+   !> Energy to write
+   real(wp), intent(in) :: energy
+
+   !> Gradient to write
+   real(wp), intent(in) :: gradient(:, :)
+
+   !> Virial tensor to write
+   real(wp), intent(in) :: sigma(:, :)
+
+   !> Label for the output
+   character(len=*), intent(in) :: label
+
+   !> Printout verbosity
+   integer, intent(in) :: verbosity
+
+   integer :: unit
+
+   open(file=filename, newunit=unit)
+   call tagged_result(unit, energy, gradient, sigma)
+   close(unit)
+   if (verbosity > 0) then
+      write(output_unit, '(a)') "[Info] "//label//" results written to '"//filename//"'"
+   end if
+end subroutine results_writer
+
+!> Write the gradient and virial tensor to Turbomole files
+subroutine turbomole_writer(mol, energy, gradient, sigma, verbosity, label)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Energy of the system
+   real(wp), intent(in) :: energy
+
+   !> Gradient of the system
+   real(wp), intent(in) :: gradient(:, :)
+
+   !> Virial tensor of the system
+   real(wp), intent(in) :: sigma(:, :)
+
+   !> Printout verbosity
+   integer, intent(in) :: verbosity
+
+   !> Label for the output
+   character(len=*), intent(in) :: label
+
+   logical :: exist
+   integer :: stat
+
+   inquire(file="gradient", exist=exist)
+   if (exist) then
+      call turbomole_gradient(mol, "gradient", energy, gradient, stat)
+      if (verbosity > 0) then
+         if (stat == 0) then
+            write(output_unit, '(a)') &
+               & "[Info] "//label//" gradient added to Turbomole gradient file"
+         else
+            write(output_unit, '(a)') &
+               & "[Warn] Could not add to Turbomole gradient file"
+         end if
+      end if
+   end if
+   inquire(file="gradlatt", exist=exist)
+   if (exist) then
+      call turbomole_gradlatt(mol, "gradlatt", energy, sigma, stat)
+      if (verbosity > 0) then
+         if (stat == 0) then
+            write(output_unit, '(a)') &
+               & "[Info] "//label//" virial added to Turbomole gradlatt file"
+         else
+            write(output_unit, '(a)') &
+               & "[Warn] Could not add to Turbomole gradlatt file"
+         end if
+      end if
+   end if
+end subroutine turbomole_writer
 
 end module dftd3_app_driver

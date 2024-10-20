@@ -20,7 +20,7 @@ module dftd3_app_help
    private
 
    public :: prog_name, header, version
-   public :: help_text, run_help_text, param_help_text
+   public :: help_text, run_help_text, param_help_text, gcp_help_text
 
 
    character(len=*), parameter :: prog_name = "s-dftd3"
@@ -46,6 +46,7 @@ module dftd3_app_help
       "                         expected order is s6, s8, a1, a2, bet (requires five arguments)"//nl//&
       "   --atm                 Use ATM three-body dispersion"//nl//&
       "   --atm-scale <s9>      Use scaled ATM three-body dispersion"//nl//&
+      "   --gcp <basis>         Include geometric counter-poise correction for given basis set"//nl//&
       "   --db <file>           Load parameters from external data file"//nl//&
       "   --noedisp             Disable writing of dispersion energy to .EDISP file"//nl//&
       "   --json [file]         Dump results to JSON output (default: dftd3.json)"//nl//&
@@ -109,8 +110,29 @@ module dftd3_app_help
       "    d3.op = {s6=1.0, s8=1.44765, a1=0.600, a2=2.50, bet=0.0}"//nl//&
       ""
 
+   character(len=*), parameter :: gcp_help_text = &
+      "Usage: "//prog_name//" gcp [options] <input>"//nl//&
+      ""//nl//&
+      "Takes an geometry input to calculate the geometric counter-poise correction."//nl//&
+      "Periodic calculations are performed automatically for periodic input formats."//nl//&
+      "Specify the level of theory to select the correct parameters."//nl//&
+      ""//nl//&
+      "-i,--input <format>      Hint for the format of the input file"//nl//&
+      "-l,--level <method>[/<basis>]"//nl//&
+      "                         Level of theory, basis set is inferred for 3c methods"//nl//&
+      "   --nocpc               Disable writing of dispersion energy to .CPC file"//nl//&
+      "   --json [file]         Dump results to JSON output (default: gcp.json)"//nl//&
+      "   --grad [file]         Request gradient evaluation,"//nl//&
+      "                         write results to file (default: gcp.txt),"//nl//&
+      "                         attempts to add to Turbomole gradient and gradlatt files"//nl//&
+      "-v,--verbose             Show more, can be used multiple times"//nl//&
+      "-s,--silent              Show less, use twice to supress all output"//nl//&
+      "   --version             Print program version and exit"//nl//&
+      "   --help                Show this help message"//nl//&
+      ""
+
    character(len=*), parameter :: help_text = &
-      "Usage: "//prog_name//" [run|param] [options] ..."//nl//&
+      "Usage: "//prog_name//" [run|param|gcp] [options] ..."//nl//&
       ""//nl//&
       "Commands"//nl//&
       ""//nl//&

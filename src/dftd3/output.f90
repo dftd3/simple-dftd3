@@ -24,6 +24,7 @@ module dftd3_output
    use dftd3_damping_optimizedpower, only : optimizedpower_damping_param
    use dftd3_damping_rational, only : rational_damping_param
    use dftd3_damping_zero, only : zero_damping_param
+   use dftd3_gcp, only : gcp_param
    use dftd3_model, only : d3_model
    use dftd3_version, only : get_dftd3_version
    implicit none
@@ -31,7 +32,7 @@ module dftd3_output
 
    public :: ascii_atomic_radii, ascii_atomic_references, ascii_system_properties
    public :: ascii_energy_atom
-   public :: ascii_results, ascii_damping_param, ascii_pairwise
+   public :: ascii_results, ascii_damping_param, ascii_pairwise, ascii_gcp_param
    public :: turbomole_gradient, turbomole_gradlatt
    public :: json_results, tagged_result
 
@@ -142,7 +143,7 @@ end subroutine ascii_system_properties
 
 
 !> Print atom-resolved dispersion energies
-subroutine ascii_energy_atom(unit, mol, energies)
+subroutine ascii_energy_atom(unit, mol, energies, label)
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -153,9 +154,16 @@ subroutine ascii_energy_atom(unit, mol, energies)
    !> Atom-resolved dispersion energies
    real(wp), allocatable, intent(in) :: energies(:)
 
-   integer :: iat, isp
+   !> Label for the output
+   character(len=*), intent(in), optional :: label
 
-   write(unit, '(a,":")') "Atom-resolved dispersion energies"
+   integer :: iat, isp
+   character(len=:), allocatable :: label_
+
+   label_ = "dispersion"
+   if (present(label)) label_ = label
+
+   write(unit, '(a,":")') "Atom-resolved "//label_//" energies"
    write(unit, '(50("-"))')
    write(unit, '(a6,1x,a4,1x,4x,a15,1x,a15)') "#", "Z", "[Hartree]", "[kcal/mol]"
    write(unit, '(50("-"))')
@@ -170,7 +178,7 @@ subroutine ascii_energy_atom(unit, mol, energies)
 end subroutine ascii_energy_atom
 
    
-subroutine ascii_results(unit, mol, energy, gradient, sigma)
+subroutine ascii_results(unit, mol, energy, gradient, sigma, label)
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -182,14 +190,21 @@ subroutine ascii_results(unit, mol, energy, gradient, sigma)
    real(wp), intent(in), optional :: gradient(:, :)
    real(wp), intent(in), optional :: sigma(:, :)
 
+   !> Label for the output
+   character(len=*), intent(in), optional :: label
+
    integer :: iat, isp
    logical :: grad
    character(len=1), parameter :: comp(3) = ["x", "y", "z"]
+   character(len=:), allocatable :: label_
+
+   label_ = "Dispersion"
+   if (present(label)) label_ = label
 
    grad = present(gradient) .and. present(sigma)
 
    write(unit, '(a,":", t25, es20.13, 1x, a)') &
-      & "Dispersion energy", energy, "Eh"
+      & label_//" energy", energy, "Eh"
    write(unit, '(a)')
    if (grad) then
       write(unit, '(a,":", t25, es20.13, 1x, a)') &
@@ -369,6 +384,61 @@ subroutine ascii_damping_param(unit, param, method)
    end select
 
 end subroutine ascii_damping_param
+
+
+subroutine ascii_gcp_param(unit, mol, param, method)
+
+   !> Unit for output
+   integer, intent(in) :: unit
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Counter-poise parameters
+   type(gcp_param), intent(in) :: param
+
+   !> Method name
+   character(len=*), intent(in), optional :: method
+
+   integer :: isp
+
+   write(unit, '(a,":")') "Global counter-poise parameters"
+   write(unit, '(20("-"))')
+   if (param%sigma > 0.0_wp .and. param%alpha > 0.0_wp .and. param%beta > 0.0_wp) then
+      write(unit, '(a6, t10, f10.4)') &
+         & "sigma", param%sigma, &
+         & "alpha", param%alpha, &
+         & "beta", param%beta
+   end if
+   if (param%damp) then
+      write(unit, '(a6, t10, f10.4)') &
+         & "dscal", param%dmp_scal, &
+         & "dexpo", param%dmp_exp
+   end if
+   if (param%srb) then
+      write(unit, '(a6, t10, f10.4)') &
+         & "rscal", param%rscal, &
+         & "qscal", param%qscal
+   end if
+   write(unit, '(20("-"))')
+   write(unit, '(a)')
+
+   if (allocated(param%emiss) .and. allocated(param%xv) &
+      & .and. allocated(param%slater)) then
+      write(unit, '(a,":")') "Atomic counter-poise parameters"
+      write(unit, '(47("-"))')
+      write(unit, '(a4,5x,a4,*(1x,a10))') "Z", "Zeff", "Emiss[Eh]", "Virtual", "Slater"
+      write(unit, '(47("-"))')
+      do isp = 1, mol%nid
+         write(unit, '(i4, 1x, a4, i4, *(1x,f10.4))') &
+            & mol%num(isp), mol%sym(isp), param%zeff(isp), &
+            & param%emiss(isp), param%xv(isp), param%slater(isp)
+      end do
+      write(unit, '(47("-"))')
+      write(unit, '(a)')
+   end if
+
+end subroutine ascii_gcp_param
 
 
 subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)

@@ -21,11 +21,11 @@ module dftd3_app_cli
    use dftd3, only : d3_param
    use dftd3_app_argument, only : argument_list, len
    use dftd3_app_help, only : prog_name, header, help_text, run_help_text, param_help_text, &
-      & version
+      & gcp_help_text, version
    implicit none
    private
 
-   public :: app_config, run_config, param_config, get_arguments
+   public :: app_config, run_config, param_config, gcp_config, get_arguments
 
    type, abstract :: app_config
    end type app_config
@@ -37,6 +37,8 @@ module dftd3_app_cli
       integer, allocatable :: input_format
       !> Method name
       character(len=:), allocatable :: method
+      !> Basis name
+      character(len=:), allocatable :: basis
       !> Damping paramaters
       type(d3_param) :: inp
       logical :: json = .false.
@@ -56,6 +58,7 @@ module dftd3_app_cli
       integer :: verbosity = 2
       logical :: pair_resolved = .false.
       logical :: citation = .false.
+      logical :: gcp = .false.
       character(len=:), allocatable :: citation_output
       !> Parameter data base
       character(len=:), allocatable :: db
@@ -69,6 +72,26 @@ module dftd3_app_cli
       !> Damping function
       character(len=:), allocatable :: damping
    end type param_config
+
+   type, extends(app_config) :: gcp_config
+      !> Geometry input file
+      character(len=:), allocatable :: input
+      !> Format of the geometry input
+      integer, allocatable :: input_format
+      !> Method name
+      character(len=:), allocatable :: method
+      !> Basis name
+      character(len=:), allocatable :: basis
+      logical :: json = .false.
+      character(len=:), allocatable :: json_output
+      logical :: wrap = .true.
+      logical :: tmer = .true.
+      logical :: grad = .false.
+      character(len=:), allocatable :: grad_output
+      integer :: verbosity = 2
+      logical :: citation = .false.
+      character(len=:), allocatable :: citation_output
+   end type gcp_config
 
 contains
 
@@ -131,6 +154,9 @@ subroutine get_arguments(config, error)
       case("param")
          allocate(param_config :: config)
          exit
+      case("gcp")
+         allocate(gcp_config :: config)
+         exit
       end select
    end do
    if (allocated(error)) return
@@ -146,6 +172,8 @@ subroutine get_arguments(config, error)
       call get_run_arguments(config, list, iarg, error)
    type is(param_config)
       call get_param_arguments(config, list, iarg, error)
+   type is(gcp_config)
+      call get_gcp_arguments(config, list, iarg, error)
    end select
 end subroutine get_arguments
 
@@ -266,6 +294,12 @@ subroutine get_run_arguments(config, list, start, error)
          call get_argument_as_real(arg, config%inp%s9, error)
          if (allocated(error)) exit
          config%atm = .true.
+      case("--gcp")
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         call move_alloc(arg, config%basis)
+         if (allocated(error)) exit
+         config%gcp = .true.
       case("--zero")
          config%zero = .true.
          iarg = iarg + 1
@@ -488,6 +522,115 @@ subroutine get_param_arguments(config, list, start, error)
    end if
 
 end subroutine get_param_arguments
+
+subroutine get_gcp_arguments(config, list, start, error)
+
+   !> Configuation data
+   type(gcp_config), intent(out) :: config
+
+   !> List of command line arguments
+   type(argument_list), intent(in) :: list
+
+   !> First command line argument
+   integer, intent(in) :: start
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer :: iarg, narg
+   character(len=:), allocatable :: arg
+
+   iarg = start
+   narg = len(list)
+   do while(iarg < narg)
+      iarg = iarg + 1
+      call list%get(iarg, arg)
+      select case(arg)
+      case("--help")
+         call info_message(error, gcp_help_text)
+         exit
+      case("--version")
+         call version(output_unit)
+         stop
+      case("-v", "--verbose")
+         config%verbosity = config%verbosity + 1
+      case("-s", "--silent")
+         config%verbosity = config%verbosity - 1
+      case default
+         if (.not.allocated(config%input)) then
+            call move_alloc(arg, config%input)
+            cycle
+         end if
+         if (arg(1:1) == "-") then
+            call fatal_error(error, "Unknown argument encountered: '"//arg//"'")
+         else
+            call fatal_error(error, "Too many positional arguments present")
+         end if
+         exit
+      case("-i", "--input")
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for input format")
+            exit
+         end if
+         config%input_format = get_filetype("."//arg)
+      case("-l", "--level")
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for input format")
+            exit
+         end if
+         if (index(arg, "/") > 0) then
+            config%method = arg(1:index(arg, "/")-1)
+            config%method = arg(index(arg, "/")+1:)
+         else
+            call move_alloc(arg, config%method)
+         end if
+      case("--json")
+         config%json = .true.
+         config%json_output = "dftd3.json"
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (allocated(arg)) then
+            if (arg(1:1) == "-") then
+               iarg = iarg - 1
+               cycle
+            end if
+            call move_alloc(arg, config%json_output)
+         end if
+      case("--nocpc")
+         config%tmer = .false.
+      case("--nowrap")
+         config%wrap = .false.
+      case("--grad")
+         config%grad = .true.
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (allocated(arg)) then
+            if (arg(1:1) == "-") then
+               iarg = iarg - 1
+               cycle
+            end if
+            call move_alloc(arg, config%grad_output)
+         end if
+      end select
+   end do
+   if (allocated(error)) return
+
+   if (config%grad.and. .not.config%json .and. .not.allocated(config%grad_output)) then
+      config%grad_output = "dftd3.txt"
+   end if
+
+   if (.not.allocated(config%input)) then
+      if (.not.allocated(error)) then
+         write(output_unit, '(a)') gcp_help_text
+         call fatal_error(error, "Insufficient arguments provided")
+      end if
+   end if
+
+end subroutine get_gcp_arguments
 
 subroutine info_message(error, message)
    type(error_type), allocatable, intent(out) :: error
