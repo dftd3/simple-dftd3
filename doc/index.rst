@@ -10,5 +10,6 @@ The *s-dftd3* project aims to provide a user-friendly and uniform interface to t
 .. toctree::
 
    Installation <installation>
+   Tutorial <tutorial/index>
    Comparison <comparison>
    API <api/index>
