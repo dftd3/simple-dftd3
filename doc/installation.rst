@@ -7,34 +7,34 @@ The preferred method for installing this package is to use a binary release dist
 If your preferred package manager is not available, you can also download the source code and build it yourself.
 
 
-Installing from conda
----------------------
+Installing from conda-forge
+---------------------------
 
-This project is packaged for the *conda* package manager and available on the *conda-forge* channel.
-To install the *conda* package manager we recommend the `miniforge <https://github.com/conda-forge/miniforge/releases>`_ installer.
+This project is packaged for the *mamba* package manager and available on the *conda-forge* channel.
+To install the *mamba* package manager we recommend the `miniforge <https://github.com/conda-forge/miniforge/releases>`_ installer.
 If the *conda-forge* channel is not yet enabled, add it to your channels with
 
 .. code-block:: bash
 
-    conda config --add channels conda-forge
+    mamba config --add channels conda-forge
 
 Once the *conda-forge* channel has been enabled, this project can be installed with:
 
 .. code-block:: bash
 
-   conda install simple-dftd3
+   mamba install simple-dftd3
 
 If you want to enable the Python API as well install
 
 .. code-block:: bash
 
-   conda install dftd3-python
+   mamba install dftd3-python
 
 It is possible to list all of the versions available on your platform with:
 
 .. code-block:: bash
 
-   conda search simple-dftd3 --channel conda-forge
+   mamba search simple-dftd3 --channel conda-forge
 
 Now you are ready to use the ``s-dftd3`` executable, find the ``dftd3.h`` header or import ``dftd3`` in your Python projects.
 
@@ -46,9 +46,19 @@ This library depends on few Fortran modules to provide the desired functionality
 
 - `mctc-lib`_: Modular computation tool chain library
 - `mstore`_: Molecular structure store (testing only)
+- `toml-f`_: TOML parser for Fortran
+
+When building from source the dependencies will be downloaded automatically if not available on the system.
+To build offline install the dependencies before building the library or provide the source of the dependencies in the *subprojects* directory.
+
+.. note::
+
+   Using the released archive is recommended because it already bundles the source code of all dependencies.
+   The complete source archive in the release page is named ``s-dftd3-<version>.tar.xz``.
 
 .. _mctc-lib: https://github.com/grimme-lab/mctc-lib
 .. _mstore: https://github.com/grimme-lab/mstore
+.. _toml-f: https://toml-f.readthedocs.io
 
 .. _meson: https://mesonbuild.com
 .. _ninja: https://ninja-build.org
