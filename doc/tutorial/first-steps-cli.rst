@@ -2,7 +2,7 @@ Computing interaction energies
 ==============================
 
 In this tutorial we want to compute the interaction energy of a non-covalently bound complex using DFT with D3 dispersion correction.
-For this purpose we are using the forth system from the S66x8 data set.\ :footcite:`golokesh`
+For this purpose we are using the forth system from the S66x8 data set.\ :footcite:`golokesh2022`
 
 We start by providing the coordinates of the dimer system in xyz format.
 
@@ -30,7 +30,7 @@ We start by providing the coordinates of the dimer system in xyz format.
 Since D3 is a post SCF correction, we need to compute the SCF interaction energy with another program first.
 For this system the PBE0/def2-QZVP interaction energy is computed with Orca 5.0.4 and already included in the comment line of the xyz file.
 
-Our next step is to compute the D3 contribution to the PBE0-D3 energy, here we choose the rational damping version of D3 denoted as Becke--Johnson (BJ) damping.
+Our next step is to compute the D3 contribution to the PBE0-D3 energy, here we choose the rational damping version of D3\ :footcite:`grimme2011` denoted as Becke--Johnson (BJ) damping.
 For this we call the ``s-dftd3`` command with the xyz file, here ``dimer.xyz`` and the option ``--bj`` with the functional name, here ``PBE0``.
 The output should look like:
 
