@@ -125,9 +125,11 @@ An example for performing a calculation with DFT-D3(BJ)-ATM is shown below
 .. code-block:: fortran
 
    subroutine calc_dftd3(mol, method, energy, gradient, sigma, error)
-      use mctc_env
-      use mctc_io
-      use dftd3
+      use mctc_env, only : wp, error_type
+      use mctc_io, only : structure_type
+      use dftd3, only : d3_model, d3_param, rational_damping_param, &
+         & get_rational_damping, new_rational_damping, new_d3_model, &
+         & get_dispersion, realspace_cutoff
       type(structure_type), intent(in) :: mol
       character(len=*), intent(in) :: method
       real(wp), intent(out) :: energy
@@ -136,11 +138,11 @@ An example for performing a calculation with DFT-D3(BJ)-ATM is shown below
       type(error_type), allocatable, intent(out) :: error
       type(d3_model) :: disp
       type(d3_param) :: inp
-      class(damping_param), allocatable :: param
+      type(rational_damping_param) :: param
 
       call get_rational_damping(inp, method, error, s9=1.0_wp)
       if (allocated(error)) return
-      call new_rational_damping(param, inp, mol)
+      call new_rational_damping(param, inp)
 
       call new_d3_model(disp, mol)
 
