@@ -22,6 +22,10 @@ macro(
   url
   revision
 )
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
+    list(APPEND CMAKE_MESSAGE_CONTEXT "${package}")
+  endif()
+
   string(TOLOWER "${package}" _pkg_lc)
   string(TOUPPER "${package}" _pkg_uc)
 
@@ -109,6 +113,9 @@ macro(
 
   unset(_pkg_lc)
   unset(_pkg_uc)
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.20")
+    list(POP_BACK CMAKE_MESSAGE_CONTEXT)
+  endif()
 
   if(NOT TARGET "${package}::${package}")
     message(FATAL_ERROR "Could not find dependency ${package}")

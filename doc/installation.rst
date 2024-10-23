@@ -153,7 +153,7 @@ After a successful build make sure the testsuite passes
 
 .. code:: text
 
-   pushd _build && ctest --output-on-failure && popd
+   ctest --output-on-failure --test-dir _build
 
 To make the project available install it with
 
