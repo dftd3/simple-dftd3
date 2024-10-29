@@ -101,6 +101,7 @@ jobs:
       - name: Build wheels
         run: python -m cibuildwheel --output-dir . *.tar.gz
         env:
+          CIBW_CONFIG_SETTINGS: setup-args="-Ds-dftd3:openmp=false"
           CIBW_ARCHS: auto64
           CIBW_BUILD: "*${{ matrix.python }}-*"
           CIBW_BUILD_VERBOSITY: 1
