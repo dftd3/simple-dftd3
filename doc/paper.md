@@ -14,7 +14,7 @@ authors:
 affiliations:
   - name: Microsoft Research, AI for Science, The Netherlands
     index: 1
-date: 19 September 2024
+date: 29 October 2024
 bibliography: _static/references.bib
 ---
 
@@ -44,6 +44,6 @@ With its simplicity and availability, the library is a valuable tool for the com
 
 # Acknowledgements
 
-S.E. acknowledges contributions from Robert Cohn, Marvin Friede, Alex Izvorski, Kjell Jorner, Eisuke Kawashima, Federico Pedron, Wanja Schulze, Qiming Sun, Jonathon Vandezande, Thijs Vogels, Shirong Wang, and Lukas Wittmann to the project.
+S.E. acknowledges contributions from Robert Cohn, Marvin Friede, Igor Gerasimov, Alex Izvorski, Kjell Jorner, Eisuke Kawashima, Federico Pedron, Wanja Schulze, Qiming Sun, Jonathon Vandezande, Thijs Vogels, Shirong Wang, and Lukas Wittmann to the project.
 
 # References
