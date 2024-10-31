@@ -122,7 +122,7 @@ and [asciidoctor](https://asciidoctor.org/) for the command line interface manpa
 For generating the main documentation pages, install the documentation dependencies with
 
 ```
-pip install -f doc/requirements.txt
+pip install -r doc/requirements.txt
 ```
 
 The pages can be built with
@@ -137,7 +137,7 @@ To view the final pages you can start a HTTP server via
 python -m http.server -d _docs
 ```
 
-And open the shown URL in a browser.
+And open the shown URL in a browser (usually this is https://localhost:8000).
 The documentation is automatically deployed from the main branch and can be viewed on [readthedocs](https://dftd3.readthedocs.io/).
 
 
@@ -180,7 +180,7 @@ In case you want to access the DFT-D3 results from other programs, dump the resu
 (the ``--noedisp`` flag prevents the ``.EDISP`` file generation):
 
 ```
-s-dftd3 --bj pbe0 --atm --json --noedisp --grad -- struct.xyz
+s-dftd3 --bj pbe0 --atm --json --grad --noedisp struct.xyz
 ```
 
 Dispersion related properties can be calculated as well:
