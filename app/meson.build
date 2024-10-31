@@ -33,6 +33,7 @@ if os != 'windows'
   test('help', sdftd3_exe, args: '--help', suite: 'app')
   test('noargs', sdftd3_exe, should_fail: true, suite: 'app')
   test('example', sdftd3_exe, args: files('example.xyz'), suite: 'app')
+  test('run-example', sdftd3_exe, args: ['run', '--', files('example.xyz')], suite: 'app')
   test('param-all', sdftd3_exe, args: ['param', sdftd3_parameters], suite: 'app')
   test('param-select', sdftd3_exe, args: ['param', sdftd3_parameters, 'b2plyp'], suite: 'app')
 endif

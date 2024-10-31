@@ -65,7 +65,7 @@ subroutine calc_dftd3(mol, method, energy, gradient, sigma, error)
 
    call get_rational_damping(inp, method, error, s9=1.0_wp)
    if (allocated(error)) return
-   call new_rational_damping(param, inp, mol)
+   call new_rational_damping(param, inp)
 
    call new_d3_model(disp, mol)
 

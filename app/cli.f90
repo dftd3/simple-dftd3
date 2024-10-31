@@ -165,14 +165,26 @@ subroutine get_run_arguments(config, list, start, error)
    type(error_type), allocatable, intent(out) :: error
 
    integer :: iarg, narg
+   logical :: read_args
    character(len=:), allocatable :: arg
 
+   read_args = .true.
    iarg = start
    narg = len(list)
    do while(iarg < narg)
       iarg = iarg + 1
       call list%get(iarg, arg)
+      if (.not.read_args) then
+         if (.not.allocated(config%input)) then
+            call move_alloc(arg, config%input)
+            cycle
+         end if
+         call fatal_error(error, "Too many positional arguments present")
+         exit
+      end if
       select case(arg)
+      case("--")
+         read_args = .false.
       case("--help")
          call info_message(error, run_help_text)
          exit
