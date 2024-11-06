@@ -23,6 +23,7 @@ module dftd3_gcp
 
    public :: gcp_param, get_gcp_param, get_geometric_counterpoise
 
+   !> Geometric counterpoise correction
    interface get_geometric_counterpoise
       module procedure get_geometric_counterpoise
       module procedure get_geometric_counterpoise_atomic
@@ -33,11 +34,13 @@ module dftd3_gcp
 contains
 
 
+!> Geometric counterpoise correction
 subroutine get_geometric_counterpoise(mol, param, energy, gradient, sigma)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
 
+   !> Geometric counterpoise parameters
    type(gcp_param), intent(in) :: param
 
    !> Counter-poise energy
@@ -57,11 +60,13 @@ subroutine get_geometric_counterpoise(mol, param, energy, gradient, sigma)
 end subroutine get_geometric_counterpoise
 
 
+!> Geometric counterpoise correction with atom-resolved energies
 subroutine get_geometric_counterpoise_atomic(mol, param, energies, gradient, sigma)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
 
+   !> Geometric counterpoise parameters
    type(gcp_param), intent(in) :: param
 
    !> Dispersion energy
@@ -89,60 +94,59 @@ subroutine get_geometric_counterpoise_atomic(mol, param, energies, gradient, sig
 end subroutine get_geometric_counterpoise_atomic
 
 
+!> Geometric counterpoise correction
 subroutine gcp_egrad(mol, iz, emiss, slater, xv, rvdw, sigma, alpha, beta, &
-   & damp, dmp_scal, dmp_exp, ea, g)
+      & damp, dmp_scal, dmp_exp, ea, g)
+   !> Molecular structure data
    type(structure_type), intent(in) :: mol
+   !> Effective nuclear charges
    integer, intent(in) :: iz(:)
+   !> Basis set superposition error per atom
    real(wp), intent(in) :: emiss(:)
+   !> Slater exponents
    real(wp), intent(in) :: slater(:)
+   !> Number of virtual orbitals
    real(wp), intent(in) :: xv(:)
+   !> Van der Waals radii
    real(wp), intent(in) :: rvdw(:, :)
+   !> Scaling factor
    real(wp), intent(in) :: sigma
+   !> Exponential factor
    real(wp), intent(in) :: alpha
+   !> Power factor
    real(wp), intent(in) :: beta
+   !> Damping flag
    logical, intent(in) :: damp
+   !> Damping scaling factor
    real(wp), intent(in) :: dmp_scal
+   !> Damping exponent
    real(wp), intent(in) :: dmp_exp
-   real(wp), intent(out) :: ea(:)
-   real(wp), intent(out), optional :: g(:, :)
-integer n,np
-integer iat,jat,izp,jzp
-real(wp)  xyzjat(3)
-real(wp)  dum2,dum22
-real(wp)  thrR,thrE
-real(wp) va,vb
-real(wp) r,rscal,rscalexp,rscalexpm1,r0abij
-real(wp) tmp,ecp,dum,tmpa,tmpb,um2,tmpc,tmpd
-real(wp) sab,ene_old_num,ene_old_den
-real(wp) vec(3),gs(3),gab,gcp
-logical echo, grad
+   !> Atom-resolved energy
+   real(wp), intent(inout) :: ea(:)
+   !> Molecular gradient
+   real(wp), intent(inout), optional :: g(:, :)
 
-! cut-off radii for all element pairs
-!real*8 autoang
-!for damping
-real(wp) dampval, grdfirst,grdsecond,ene_old,ene_dmp,grd_dmp
-! Two threshold. thrR: distance cutoff thrE: numerical noise cutoff
-echo = .false.
-thrR=60            ! 60 bohr
-thrE=epsilon(1.d0) ! cut below machine precision rounding
+   integer iat,jat,izp,jzp
+   real(wp)  dum2,dum22
+   real(wp)  thrR,thrE
+   real(wp) va,vb
+   real(wp) r,rscal,rscalexp,rscalexpm1,r0abij
+   real(wp) tmp,ecp,dum,tmpa,tmpb,um2,tmpc,tmpd
+   real(wp) sab,ene_old_num,ene_old_den
+   real(wp) vec(3),gs(3),gab,gcp
+   logical grad
+   real(wp) dampval, grdfirst,grdsecond,ene_old,ene_dmp,grd_dmp
 
-grad = present(g)
+   thrR=60            ! 60 bohr
+   thrE=epsilon(1.d0) ! cut below machine precision rounding
 
-ea=0.0d0
-if (grad) g=0.0d0
-ecp=0.0d0
-gcp=0.0d0
-dum=0.0d0
+   grad = present(g)
 
    gs=0
-   if(echo) write(*,'(2x,a5,2x,a5,2x,a5,2x,a7,2x,a14,4x,a15)') &
-        '#','ON','sites','Nvirt','Emiss','BSSE [kcal/mol]'
-   ! Loop over all i atoms
    do iat=1,mol%nat
       izp = mol%id(iat)
       va=xv(izp)
 
-      np=0
       ! the BSSE due to atom jat, Loop over all j atoms
       do jat=1,mol%nat
          jzp = mol%id(jat)
@@ -168,21 +172,15 @@ dum=0.0d0
          ! noise cutoff(damp)
          if(abs(ene_old).lt.thrE) cycle
          if(damp) then
-!D3 r0ab radii
             r0abij=rvdw(izp,jzp)
             rscal=r/r0abij
-!covalent radii
-!          rscal=r/(rad(izp)+rad(jzp))
-          rscalexp=rscal**dmp_exp
-          dampval=(1d0-1d0/(1d0+dmp_scal*rscalexp))
-          ene_dmp=ene_old*dampval
-          ea(iat)=ea(iat)+emiss(izp)*ene_dmp
+            rscalexp=rscal**dmp_exp
+            dampval=(1d0-1d0/(1d0+dmp_scal*rscalexp))
+            ene_dmp=ene_old*dampval
+            ea(iat)=ea(iat)+emiss(izp)*ene_dmp*sigma
          else
-          ea(iat)=ea(iat)+emiss(izp)*ene_old
-       endif
-
-         ! sites counter (i.e. # atoms contributing to the 'atomic bsse')
-         np=np+1
+            ea(iat)=ea(iat)+emiss(izp)*ene_old*sigma
+         endif
 
          ! gradient for i,j pair
          if(grad)then
@@ -207,21 +205,21 @@ dum=0.0d0
             if(damp) then
                tmp=tmp*dampval+ene_old*grd_dmp*(vec(1)/r)
             endif
-            g(1,iat)=g(1,iat)+tmp*emiss(izp)
+            g(1,iat)=g(1,iat)+tmp*emiss(izp)*sigma
 
             tmpa=dum2*vec(2)+gs(2)
             tmp=dum*tmpa/tmpb
             if(damp) then
                tmp=tmp*dampval+ene_old*grd_dmp*(vec(2)/r)
             endif
-            g(2,iat)=g(2,iat)+tmp*emiss(izp)
+            g(2,iat)=g(2,iat)+tmp*emiss(izp)*sigma
 
             tmpa=dum2*vec(3)+gs(3)
             tmp=dum*tmpa/tmpb
             if(damp) then
               tmp=tmp*dampval+ene_old*grd_dmp*(vec(3)/r)
             endif
-            g(3,iat)=g(3,iat)+tmp*emiss(izp)
+            g(3,iat)=g(3,iat)+tmp*emiss(izp)*sigma
 
             if(va.lt.0.5) cycle
             if(damp) then
@@ -236,162 +234,146 @@ dum=0.0d0
             if(damp) then
                tmp=tmp*dampval+ene_old*grd_dmp*(-vec(1)/r)
             endif
-            g(1,iat)=g(1,iat)-tmp*emiss(jzp)
+            g(1,iat)=g(1,iat)-tmp*emiss(jzp)*sigma
 
             tmpa=dum2*(-vec(2))-gs(2)
             tmp=dum*tmpa/tmpb
             if(damp) then
                tmp=tmp*dampval+ene_old*grd_dmp*(-vec(2)/r)
             endif
-            g(2,iat)=g(2,iat)-tmp*emiss(jzp)
+            g(2,iat)=g(2,iat)-tmp*emiss(jzp)*sigma
 
             tmpa=dum2*(-vec(3))-gs(3)
             tmp=dum*tmpa/tmpb
             if(damp) then
                tmp=tmp*dampval+ene_old*grd_dmp*(-vec(3)/r)
             endif
-            g(3,iat)=g(3,iat)-tmp*emiss(jzp)
+            g(3,iat)=g(3,iat)-tmp*emiss(jzp)*sigma
 
-         endif
-! end of j-loop
-      enddo
-      if(echo) &
-       write(*,'(2x,3(I5,2x),2x,F5.1,2x,F14.4,2x,F14.4,2x,F14.4,2x,F14.4)')  &
-                iat,iz(izp),np,va,emiss(izp), xv(izp), slater(izp), ea(iat)*627.5099*sigma
-
-         ecp=ecp+ea(iat)
-! end of i-loop
-      enddo
-gcp=ecp*sigma
-ea=ea*sigma
-if(grad)g=g*sigma
-
-
-!Special HF-3c correction
-! if(base) then
-!  call basegrad(n,max_elem,iz,xyz,lat,pbc,0.7d0,0.03d0,ebas,gbas,echo)
-!  gcp=gcp+ebas
-!  if(grad) g=g+gbas
-! endif
+         end if
+      end do
+   end do
 
 end subroutine gcp_egrad
 
 
+!> Short-range bond length correction for HF-3c
 subroutine basegrad(mol,iz,r0ab,rscal,qscal,e,g,sigma)
-type(structure_type), intent(in) :: mol
-integer, intent(in) :: iz(:)
-real(wp), intent(in) :: r0ab(:,:)
-real(wp), intent(in) :: rscal
-real(wp), intent(in) :: qscal
-real(wp), intent(inout) :: e(:)
-real(wp), intent(inout), optional :: g(:, :)
-real(wp), intent(inout), optional :: sigma(:, :)
-real*8 fi,fj,ff,rf,r,expt
-!c cut-off radii for all element pairs
-real*8 r0,thrR,vec(3)
-integer iat,jat,izp,jzp
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+   !> Effective nuclear charges
+   integer, intent(in) :: iz(:)
+   !> Van der Waals radii
+   real(wp), intent(in) :: r0ab(:,:)
+   !> Radii scaling factor
+   real(wp), intent(in) :: rscal
+   !> Prefactor for the SRB potential
+   real(wp), intent(in) :: qscal
+   !> Atom-resolved energy
+   real(wp), intent(inout) :: e(:)
+   !> Molecular gradient
+   real(wp), intent(inout), optional :: g(:, :)
+   !> Molecular virial
+   real(wp), intent(inout), optional :: sigma(:, :)
 
-!threshold
-thrR=30            ! 30 bohr
+   real(wp) fi,fj,ff,rf,r,expt
+   real(wp) r0,thrR,vec(3)
+   integer iat,jat,izp,jzp
 
-do iat=1,mol%nat-1
-   izp = mol%id(iat)
- do jat=iat+1,mol%nat
-   jzp = mol%id(jat)
-  if(iz(izp).lt.1.or.iz(izp).gt.18) cycle
-  if(iz(jzp).lt.1.or.iz(jzp).gt.18) cycle
-  vec(1)=mol%xyz(1,iat)-mol%xyz(1,jat)
-  vec(2)=mol%xyz(2,iat)-mol%xyz(2,jat)
-  vec(3)=mol%xyz(3,iat)-mol%xyz(3,jat)
-  r=sqrt(vec(1)*vec(1)+vec(2)*vec(2)+vec(3)*vec(3))
-  if(r.gt.thrR) cycle
-  r0=rscal*r0ab(izp,jzp)**0.75d0
-  fi=float(iz(izp))
-  fj=float(iz(jzp))
-  ff=-(fi*fj)**1.5d0
-  expt=exp(-r0*r)
-  e(iat)=e(iat)+ff*expt/2*qscal
-  e(jat)=e(jat)+ff*expt/2*qscal
-  rf=qscal/r
-  if (present(g)) then
-  g(1,iat)=g(1,iat)-ff*r0*vec(1)*expt*rf
-  g(1,jat)=g(1,jat)+ff*r0*vec(1)*expt*rf
-  g(2,iat)=g(2,iat)-ff*r0*vec(2)*expt*rf
-  g(2,jat)=g(2,jat)+ff*r0*vec(2)*expt*rf
-  g(3,iat)=g(3,iat)-ff*r0*vec(3)*expt*rf
-  g(3,jat)=g(3,jat)+ff*r0*vec(3)*expt*rf
-  end if
-  enddo
-enddo
+   !threshold
+   thrR=30            ! 30 bohr
+
+   do iat=1,mol%nat-1
+      izp = mol%id(iat)
+      do jat=iat+1,mol%nat
+         jzp = mol%id(jat)
+         if(iz(izp).lt.1.or.iz(izp).gt.18) cycle
+         if(iz(jzp).lt.1.or.iz(jzp).gt.18) cycle
+         vec(1)=mol%xyz(1,iat)-mol%xyz(1,jat)
+         vec(2)=mol%xyz(2,iat)-mol%xyz(2,jat)
+         vec(3)=mol%xyz(3,iat)-mol%xyz(3,jat)
+         r=sqrt(vec(1)*vec(1)+vec(2)*vec(2)+vec(3)*vec(3))
+         if(r.gt.thrR) cycle
+         r0=rscal*r0ab(izp,jzp)**0.75d0
+         fi=float(iz(izp))
+         fj=float(iz(jzp))
+         ff=-(fi*fj)**1.5d0
+         expt=exp(-r0*r)
+         e(iat)=e(iat)+ff*expt/2*qscal
+         e(jat)=e(jat)+ff*expt/2*qscal
+         rf=qscal/r
+         if (present(g)) then
+            g(1,iat)=g(1,iat)-ff*r0*vec(1)*expt*rf
+            g(1,jat)=g(1,jat)+ff*r0*vec(1)*expt*rf
+            g(2,iat)=g(2,iat)-ff*r0*vec(2)*expt*rf
+            g(2,jat)=g(2,jat)+ff*r0*vec(2)*expt*rf
+            g(3,iat)=g(3,iat)-ff*r0*vec(3)*expt*rf
+            g(3,jat)=g(3,jat)+ff*r0*vec(3)*expt*rf
+         end if
+      enddo
+   enddo
 
 end subroutine basegrad
 
 
-! short-range bond length correction
-! modified form derived from HF-3c SRB potential
-! requires TRUE ordinal numbers in array iz
-! the empirical parameters are qscal (prefactor) and rscal (radii scaling)
-! SG, Nov. 2016
+!> Short-range bond length correction, modified form derived from HF-3c SRB potential
 subroutine srb_egrad2(mol,iz,r0ab,rscal,qscal,energies,g)
-type(structure_type), intent(in) :: mol
-integer, intent(in) :: iz(:)
-real(wp), intent(in) :: r0ab(:,:)
-real(wp), intent(in) :: rscal
-real(wp), intent(in) :: qscal
-real(wp), intent(inout) :: energies(:)
-real(wp), intent(inout), optional :: g(:, :)
-integer :: iat, jat, izp, jzp
-real(wp) :: dx, dy, dz, r, r0, fi, fj, ff, ener_dum, r0abij, thrR, thrE, rf
-logical grad, echo
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+   !> True ordinal numbers
+   integer, intent(in) :: iz(:)
+   !> Van der Waals radii
+   real(wp), intent(in) :: r0ab(:,:)
+   !> Radii scaling factor
+   real(wp), intent(in) :: rscal
+   !> Prefactor for the SRB potential
+   real(wp), intent(in) :: qscal
+   !> Atom-resolved energy
+   real(wp), intent(inout) :: energies(:)
+   !> Molecular gradient
+   real(wp), intent(inout), optional :: g(:, :)
 
-! Two threshold. thrR: distance cutoff thrE: numerical noise cutoff
-echo = .false.
-grad = present(g)
-thrR=30.0d0            ! X bohr
-thrE=epsilon(1.d0)
+   integer :: iat, jat, izp, jzp
+   real(wp) :: dx, dy, dz, r, r0, fi, fj, ff, ener_dum, r0abij, thrR, thrE, rf
+   logical grad
 
-do iat=1,mol%nat
-   izp = mol%id(iat)
-   do jat=1,mol%nat
-      jzp = mol%id(jat)
-      if(iat.eq.jat) then
-         cycle
-      end if
-      dx=mol%xyz(1,iat)-mol%xyz(1,jat)
-      dy=mol%xyz(2,iat)-mol%xyz(2,jat)
-      dz=mol%xyz(3,iat)-mol%xyz(3,jat)
-      r=sqrt(dx*dx+dy*dy+dz*dz)
-      ! distance cutoff
-      if(r.gt.thrR) cycle
-      ! Do SRB for B97-3c
-      r0abij=r0ab(izp,jzp)
-      r0=rscal/r0ab(izp,jzp)
-      fi=real(iz(izp))
-      fj=real(iz(jzp))
-      ff=-(fi*fj)**0.5d0
-      ener_dum=qscal*ff*exp(-r0*r)
-      !factor 1/2 from double counting
-      ener_dum=ener_dum*0.5d0
-      energies(iat)=energies(iat)+ener_dum
-      ! energy=energy+ener_dum
-      if(grad) then
-         rf=qscal/r
-         g(1,iat)=g(1,iat)-ff*r0*dx*exp(-r0*r)*rf
-         g(2,iat)=g(2,iat)-ff*r0*dy*exp(-r0*r)*rf
-         g(3,iat)=g(3,iat)-ff*r0*dz*exp(-r0*r)*rf
-      endif
-   enddo !jat
-enddo !iat
-if(echo)then
-   write(*,'(/2x,a5,2x,a5,4x,a15)') &
-        '#','ON','SRB [kcal/mol]'
+   ! Two threshold. thrR: distance cutoff thrE: numerical noise cutoff
+   grad = present(g)
+   thrR=30.0d0            ! X bohr
+   thrE=epsilon(1.d0)
+
    do iat=1,mol%nat
-      write(*,'(2x,2(i5,2x),F9.3)') iat,iz(mol%id(iat)),energies(iat)
-   enddo
-!   write(IOUT,*)'** SRB correction **'
-!   write(IOUT,'(2x,a7,F18.10,'' / (a.u.) || '',x,F11.4,'' / (kcal/mol)'')')'Esrb:  ',energy,energy*AUTOKCAL
-!   if(grad)write(IOUT,*)'|G|=',sum(abs(g(1:3,1:n)))
-endif
+      izp = mol%id(iat)
+      do jat=1,mol%nat
+         jzp = mol%id(jat)
+         if(iat.eq.jat) then
+            cycle
+         end if
+         dx=mol%xyz(1,iat)-mol%xyz(1,jat)
+         dy=mol%xyz(2,iat)-mol%xyz(2,jat)
+         dz=mol%xyz(3,iat)-mol%xyz(3,jat)
+         r=sqrt(dx*dx+dy*dy+dz*dz)
+         ! distance cutoff
+         if(r.gt.thrR) cycle
+         ! Do SRB for B97-3c
+         r0abij=r0ab(izp,jzp)
+         r0=rscal/r0ab(izp,jzp)
+         fi=real(iz(izp))
+         fj=real(iz(jzp))
+         ff=-(fi*fj)**0.5d0
+         ener_dum=qscal*ff*exp(-r0*r)
+         !factor 1/2 from double counting
+         ener_dum=ener_dum*0.5d0
+         energies(iat)=energies(iat)+ener_dum
+         ! energy=energy+ener_dum
+         if(grad) then
+            rf=qscal/r
+            g(1,iat)=g(1,iat)-ff*r0*dx*exp(-r0*r)*rf
+            g(2,iat)=g(2,iat)-ff*r0*dy*exp(-r0*r)*rf
+            g(3,iat)=g(3,iat)-ff*r0*dz*exp(-r0*r)*rf
+         endif
+      enddo !jat
+   enddo !iat
 
 end subroutine srb_egrad2
 
@@ -406,160 +388,158 @@ end subroutine srb_egrad2
 !* Inspired by mopac7.0
 !******************************************************************************
 subroutine ssovl(r,iat,jat,iz,xza,xzb,ovl)
-implicit none
-integer ii,shell(72)
-logical debug
-real(wp) za,zb,R,ovl,ax,bx,norm,R05
-integer na,nb
-real(wp) Bxx0,Bxx1,Bxx2,xx,Bxx4,Bxx6
-real(wp) Bxx3,Bxx5
-data shell/                 &
-!          h, he
-          1,1               &
-!         li-ne
-          ,2,2,2,2,2,2,2,2, &
-!         na-ar
-          3,3,3,3,3,3,3,3,  &
-! 4s,5s will be treated as 3s
-!         k-rn , no f-elements
-          54*3/
-! ...
-real(kind=8) xza,xzb
-integer iat,jat,iz(*)
+   integer ii,shell(72)
+   logical debug
+   real(wp) za,zb,R,ovl,ax,bx,norm,R05
+   integer na,nb
+   real(wp) Bxx0,Bxx1,Bxx2,xx,Bxx4,Bxx6
+   real(wp) Bxx3,Bxx5
+   data shell/                 &
+   !          h, he
+            1,1               &
+   !         li-ne
+            ,2,2,2,2,2,2,2,2, &
+   !         na-ar
+            3,3,3,3,3,3,3,3,  &
+   ! 4s,5s will be treated as 3s
+   !         k-rn , no f-elements
+            54*3/
+   ! ...
+   real(wp) xza,xzb
+   integer iat,jat,iz(*)
 
-       za=xza
-       zb=xzb
-       na=iz(iat)
-       nb=iz(jat)
-debug=.false.
+   za=xza
+   zb=xzb
+   na=iz(iat)
+   nb=iz(jat)
+   debug=.false.
 !debug=.true.
 
 ! ii selects kind of ovl by multiplying the shell
 ! kind    <1s|1s>  <2s|1s>  <2s|2s>  <1s|3s>  <2s|3s>  <3s|3s>
 ! case:      1        2        4       3        6         9
 !
-ii=shell(na)*shell(nb)
-if(debug) write(*,*) 'shell', ii
+   ii=shell(na)*shell(nb)
+   if(debug) write(*,*) 'shell', ii
 
-R05=R*0.5
-ax=(za+zb)*R05
-bx=(zb-za)*R05
+   R05=R*0.5
+   ax=(za+zb)*R05
+   bx=(zb-za)*R05
 
-! same elements
-if(za == zb.OR.abs(za-zb) < 0.1) then
-  select case (ii)
-   case (1)
-    ovl=0.25d0*sqrt((za*zb*R*R)**3)*(A2(ax)*Bint(bx,0)-Bint(bx,2)*A0(ax))
-   case (2)
-    ovl = SQRT(1._wp/3._wp)
-    if(shell(na) < shell(nb)) then
-    ! <1s|2s>
-      norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
-      ovl=ovl*norm*(A3(ax)*Bint(bx,0)-Bint(bx,3)*A0(ax)+A2(ax)*Bint(bx,1)-Bint(bx,2)*A1(ax))
-     else
-    ! switch za/zb to get <2s|1s>
-      xx=za
-      za=zb
-      zb=xx
-      ax=(za+zb)*R05
-      bx=(zb-za)*R05
-      norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
-      ovl=ovl*norm*(A3(ax)*Bint(bx,0)-Bint(bx,3)*A0(ax)+A2(ax)*Bint(bx,1)-Bint(bx,2)*A1(ax))
-    endif
-   case (4)
-    norm=SQRT((ZA*ZB)**5)*(R**5)*0.0625d0
-    ovl=norm* (A4(ax)*Bint(bx,0)+Bint(bx,4)*A0(ax)-2.0d0*A2(ax)*Bint(bx,2))*(1d0/3d0)
-   case(3)
-    if(shell(na) < shell(nb)) then
-      norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-      ovl=norm*(A4(ax)*Bint(bx,0)-Bint(bx,4)*A0(ax)+2.d0*(A3(ax)*Bint(bx,1)-Bint(bx,3)*A1(ax)))/sqrt(3.d0)
-    else
-      xx=za
-      za=zb
-      zb=xx
-      ax=(za+zb)*R05
-      bx=(zb-za)*R05
-      norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-      ovl=norm*(A4(ax)*Bint(bx,0)-Bint(bx,4)*A0(ax)+2.d0*(A3(ax)*Bint(bx,1)-Bint(bx,3)*A1(ax)))/sqrt(3.d0)
-    endif
-   case(6)
-    if(shell(na) < shell(nb)) then
-      norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
-      ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1) &
-         & -2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3)) &
-         & +A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
-    else
-      xx=za
-      za=zb
-      zb=xx
-      ax=(za+zb)*R05
-      bx=(zb-za)*R05
-      norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
-      ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1) &
-         & -2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3)) &
-         & +A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
-    endif
-   case(9)
-      norm=sqrt((ZA*ZB*R*R)**7)/480.d0
-      ovl=norm*(A6(ax)*Bint(bx,0)-3.d0*(A4(ax)*Bint(bx,2) &
-         & -A2(ax)*Bint(bx,4))-A0(ax)*Bint(bx,6))/3._wp
-   end select
-else ! different elements
-   select case (ii)
-   case (1)
-      norm=0.25d0*sqrt((za*zb*R*R)**3)
-      ovl=(A2(ax)*B0(bx)-B2(bx)*A0(ax))*norm
-   case (2)
-      ovl = SQRT(1._wp/3._wp)
-    if(shell(na) < shell(nb)) then
-    ! <1s|2s>
-      norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
-      ovl=ovl*norm*(A3(ax)*B0(bx)-B3(bx)*A0(ax)+A2(ax)*B1(bx)-B2(bx)*A1(ax))
-     else
-    ! switch za/zb to get <2s|1s>
-      xx=za
-      za=zb
-      zb=xx
-      ax=(za+zb)*R05
-      bx=(zb-za)*R05
-      norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
-      ovl=ovl*norm*(A3(ax)*B0(bx)-B3(bx)*A0(ax)+A2(ax)*B1(bx)-B2(bx)*A1(ax))
-    endif
-   case (4) ! <2s|2s>
-      norm=SQRT((ZA*ZB)**5)*(R**5)*0.0625_wp
-      ovl=norm* (A4(ax)*B0(bx)+B4(bx)*A0(ax)-2.0_wp*A2(ax)*B2(bx))*(1d0/3d0)
-   case(3)  ! <1s|3s> + <3s|1s>
-    if(shell(na) < shell(nb)) then
-      norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-      ovl=norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.d0)
-    else
-      xx=za
-      za=zb
-      zb=xx
-      ax=(za+zb)*R05
-      bx=(zb-za)*R05
-      norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-      ovl=norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.d0)
-    endif
-   case(6)  ! <2s|3s> + <3s|2s>
-    if(shell(na) < shell(nb)) then
-      norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
-      ovl=norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2d0*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.d0
-    else
-      xx=za
-      za=zb
-      zb=xx
-      ax=(za+zb)*R05
-      bx=(zb-za)*R05
-      norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
-      ovl=norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2.0_wp*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.d0
-    endif
-    case(9) ! <3s|3>
-      norm=sqrt((ZA*ZB*R*R)**7)/1440.d0
-!      ovl=norm*(A6(ax)*B0(bx)-3.d0*(A4(ax)*B2(bx)-A2(ax)*B4(bx))-A0(ax)*Bint(bx,6))
-      ovl=norm*(A6(ax)*B0(bx)-3.d0*(A4(ax)*B2(bx)-A2(ax)*B4(bx))-A0(ax)*B6(bx))
-   end select
-endif
+   ! same elements
+   if(za == zb.OR.abs(za-zb) < 0.1) then
+      select case (ii)
+      case (1)
+         ovl=0.25d0*sqrt((za*zb*R*R)**3)*(A2(ax)*Bint(bx,0)-Bint(bx,2)*A0(ax))
+      case (2)
+         ovl = SQRT(1._wp/3._wp)
+         if(shell(na) < shell(nb)) then
+         ! <1s|2s>
+            norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
+            ovl=ovl*norm*(A3(ax)*Bint(bx,0)-Bint(bx,3)*A0(ax)+A2(ax)*Bint(bx,1)-Bint(bx,2)*A1(ax))
+         else
+         ! switch za/zb to get <2s|1s>
+            xx=za
+            za=zb
+            zb=xx
+            ax=(za+zb)*R05
+            bx=(zb-za)*R05
+            norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
+            ovl=ovl*norm*(A3(ax)*Bint(bx,0)-Bint(bx,3)*A0(ax)+A2(ax)*Bint(bx,1)-Bint(bx,2)*A1(ax))
+         endif
+      case (4)
+         norm=SQRT((ZA*ZB)**5)*(R**5)*0.0625d0
+         ovl=norm* (A4(ax)*Bint(bx,0)+Bint(bx,4)*A0(ax)-2.0d0*A2(ax)*Bint(bx,2))*(1d0/3d0)
+      case(3)
+         if(shell(na) < shell(nb)) then
+            norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
+            ovl=norm*(A4(ax)*Bint(bx,0)-Bint(bx,4)*A0(ax)+2.d0*(A3(ax)*Bint(bx,1)-Bint(bx,3)*A1(ax)))/sqrt(3.d0)
+         else
+            xx=za
+            za=zb
+            zb=xx
+            ax=(za+zb)*R05
+            bx=(zb-za)*R05
+            norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
+            ovl=norm*(A4(ax)*Bint(bx,0)-Bint(bx,4)*A0(ax)+2.d0*(A3(ax)*Bint(bx,1)-Bint(bx,3)*A1(ax)))/sqrt(3.d0)
+         endif
+      case(6)
+         if(shell(na) < shell(nb)) then
+            norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
+            ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1) &
+               & -2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3)) &
+               & +A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
+         else
+            xx=za
+            za=zb
+            zb=xx
+            ax=(za+zb)*R05
+            bx=(zb-za)*R05
+            norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
+            ovl=norm*(A5(ax)*Bint(bx,0)+A4(ax)*Bint(bx,1) &
+               & -2d0*(A3(ax)*Bint(bx,2)+A2(ax)*Bint(bx,3)) &
+               & +A1(ax)*Bint(bx,4)+A0(ax)*Bint(bx,5))/3.d0
+         endif
+      case(9)
+         norm=sqrt((ZA*ZB*R*R)**7)/480.d0
+         ovl=norm*(A6(ax)*Bint(bx,0)-3.d0*(A4(ax)*Bint(bx,2) &
+            & -A2(ax)*Bint(bx,4))-A0(ax)*Bint(bx,6))/3._wp
+      end select
+   else ! different elements
+      select case (ii)
+      case (1)
+         norm=0.25d0*sqrt((za*zb*R*R)**3)
+         ovl=(A2(ax)*B0(bx)-B2(bx)*A0(ax))*norm
+      case (2)
+         ovl = SQRT(1._wp/3._wp)
+         if(shell(na) < shell(nb)) then
+         ! <1s|2s>
+            norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
+            ovl=ovl*norm*(A3(ax)*B0(bx)-B3(bx)*A0(ax)+A2(ax)*B1(bx)-B2(bx)*A1(ax))
+         else
+         ! switch za/zb to get <2s|1s>
+            xx=za
+            za=zb
+            zb=xx
+            ax=(za+zb)*R05
+            bx=(zb-za)*R05
+            norm=SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
+            ovl=ovl*norm*(A3(ax)*B0(bx)-B3(bx)*A0(ax)+A2(ax)*B1(bx)-B2(bx)*A1(ax))
+         endif
+      case (4) ! <2s|2s>
+         norm=SQRT((ZA*ZB)**5)*(R**5)*0.0625_wp
+         ovl=norm* (A4(ax)*B0(bx)+B4(bx)*A0(ax)-2.0_wp*A2(ax)*B2(bx))*(1d0/3d0)
+      case(3)  ! <1s|3s> + <3s|1s>
+         if(shell(na) < shell(nb)) then
+            norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
+            ovl=norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.d0)
+         else
+            xx=za
+            za=zb
+            zb=xx
+            ax=(za+zb)*R05
+            bx=(zb-za)*R05
+            norm=SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
+            ovl=norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.d0)
+         endif
+      case(6)  ! <2s|3s> + <3s|2s>
+         if(shell(na) < shell(nb)) then
+            norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
+            ovl=norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2d0*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.d0
+         else
+            xx=za
+            za=zb
+            zb=xx
+            ax=(za+zb)*R05
+            bx=(zb-za)*R05
+            norm=SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
+            ovl=norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2.0_wp*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.d0
+         endif
+      case(9) ! <3s|3>
+         norm=sqrt((ZA*ZB*R*R)**7)/1440.d0
+         ovl=norm*(A6(ax)*B0(bx)-3.d0*(A4(ax)*B2(bx)-A2(ax)*B4(bx))-A0(ax)*B6(bx))
+      end select
+   endif
 end subroutine ssovl
 
 
@@ -569,38 +549,38 @@ end subroutine ssovl
 !* p. 570  eq. 11.4.14                  *
 !****************************************
 
-real(8) pure function A0(x)
+real(wp) pure function A0(x)
 ! Hilfsintegral A_0
 implicit none
-real(8), intent(in) :: x
+real(wp), intent(in) :: x
 A0=exp(-x)/x
 return
 end function
 
-real(8) pure function A1(x)
+real(wp) pure function A1(x)
 ! Hilfsintegral A_1
 implicit none
-real(8), intent(in) :: x
+real(wp), intent(in) :: x
 A1=((1+x)*exp(-x))/(x**2)
 return
 end function
 
 
-real(8) pure function A2(x)
+real(wp) pure function A2(x)
 ! Hilfsintegral A_2
 implicit none
-real(8), intent(in) :: x
+real(wp), intent(in) :: x
 A2=((2d0+2d0*x+x**2)*exp(-x))/x**3
 return
 end function
 
 
-real(8) pure function A3(x)
+real(wp) pure function A3(x)
 ! Hilfsintegral A_3
 implicit none
-real(8), intent(in) :: x
-real(8) xx
-real(8) x2,x3,x4
+real(wp), intent(in) :: x
+real(wp) xx
+real(wp) x2,x3,x4
 x2=x*x
 x3=x2*x
 x4=x3*x
@@ -610,12 +590,12 @@ return
 end function
 
 
-real(8) pure function A4(x)
+real(wp) pure function A4(x)
 ! Hilfsintegral A_4
 implicit none
-real(8), intent(in) :: x
-real(8) xx
-real(8) x2,x3,x4,x5
+real(wp), intent(in) :: x
+real(wp) xx
+real(wp) x2,x3,x4,x5
 x2=x*x
 x3=x2*x
 x4=x3*x
@@ -625,12 +605,12 @@ A4=(xx*exp(-x))/x5
 return
 end function
 
-real(8) pure function A5(x)
+real(wp) pure function A5(x)
 ! Hilfsintegral A_5
 implicit none
-real(8), intent(in) :: x
-real(8) xx
-real(8) x2,x3,x4,x5,x6
+real(wp), intent(in) :: x
+real(wp) xx
+real(wp) x2,x3,x4,x5,x6
 x2=x*x
 x3=x2*x
 x4=x3*x
@@ -641,12 +621,12 @@ A5=(xx*exp(-x))/x6
 return
 end function
 
-real(8) pure function A6(x)
+real(wp) pure function A6(x)
 ! Hilfsintegral A_6
 implicit none
-real(8), intent(in) :: x
-real(8) xx
-real(8) x2,x3,x4,x5,x6,x7
+real(wp), intent(in) :: x
+real(wp) xx
+real(wp) x2,x3,x4,x5,x6,x7
 x2=x*x
 x3=x2*x
 x4=x3*x
@@ -743,14 +723,14 @@ real(wp) function B6(x)
 end function
 
 
-real*8 function bint(x,k)
+real(wp) function bint(x,k)
 ! calculates B_k(x)
 ! general summation formula
 ! 'infinite' sum is numerically unstable. 12 terms seem
 ! accurate enough
 implicit none
-real(8), intent(in) :: x
-real(8) xx,yy
+real(wp), intent(in) :: x
+real(wp) xx,yy
 integer, intent(in) :: k
 integer i
 bint=0
@@ -773,7 +753,7 @@ end function bint
 
 
 ! faculty function
-integer(8) function fact(N)
+integer(wp) function fact(N)
 implicit none
 integer j,n
 fact=1
