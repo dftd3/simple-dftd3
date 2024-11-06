@@ -7,8 +7,6 @@ The *s-dftd3* library seamlessly integrates with other Fortran projects via modu
 
    Generally, all quantities used in the library are stored in `atomic units <https://en.wikipedia.org/wiki/Hartree_atomic_units>`_.
 
-.. contents::
-
 
 Handling of geometries and structure
 ------------------------------------
