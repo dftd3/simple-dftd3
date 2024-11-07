@@ -23,22 +23,39 @@ module dftd3_gcp_param
 
    public :: gcp_param, get_gcp_param
 
+   !> Parameters for the geometric counter-poise correction
    type :: gcp_param
+      !> Basis set superposition error correction
       real(wp), allocatable :: emiss(:)
+      !> Number of virtual orbitals
       real(wp), allocatable :: xv(:)
+      !> Slater exponents
       real(wp), allocatable :: slater(:)
+      !> Van der Waals radii for effective nuclear charges
       real(wp), allocatable :: rvdw(:, :)
+      !> Van der Waals radii for true nuclear charges
       real(wp), allocatable :: rvdw_srb(:, :)
+      !> Effective nuclear charges
       integer, allocatable :: zeff(:)
+      !> Scaling factor for the counter-poise correction
       real(wp) :: sigma = 0.0_wp
+      !> Exponential parameter
       real(wp) :: alpha = 0.0_wp
+      !> Power parameter
       real(wp) :: beta = 0.0_wp
+      !> Damping enabled
       logical :: damp = .false.
+      !> Damping scaling factor
       real(wp) :: dmp_scal = 4.0_wp
+      !> Damping exponent
       real(wp) :: dmp_exp = 6.0_wp
+      !> Short-range bond correction
       logical :: srb = .false.
+      !> Short-range bond correction radii scaling factor
       real(wp) :: rscal = 0.0_wp
+      !> Short-range bond correction scaling factor
       real(wp) :: qscal = 0.0_wp
+      !> Short-range bond correction for HF-3c
       logical :: base = .false.
     end type
 
@@ -57,12 +74,12 @@ module dftd3_gcp_param
          p_ccdz_bas, &
          p_accdz_bas, &
          p_pobtz_bas, &
-         p_pobdzvp_bas, &
+         ! p_pobdzvp_bas, &
          p_minix_bas, &
          p_gcore_bas, &
          p_2g_bas, &
          p_dzp_bas, &
-         p_hsv_bas, &
+         ! p_hsv_bas, &
          p_dz_bas, &
          p_msvp_bas, &
          p_lanl2_bas, &
@@ -473,13 +490,14 @@ module dftd3_gcp_param
 
 contains
 
-subroutine get_gcp_param(param, mol, method, basis)
+subroutine get_gcp_param(param, mol, method, basis, eta)
    type(gcp_param), intent(out) :: param
    type(structure_type), intent(in) :: mol
    character(len=*), intent(in), optional :: method
    character(len=*), intent(in), optional :: basis
+   real(wp), intent(in), optional :: eta
 
-   real(wp) :: eta, eta_spec
+   real(wp) :: eta_, eta_spec
    real(wp), allocatable :: nbas(:)
    integer :: isp, izp, jsp, basis_id, method_id
    integer, allocatable :: nel(:)
@@ -495,7 +513,8 @@ subroutine get_gcp_param(param, mol, method, basis)
    if (present(basis)) basis_id = get_basis_id(basis)
    if (basis_id == p_unknown_bas .and. method_id == p_unknown_method) return
 
-   eta = 0.0_wp
+   eta_ = 0.0_wp
+   if (present(eta)) eta_ = eta
    eta_spec = 0.0_wp
 
    allocate(param%zeff(mol%nid))
@@ -538,17 +557,17 @@ subroutine get_gcp_param(param, mol, method, basis)
       select case(method_id)
       case (p_hf_method) ! RMS=0.3218975
          param%sigma = 0.1724_wp
-         eta = 1.2804_wp
+         eta_ = 1.2804_wp
          param%alpha = 0.8568_wp
          param%beta = 1.2342_wp
       case (p_hyb_method, p_b3lyp_method, p_pw6b95_method) ! RMS= 0.557
          param%sigma = 0.4048_wp
-         eta = 1.1626_wp
+         eta_ = 1.1626_wp
          param%alpha = 0.8652_wp
          param%beta = 1.2375_wp
       case (p_gga_method, p_tpss_method, p_blyp_method) ! RMS = 0.6652
          param%sigma = 0.2727_wp
-         eta = 1.4022_wp
+         eta_ = 1.4022_wp
          param%alpha = 0.8055_wp
          param%beta = 1.3000_wp
       end select
@@ -559,12 +578,12 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then !RMS=0.3502
          param%sigma = 0.1373_wp
-         eta = 1.4271_wp
+         eta_ = 1.4271_wp
          param%alpha = 0.8141_wp
          param%beta = 1.2760_wp
       elseif (is_dft_method(method_id)) then ! RMS= 0.57 ! def2-SV(P)
          param%sigma = 0.2424_wp
-         eta = 1.2371_wp
+         eta_ = 1.2371_wp
          param%alpha = 0.6076_wp
          param%beta = 1.4078_wp
       end if
@@ -575,7 +594,7 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (is_dft_method(method_id)) then ! RMS=  0.56 ! def2-SV(P/h,c)  = SV at h,c
          param%sigma = 0.1861_wp
-         eta = 1.3200_wp
+         eta_ = 1.3200_wp
          param%alpha = 0.6171_wp
          param%beta = 1.4019_wp
       end if
@@ -586,27 +605,27 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then ! RMS=0.4065
          param%sigma = 0.2054_wp
-         eta = 1.3157_wp
+         eta_ = 1.3157_wp
          param%alpha = 0.8136_wp
          param%beta = 1.2572_wp
       elseif (method_id == p_tpss_method) then ! RMS=  0.618
          param%sigma = 0.6647_wp
-         eta = 1.3306_wp
+         eta_ = 1.3306_wp
          param%alpha = 1.0792_wp
          param%beta = 1.1651_wp
       elseif (method_id == p_pw6b95_method) then  ! RMS = 0.58312
          param%sigma = 0.3098_wp
-         eta = 1.2373_wp
+         eta_ = 1.2373_wp
          param%alpha = 0.6896_wp
          param%beta = 1.3347_wp
       elseif (is_hyb_method(method_id)) then ! RMS=0.6498
          param%sigma = 0.2990_wp
-         eta = 1.2605_wp
+         eta_ = 1.2605_wp
          param%alpha = 0.6438_wp
          param%beta = 1.3694_wp
       elseif (is_gga_method(method_id)) then ! RMS=
          param%sigma = 0.6823_wp
-         eta = 1.2491_wp
+         eta_ = 1.2491_wp
          param%alpha = 0.8225_wp
          param%beta = 1.2811_wp
       end if
@@ -617,12 +636,12 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then ! RMS=0.4065
          param%sigma = 0.2054_wp
-         eta = 1.3157_wp
+         eta_ = 1.3157_wp
          param%alpha = 0.8136_wp
          param%beta = 1.2572_wp
       elseif (is_dft_method(method_id)) then ! RMS=0.6498
          param%sigma = 0.2990_wp
-         eta = 1.2605_wp
+         eta_ = 1.2605_wp
          param%alpha = 0.6438_wp
          param%beta = 1.3694_wp
       end if
@@ -633,27 +652,27 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then ! RMS= 0.3040
          param%sigma = 0.1290_wp
-         eta = 1.1526_wp
+         eta_ = 1.1526_wp
          param%alpha = 1.1549_wp
          param%beta = 1.1763_wp
       elseif (method_id == p_tpss_method) then ! RMS=
          param%sigma = 0.22982_wp
-         eta = 1.35401_wp
+         eta_ = 1.35401_wp
          param%alpha = 1.47633_wp
          param%beta = 1.11300_wp
       elseif (method_id == p_pw6b95_method) then  ! RMS = 0.3279929
          param%sigma = 0.21054_wp
-         eta = 1.25458_wp
+         eta_ = 1.25458_wp
          param%alpha = 1.35003_wp
          param%beta = 1.14061_wp
       elseif (is_gga_method(method_id)) then ! RMS= 0.3462
          param%sigma = 0.1566_wp
-         eta = 1.0271_wp
+         eta_ = 1.0271_wp
          param%alpha = 1.0732_wp
          param%beta = 1.1968_wp
       elseif (is_hyb_method(method_id)) then ! RMS= 0.3400
          param%sigma = 0.2059_wp
-         eta = 0.9722_wp
+         eta_ = 0.9722_wp
          param%alpha = 1.1961_wp
          param%beta = 1.1456_wp
       end if
@@ -664,12 +683,12 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then ! RMS= 0.40476
          param%sigma = 0.2048_wp
-         eta = 1.5652_wp
+         eta_ = 1.5652_wp
          param%alpha = 0.9447_wp
          param%beta = 1.2100_wp
       elseif (is_dft_method(method_id)) then ! RMS=  0.47856
          param%sigma = 0.3405_wp
-         eta = 1.6127_wp
+         eta_ = 1.6127_wp
          param%alpha = 0.8589_wp
          param%beta = 1.2830_wp
       end if
@@ -680,17 +699,17 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then !  RMS= 0.1150
          param%sigma = 0.3127_wp
-         eta = 1.9914_wp
+         eta_ = 1.9914_wp
          param%alpha = 1.0216_wp
          param%beta = 1.2833_wp
       elseif (is_hyb_method(method_id)) then ! RMS=0.19648
          param%sigma = 0.2905_wp
-         eta = 2.2495_wp
+         eta_ = 2.2495_wp
          param%alpha = 0.8120_wp
          param%beta = 1.4412_wp
       elseif (is_gga_method(method_id)) then !RMS = 0.21408
          param%sigma = 0.1182_wp
-         eta = 1.0631_wp
+         eta_ = 1.0631_wp
          param%alpha = 1.0510_wp
          param%beta = 1.1287_wp
       end if
@@ -701,12 +720,12 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then ! RMS=0.209
          param%sigma = 0.2600_wp
-         eta = 2.2448_wp
+         eta_ = 2.2448_wp
          param%alpha = 0.7998_wp
          param%beta = 1.4381_wp
       elseif (is_dft_method(method_id)) then ! RMS=0.1817
          param%sigma = 0.2393_wp
-         eta = 2.2247_wp
+         eta_ = 2.2247_wp
          param%alpha = 0.8185_wp
          param%beta = 1.4298_wp
       end if
@@ -717,12 +736,12 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then ! RMS=0.4968
          param%sigma = 0.4416_wp
-         eta = 1.5185_wp
+         eta_ = 1.5185_wp
          param%alpha = 0.6902_wp
          param%beta = 1.3713_wp
       elseif (is_dft_method(method_id)) then ! RMS=0.7610
          param%sigma = 0.5383_wp
-         eta = 1.6482_wp
+         eta_ = 1.6482_wp
          param%alpha = 0.6230_wp
          param%beta = 1.4523_wp
       end if
@@ -733,12 +752,12 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then !RMS=0.2222
          param%sigma = 0.0748_wp
-         eta = 0.0663_wp
+         eta_ = 0.0663_wp
          param%alpha = 0.3811_wp
          param%beta = 1.0155_wp
       elseif (is_dft_method(method_id)) then ! RMS=0.1840
          param%sigma = 0.1465_wp
-         eta = 0.0500_wp
+         eta_ = 0.0500_wp
          param%alpha = 0.6003_wp
          param%beta = 0.8761_wp
       end if
@@ -749,14 +768,14 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (is_dft_method(method_id)) then
          param%sigma = 0.1300_wp
-         eta = 1.3743_wp
+         eta_ = 1.3743_wp
          param%alpha = 0.4792_wp
          param%beta = 1.3962_wp
       end if
 
-   case(p_pobdzvp_bas)
-      param%emiss = emiss_hf_pobdzvp(param%zeff)
-      nbas = nbas_pobdzvp(param%zeff)
+   ! case(p_pobdzvp_bas)
+   !    param%emiss = emiss_hf_pobdzvp(param%zeff)
+   !    nbas = nbas_pobdzvp(param%zeff)
 
    case(p_minix_bas)
       param%emiss = emiss_hf_minix(param%zeff)
@@ -764,7 +783,7 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method .or. method_id == p_hf3c_method) then
          param%sigma = 0.1290_wp
-         eta = 1.1526_wp
+         eta_ = 1.1526_wp
          param%alpha = 1.1549_wp
          param%beta = 1.1763_wp
          param%base = method_id == p_hf3c_method
@@ -774,7 +793,7 @@ subroutine get_gcp_param(param, mol, method, basis)
          end if
       elseif (is_dft_method(method_id)) then
          param%sigma = 0.2059_wp
-         eta = 0.9722_wp
+         eta_ = 0.9722_wp
          param%alpha = 1.1961_wp
          param%beta = 1.1456_wp
       end if
@@ -789,7 +808,7 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then
          param%sigma = 0.2461_wp
-         eta = 1.1616_wp
+         eta_ = 1.1616_wp
          param%alpha = 0.7335_wp
          param%beta = 1.4709_wp
       end if
@@ -800,19 +819,19 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then !RMS=0.4571
          param%sigma = 0.1443_wp
-         eta = 1.4547_wp
+         eta_ = 1.4547_wp
          param%alpha = 0.3711_wp
          param%beta = 1.6300_wp
       elseif (is_dft_method(method_id)) then !RMS=0.7184
          param%sigma = 0.2687_wp
-         eta = 1.4634_wp
+         eta_ = 1.4634_wp
          param%alpha = 0.3513_wp
          param%beta = 1.6880_wp
       end if
 
-   case(p_hsv_bas)
-      param%emiss = emiss_hf_hsv(param%zeff)
-      nbas = nbas_hsv(param%zeff)
+   ! case(p_hsv_bas)
+   !    param%emiss = emiss_hf_hsv(param%zeff)
+   !    nbas = nbas_hsv(param%zeff)
 
    case(p_dz_bas)
       param%emiss = emiss_hf_dz(param%zeff)
@@ -820,12 +839,12 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_hf_method) then  !RMS=0.3754
          param%sigma = 0.1059_wp
-         eta = 1.4554_wp
+         eta_ = 1.4554_wp
          param%alpha = 0.3711_wp
          param%beta = 1.6342_wp
       elseif (is_dft_method(method_id)) then
          param%sigma = 0.2687_wp
-         eta = 1.4634_wp
+         eta_ = 1.4634_wp
          param%alpha = 0.3513_wp
          param%beta = 1.6880_wp
       end if
@@ -840,7 +859,7 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_b3pbe3c_method) then
          param%sigma = 1.0000_wp
-         eta = 2.98561_wp
+         eta_ = 2.98561_wp
          param%alpha = 0.3011_wp
          param%beta = 2.4405_wp
       end if
@@ -851,13 +870,13 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_pbeh3c_method) then
          param%sigma = 1.00000_wp
-         eta = 1.32492_wp
+         eta_ = 1.32492_wp
          param%alpha = 0.27649_wp
          param%beta = 1.95600_wp
          param%damp = .true.
       elseif (method_id == p_hse3c_method) then
          param%sigma = 1.00000_wp
-         eta = 1.32378_wp
+         eta_ = 1.32378_wp
          param%alpha = 0.28314_wp
          param%beta = 1.94527_wp
          param%damp = .true.
@@ -869,7 +888,7 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (is_dft_method(method_id)) then
          param%sigma = 0.3405_wp
-         eta = 1.6127_wp
+         eta_ = 1.6127_wp
          param%alpha = 0.8589_wp
          param%beta = 1.2830_wp
       end if
@@ -880,7 +899,7 @@ subroutine get_gcp_param(param, mol, method, basis)
 
       if (method_id == p_r2scan3c_method) then
          param%sigma = 1.0000_wp
-         eta = 1.3150_wp
+         eta_ = 1.3150_wp
          eta_spec = 1.15_wp
          param%alpha = 0.9410_wp
          param%beta = 1.4636_wp
@@ -898,8 +917,8 @@ subroutine get_gcp_param(param, mol, method, basis)
       end if
    end if
 
-   if (eta > 0.0_wp) then
-      param%slater = eta * slater_exp(param%zeff)
+   if (eta_ > 0.0_wp) then
+      param%slater = eta_ * slater_exp(param%zeff)
       if (eta_spec > 0.0_wp) then
          where(param%zeff > 10) param%slater = eta_spec * param%slater
       end if
@@ -998,8 +1017,8 @@ pure function get_basis_id(basis) result(id)
       id = p_accdz_bas
    case('pobtz', 'pobtzvp')
       id = p_pobtz_bas
-   case('pobdzvp')
-      id = p_pobdzvp_bas
+   ! case('pobdzvp')
+   !    id = p_pobdzvp_bas
    case ('minix', 'hf3c')
       id = p_minix_bas
    case('gcore')
@@ -1008,8 +1027,8 @@ pure function get_basis_id(basis) result(id)
       id = p_2g_bas
    case('dzp')
       id = p_dzp_bas
-   case('hsv')
-      id = p_hsv_bas
+   ! case('hsv')
+   !    id = p_hsv_bas
    case('lanl')
       id = p_lanl2_bas
    case('dz')
@@ -1061,29 +1080,5 @@ pure function number_of_electrons(number, valence_minimal_basis) result(nel)
       nel = number
    end if
 end function number_of_electrons
-
-subroutine setzet(eta,etaspec,za,zb)
-implicit none
-integer i
-real(8) za(36),zb(36)
-real(8) ZS(36),ZP(36),ZD(36),eta,etaspec
-
-  do i=1,36
-select case (i)
-  case(:2)
-    za(i)=ZS(i)
-  case(3:20,31:)
-    za(i)=( ZS(i)+ZP(i) )/2d0
-  case(21:30)
-    za(i)=( ZS(i)+ZP(i)+ZD(i) )/3d0
-end select
-  enddo
-
-  za(11:36)=za(11:36)*etaspec !SG r2scan-3c/def2-mtzvpp change
-
-  za=za*eta
-
- return
-end subroutine setzet
 
 endmodule dftd3_gcp_param

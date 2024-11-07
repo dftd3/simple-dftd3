@@ -18,6 +18,7 @@ module dftd3_gcp
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use dftd3_gcp_param, only : gcp_param, get_gcp_param
+   use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    implicit none
    private
 
@@ -35,13 +36,16 @@ contains
 
 
 !> Geometric counterpoise correction
-subroutine get_geometric_counterpoise(mol, param, energy, gradient, sigma)
+subroutine get_geometric_counterpoise(mol, param, cutoff, energy, gradient, sigma)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
 
    !> Geometric counterpoise parameters
    type(gcp_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
 
    !> Counter-poise energy
    real(wp), intent(inout) :: energy
@@ -55,19 +59,22 @@ subroutine get_geometric_counterpoise(mol, param, energy, gradient, sigma)
    real(wp), allocatable :: energies(:)
 
    allocate(energies(mol%nat), source=0.0_wp)
-   call get_geometric_counterpoise_atomic(mol, param, energies, gradient, sigma)
+   call get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradient, sigma)
    energy = energy + sum(energies)
 end subroutine get_geometric_counterpoise
 
 
 !> Geometric counterpoise correction with atom-resolved energies
-subroutine get_geometric_counterpoise_atomic(mol, param, energies, gradient, sigma)
+subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradient, sigma)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
 
    !> Geometric counterpoise parameters
    type(gcp_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
 
    !> Dispersion energy
    real(wp), intent(inout) :: energies(:)
@@ -78,27 +85,40 @@ subroutine get_geometric_counterpoise_atomic(mol, param, energies, gradient, sig
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
+   real(wp), allocatable :: lattr(:, :)
+
    if (allocated(param%emiss)) then
-      call gcp_egrad(mol, param%zeff, param%emiss, param%slater, param%xv, param%rvdw, &
-         & param%sigma, param%alpha, param%beta, param%damp, param%dmp_scal, param%dmp_exp, &
-         & energies, gradient)
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%gcp, lattr)
+      call gcp_egrad(mol, lattr, cutoff%gcp, param%zeff, param%emiss, param%slater, &
+         & param%xv, param%rvdw, param%sigma, param%alpha, param%beta, param%damp, &
+         & param%dmp_scal, param%dmp_exp, energies, gradient, sigma)
+   end if
+
+   if (param%srb .or. param%base) then
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%srb, lattr)
    end if
 
    if (param%srb) then
-      call srb_egrad2(mol, mol%num, param%rvdw_srb, param%rscal, param%qscal, energies, gradient)
+      call srb_egrad2(mol, lattr, cutoff%srb, mol%num, param%rvdw_srb, param%rscal, param%qscal, &
+         & energies, gradient, sigma)
    end if
 
    if (param%base) then
-      call basegrad(mol, param%zeff, param%rvdw, param%rscal, param%qscal, energies, gradient, sigma)
+      call basegrad(mol, lattr, cutoff%srb, param%zeff, param%rvdw, param%rscal, param%qscal, &
+         & energies, gradient, sigma)
    end if
 end subroutine get_geometric_counterpoise_atomic
 
 
 !> Geometric counterpoise correction
-subroutine gcp_egrad(mol, iz, emiss, slater, xv, rvdw, sigma, alpha, beta, &
-      & damp, dmp_scal, dmp_exp, ea, g)
+subroutine gcp_egrad(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alpha, beta, &
+      & damp, dmp_scal, dmp_exp, energies, gradient, sigma)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
+   !> Translation vectors
+   real(wp), intent(in) :: trans(:, :)
+   !> Distance cutoff
+   real(wp), intent(in) :: cutoff
    !> Effective nuclear charges
    integer, intent(in) :: iz(:)
    !> Basis set superposition error per atom
@@ -110,7 +130,7 @@ subroutine gcp_egrad(mol, iz, emiss, slater, xv, rvdw, sigma, alpha, beta, &
    !> Van der Waals radii
    real(wp), intent(in) :: rvdw(:, :)
    !> Scaling factor
-   real(wp), intent(in) :: sigma
+   real(wp), intent(in) :: escal
    !> Exponential factor
    real(wp), intent(in) :: alpha
    !> Power factor
@@ -122,52 +142,51 @@ subroutine gcp_egrad(mol, iz, emiss, slater, xv, rvdw, sigma, alpha, beta, &
    !> Damping exponent
    real(wp), intent(in) :: dmp_exp
    !> Atom-resolved energy
-   real(wp), intent(inout) :: ea(:)
+   real(wp), intent(inout) :: energies(:)
    !> Molecular gradient
-   real(wp), intent(inout), optional :: g(:, :)
+   real(wp), intent(inout), optional :: gradient(:, :)
+   !> Virial
+   real(wp), intent(inout), optional :: sigma(:, :)
 
    integer iat,jat,izp,jzp
    real(wp)  dum2,dum22
-   real(wp)  thrR,thrE
-   real(wp) va,vb
+   real(wp)  thrE
+   real(wp) xvi,xvj
    real(wp) r,rscal,rscalexp,rscalexpm1,r0abij
-   real(wp) tmp,ecp,dum,tmpa,tmpb,um2,tmpc,tmpd
-   real(wp) sab,ene_old_num,ene_old_den
-   real(wp) vec(3),gs(3),gab,gcp
+   real(wp) tmp,ecp,dum,tmpa,tmpb,um2,tmpc,tmpd,gtmp(3)
+   real(wp) sij,sji,ene_old_num,ene_old_den
+   real(wp) vec(3),gs(3),gij,gji,gcp
    logical grad
    real(wp) dampval, grdfirst,grdsecond,ene_old,ene_dmp,grd_dmp
 
-   thrR=60            ! 60 bohr
    thrE=epsilon(1.d0) ! cut below machine precision rounding
 
-   grad = present(g)
+   grad = present(gradient)
 
    gs=0
    do iat=1,mol%nat
       izp = mol%id(iat)
-      va=xv(izp)
+      xvi=xv(izp)
 
       ! the BSSE due to atom jat, Loop over all j atoms
       do jat=1,mol%nat
          jzp = mol%id(jat)
-         if(iat.eq.jat) cycle
-         vec(1)=(mol%xyz(1,iat)-mol%xyz(1,jat))
-         vec(2)=(mol%xyz(2,iat)-mol%xyz(2,jat))
-         vec(3)=(mol%xyz(3,iat)-mol%xyz(3,jat))
-         r=sqrt(vec(1)*vec(1)+vec(2)*vec(2)+vec(3)*vec(3))
+         if(iat == jat) cycle
+         vec(:)=mol%xyz(:,iat)-mol%xyz(:,jat)
+         r=norm2(vec)
 
          ! # of bf that are available from jat
-         vb=xv(jzp)
-         if(vb.lt.0.5) cycle
+         xvj=xv(jzp)
+         if(xvj.lt.0.5) cycle
          ! distance cutoff
-         if(r.gt.thrR) cycle
-         ! calulate slater overlap sab
-         call ssovl(r,izp,jzp,iz,slater(izp),slater(jzp),sab)
-         ! noise cutoff(sqrt(sab))
-         if(sqrt(abs(sab)).lt.thrE) cycle
+         if(r > cutoff .or. r < epsilon(1.0_wp)) cycle
+         ! calulate slater overlap sij
+         call ssovl(r,izp,jzp,iz,slater(izp),slater(jzp),sij)
+         ! noise cutoff(sqrt(sij))
+         if(sqrt(abs(sij)).lt.thrE) cycle
          ! evaluate gcp central expression
          ene_old_num=exp(-alpha*r**beta)
-         ene_old_den=sqrt(vb*Sab)
+         ene_old_den=sqrt(xvj*sij)
          ene_old=ene_old_num/ene_old_den
          ! noise cutoff(damp)
          if(abs(ene_old).lt.thrE) cycle
@@ -177,22 +196,20 @@ subroutine gcp_egrad(mol, iz, emiss, slater, xv, rvdw, sigma, alpha, beta, &
             rscalexp=rscal**dmp_exp
             dampval=(1d0-1d0/(1d0+dmp_scal*rscalexp))
             ene_dmp=ene_old*dampval
-            ea(iat)=ea(iat)+emiss(izp)*ene_dmp*sigma
+            energies(iat)=energies(iat)+emiss(izp)*ene_dmp*escal
          else
-            ea(iat)=ea(iat)+emiss(izp)*ene_old*sigma
+            energies(iat)=energies(iat)+emiss(izp)*ene_old*escal
          endif
 
          ! gradient for i,j pair
          if(grad)then
-            call gsovl(r,izp,jzp,iz,slater(izp),slater(jzp),gab)
+            call gsovl(r,izp,jzp,iz,slater(izp),slater(jzp),gij)
 
-            gs(1)=gab*vec(1)
-            gs(2)=gab*vec(2)
-            gs(3)=gab*vec(3)
+            gs(:)=gij*vec
             dum=exp(-alpha*r**beta)*(-1d0/2d0)
-            dum2=2d0*alpha*beta*r**beta*sab/r
-            dum22=r*sab**(3d0/2d0)
-            tmpb=dum22*sqrt(vb)
+            dum2=2d0*alpha*beta*r**beta*sij/r
+            dum22=r*sij**(3d0/2d0)
+            tmpb=dum22*sqrt(xvj)
 
             if(damp) then
               rscalexpm1=rscal**(dmp_exp-1)
@@ -200,56 +217,25 @@ subroutine gcp_egrad(mol, iz, emiss, slater, xv, rvdw, sigma, alpha, beta, &
               grd_dmp=grd_dmp/((dmp_scal*rscalexp+1.0d0)**2)
             endif
 
-            tmpa=dum2*vec(1)+gs(1)
-            tmp=dum*tmpa/tmpb
+            gtmp=dum*(dum2*vec + gs)/tmpb
             if(damp) then
-               tmp=tmp*dampval+ene_old*grd_dmp*(vec(1)/r)
+               gtmp=gtmp*dampval+ene_old*grd_dmp*(vec/r)
             endif
-            g(1,iat)=g(1,iat)+tmp*emiss(izp)*sigma
+            gradient(:,iat)=gradient(:,iat)+gtmp*emiss(izp)*escal
 
-            tmpa=dum2*vec(2)+gs(2)
-            tmp=dum*tmpa/tmpb
+            if(xvi.lt.0.5) cycle
             if(damp) then
-               tmp=tmp*dampval+ene_old*grd_dmp*(vec(2)/r)
-            endif
-            g(2,iat)=g(2,iat)+tmp*emiss(izp)*sigma
-
-            tmpa=dum2*vec(3)+gs(3)
-            tmp=dum*tmpa/tmpb
-            if(damp) then
-              tmp=tmp*dampval+ene_old*grd_dmp*(vec(3)/r)
-            endif
-            g(3,iat)=g(3,iat)+tmp*emiss(izp)*sigma
-
-            if(va.lt.0.5) cycle
-            if(damp) then
-              ene_old_den=sqrt(va*Sab)
+              ene_old_den=sqrt(xvi*sij)
               ene_old=ene_old_num/ene_old_den
             endif
 
-            tmpb=dum22*sqrt(va)
+            tmpb=dum22*sqrt(xvi)
 
-            tmpa=dum2*(-vec(1))-gs(1)
-            tmp=dum*tmpa/tmpb
+            gtmp=dum*(dum2*(-vec)-gs)/tmpb
             if(damp) then
-               tmp=tmp*dampval+ene_old*grd_dmp*(-vec(1)/r)
+               gtmp=gtmp*dampval+ene_old*grd_dmp*(-vec/r)
             endif
-            g(1,iat)=g(1,iat)-tmp*emiss(jzp)*sigma
-
-            tmpa=dum2*(-vec(2))-gs(2)
-            tmp=dum*tmpa/tmpb
-            if(damp) then
-               tmp=tmp*dampval+ene_old*grd_dmp*(-vec(2)/r)
-            endif
-            g(2,iat)=g(2,iat)-tmp*emiss(jzp)*sigma
-
-            tmpa=dum2*(-vec(3))-gs(3)
-            tmp=dum*tmpa/tmpb
-            if(damp) then
-               tmp=tmp*dampval+ene_old*grd_dmp*(-vec(3)/r)
-            endif
-            g(3,iat)=g(3,iat)-tmp*emiss(jzp)*sigma
-
+            gradient(:,iat)=gradient(:,iat)-gtmp*emiss(jzp)*escal
          end if
       end do
    end do
@@ -258,9 +244,13 @@ end subroutine gcp_egrad
 
 
 !> Short-range bond length correction for HF-3c
-subroutine basegrad(mol,iz,r0ab,rscal,qscal,e,g,sigma)
+subroutine basegrad(mol,trans,cutoff,iz,r0ab,rscal,qscal,e,gradient,sigma)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
+   !> Translation vectors
+   real(wp), intent(in) :: trans(:, :)
+   !> Distance cutoff
+   real(wp), intent(in) :: cutoff
    !> Effective nuclear charges
    integer, intent(in) :: iz(:)
    !> Van der Waals radii
@@ -272,28 +262,23 @@ subroutine basegrad(mol,iz,r0ab,rscal,qscal,e,g,sigma)
    !> Atom-resolved energy
    real(wp), intent(inout) :: e(:)
    !> Molecular gradient
-   real(wp), intent(inout), optional :: g(:, :)
+   real(wp), intent(inout), optional :: gradient(:, :)
    !> Molecular virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
    real(wp) fi,fj,ff,rf,r,expt
-   real(wp) r0,thrR,vec(3)
+   real(wp) r0,vec(3)
    integer iat,jat,izp,jzp
 
-   !threshold
-   thrR=30            ! 30 bohr
-
-   do iat=1,mol%nat-1
+   do iat=1,mol%nat
       izp = mol%id(iat)
-      do jat=iat+1,mol%nat
+      do jat=1,iat-1
          jzp = mol%id(jat)
          if(iz(izp).lt.1.or.iz(izp).gt.18) cycle
          if(iz(jzp).lt.1.or.iz(jzp).gt.18) cycle
-         vec(1)=mol%xyz(1,iat)-mol%xyz(1,jat)
-         vec(2)=mol%xyz(2,iat)-mol%xyz(2,jat)
-         vec(3)=mol%xyz(3,iat)-mol%xyz(3,jat)
-         r=sqrt(vec(1)*vec(1)+vec(2)*vec(2)+vec(3)*vec(3))
-         if(r.gt.thrR) cycle
+         vec(:)=mol%xyz(:,iat)-mol%xyz(:,jat)
+         r=norm2(vec)
+         if(r > cutoff .or. r < epsilon(1.0_wp)) cycle
          r0=rscal*r0ab(izp,jzp)**0.75d0
          fi=float(iz(izp))
          fj=float(iz(jzp))
@@ -302,13 +287,9 @@ subroutine basegrad(mol,iz,r0ab,rscal,qscal,e,g,sigma)
          e(iat)=e(iat)+ff*expt/2*qscal
          e(jat)=e(jat)+ff*expt/2*qscal
          rf=qscal/r
-         if (present(g)) then
-            g(1,iat)=g(1,iat)-ff*r0*vec(1)*expt*rf
-            g(1,jat)=g(1,jat)+ff*r0*vec(1)*expt*rf
-            g(2,iat)=g(2,iat)-ff*r0*vec(2)*expt*rf
-            g(2,jat)=g(2,jat)+ff*r0*vec(2)*expt*rf
-            g(3,iat)=g(3,iat)-ff*r0*vec(3)*expt*rf
-            g(3,jat)=g(3,jat)+ff*r0*vec(3)*expt*rf
+         if (present(gradient)) then
+            gradient(:,iat)=gradient(:,iat)-ff*r0*vec*expt*rf
+            gradient(:,jat)=gradient(:,jat)+ff*r0*vec*expt*rf
          end if
       enddo
    enddo
@@ -317,9 +298,13 @@ end subroutine basegrad
 
 
 !> Short-range bond length correction, modified form derived from HF-3c SRB potential
-subroutine srb_egrad2(mol,iz,r0ab,rscal,qscal,energies,g)
+subroutine srb_egrad2(mol,trans,cutoff,iz,r0ab,rscal,qscal,energies,gradient,sigma)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
+   !> Translation vectors
+   real(wp), intent(in) :: trans(:, :)
+   !> Distance cutoff
+   real(wp), intent(in) :: cutoff
    !> True ordinal numbers
    integer, intent(in) :: iz(:)
    !> Van der Waals radii
@@ -331,30 +316,26 @@ subroutine srb_egrad2(mol,iz,r0ab,rscal,qscal,energies,g)
    !> Atom-resolved energy
    real(wp), intent(inout) :: energies(:)
    !> Molecular gradient
-   real(wp), intent(inout), optional :: g(:, :)
+   real(wp), intent(inout), optional :: gradient(:, :)
+   !> Virial
+   real(wp), intent(inout), optional :: sigma(:, :)
 
    integer :: iat, jat, izp, jzp
-   real(wp) :: dx, dy, dz, r, r0, fi, fj, ff, ener_dum, r0abij, thrR, thrE, rf
+   real(wp) :: vec(3), dx, dy, dz, r, r0, fi, fj, ff, ener_dum, r0abij, thrE, rf
    logical grad
 
    ! Two threshold. thrR: distance cutoff thrE: numerical noise cutoff
-   grad = present(g)
-   thrR=30.0d0            ! X bohr
+   grad = present(gradient)
    thrE=epsilon(1.d0)
 
    do iat=1,mol%nat
       izp = mol%id(iat)
-      do jat=1,mol%nat
+      do jat=1,iat - 1
          jzp = mol%id(jat)
-         if(iat.eq.jat) then
-            cycle
-         end if
-         dx=mol%xyz(1,iat)-mol%xyz(1,jat)
-         dy=mol%xyz(2,iat)-mol%xyz(2,jat)
-         dz=mol%xyz(3,iat)-mol%xyz(3,jat)
-         r=sqrt(dx*dx+dy*dy+dz*dz)
+         vec(:)=mol%xyz(:,iat)-mol%xyz(:,jat)
+         r=norm2(vec)
          ! distance cutoff
-         if(r.gt.thrR) cycle
+         if(r > cutoff .or. r < epsilon(1.0_wp)) cycle
          ! Do SRB for B97-3c
          r0abij=r0ab(izp,jzp)
          r0=rscal/r0ab(izp,jzp)
@@ -365,12 +346,12 @@ subroutine srb_egrad2(mol,iz,r0ab,rscal,qscal,energies,g)
          !factor 1/2 from double counting
          ener_dum=ener_dum*0.5d0
          energies(iat)=energies(iat)+ener_dum
+         energies(jat)=energies(jat)+ener_dum
          ! energy=energy+ener_dum
          if(grad) then
             rf=qscal/r
-            g(1,iat)=g(1,iat)-ff*r0*dx*exp(-r0*r)*rf
-            g(2,iat)=g(2,iat)-ff*r0*dy*exp(-r0*r)*rf
-            g(3,iat)=g(3,iat)-ff*r0*dz*exp(-r0*r)*rf
+            gradient(:,iat)=gradient(:,iat)-ff*r0*vec*exp(-r0*r)*rf
+            gradient(:,jat)=gradient(:,jat)+ff*r0*vec*exp(-r0*r)*rf
          endif
       enddo !jat
    enddo !iat

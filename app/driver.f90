@@ -211,7 +211,7 @@ subroutine run_driver(config, error)
       call get_dispersion(mol, d3, param, realspace_cutoff(), energies, &
          & gradient, sigma)
       if (config%gcp) then
-         call get_geometric_counterpoise(mol, gcp, energies, gradient, sigma)
+         call get_geometric_counterpoise(mol, gcp, realspace_cutoff(), energies, gradient, sigma)
       end if
       energy = sum(energies)
 
@@ -391,7 +391,7 @@ subroutine gcp_driver(config, error)
       allocate(sigma(3, 3), source=0.0_wp)
    end if
 
-   call get_geometric_counterpoise(mol, param, energies, gradient, sigma)
+   call get_geometric_counterpoise(mol, param, realspace_cutoff(), energies, gradient, sigma)
    energy = sum(energies)
 
    if (config%verbosity > 0) then
