@@ -87,7 +87,7 @@ subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradi
 
    real(wp), allocatable :: lattr(:, :)
 
-   if (allocated(param%emiss)) then
+   if (allocated(param%emiss) .and. allocated(param%slater) .and. allocated(param%xv)) then
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%gcp, lattr)
       call gcp_egrad(mol, lattr, cutoff%gcp, param%zeff, param%emiss, param%slater, &
          & param%xv, param%rvdw, param%sigma, param%alpha, param%beta, param%damp, &

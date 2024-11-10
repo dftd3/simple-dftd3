@@ -31,6 +31,7 @@ module dftd3_api
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_damping, only : damping_param
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
+   use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_model, only : d3_model, new_d3_model
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping
@@ -58,6 +59,10 @@ module dftd3_api
    public :: new_optimizedpower_damping_api, load_optimizedpower_damping_api
    public :: delete_param_api
 
+   public :: vp_gcp
+   public :: load_gcp_param_api, delete_gcp_api, set_gcp_realspace_cutoff
+   public :: get_counterpoise_api
+
 
    !> Void pointer to error handle
    type :: vp_error
@@ -84,6 +89,14 @@ module dftd3_api
       !> Actual payload
       class(damping_param), allocatable :: ptr
    end type vp_param
+
+   !> Void pointer to counter-poise parameters
+   type :: vp_gcp
+      !> Actual payload
+      type(gcp_param) :: ptr
+      !> Additional real space cutoff
+      type(realspace_cutoff), allocatable :: cutoff
+   end type vp_gcp
 
 
    character(len=*), parameter :: namespace = "dftd3_"
@@ -815,6 +828,138 @@ subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
       & pair_energy2, pair_energy3)
 
 end subroutine get_pairwise_dispersion_api
+
+
+!> Create new error handle object
+function load_gcp_param_api(verror, vmol, cmethod, cbasis) &
+      & result(vgcp) &
+      & bind(C, name=namespace//"load_gcp_parameters")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   character(kind=c_char), intent(in) :: cmethod(*)
+   character(len=:, kind=c_char), allocatable :: method
+   character(kind=c_char), intent(in) :: cbasis(*)
+   character(len=:, kind=c_char), allocatable :: basis
+   type(vp_error), pointer :: gcp
+   type(c_ptr) :: vgcp
+
+   vgcp = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   call c_f_character(cmethod, method)
+   call c_f_character(cbasis, basis)
+
+   allocate(gcp)
+   call get_gcp_param(gcp%ptr, mol%ptr, method, basis)
+   vgcp = c_loc(gcp)
+
+end function load_gcp_param_api
+
+
+subroutine set_gcp_realspace_cutoff(verror, vgcp, bas, srb) &
+      & bind(C, name=namespace//"set_gcp_realspace_cutoff")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vgcp
+   type(vp_gcp), pointer :: gcp
+   real(c_double), value, intent(in) :: bas
+   real(c_double), value, intent(in) :: srb
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vgcp)) then
+      call fatal_error(error%ptr, "Counter-poise parameters are missing")
+      return
+   end if
+   call c_f_pointer(vgcp, gcp)
+
+   gcp%cutoff = realspace_cutoff(gcp=bas, srb=srb)
+end subroutine set_gcp_realspace_cutoff
+
+
+!> Delete counter-poise parameter handle object
+subroutine delete_gcp_api(vgcp) &
+      & bind(C, name=namespace//"delete_gcp")
+   type(c_ptr), intent(inout) :: vgcp
+   type(vp_error), pointer :: gcp
+
+   if (c_associated(vgcp)) then
+      call c_f_pointer(vgcp, gcp)
+
+      deallocate(gcp)
+      vgcp = c_null_ptr
+   end if
+
+end subroutine delete_gcp_api
+
+
+!> Calculate dispersion
+subroutine get_counterpoise_api(verror, vmol, vgcp, &
+      & energy, c_gradient, c_sigma) &
+      & bind(C, name=namespace//"get_counterpoise")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr), value :: vgcp
+   type(vp_gcp), pointer :: gcp
+   real(c_double), intent(out) :: energy
+   real(c_double), intent(out), optional :: c_gradient(3, *)
+   real(wp), allocatable :: gradient(:, :)
+   real(c_double), intent(out), optional :: c_sigma(3, 3)
+   real(wp), allocatable :: sigma(:, :)
+   type(realspace_cutoff) :: cutoff
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   if (.not.c_associated(vgcp)) then
+      call fatal_error(error%ptr, "Counter-poise parameters are missing")
+      return
+   end if
+   call c_f_pointer(vgcp, gcp)
+
+   if (present(c_gradient)) then
+      gradient = c_gradient(:3, :mol%ptr%nat)
+   endif
+
+   if (present(c_gradient)) then
+      sigma = c_sigma(:3, :3)
+   endif
+
+   cutoff = realspace_cutoff()
+   if (allocated(gcp%cutoff)) then
+      cutoff = gcp%cutoff
+   end if
+   call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, &
+      & energy, gradient, sigma)
+
+   if (present(c_gradient)) then
+      c_gradient(:3, :mol%ptr%nat) = gradient
+   endif
+
+   if (present(c_gradient)) then
+      c_sigma(:3, :3) = sigma
+   endif
+
+end subroutine get_dispersion_api
 
 
 subroutine f_c_character(rhs, lhs, len)

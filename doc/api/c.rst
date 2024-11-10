@@ -5,7 +5,7 @@ The C API bindings are provided by using the ``iso_c_binding`` intrinsic module.
 Generally, objects are exported as opaque pointers and can only be manipulated within the library.
 The API user is required delete all objects created in the library by using the provided deconstructor functions to avoid mamory leaks.
 
-Overall four classes of objects are provided by the library
+Overall five classes of objects are provided by the library
 
 - error handlers (:c:type:`dftd3_error`),
   used to communicate exceptional conditions and errors from the library to the user
@@ -16,6 +16,8 @@ Overall four classes of objects are provided by the library
   general model for calculating dispersion releated properties
 - damping function objects (:c:type:`dftd3_param`)
   polymorphic objects to represent the actual method parametrisation
+- counter-poise parameter objects (:c:type:`dftd3_gcp`),
+  short range correction for compensating basis set superposition errors
 
 .. note::
 
@@ -263,6 +265,32 @@ Standard damping parameters like the rational damping are independent of the mol
    Delete damping parameters. The handle is set to NULL after deletion.
 
 
+Geometrical counter-poise correction
+------------------------------------
+
+.. c:type:: struct _dftd3_gcp* dftd3_gcp;
+
+   Counter-poise parameter class
+
+The counter-poise parameter object provides an additional short ranged correction to account for basis set superposition error in small basis sets.
+
+.. c:function:: dftd3_gcp dftd3_load_gcp_param(dftd3_error error, dftd3_structure mol, char* method, char* basis);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :param method: Name of the method to load parameters for
+   :param basis: Name of the basis to load parameters for
+   :returns: New counter-poise parameter handle
+
+   Load geometrical counter-poise parameters from internal storage
+
+.. c:function:: void dftd3_delete_gcp(dftd3_gcp* gcp);
+
+   :param param: Counter-poise parameter handle
+
+   Delete counter-poise parameters. The handle is set to NULL after deletion.
+
+
 Calculation entrypoints
 -----------------------
 
@@ -290,6 +318,17 @@ To evaluate dispersion energies or related properties the :c:func:`dftd3_get_dis
    :param energy3: Pairwise non-addititive dispersion energies
 
    Evaluate the pairwise representation of the dispersion energy
+
+.. c:function:: void dftd3_get_counterpoise(dftd3_error error, dftd3_structure mol, dftd3_gcp gcp, double* energy, double* gradient, double* sigma);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :param gcp: Counter-poise parameter handle
+   :param energy: Dispersion energy
+   :param gradient: Dispersion gradient [natoms, 3] (optional)
+   :param sigma: Dispersion strain derivatives [3, 3] (optional)
+
+   Evaluate the counter-poise energy and its derivatives.
 
 
 Memory management
