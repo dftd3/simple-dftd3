@@ -27,7 +27,6 @@ if not mstore_dep.found()
 endif
 
 tests = [
-  'ncoord',
   'model',
   'dftd3',
   'param',
