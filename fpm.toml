@@ -8,8 +8,8 @@ description = "Simple reimplementation of the DFT-D3 method"
 keywords = ["dispersion-correction", "quantum-chemistry"]
 
 [dependencies]
-mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
-mctc-lib.tag = "v0.3.0"
+mctc-lib.git = "https://github.com/thfroitzheim/mctc-lib"
+mctc-lib.tag = "ncoord"
 
 [dev-dependencies]
 mstore.git = "https://github.com/grimme-lab/mstore"
