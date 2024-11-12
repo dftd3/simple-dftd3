@@ -19,10 +19,11 @@ module test_model
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io_structure, only : structure_type
+   use mctc_ncoord, only : ncoord_type, new_ncoord
+   use mctc_data, only : get_covalent_rad
    use mstore, only : get_structure
    use dftd3_cutoff, only : get_lattice_points
-   use dftd3_data, only : get_covalent_rad, get_vdw_rad, get_r4r2_val
-   use dftd3_ncoord, only : get_coordination_number
+   use dftd3_data, only : get_vdw_rad, get_r4r2_val
    use dftd3_model
    implicit none
    private
@@ -72,14 +73,16 @@ subroutine test_gw_gen(error, mol, ref)
    real(wp), allocatable :: cn(:), rcov(:), gwvec(:, :)
    real(wp), parameter :: cutoff = 30.0_wp
    real(wp), allocatable :: lattr(:, :)
+   class(ncoord_type), allocatable :: ncoord
 
    call new_d3_model(d3, mol)
 
    allocate(rcov(mol%nid), cn(mol%nat), gwvec(maxval(d3%ref), mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
+   call new_ncoord(ncoord, mol, "exp", cutoff=cutoff, rcov=rcov)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
-   call get_coordination_number(mol, lattr, cutoff, rcov, cn)
+   call ncoord%get_coordination_number(mol, lattr, cn)
 
    call d3%weight_references(mol, cn, gwvec)
 
@@ -105,6 +108,7 @@ subroutine test_dgw_gen(error, mol)
    real(wp), allocatable :: gwr(:, :), gwl(:, :), numdcn(:, :)
    real(wp), parameter :: cutoff = 30.0_wp, lattr(3, 1) = 0.0_wp
    real(wp), parameter :: step = 1.0e-6_wp
+   class(ncoord_type), allocatable :: ncoord
 
    call new_d3_model(d3, mol)
 
@@ -114,7 +118,8 @@ subroutine test_dgw_gen(error, mol)
       & numdcn(mref, mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
-   call get_coordination_number(mol, lattr, cutoff, rcov, cn)
+   call new_ncoord(ncoord, mol, "exp", cutoff=cutoff, rcov=rcov)
+   call ncoord%get_coordination_number(mol, lattr, cn)
 
    do iat = 1, mol%nat
       cn(iat) = cn(iat) + step

@@ -29,7 +29,6 @@ list(
   "${dir}/disp.f90"
   "${dir}/gcp.f90"
   "${dir}/model.f90"
-  "${dir}/ncoord.f90"
   "${dir}/output.f90"
   "${dir}/param.f90"
   "${dir}/reference.f90"
