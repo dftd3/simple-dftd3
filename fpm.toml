@@ -1,5 +1,5 @@
 name = "s-dftd3"
-version = "1.2.0"
+version = "1.2.1"
 license = "LGPL-3.0-or-later"
 maintainer = ["@awvwgk"]
 author = ["Sebastian Ehlert"]

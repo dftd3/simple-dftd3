@@ -2,6 +2,7 @@
 
 [![Latest Version](https://img.shields.io/github/v/release/dftd3/simple-dftd3)](https://github.com/dftd3/simple-dftd3/releases/latest)
 [![LGPL-3.0-or-later](https://img.shields.io/github/license/dftd3/simple-dftd3)](COPYING)
+[![JOSS](https://joss.theoj.org/papers/1a0f4b4571b8a362d596bd5759572d7f/status.svg)](https://joss.theoj.org/papers/1a0f4b4571b8a362d596bd5759572d7f)
 [![CI](https://github.com/dftd3/simple-dftd3/workflows/CI/badge.svg)](https://github.com/dftd3/simple-dftd3/actions)
 [![Documentation](https://readthedocs.org/projects/dftd3/badge/?version=latest)](https://dftd3.readthedocs.io/en/latest/)
 [![docs](https://github.com/dftd3/simple-dftd3/actions/workflows/docs.yml/badge.svg)](https://dftd3.github.io/simple-dftd3/)
