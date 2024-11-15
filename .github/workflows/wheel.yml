@@ -144,14 +144,6 @@ jobs:
           mkdir dist/
           cp -v dftd3*/dftd3*.whl dftd3*/dftd3*.tar.gz dist/
 
-      - name: Publish to Test PyPI
-        if: ${{ github.event_name == 'release' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_TOKEN }}
-          repository_url: https://test.pypi.org/legacy/
-
       - name: Upload assets
         uses: svenstaro/upload-release-action@v2
         if: ${{ github.event_name == 'release' }}
