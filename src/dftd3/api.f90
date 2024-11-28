@@ -842,7 +842,7 @@ function load_gcp_param_api(verror, vmol, cmethod, cbasis) &
    character(len=:, kind=c_char), allocatable :: method
    character(kind=c_char), intent(in) :: cbasis(*)
    character(len=:, kind=c_char), allocatable :: basis
-   type(vp_error), pointer :: gcp
+   type(vp_gcp), pointer :: gcp
    type(c_ptr) :: vgcp
 
    vgcp = c_null_ptr
@@ -959,7 +959,7 @@ subroutine get_counterpoise_api(verror, vmol, vgcp, &
       c_sigma(:3, :3) = sigma
    endif
 
-end subroutine get_dispersion_api
+end subroutine get_counterpoise_api
 
 
 subroutine f_c_character(rhs, lhs, len)
