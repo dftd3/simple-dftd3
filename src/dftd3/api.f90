@@ -833,14 +833,14 @@ end subroutine get_pairwise_dispersion_api
 !> Create new error handle object
 function load_gcp_param_api(verror, vmol, cmethod, cbasis) &
       & result(vgcp) &
-      & bind(C, name=namespace//"load_gcp_parameters")
+      & bind(C, name=namespace//"load_gcp_param")
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
    type(c_ptr), value :: vmol
    type(vp_structure), pointer :: mol
-   character(kind=c_char), intent(in) :: cmethod(*)
+   character(kind=c_char), intent(in), optional :: cmethod(*)
    character(len=:, kind=c_char), allocatable :: method
-   character(kind=c_char), intent(in) :: cbasis(*)
+   character(kind=c_char), intent(in), optional :: cbasis(*)
    character(len=:, kind=c_char), allocatable :: basis
    type(vp_gcp), pointer :: gcp
    type(c_ptr) :: vgcp
@@ -856,8 +856,8 @@ function load_gcp_param_api(verror, vmol, cmethod, cbasis) &
    end if
    call c_f_pointer(vmol, mol)
 
-   call c_f_character(cmethod, method)
-   call c_f_character(cbasis, basis)
+   if (present(cmethod)) call c_f_character(cmethod, method)
+   if (present(cbasis)) call c_f_character(cbasis, basis)
 
    allocate(gcp)
    call get_gcp_param(gcp%ptr, mol%ptr, method, basis)

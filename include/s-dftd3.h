@@ -243,7 +243,7 @@ dftd3_set_gcp_realspace_cutoff(dftd3_error /* error */,
 
 /// Delete counter-poise parameters
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
-dftd3_delete_gcp(dftd3_gcp* /* param */) SDFTD3_API_SUFFIX__V_1_3;
+dftd3_delete_gcp(dftd3_gcp* /* gcp */) SDFTD3_API_SUFFIX__V_1_3;
 
 /*
  * Perform dispersion calculations
