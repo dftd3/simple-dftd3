@@ -20,6 +20,7 @@ program tester
    use mctc_env_testing, only : run_testsuite, new_testsuite, testsuite_type, &
       & select_suite, run_selected
    use test_dftd3, only : collect_dftd3
+   use test_gcp, only : collect_gcp
    use test_model, only : collect_model
    use test_ncoord, only : collect_ncoord
    use test_param, only : collect_param
@@ -41,6 +42,7 @@ program tester
       & new_testsuite("param", collect_param), &
       & new_testsuite("pairwise", collect_pairwise), &
       & new_testsuite("periodic", collect_periodic), &
+      & new_testsuite("gcp", collect_gcp), &
       & new_testsuite("regression", collect_regression) &
       & ]
 

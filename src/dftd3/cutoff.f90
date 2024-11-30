@@ -30,6 +30,12 @@ module dftd3_cutoff
    !> Three-body interaction cutoff
    real(wp), parameter :: disp3_default = 40.0_wp
 
+   !> Counter-poise correction cutoff
+   real(wp), parameter :: gcp_default = 60.0_wp
+
+   !> Short-range bond correction cutoff
+   real(wp), parameter :: srb_default = 60.0_wp
+
 
    !> Collection of real space cutoffs
    type :: realspace_cutoff
@@ -43,6 +49,12 @@ module dftd3_cutoff
 
       !> Three-body interaction cutoff
       real(wp) :: disp3 = disp3_default
+
+      !> Counter-poise correction cutoff
+      real(wp) :: gcp = gcp_default
+
+      !> Short-range bond correction cutoff
+      real(wp) :: srb = srb_default
 
    end type realspace_cutoff
 

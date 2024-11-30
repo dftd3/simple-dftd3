@@ -36,6 +36,11 @@ tests = [
   '18-db-d3-bjm',
   '19-db-d3-zerom',
   '20-db-d3-op',
+  '21-gcp-pbeh3c',
+  '22-gcp-b973c',
+  '23-gcp-hf3c',
+  '24-gcp-hf-deftzvp',
+  '25-gcp-b3lyp-631gd',
 ]
 
 foreach t : tests

@@ -33,6 +33,7 @@ tests = [
   'param',
   'pairwise',
   'periodic',
+  'gcp',
   'regression',
 ]
 

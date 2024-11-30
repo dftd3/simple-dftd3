@@ -23,6 +23,7 @@ set(
   "param"
   "pairwise"
   "periodic"
+  "gcp"
   "regression"
 )
 set(

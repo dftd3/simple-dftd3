@@ -16,6 +16,7 @@
 
 add_subdirectory("damping")
 add_subdirectory("data")
+add_subdirectory("gcp")
 
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
@@ -26,6 +27,7 @@ list(
   "${dir}/damping.f90"
   "${dir}/data.f90"
   "${dir}/disp.f90"
+  "${dir}/gcp.f90"
   "${dir}/model.f90"
   "${dir}/ncoord.f90"
   "${dir}/output.f90"

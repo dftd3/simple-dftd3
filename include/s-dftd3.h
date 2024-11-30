@@ -29,6 +29,7 @@
 #define SDFTD3_API_SUFFIX__V_0_3
 #define SDFTD3_API_SUFFIX__V_0_4
 #define SDFTD3_API_SUFFIX__V_0_5
+#define SDFTD3_API_SUFFIX__V_1_3
 
 /// Error handle class
 typedef struct _dftd3_error* dftd3_error;
@@ -38,6 +39,9 @@ typedef struct _dftd3_structure* dftd3_structure;
 
 /// Dispersion model class
 typedef struct _dftd3_model* dftd3_model;
+
+/// Counter-poisecorrection parameters class
+typedef struct _dftd3_gcp* dftd3_gcp;
 
 /// Damping parameter class
 typedef struct _dftd3_param* dftd3_param;
@@ -50,7 +54,8 @@ typedef struct _dftd3_param* dftd3_param;
                        dftd3_error: dftd3_delete_error, \
                    dftd3_structure: dftd3_delete_structure, \
                        dftd3_model: dftd3_delete_model, \
-                       dftd3_param: dftd3_delete_param \
+                       dftd3_param: dftd3_delete_param, \
+                         dftd3_gcp: dftd3_delete_gcp \
                                   )(&ptr)
 
 /*
@@ -219,6 +224,28 @@ SDFTD3_API_ENTRY void SDFTD3_API_CALL
 dftd3_delete_param(dftd3_param* /* param */) SDFTD3_API_SUFFIX__V_0_2;
 
 /*
+ * Counter-poise correction parameters
+**/
+
+/// Load geometric counter-poise parameters from internal storage
+SDFTD3_API_ENTRY dftd3_gcp SDFTD3_API_CALL
+dftd3_load_gcp_param(dftd3_error /* error */,
+                     dftd3_structure /* mol */,
+                     char* /* method */,
+                     char* /* basis */) SDFTD3_API_SUFFIX__V_1_3;
+
+/// Set realspace cutoffs (quantities in Bohr)
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_gcp_realspace_cutoff(dftd3_error /* error */,
+                               dftd3_gcp /* gcp */,
+                               double /* bas */,
+                               double /* srb */) SDFTD3_API_SUFFIX__V_1_3;
+
+/// Delete counter-poise parameters
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_delete_gcp(dftd3_gcp* /* gcp */) SDFTD3_API_SUFFIX__V_1_3;
+
+/*
  * Perform dispersion calculations
 **/
 
@@ -240,3 +267,16 @@ dftd3_get_pairwise_dispersion(dftd3_error /* error */,
                               dftd3_param /* param */,
                               double* /* pair_energy2[n][n] */,
                               double* /* pair_energy3[n][n] */) SDFTD3_API_SUFFIX__V_0_5;
+
+/*
+ * Perform geometric counterpoise calculations
+**/
+
+/// Evaluate the dispersion energy and its derivatives
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_get_counterpoise(dftd3_error /* error */,
+                       dftd3_structure /* mol */,
+                       dftd3_gcp /* gcp */,
+                       double* /* energy */,
+                       double* /* gradient[n][3] */,
+                       double* /* sigma[3][3] */) SDFTD3_API_SUFFIX__V_1_3;
