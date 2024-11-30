@@ -284,6 +284,15 @@ The counter-poise parameter object provides an additional short ranged correctio
 
    Load geometrical counter-poise parameters from internal storage
 
+.. c:function:: void dftd3_set_gcp_realspace_cutoff(dftd3_error error, dftd3_gcp gcp, double bas, double srb);
+
+   :param error: Error handle
+   :param model: Dispersion model handle
+   :param bas: Cutoff for basis set superposition correction
+   :param srb: Cutoff for short-range bond correction
+
+   Set realspace cutoffs for usage in the counter-poise calculation
+
 .. c:function:: void dftd3_delete_gcp(dftd3_gcp* gcp);
 
    :param param: Counter-poise parameter handle

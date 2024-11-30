@@ -15,6 +15,8 @@ Usable via the command line interface of the [`s-dftd3` executable](man/s-dftd3.
 in Fortran via the [`dftd3` module](https://dftd3.readthedocs.io/en/latest/api/fortran.html),
 with the C interface by including the [`dftd3.h` header](https://dftd3.readthedocs.io/en/latest/api/c.html),
 or in Python by using the [`dftd3` module](https://dftd3.readthedocs.io/en/latest/api/python.html).
+Additionally, the geometric counter-poise correction (see [*JCP* **136**, 154101 (2012)](https://dx.doi.org/10.1063/1.3700154))
+is available to correct for basis set superposition errors and construct composite electronic structure methods of the 3c family.
 
 
 ## Installation
@@ -236,6 +238,11 @@ To evaluate a dispersion correction in C four objects are available:
 
    Damping parameter object determining the short-range behaviour of the dispersion correction.
    Standard damping parameters like the rational damping are independent of the molecular structure and can easily be reused for several structures or easily exchanged.
+
+5. the counter-poise parameters:
+
+   Counter-poise parameter object determining the basis set specific correction for basis set superposition error.
+   Recreating a structure object requires to recreate the counter-poise parameters as well as they are dependent on the basis definition for each element type.
 
 The user is responsible for creating and deleting the objects to avoid memory leaks.
 
