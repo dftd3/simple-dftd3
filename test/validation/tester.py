@@ -23,7 +23,7 @@ with open(sys.argv[3]) as fd:
     args = [arg.replace('$ORIGIN', wdir) for arg in fd.read().strip().split("\n")]
 
 stat = subprocess.call(
-    [prog, "--json", os.path.basename(outp)] + args,
+    [prog, *args, "--json", os.path.basename(outp)],
     shell=False,
     stdin=None,
     stderr=subprocess.STDOUT,

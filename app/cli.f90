@@ -295,11 +295,16 @@ subroutine get_run_arguments(config, list, start, error)
          if (allocated(error)) exit
          config%atm = .true.
       case("--gcp")
+         config%gcp = .true.
          iarg = iarg + 1
          call list%get(iarg, arg)
-         call move_alloc(arg, config%basis)
-         if (allocated(error)) exit
-         config%gcp = .true.
+         if (allocated(arg)) then
+            if (arg(1:1) == "-") then
+               iarg = iarg - 1
+               cycle
+            end if
+            call move_alloc(arg, config%basis)
+         end if
       case("--zero")
          config%zero = .true.
          iarg = iarg + 1
@@ -584,7 +589,7 @@ subroutine get_gcp_arguments(config, list, start, error)
          end if
          if (index(arg, "/") > 0) then
             config%method = arg(1:index(arg, "/")-1)
-            config%method = arg(index(arg, "/")+1:)
+            config%basis = arg(index(arg, "/")+1:)
          else
             call move_alloc(arg, config%method)
          end if

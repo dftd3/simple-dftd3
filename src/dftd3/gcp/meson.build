@@ -15,6 +15,5 @@
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 srcs += files(
-  'data.f90',
   'param.f90',
 )
