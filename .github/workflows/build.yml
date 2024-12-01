@@ -24,7 +24,7 @@ jobs:
           compiler: gnu
           version: 8
 
-        - os: macos-12
+        - os: macos-13
           build: cmake
           build-type: debug
           compiler: gnu
@@ -36,7 +36,7 @@ jobs:
           compiler: gnu
           version: 9
 
-        - os: macos-12
+        - os: macos-13
           build: meson
           build-type: debug
           compiler: gnu
@@ -228,6 +228,8 @@ jobs:
     - name: Upload coverage report
       if: ${{ matrix.build-type == 'coverage' }}
       uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
 
 
   python:
@@ -255,6 +257,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - run: pip3 install coverage
 
     - name: Install dependencies
       uses: mamba-org/setup-micromamba@v1
@@ -299,12 +303,12 @@ jobs:
         PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD3_PREFIX }}/lib/pkgconfig
 
     - name: Test Python API
-      run: pytest --pyargs dftd3 --cov=dftd3 -vv
+      run: pytest --pyargs dftd3 --cov=dftd3 --cov-report term --cov-report xml:coverage.xml -vv
       env:
         LD_LIBRARY_PATH: ${{ env.LD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib
         DYLD_LIBRARY_PATH: ${{ env.DYLD_LIBRARY_PATH }}:${{ env.DFTD3_PREFIX }}/lib
 
-    - run: pip3 install coverage
-
     - name: Upload coverage report
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
