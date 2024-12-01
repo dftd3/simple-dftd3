@@ -82,6 +82,7 @@ pysrcs = files(
   'test_parameters.py',
   'test_pyscf.py',
   'test_qcschema.py',
+  'py.typed',
 )
 fs = import('fs')
 if fs.exists('parameters.toml')
