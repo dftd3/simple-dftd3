@@ -34,3 +34,7 @@
 # Directories
 /build*/
 /_*/
+
+# Outputs
+.EDISP
+.CPC
