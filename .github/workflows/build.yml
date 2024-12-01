@@ -227,7 +227,7 @@ jobs:
 
     - name: Upload coverage report
       if: ${{ matrix.build-type == 'coverage' }}
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
 
 
   python:
