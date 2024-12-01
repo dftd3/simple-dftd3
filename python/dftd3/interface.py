@@ -459,6 +459,59 @@ class DispersionModel(Structure):
         }
 
 
+class GeometricCounterpoise(Structure):
+    """
+    .. Counterpoise correction parameters
+
+    Contains the required information to evaluate the counterpoise correction
+    for a given geometry. The counterpoise correction is a method to correct
+    the interaction energy in a supermolecular calculation for the basis set
+    superposition error (BSSE).
+    """
+
+    _gcp = library.ffi.NULL
+
+    def __init__(
+        self,
+        numbers: np.ndarray,
+        positions: np.ndarray,
+        lattice: Optional[np.ndarray] = None,
+        periodic: Optional[np.ndarray] = None,
+        method: Optional[str] = None,
+        basis: Optional[str] = None,
+    ):
+        Structure.__init__(self, numbers, positions, lattice, periodic)
+
+        _method = library.ffi.new("char[]", method.encode()) if method else library.ffi.NULL
+        _basis = library.ffi.new("char[]", basis.encode()) if basis else library.ffi.NULL
+        self._gcp = library.load_gcp_param(self._mol, _method, _basis)
+
+    def set_realspace_cutoff(self, bas: float, srb: float):
+        """Set realspace cutoff for evaluation of interactions"""
+
+        library.set_gcp_realspace_cutoff(self._disp, bas, srb)
+
+    def get_counterpoise(self, grad: bool) -> dict:
+        """Evaluate the counterpoise corrected interaction energy"""
+
+        _energy = np.array(0.0)
+        if grad:
+            _gradient = np.zeros((len(self), 3))
+            _sigma = np.zeros((3, 3))
+        else:
+            _gradient = None
+            _sigma = None
+
+        library.get_counterpoise(self._mol, self._gcp, _cast("double*", _energy), _cast("double*", _gradient), _cast("double*", _sigma))
+
+        results = dict(energy=_energy)
+        if _gradient is not None:
+            results.update(gradient=_gradient)
+        if _sigma is not None:
+            results.update(virial=_sigma)
+        return results
+
+
 def _cast(ctype, array):
     """Cast a numpy array to a FFI pointer"""
     return (

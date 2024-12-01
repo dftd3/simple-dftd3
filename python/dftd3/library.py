@@ -191,6 +191,25 @@ get_dispersion = error_check(lib.dftd3_get_dispersion)
 get_pairwise_dispersion = error_check(lib.dftd3_get_pairwise_dispersion)
 
 
+def _delete_gcp(gcp):
+    """Delete a geometric counter-poise object"""
+    ptr = ffi.new("dftd3_gcp *")
+    ptr[0] = gcp
+    lib.dftd3_delete_gcp(ptr)
+
+
+def load_gcp_param(mol, method: str, basis: str):
+    """Load GCP parameters from internal storage"""
+    return ffi.gc(
+        error_check(lib.dftd3_load_gcp_param)(mol, method.encode(), basis.encode()),
+        _delete_gcp,
+    )
+
+
+set_gcp_realspace_cutoff = error_check(lib.dftd3_set_gcp_realspace_cutoff)
+get_counterpoise = error_check(lib.dftd3_get_counterpoise)
+
+
 def _ref(ctype, value):
     """Create a reference to a value"""
     if value is None:
