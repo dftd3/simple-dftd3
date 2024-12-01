@@ -69,16 +69,8 @@ jobs:
         os:
         - ubuntu-latest
         - windows-latest
-        - macos-12
-        - macos-latest
-        python: ['38', '39', '310', '311', '312', '313']
-        exclude:
-          - os: windows-latest
-            python: '39'
-          - os: windows-latest
-            python: '310'
-          - os: macos-latest
-            python: '38'
+        - macos-13
+        - macos-14
 
     defaults:
       run:
@@ -103,19 +95,19 @@ jobs:
         env:
           CIBW_CONFIG_SETTINGS: setup-args="-Ds-dftd3:openmp=false"
           CIBW_ARCHS: auto64
-          CIBW_BUILD: "*${{ matrix.python }}-*"
+          CIBW_SKIP: "{cp38-macosx_arm64,pp37-win_amd64,pp39-win_amd64,pp310-win_amd64}"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-latest' && 'arm64' || 'x86_64' }}
+          CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-14' && 'arm64' || 'x86_64' }}
           CIBW_ENVIRONMENT_MACOS: >
              CC=gcc-14 CXX=g++-14 FC=gfortran-14
-             MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-latest' && '14.0' || '12.0' }}
+             MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-14' && '14.0' || '13.0' }}
           CIBW_BEFORE_ALL_MACOS: brew install gcc@14
           CIBW_BEFORE_BUILD_WINDOWS: choco upgrade mingw && pip install delvewheel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel show {wheel} && delvewheel repair -w {dest_dir} {wheel} --no-mangle-all"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: dftd3-python-${{ matrix.os }}-${{ matrix.python }}
+          name: dftd3-python-${{ matrix.os }}
           path: "*.whl"
 
   release:
