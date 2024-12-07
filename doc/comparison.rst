@@ -39,6 +39,7 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
 
 Many more versions are probably around or redistributed in various quantum chemistry programs.
 
+.. _users:
 
 Users of this library
 ---------------------
