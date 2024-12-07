@@ -26,7 +26,7 @@ module dftd3_citation
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3
+      & doi_wb97x_d3, doi_hse06_d3, doi_joss
 
    !> Represents an author to allow creating author lists
    type :: author_type
@@ -82,7 +82,8 @@ module dftd3_citation
       & doi_minnesota_d3 = "10.1021/acs.jpclett.5b01591", &
       & doi_b97m_d3 = "10.1021/acs.jctc.8b00842", &
       & doi_wb97x_d3 = "10.1021/ct300715s", &
-      & doi_hse06_d3 = "10.1021/jp501237c"
+      & doi_hse06_d3 = "10.1021/jp501237c", &
+      & doi_joss = "10.21105/joss.07169"
 
 contains
 
@@ -604,6 +605,19 @@ pure function get_citation(doi) result(citation)
          volume="118", &
          pages="7615-7621", &
          year="2014" &
+      )
+      
+   case(doi_joss)
+      citation = new_citation( &
+         doi=doi, &
+         title="Simple DFT-D3: Library first implementation of the D3 dispersion correction", &
+         author=[ &
+         & author_name("Sebastian Ehlert")], &
+         journal="J. Open Source Softw.", &
+         issue="103", &
+         volume="9", &
+         pages="7169", &
+         year="2024" &
       )
    end select
 end function get_citation

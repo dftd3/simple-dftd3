@@ -32,7 +32,7 @@ module dftd3_app_driver
       & turbomole_gradient, turbomole_gradlatt, ascii_gcp_param
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_citation, only : format_bibtex, is_citation_present, citation_type, &
-      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, same_citation
+      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, doi_joss, same_citation
    use dftd3_app_help, only : header
    use dftd3_app_cli, only : app_config, run_config, param_config, gcp_config, get_arguments
    use dftd3_app_toml, only : param_database
@@ -256,6 +256,8 @@ subroutine run_driver(config, error)
 
    if (config%citation) then
       open(file=config%citation_output, newunit=unit)
+      call format_bibtex(output, get_citation(doi_joss))
+      if (allocated(output)) write(unit, '(a)') output
       if (.not.same_citation(citation, param_citation)) then
          call format_bibtex(output, citation)
          if (allocated(output)) write(unit, '(a)') output
