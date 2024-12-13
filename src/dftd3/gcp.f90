@@ -173,6 +173,12 @@ subroutine gcp_energy(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, al
    real(wp) :: dampval, grd_dmp
    real(wp) :: dE
 
+   !$omp parallel do default(none) &
+   !$omp reduction(+:energies) &
+   !$omp shared(mol, iz, xv, emiss, rvdw, trans, cutoff, alpha, beta, &
+   !$omp&       dmp_scal, dmp_exp, escal, slater, damp) &
+   !$omp private(izp, jat, jzp, xvi, xvj, emi, emj, r0, jtr, vec, r1, sij, &
+   !$omp&        expv, bsse, argv, dE, dampval, grd_dmp, rscal, rscalexp)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       xvi = merge(1.0_wp / sqrt(xv(izp)), 0.0_wp, xv(izp) >= 0.5_wp)
@@ -262,6 +268,13 @@ subroutine gcp_deriv(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alp
    real(wp) :: dampval, grd_dmp
    real(wp) :: dE, dG(3), dS(3, 3)
 
+   !$omp parallel do default(none) &
+   !$omp reduction(+:energies, gradient, sigma) &
+   !$omp shared(mol, iz, xv, emiss, rvdw, trans, cutoff, alpha, beta, &
+   !$omp&       dmp_scal, dmp_exp, escal, slater, damp) &
+   !$omp private(izp, jat, jzp, xvi, xvj, emi, emj, r0, jtr, vec, r1, sij, gij, emij, &
+   !$omp&        expv, bsse, argv, dE, dampval, grd_dmp, dG, dS, expd, argd, ovlpd, gs, &
+   !$omp&        rscal, rscalexp, rscalexpm1)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       xvi = merge(1.0_wp / sqrt(xv(izp)), 0.0_wp, xv(izp) >= 0.5_wp)
@@ -358,6 +371,10 @@ subroutine srb_energy(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, en
    real(wp) :: r0, vec(3), dE
    integer iat, jat, jtr, izp, jzp
 
+   !$omp parallel do default(none) &
+   !$omp reduction(+:energies) &
+   !$omp shared(mol, trans, cutoff, iz, r0ab, rexp, zexp, rscal, qscal) &
+   !$omp private(izp, jat, jzp, r0, vec, r1, fi, fj, ff, expt, dE)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       fi = real(iz(izp), wp)
@@ -416,6 +433,10 @@ subroutine srb_deriv(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, ene
    real(wp) :: r0, vec(3), dE, dG(3), dS(3, 3)
    integer iat, jat, jtr, izp, jzp
 
+   !$omp parallel do default(none) &
+   !$omp reduction(+:energies, gradient, sigma) &
+   !$omp shared(mol, trans, cutoff, iz, r0ab, rexp, zexp, rscal, qscal) &
+   !$omp private(izp, jat, jzp, r0, vec, r1, fi, fj, ff, expt, rf, dE, dG, dS)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       fi = real(iz(izp), wp)
@@ -468,8 +489,7 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
    logical debug
    real(wp) za, zb, R, ovl, ax, bx, norm, R05
    integer na, nb
-   real(wp) Bxx0, Bxx1, Bxx2, xx, Bxx4, Bxx6
-   real(wp) Bxx3, Bxx5
+   real(wp) xx
    data shell/                 &
    !          h, he
             1, 1               &
