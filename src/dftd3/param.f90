@@ -107,7 +107,7 @@ function get_method_id(method) result(id)
    end do
    select case(trim(lowercase(lc_method)))
    case default; id = p_invalid
-   case("b1b95"); id = p_b1b95_df
+   case("b1b95", "b88b95"); id = p_b1b95_df
    case("b1lyp"); id = p_b1lyp_df
    case("b1p", "b1p86"); id = p_b1p_df
    case("b2gpplyp"); id = p_b2gpplyp_df
@@ -123,7 +123,7 @@ function get_method_id(method) result(id)
    case("b973c"); id = p_b973c_df
    case("b97m"); id = p_b97m_df
    case("b98"); id = p_b98_df
-   case("bhlyp"); id = p_bhlyp_df
+   case("bhlyp", "bhandhlyp"); id = p_bhlyp_df
    case("blyp"); id = p_blyp_df
    case("bmk"); id = p_bmk_df
    case("bop"); id = p_bop_df
@@ -231,7 +231,7 @@ function get_method_id(method) result(id)
    case("optscsdrpa75"); id = p_optscs_drpa75_df
    case("otpss"); id = p_otpss_df
    case("pbe"); id = p_pbe_df
-   case("pbe0"); id = p_pbe0_df
+   case("pbe0", "pbeh"); id = p_pbe0_df
    case("pbe1kcis"); id = p_pbe1kcis_df
    case("pbe38"); id = p_pbe38_df
    case("pbeh1pbe"); id = p_pbeh1pbe_df
