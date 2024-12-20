@@ -66,7 +66,8 @@ A list of projects currently using this DFT-D3 implementation is given here.
   Simple small molecular docking and conformation filtering tool.
 `MLAtom <https://github.com/dralgroup/mlatom>`_: (since 3.11.0)
   Platform for Machine Learning-Enhanced Computational Chemistry Simulations and Workflows.\ :footcite:`dral2024`
-
+`FHI-aims <https://fhi-aims.org/>`_: (since 240920)
+  All-electron electronic structure theory with numeric atom-centered orbitals.\ :footcite:`blum2009`
 
 If your project is using *s-dftd3* feel free to add your project to this list.
 
