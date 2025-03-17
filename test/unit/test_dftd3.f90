@@ -928,7 +928,7 @@ subroutine test_pbed3bj_actinides(error)
       & 2.01082807362334_wp, 1.34838807211157_wp,-4.70482633508447_wp],&
       & [3, 17])
    mol%periodic = [.false.]
-   allocate(mol%lattice(0,0))
+   allocate(mol%lattice(0, 0))
 
    call new_rational_damping(param, inp)
    call test_dftd3_gen(error, mol, param, -1.4131143363689097E-001_wp)
