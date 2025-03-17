@@ -200,7 +200,8 @@ jobs:
 
     - name: Create coverage report
       if: ${{ matrix.build == 'meson' && matrix.build-type == 'coverage' }}
-      run:
+      run: |
+         pip3 install gcovr
          ninja -C ${{ env.BUILD_DIR }} coverage
 
     - name: Install project
