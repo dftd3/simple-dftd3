@@ -18,7 +18,7 @@ module dftd3_app_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type, read_structure, filetype, get_filetype
-   use mctc_ncoord, only : ncoord_type, new_ncoord
+   use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
    use dftd3, only : damping_param, d3_param, d3_model, &
       & get_dispersion, get_zero_damping, zero_damping_param, new_zero_damping, &
       & get_rational_damping, rational_damping_param, new_rational_damping, &
@@ -301,7 +301,7 @@ subroutine property_calc(unit, mol, disp, verbosity)
 
    mref = maxval(disp%ref)
    allocate(cn(mol%nat), gwvec(mref, mol%nat), c6(mol%nat, mol%nat))
-   call new_ncoord(ncoord, mol, "exp", cutoff=30.0_wp, rcov=disp%rcov)
+   call new_ncoord(ncoord, mol, cn_count%exp, cutoff=30.0_wp, rcov=disp%rcov)
    call get_lattice_points(mol%periodic, mol%lattice, 30.0_wp, lattr)
    call ncoord%get_coordination_number(mol, lattr, cn)
    call disp%weight_references(mol, cn, gwvec)

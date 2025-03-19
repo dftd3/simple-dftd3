@@ -19,7 +19,7 @@ module test_model
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io_structure, only : structure_type
-   use mctc_ncoord, only : ncoord_type, new_ncoord
+   use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
    use mctc_data, only : get_covalent_rad
    use mstore, only : get_structure
    use dftd3_cutoff, only : get_lattice_points
@@ -80,7 +80,7 @@ subroutine test_gw_gen(error, mol, ref)
    allocate(rcov(mol%nid), cn(mol%nat), gwvec(maxval(d3%ref), mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
-   call new_ncoord(ncoord, mol, "exp", cutoff=cutoff, rcov=rcov)
+   call new_ncoord(ncoord, mol, cn_count%exp, cutoff=cutoff, rcov=rcov)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
    call ncoord%get_coordination_number(mol, lattr, cn)
 
@@ -118,7 +118,7 @@ subroutine test_dgw_gen(error, mol)
       & numdcn(mref, mol%nat))
    rcov(:) = get_covalent_rad(mol%num)
 
-   call new_ncoord(ncoord, mol, "exp", cutoff=cutoff, rcov=rcov)
+   call new_ncoord(ncoord, mol, cn_count%exp, cutoff=cutoff, rcov=rcov)
    call ncoord%get_coordination_number(mol, lattr, cn)
 
    do iat = 1, mol%nat
