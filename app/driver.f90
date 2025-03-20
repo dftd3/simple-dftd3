@@ -18,14 +18,13 @@ module dftd3_app_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type, read_structure, filetype, get_filetype
-   use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
    use dftd3, only : damping_param, d3_param, d3_model, &
       & get_dispersion, get_zero_damping, zero_damping_param, new_zero_damping, &
       & get_rational_damping, rational_damping_param, new_rational_damping, &
       & get_mzero_damping, mzero_damping_param, new_mzero_damping, get_mrational_damping, &
       & get_optimizedpower_damping, optimizedpower_damping_param, &
       & new_optimizedpower_damping, new_d3_model, get_pairwise_dispersion, &
-      & realspace_cutoff, get_lattice_points
+      & realspace_cutoff, get_lattice_points, get_coordination_number
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_output, only : ascii_damping_param, ascii_atomic_radii, &
       & ascii_atomic_references, ascii_system_properties, ascii_energy_atom, &
@@ -290,7 +289,6 @@ subroutine property_calc(unit, mol, disp, verbosity)
 
    integer :: mref
    real(wp), allocatable :: cn(:), gwvec(:, :), c6(:, :), lattr(:, :)
-   class(ncoord_type), allocatable :: ncoord
 
    if (verbosity > 1) then
       call ascii_atomic_radii(unit, mol, disp)
@@ -301,9 +299,8 @@ subroutine property_calc(unit, mol, disp, verbosity)
 
    mref = maxval(disp%ref)
    allocate(cn(mol%nat), gwvec(mref, mol%nat), c6(mol%nat, mol%nat))
-   call new_ncoord(ncoord, mol, cn_count%exp, cutoff=30.0_wp, rcov=disp%rcov)
    call get_lattice_points(mol%periodic, mol%lattice, 30.0_wp, lattr)
-   call ncoord%get_coordination_number(mol, lattr, cn)
+   call get_coordination_number(mol, lattr, 30.0_wp, disp%rcov, cn)
    call disp%weight_references(mol, cn, gwvec)
    call disp%get_atomic_c6(mol, gwvec, c6=c6)
 

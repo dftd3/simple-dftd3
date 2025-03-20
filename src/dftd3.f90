@@ -17,6 +17,7 @@
 module dftd3
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
+   use dftd3_ncoord, only : get_coordination_number
    use dftd3_damping, only : damping_param
    use dftd3_damping_mzero, only : mzero_damping_param, new_mzero_damping
    use dftd3_damping_optimizedpower, only : optimizedpower_damping_param, &
@@ -33,6 +34,7 @@ module dftd3
    public :: get_dispersion, get_pairwise_dispersion
    public :: realspace_cutoff, get_lattice_points
    public :: damping_param, d3_param
+   public :: get_coordination_number
    public :: get_rational_damping, get_zero_damping
    public :: get_mrational_damping, get_mzero_damping
    public :: get_optimizedpower_damping
