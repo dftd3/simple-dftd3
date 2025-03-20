@@ -18,13 +18,13 @@ module dftd3_app_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type, read_structure, filetype, get_filetype
-   use dftd3, only : damping_param, d3_param, d3_model, get_coordination_number, &
+   use dftd3, only : damping_param, d3_param, d3_model, &
       & get_dispersion, get_zero_damping, zero_damping_param, new_zero_damping, &
       & get_rational_damping, rational_damping_param, new_rational_damping, &
       & get_mzero_damping, mzero_damping_param, new_mzero_damping, get_mrational_damping, &
       & get_optimizedpower_damping, optimizedpower_damping_param, &
       & new_optimizedpower_damping, new_d3_model, get_pairwise_dispersion, &
-      & realspace_cutoff, get_lattice_points
+      & realspace_cutoff, get_lattice_points, get_coordination_number
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_output, only : ascii_damping_param, ascii_atomic_radii, &
       & ascii_atomic_references, ascii_system_properties, ascii_energy_atom, &

@@ -17,9 +17,9 @@
 module dftd3_disp
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_damping, only : damping_param
-   use dftd3_data, only : get_covalent_rad
    use dftd3_model, only : d3_model
    use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs
+   use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
@@ -100,7 +100,7 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
       & energies, dEdcn, gradient, sigma)
    if (grad) then
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
-         & gradient, sigma)
+      & gradient, sigma)
    end if
 
 end subroutine get_dispersion_atomic
