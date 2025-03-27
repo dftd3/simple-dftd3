@@ -80,6 +80,7 @@ subroutine test_gw_gen(error, mol, ref)
    rcov(:) = get_covalent_rad(mol%num)
 
    call new_ncoord(ncoord, mol, cn_count%exp, cutoff=cutoff, rcov=rcov, error=error)
+   if (allocated(error)) return
    call get_lattice_points(mol%periodic, mol%lattice, cutoff, lattr)
    call ncoord%get_coordination_number(mol, lattr, cn)
 
@@ -118,6 +119,7 @@ subroutine test_dgw_gen(error, mol)
    rcov(:) = get_covalent_rad(mol%num)
 
    call new_ncoord(ncoord, mol, cn_count%exp, cutoff=cutoff, rcov=rcov, error=error)
+   if (allocated(error)) return
    call ncoord%get_coordination_number(mol, lattr, cn)
 
    do iat = 1, mol%nat

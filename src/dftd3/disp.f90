@@ -100,7 +100,7 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
       & energies, dEdcn, gradient, sigma)
    if (grad) then
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
-      & gradient, sigma)
+         & gradient, sigma)
    end if
 
 end subroutine get_dispersion_atomic

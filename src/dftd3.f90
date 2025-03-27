@@ -32,9 +32,9 @@ module dftd3
    private
 
    public :: get_dispersion, get_pairwise_dispersion
+   public :: get_coordination_number
    public :: realspace_cutoff, get_lattice_points
    public :: damping_param, d3_param
-   public :: get_coordination_number
    public :: get_rational_damping, get_zero_damping
    public :: get_mrational_damping, get_mzero_damping
    public :: get_optimizedpower_damping

@@ -60,7 +60,7 @@ subroutine get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
    call new_ncoord(ncoord, mol, cn_count%exp, &
       & kcn=default_kcn, cutoff=cutoff, rcov=rcov, error=error)
    if(allocated(error)) then
-      error stop "Error occurd in the coordination number setup"
+      error stop "Error occured in the coordination number setup"
    end if
 
    call ncoord%get_coordination_number(mol, trans, cn, dcndr, dcndL)
@@ -97,7 +97,7 @@ subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, dEdcn, gradi
    call new_ncoord(ncoord, mol, cn_count%exp, &
       & kcn=default_kcn, cutoff=cutoff, rcov=rcov, error=error)
    if(allocated(error)) then
-      error stop "Error occurd in the coordination number setup"
+      error stop "Error occured in the coordination number setup"
    end if
 
    call ncoord%add_coordination_number_derivs(mol, trans, dEdcn, gradient, sigma)
