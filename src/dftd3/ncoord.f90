@@ -30,7 +30,8 @@ module dftd3_ncoord
 contains
 
 
-!> Wrapper for geometric fractional coordination number with standard exponential counting function.
+!> Wrapper for geometric fractional coordination number 
+!> with standard exponential counting function.
 subroutine get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
 
    !> Molecular structure data
@@ -57,8 +58,8 @@ subroutine get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
    class(ncoord_type), allocatable :: ncoord
    type(error_type), allocatable :: error
 
-   call new_ncoord(ncoord, mol, cn_count%exp, &
-      & kcn=default_kcn, cutoff=cutoff, rcov=rcov, error=error)
+   call new_ncoord(ncoord, mol, cn_count%exp, error, &
+      & kcn=default_kcn, cutoff=cutoff, rcov=rcov)
    if(allocated(error)) then
       error stop "Error occured in the coordination number setup"
    end if
@@ -94,8 +95,8 @@ subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, dEdcn, gradi
    class(ncoord_type), allocatable :: ncoord
    type(error_type), allocatable :: error
 
-   call new_ncoord(ncoord, mol, cn_count%exp, &
-      & kcn=default_kcn, cutoff=cutoff, rcov=rcov, error=error)
+   call new_ncoord(ncoord, mol, cn_count%exp, error, &
+      & kcn=default_kcn, cutoff=cutoff, rcov=rcov)
    if(allocated(error)) then
       error stop "Error occured in the coordination number setup"
    end if
