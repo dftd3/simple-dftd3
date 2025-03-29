@@ -22,7 +22,7 @@ The classes defined here allow a more Pythonic usage of the API object provided 
 library in actual workflows than the low-level access provided in the CFFI generated wrappers.
 """
 
-from typing import List, Optional, Union
+from typing import Optional
 import numpy as np
 
 from . import library
