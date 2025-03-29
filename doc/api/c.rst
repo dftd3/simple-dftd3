@@ -349,11 +349,18 @@ For each object type, a deconstructor function is provided to free the memory al
 A type-generic macro is provided to select the correct deconstructor based on the object type.
 Note that NULL pointers are allowed and will be ignored by the deconstructor.
 
-.. c:macro:: dftd3_delete(ptr) _Generic((ptr), dftd3_error: dftd3_delete_error, dftd3_structure: dftd3_delete_structure, dftd3_model: dftd3_delete_model, dftd3_param: dftd3_delete_param)(&ptr)
 
-   :param ptr: Object handle
+.. c:macro:: dftd3_delete(ptr)
 
-   Macro to delete objects created by the library. The macro is type-generic and selects the correct deconstructor based on the object type. The handle is set to NULL after deletion.
+   :param ptr: Object handle (e.g., `dftd3_error`, `dftd3_model`, etc.)
+
+   Macro to delete objects created by the library. The handle is set to NULL after deletion. The macro is type-generic and selects the correct deconstructor based on the object type:
+
+   - :c:func:`dftd3_delete_error`
+   - :c:func:`dftd3_delete_structure`
+   - :c:func:`dftd3_delete_model`
+   - :c:func:`dftd3_delete_param`
+   - :c:func:`dftd3_delete_gcp`
 
 
 Performing calculations
