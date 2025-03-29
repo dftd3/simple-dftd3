@@ -470,6 +470,7 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
    icycle = 1
    i = 0
    escf = 0.0_wp
+   line_number = 0
 
    inquire(file=fname,exist=exist)
    if (exist) then
@@ -549,6 +550,7 @@ subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
    icycle = 1
    i = 0
    escf = 0.0_wp
+   line_number = 0
 
    inquire(file=fname,exist=exist)
    if (exist) then
