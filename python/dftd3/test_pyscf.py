@@ -16,7 +16,7 @@
 
 import numpy as np
 import pytest
-from pytest import approx, raises
+from pytest import approx
 
 try:
     import pyscf

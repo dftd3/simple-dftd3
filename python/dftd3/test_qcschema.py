@@ -240,8 +240,6 @@ def test_gradient_tpss_d3zero():
 
 @pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_error_noargs():
-    thr = 1e-9
-
     atomic_input = qcel.models.AtomicInput(
         molecule={
             "symbols": "C C C C N C S H H H H H".split(),
@@ -273,8 +271,6 @@ def test_error_noargs():
 
 @pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_error_nomethod():
-    thr = 1e-9
-
     atomic_input = qcel.models.AtomicInput(
         molecule={
             "symbols": "C C C C N C S H H H H H".split(),
@@ -314,8 +310,6 @@ def test_error_nomethod():
 
 @pytest.mark.skipif(qcel is None, reason="requires qcelemental")
 def test_error_level():
-    thr = 1e-9
-
     atomic_input = qcel.models.AtomicInput(
         molecule={
             "symbols": "C C C C N C S H H H H H".split(),

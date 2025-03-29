@@ -33,6 +33,7 @@
 
 # Directories
 /build*/
+**/_build
 /_*/
 
 # Outputs
