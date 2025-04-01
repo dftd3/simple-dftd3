@@ -16,6 +16,7 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_ncoord
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use mctc_env, only : error_type, wp
    use mctc_io, only : structure_type
    use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
@@ -61,7 +62,8 @@ subroutine get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
    call new_ncoord(ncoord, mol, cn_count%exp, error, &
       & kcn=default_kcn, cutoff=cutoff, rcov=rcov)
    if(allocated(error)) then
-      error stop "Error occured in the coordination number setup"
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
    end if
 
    call ncoord%get_coordination_number(mol, trans, cn, dcndr, dcndL)
@@ -98,7 +100,8 @@ subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, dEdcn, gradi
    call new_ncoord(ncoord, mol, cn_count%exp, error, &
       & kcn=default_kcn, cutoff=cutoff, rcov=rcov)
    if(allocated(error)) then
-      error stop "Error occured in the coordination number setup"
+      write(error_unit, '("[Error]:", 1x, a)') error%message
+      error stop
    end if
 
    call ncoord%add_coordination_number_derivs(mol, trans, dEdcn, gradient, sigma)
