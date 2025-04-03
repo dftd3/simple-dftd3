@@ -15,13 +15,12 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_data
-   use dftd3_data_covrad, only : get_covalent_rad
    use dftd3_data_r4r2, only : get_r4r2_val
    use dftd3_data_vdwrad, only : get_vdw_rad
    implicit none
    private
 
-   public :: get_covalent_rad, get_r4r2_val, get_vdw_rad
+   public :: get_r4r2_val, get_vdw_rad
 
 
 end module dftd3_data

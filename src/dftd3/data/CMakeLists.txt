@@ -18,7 +18,6 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
-  "${dir}/covrad.f90"
   "${dir}/r4r2.f90"
   "${dir}/vdwrad.f90"
 )

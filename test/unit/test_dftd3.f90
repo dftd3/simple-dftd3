@@ -901,7 +901,7 @@ subroutine test_pbed3bj_actinides(error)
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 
-   !> Molecular structure data 
+   ! Molecular structure data 
    mol%nat = 17
    mol%nid = 17
    mol%id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, &

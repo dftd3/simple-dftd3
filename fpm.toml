@@ -9,10 +9,11 @@ keywords = ["dispersion-correction", "quantum-chemistry"]
 
 [dependencies]
 mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
-mctc-lib.tag = "v0.3.0"
+mctc-lib.tag = "v0.4.1"
 
 [dev-dependencies]
 mstore.git = "https://github.com/grimme-lab/mstore"
+mstore.tag = "v0.3.0"
 
 [build]
 auto-tests = false

@@ -17,9 +17,9 @@
 module dftd3_disp
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_damping, only : damping_param
-   use dftd3_data, only : get_covalent_rad
    use dftd3_model, only : d3_model
    use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs
+   use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
