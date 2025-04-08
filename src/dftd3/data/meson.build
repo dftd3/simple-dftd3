@@ -15,7 +15,6 @@
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 srcs += files(
-  'covrad.f90',
   'r4r2.f90',
   'vdwrad.f90',
 )

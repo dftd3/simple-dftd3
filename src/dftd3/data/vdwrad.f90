@@ -18,7 +18,7 @@ module dftd3_data_vdwrad
    use mctc_env, only : wp
    use mctc_io_convert, only : aatoau
    use mctc_io_symbols, only : to_number
-   use dftd3_data_covrad, only : get_covalent_rad
+   use mctc_data_covrad, only : get_covalent_rad
    implicit none
    private
 

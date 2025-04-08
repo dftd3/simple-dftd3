@@ -22,7 +22,6 @@ program tester
    use test_dftd3, only : collect_dftd3
    use test_gcp, only : collect_gcp
    use test_model, only : collect_model
-   use test_ncoord, only : collect_ncoord
    use test_param, only : collect_param
    use test_pairwise, only : collect_pairwise
    use test_periodic, only : collect_periodic
@@ -36,7 +35,6 @@ program tester
    stat = 0
 
    testsuites = [ &
-      & new_testsuite("ncoord", collect_ncoord), &
       & new_testsuite("model", collect_model), &
       & new_testsuite("dftd3", collect_dftd3), &
       & new_testsuite("param", collect_param), &
