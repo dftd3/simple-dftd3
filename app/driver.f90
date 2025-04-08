@@ -71,8 +71,7 @@ subroutine run_driver(config, error)
    real(wp), allocatable :: s9
    real(wp) :: energy
    character(len=:), allocatable :: output
-   integer :: stat, unit, idx
-   logical :: exist
+   integer :: unit
    type(citation_type) :: citation, param_citation
 
    if (config%verbosity > 1) then
