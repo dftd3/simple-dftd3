@@ -157,8 +157,7 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
+                  vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
                   r2 = r2ij*r2ik*r2jk
@@ -284,8 +283,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
+                  vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
                   r2 = r2ij*r2ik*r2jk
@@ -439,8 +437,7 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
-                  vjk(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, jat) &
-                     & - trans(:, jtr)
+                  vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
                   r2 = r2ij*r2ik*r2jk
