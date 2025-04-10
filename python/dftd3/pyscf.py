@@ -267,7 +267,7 @@ class _DFTD3Grad:
     pass
 
 
-def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
+def d3_energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     """
     Apply DFT-D3 corrections to SCF or MCSCF methods by returning an
     instance of a new class built from the original instances class.
@@ -301,7 +301,7 @@ def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     ...          H   2.15862174  -0.13639605   0.80956529
     ...          '''
     ... )
-    >>> mf = disp.energy(scf.RHF(mol)).run()
+    >>> mf = disp.d3_energy(scf.RHF(mol)).run()
     converged SCF energy = -110.932603617026
     >>> mf.kernel()
     -110.93260361702605
@@ -355,7 +355,7 @@ def energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     return DFTD3(mf, with_dftd3)
 
 
-def grad(scf_grad: GradientsBase, **kwargs):
+def d3_grad(scf_grad: GradientsBase, **kwargs):
     """
     Apply DFT-D3 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
@@ -387,7 +387,7 @@ def grad(scf_grad: GradientsBase, **kwargs):
     ...          H   1.57598558  -0.38252146   0.75856129
     ...          '''
     ... )
-    >>> grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
+    >>> grad = disp.d3_energy(scf.RHF(mol)).run().nuc_grad_method()
     converged SCF energy = -149.947191000075
     >>> g = grad.kernel()
     --------------- DFTD3 gradients ---------------
@@ -422,3 +422,7 @@ def grad(scf_grad: GradientsBase, **kwargs):
     mfgrad = DFTD3Grad.__new__(DFTD3Grad)
     mfgrad.__dict__.update(scf_grad.__dict__)
     return mfgrad
+
+
+energy = d3_energy
+grad = d3_grad

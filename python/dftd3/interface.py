@@ -58,7 +58,7 @@ class Structure:
         on invalid input, like incorrect shape / type of the passed arrays
     """
 
-    _mol = library.ffi.NULL
+    _mol = library.StructureHandle.null()
 
     def __init__(
         self,
@@ -104,10 +104,10 @@ class Structure:
 
         self._mol = library.new_structure(
             self._natoms,
-            _cast("int*", _numbers),
-            _cast("double*", _positions),
-            _cast("double*", _lattice),
-            _cast("bool*", _periodic),
+            _numbers,
+            _positions,
+            _lattice,
+            _periodic,
         )
 
     def __len__(self):
@@ -147,8 +147,8 @@ class Structure:
 
         library.update_structure(
             self._mol,
-            _cast("double*", _positions),
-            _cast("double*", _lattice),
+            _positions,
+            _lattice,
         )
 
 
@@ -176,7 +176,7 @@ class DampingParam:
        of the object should use the second method.
     """
 
-    _param = library.ffi.NULL
+    _param = library.ParamHandle.null()
 
     def __init__(self, **kwargs):
         """Create new damping parameter from method name or explicit data"""
@@ -190,11 +190,11 @@ class DampingParam:
             self._param = self.new_param(**kwargs)
 
     @staticmethod
-    def load_param(method, **kwargs):
+    def load_param(method, **kwargs) -> library.ParamHandle:
         raise NotImplementedError("Child class has to define parameter loading")
 
     @staticmethod
-    def new_param(**kwargs):
+    def new_param(**kwargs) -> library.ParamHandle:
         raise NotImplementedError("Child class has to define parameter construction")
 
 
@@ -218,15 +218,22 @@ class RationalDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, atm=True):
-        _method = library.ffi.new("char[]", method.encode())
+    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
         return library.load_rational_damping(
-            _method,
+            method,
             atm,
         )
 
     @staticmethod
-    def new_param(*, s6=1.0, s8, s9=1.0, a1, a2, alp=14.0):
+    def new_param(
+        *,
+        s6: float = 1.0,
+        s8: float,
+        s9: float = 1.0,
+        a1: float,
+        a2: float,
+        alp: float = 14.0,
+    ) -> library.ParamHandle:
         return library.new_rational_damping(
             s6,
             s8,
@@ -254,15 +261,22 @@ class ZeroDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, atm=True):
-        _method = library.ffi.new("char[]", method.encode())
+    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
         return library.load_zero_damping(
-            _method,
+            method,
             atm,
         )
 
     @staticmethod
-    def new_param(*, s6=1.0, s8, s9=1.0, rs6, rs8=1.0, alp=14.0):
+    def new_param(
+        *,
+        s6: float = 1.0,
+        s8: float,
+        s9: float = 1.0,
+        rs6: float,
+        rs8: float = 1.0,
+        alp: float = 14.0,
+    ) -> library.ParamHandle:
         return library.new_zero_damping(
             s6,
             s8,
@@ -289,15 +303,22 @@ class ModifiedRationalDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, atm=True):
-        _method = library.ffi.new("char[]", method.encode())
+    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
         return library.load_mrational_damping(
-            _method,
+            method,
             atm,
         )
 
     @staticmethod
-    def new_param(*, s6=1.0, s8, s9=1.0, a1, a2, alp=14.0):
+    def new_param(
+        *,
+        s6: float = 1.0,
+        s8: float,
+        s9: float = 1.0,
+        a1: float,
+        a2: float,
+        alp: float = 14.0,
+    ) -> library.ParamHandle:
         return library.new_mrational_damping(
             s6,
             s8,
@@ -327,15 +348,23 @@ class ModifiedZeroDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, atm=True):
-        _method = library.ffi.new("char[]", method.encode())
+    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
         return library.load_mzero_damping(
-            _method,
+            method,
             atm,
         )
 
     @staticmethod
-    def new_param(*, s6=1.0, s8, s9=1.0, rs6, rs8=1.0, alp=14.0, bet):
+    def new_param(
+        *,
+        s6: float = 1.0,
+        s8: float,
+        s9: float = 1.0,
+        rs6: float,
+        rs8: float = 1.0,
+        alp: float = 14.0,
+        bet: float,
+    ) -> library.ParamHandle:
         return library.new_mzero_damping(
             s6,
             s8,
@@ -364,15 +393,23 @@ class OptimizedPowerDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method, atm=True):
-        _method = library.ffi.new("char[]", method.encode())
+    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
         return library.load_optimizedpower_damping(
-            _method,
+            method,
             atm,
         )
 
     @staticmethod
-    def new_param(*, s6=1.0, s8, s9=1.0, a1, a2, alp=14.0, bet):
+    def new_param(
+        *,
+        s6: float = 1.0,
+        s8: float,
+        s9: float = 1.0,
+        a1: float,
+        a2: float,
+        alp: float = 14.0,
+        bet,
+    ) -> library.ParamHandle:
         return library.new_optimizedpower_damping(
             s6,
             s8,
@@ -394,7 +431,7 @@ class DispersionModel(Structure):
     input.
     """
 
-    _disp = library.ffi.NULL
+    _disp = library.ModelHandle.null()
 
     def __init__(
         self,
@@ -427,9 +464,9 @@ class DispersionModel(Structure):
             self._mol,
             self._disp,
             param._param,
-            _cast("double*", _energy),
-            _cast("double*", _gradient),
-            _cast("double*", _sigma),
+            _energy,
+            _gradient,
+            _sigma,
         )
 
         results = dict(energy=_energy)
@@ -449,8 +486,8 @@ class DispersionModel(Structure):
             self._mol,
             self._disp,
             param._param,
-            _cast("double*", _pair_disp2),
-            _cast("double*", _pair_disp3),
+            _pair_disp2,
+            _pair_disp3,
         )
 
         return {
@@ -459,22 +496,55 @@ class DispersionModel(Structure):
         }
 
 
-def _cast(ctype, array):
-    """Cast a numpy array to a FFI pointer"""
-    return (
-        library.ffi.NULL
-        if array is None
-        else library.ffi.cast(ctype, array.ctypes.data)
-    )
+class GeometricCounterpoise(Structure):
+    """
+    .. Counterpoise correction parameters
 
+    Contains the required information to evaluate the counterpoise correction
+    for a given geometry. The counterpoise correction is a method to correct
+    the interaction energy in a supermolecular calculation for the basis set
+    superposition error (BSSE).
+    """
 
-def _ref(ctype, value):
-    """Create a reference to a value"""
-    if value is None:
-        return library.ffi.NULL
-    ref = library.ffi.new(ctype + "*")
-    ref[0] = value
-    return ref
+    _gcp = library.GCPHandle.null()
+
+    def __init__(
+        self,
+        numbers: np.ndarray,
+        positions: np.ndarray,
+        lattice: Optional[np.ndarray] = None,
+        periodic: Optional[np.ndarray] = None,
+        method: Optional[str] = None,
+        basis: Optional[str] = None,
+    ):
+        Structure.__init__(self, numbers, positions, lattice, periodic)
+
+        self._gcp = library.load_gcp_param(self._mol, method, basis)
+
+    def set_realspace_cutoff(self, bas: float, srb: float):
+        """Set realspace cutoff for evaluation of interactions"""
+
+        library.set_gcp_realspace_cutoff(self._gcp, bas, srb)
+
+    def get_counterpoise(self, grad: bool) -> dict:
+        """Evaluate the counterpoise corrected interaction energy"""
+
+        _energy = np.array(0.0)
+        if grad:
+            _gradient = np.zeros((len(self), 3))
+            _sigma = np.zeros((3, 3))
+        else:
+            _gradient = None
+            _sigma = None
+
+        library.get_counterpoise(self._mol, self._gcp, _energy, _gradient, _sigma)
+
+        results = dict(energy=_energy)
+        if _gradient is not None:
+            results.update(gradient=_gradient)
+        if _sigma is not None:
+            results.update(virial=_sigma)
+        return results
 
 
 def _rename_kwargs(kwargs, old_name, new_name):

@@ -22,105 +22,23 @@ from dftd3.interface import (
     ModifiedRationalDampingParam,
     OptimizedPowerDampingParam,
     DispersionModel,
+    GeometricCounterpoise,
 )
+import pytest
 from pytest import approx, raises, mark
 import numpy as np
 
 
-def test_rational_damping_noargs():
-    """Check constructor of damping parameters for insufficient arguments"""
-
-    with raises(TypeError):
-        RationalDampingParam()
-
-    with raises(TypeError, match="s8"):
-        RationalDampingParam(a1=0.4, a2=5.0)
-
-    with raises(TypeError, match="a1"):
-        RationalDampingParam(s8=1.0, a2=5.0)
-
-    with raises(TypeError, match="a2"):
-        RationalDampingParam(s8=1.0, a1=0.4)
-
-
-def test_zero_damping_noargs():
-    """Check constructor of damping parameters for insufficient arguments"""
-
-    with raises(TypeError):
-        ZeroDampingParam()
-
-    with raises(TypeError, match="s8"):
-        ZeroDampingParam(rs6=1.2)
-
-    with raises(TypeError, match="rs6"):
-        ZeroDampingParam(s8=1.0)
-
-
-def test_modified_rational_damping_noargs():
-    """Check constructor of damping parameters for insufficient arguments"""
-
-    with raises(TypeError):
-        ModifiedRationalDampingParam()
-
-    with raises(TypeError, match="s8"):
-        ModifiedRationalDampingParam(a1=0.4, a2=5.0)
-
-    with raises(TypeError, match="a1"):
-        ModifiedRationalDampingParam(s8=1.0, a2=5.0)
-
-    with raises(TypeError, match="a2"):
-        ModifiedRationalDampingParam(s8=1.0, a1=0.4)
-
-
-def test_modified_zero_damping_noargs():
-    """Check constructor of damping parameters for insufficient arguments"""
-
-    with raises(TypeError):
-        ModifiedZeroDampingParam()
-
-    with raises(TypeError, match="s8"):
-        ModifiedZeroDampingParam(rs6=1.2, bet=1.0)
-
-    with raises(TypeError, match="rs6"):
-        ModifiedZeroDampingParam(s8=1.0, bet=1.0)
-
-    with raises(TypeError, match="bet"):
-        ModifiedZeroDampingParam(s8=1.0, rs6=1.2)
-
-    with raises(TypeError):
-        ModifiedZeroDampingParam(s8=1.0, rs6=1.2, bet=1.0, method="abc")
-
-
-def test_optimized_power_damping_noargs():
-    """Check constructor of damping parameters for insufficient arguments"""
-
-    with raises(TypeError):
-        OptimizedPowerDampingParam()
-
-    with raises(TypeError, match="s8"):
-        OptimizedPowerDampingParam(a1=0.3, a2=4.2, bet=1.0)
-
-    with raises(TypeError, match="a1"):
-        OptimizedPowerDampingParam(s8=1.0, a2=4.2, bet=1.0)
-
-    with raises(TypeError, match="a2"):
-        OptimizedPowerDampingParam(s8=1.0, a1=0.3, bet=1.0)
-
-    with raises(TypeError, match="bet"):
-        OptimizedPowerDampingParam(s8=1.0, a1=0.3, a2=4.2)
-
-    with raises(TypeError):
-        OptimizedPowerDampingParam(s8=1.0, a1=0.3, a2=4.2, bet=1.0, method="abc")
-
-
-def test_structure():
-    """check if the molecular structure data is working as expected."""
-
-    rng = np.random.default_rng()
-    numbers = np.array(
+@pytest.fixture
+def numbers() -> np.ndarray:
+    return np.array(
         [6, 7, 6, 7, 6, 6, 6, 8, 7, 6, 8, 7, 6, 6, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
     )
-    positions = np.array(
+
+
+@pytest.fixture
+def positions() -> np.ndarray:
+    return np.array(
         [
             [+2.02799738646442, +0.09231312124713, -0.14310895950963],
             [+4.75011007621000, +0.02373496014051, -0.14324124033844],
@@ -149,37 +67,14 @@ def test_structure():
         ]
     )
 
-    # Constructor should raise an error for nuclear fusion input
-    with raises(RuntimeError, match="Too close interatomic distances found"):
-        Structure(numbers, np.zeros((24, 3)))
 
-    # The Python class should protect from garbage input like this
-    with raises(ValueError, match="Dimension missmatch"):
-        Structure(np.array([1, 1, 1]), positions)
-
-    # Also check for sane coordinate input
-    with raises(ValueError, match="Expected tripels"):
-        Structure(numbers, rng.random(7))
-
-    # Construct real molecule
-    mol = Structure(numbers, positions)
-
-    # Try to update a structure with missmatched coordinates
-    with raises(ValueError, match="Dimension missmatch for positions"):
-        mol.update(rng.random(7))
-
-    # Try to add a missmatched lattice
-    with raises(ValueError, match="Invalid lattice provided"):
-        mol.update(positions, rng.random(7))
-
-    # Try to update a structure with nuclear fusion coordinates
-    with raises(RuntimeError, match="Too close interatomic distances found"):
-        mol.update(np.zeros((24, 3)))
+@pytest.fixture(params=[True, False])
+def atm(request) -> bool:
+    return request.param
 
 
-@mark.parametrize("atm", [True, False])
-def test_pbe0_d3_bj(atm):
-
+@pytest.fixture
+def model() -> DispersionModel:
     numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
     positions = np.array(
         [  # Coordinates in Bohr
@@ -201,133 +96,192 @@ def test_pbe0_d3_bj(atm):
             [+2.85007173009739, -2.64884892757600, +0.71010806424206],
         ]
     )
+    return DispersionModel(numbers, positions)
+
+
+def test_rational_damping_noargs() -> None:
+    """Check constructor of damping parameters for insufficient arguments"""
+
+    with raises(TypeError):
+        RationalDampingParam()
+
+    with raises(TypeError, match="s8"):
+        RationalDampingParam(a1=0.4, a2=5.0)
+
+    with raises(TypeError, match="a1"):
+        RationalDampingParam(s8=1.0, a2=5.0)
+
+    with raises(TypeError, match="a2"):
+        RationalDampingParam(s8=1.0, a1=0.4)
+
+
+def test_zero_damping_noargs() -> None:
+    """Check constructor of damping parameters for insufficient arguments"""
+
+    with raises(TypeError):
+        ZeroDampingParam()
+
+    with raises(TypeError, match="s8"):
+        ZeroDampingParam(rs6=1.2)
+
+    with raises(TypeError, match="rs6"):
+        ZeroDampingParam(s8=1.0)
+
+
+def test_modified_rational_damping_noargs() -> None:
+    """Check constructor of damping parameters for insufficient arguments"""
+
+    with raises(TypeError):
+        ModifiedRationalDampingParam()
+
+    with raises(TypeError, match="s8"):
+        ModifiedRationalDampingParam(a1=0.4, a2=5.0)
+
+    with raises(TypeError, match="a1"):
+        ModifiedRationalDampingParam(s8=1.0, a2=5.0)
+
+    with raises(TypeError, match="a2"):
+        ModifiedRationalDampingParam(s8=1.0, a1=0.4)
+
+
+def test_modified_zero_damping_noargs() -> None:
+    """Check constructor of damping parameters for insufficient arguments"""
+
+    with raises(TypeError):
+        ModifiedZeroDampingParam()
+
+    with raises(TypeError, match="s8"):
+        ModifiedZeroDampingParam(rs6=1.2, bet=1.0)
+
+    with raises(TypeError, match="rs6"):
+        ModifiedZeroDampingParam(s8=1.0, bet=1.0)
+
+    with raises(TypeError, match="bet"):
+        ModifiedZeroDampingParam(s8=1.0, rs6=1.2)
+
+    with raises(TypeError):
+        ModifiedZeroDampingParam(s8=1.0, rs6=1.2, bet=1.0, method="abc")
+
+
+def test_optimized_power_damping_noargs() -> None:
+    """Check constructor of damping parameters for insufficient arguments"""
+
+    with raises(TypeError):
+        OptimizedPowerDampingParam()
+
+    with raises(TypeError, match="s8"):
+        OptimizedPowerDampingParam(a1=0.3, a2=4.2, bet=1.0)
+
+    with raises(TypeError, match="a1"):
+        OptimizedPowerDampingParam(s8=1.0, a2=4.2, bet=1.0)
+
+    with raises(TypeError, match="a2"):
+        OptimizedPowerDampingParam(s8=1.0, a1=0.3, bet=1.0)
+
+    with raises(TypeError, match="bet"):
+        OptimizedPowerDampingParam(s8=1.0, a1=0.3, a2=4.2)
+
+    with raises(TypeError):
+        OptimizedPowerDampingParam(s8=1.0, a1=0.3, a2=4.2, bet=1.0, method="abc")
+
+
+@pytest.mark.parametrize("cls", [Structure, DispersionModel, GeometricCounterpoise])
+def test_structure(cls, numbers: np.ndarray, positions: np.ndarray) -> None:
+    """check if the molecular structure data is working as expected."""
+
+    rng = np.random.default_rng()
+
+    # Constructor should raise an error for nuclear fusion input
+    with raises(RuntimeError, match="Too close interatomic distances found"):
+        cls(numbers, np.zeros((24, 3)))
+
+    # The Python class should protect from garbage input like this
+    with raises(ValueError, match="Dimension missmatch"):
+        cls(np.array([1, 1, 1]), positions)
+
+    # Also check for sane coordinate input
+    with raises(ValueError, match="Expected tripels"):
+        cls(numbers, rng.random(7))
+
+    # Construct real molecule
+    inst = cls(numbers, positions)
+
+    # Try to update a structure with missmatched coordinates
+    with raises(ValueError, match="Dimension missmatch for positions"):
+        inst.update(rng.random(7))
+
+    # Try to add a missmatched lattice
+    with raises(ValueError, match="Invalid lattice provided"):
+        inst.update(positions, rng.random(7))
+
+    # Try to update a structure with nuclear fusion coordinates
+    with raises(RuntimeError, match="Too close interatomic distances found"):
+        inst.update(np.zeros((24, 3)))
+
+
+def test_pbe0_d3_bj(atm: bool, model: DispersionModel) -> None:
     ref = -0.029489232932494884 if atm else -0.029589132634178342
-    model = DispersionModel(numbers, positions)
     res = model.get_dispersion(RationalDampingParam(method="pbe0", atm=atm), grad=False)
     assert approx(res.get("energy")) == ref
 
 
-@mark.parametrize("atm", [True, False])
-def test_b3lyp_d3_zero(atm):
-
-    numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
-    positions = np.array(
-        [  # Coordinates in Bohr
-            [+2.79274810283778, +3.82998228828316, -2.79287054959216],
-            [-1.43447454186833, +0.43418729987882, +5.53854345129809],
-            [-3.26268343665218, -2.50644032426151, -1.56631149351046],
-            [+2.14548759959147, -0.88798018953965, -2.24592534506187],
-            [-4.30233097423181, -3.93631518670031, -0.48930754109119],
-            [+0.06107643564880, -3.82467931731366, -2.22333344469482],
-            [+0.41168550401858, +0.58105573172764, +5.56854609916143],
-            [+4.41363836635653, +3.92515871809283, +2.57961724984000],
-            [+1.33707758998700, +1.40194471661647, +1.97530004949523],
-            [+3.08342709834868, +1.72520024666801, -4.42666116106828],
-            [-3.02346932078505, +0.04438199934191, -0.27636197425010],
-            [+1.11508390868455, -0.97617412809198, +6.25462847718180],
-            [+0.61938955433011, +2.17903547389232, -6.21279842416963],
-            [-2.67491681346835, +3.00175899761859, +1.05038813614845],
-            [-4.13181080289514, -2.34226739863660, -3.44356159392859],
-            [+2.85007173009739, -2.64884892757600, +0.71010806424206],
-        ]
-    )
+def test_b3lyp_d3_zero(atm: bool, model: DispersionModel) -> None:
     ref = -0.022714272555175656 if atm else -0.022814172019166058
-    model = DispersionModel(numbers, positions)
     res = model.get_dispersion(ZeroDampingParam(method="b3lyp", atm=atm), grad=False)
     assert approx(res.get("energy")) == ref
 
 
-@mark.parametrize("atm", [True, False])
-def test_pbe_d3_bjm(atm):
-
-    numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
-    positions = np.array(
-        [  # Coordinates in Bohr
-            [+2.79274810283778, +3.82998228828316, -2.79287054959216],
-            [-1.43447454186833, +0.43418729987882, +5.53854345129809],
-            [-3.26268343665218, -2.50644032426151, -1.56631149351046],
-            [+2.14548759959147, -0.88798018953965, -2.24592534506187],
-            [-4.30233097423181, -3.93631518670031, -0.48930754109119],
-            [+0.06107643564880, -3.82467931731366, -2.22333344469482],
-            [+0.41168550401858, +0.58105573172764, +5.56854609916143],
-            [+4.41363836635653, +3.92515871809283, +2.57961724984000],
-            [+1.33707758998700, +1.40194471661647, +1.97530004949523],
-            [+3.08342709834868, +1.72520024666801, -4.42666116106828],
-            [-3.02346932078505, +0.04438199934191, -0.27636197425010],
-            [+1.11508390868455, -0.97617412809198, +6.25462847718180],
-            [+0.61938955433011, +2.17903547389232, -6.21279842416963],
-            [-2.67491681346835, +3.00175899761859, +1.05038813614845],
-            [-4.13181080289514, -2.34226739863660, -3.44356159392859],
-            [+2.85007173009739, -2.64884892757600, +0.71010806424206],
-        ]
-    )
+def test_pbe_d3_bjm(atm: bool, model: DispersionModel) -> None:
     ref = -0.06327406660942464 if atm else -0.06337396631110809
-    model = DispersionModel(numbers, positions)
-    res = model.get_dispersion(ModifiedRationalDampingParam(method="pbe", atm=atm), grad=False)
+    res = model.get_dispersion(
+        ModifiedRationalDampingParam(method="pbe", atm=atm), grad=False
+    )
     assert approx(res.get("energy")) == ref
 
 
-@mark.parametrize("atm", [True, False])
-def test_bp_d3_zerom(atm):
-
-    numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
-    positions = np.array(
-        [  # Coordinates in Bohr
-            [+2.79274810283778, +3.82998228828316, -2.79287054959216],
-            [-1.43447454186833, +0.43418729987882, +5.53854345129809],
-            [-3.26268343665218, -2.50644032426151, -1.56631149351046],
-            [+2.14548759959147, -0.88798018953965, -2.24592534506187],
-            [-4.30233097423181, -3.93631518670031, -0.48930754109119],
-            [+0.06107643564880, -3.82467931731366, -2.22333344469482],
-            [+0.41168550401858, +0.58105573172764, +5.56854609916143],
-            [+4.41363836635653, +3.92515871809283, +2.57961724984000],
-            [+1.33707758998700, +1.40194471661647, +1.97530004949523],
-            [+3.08342709834868, +1.72520024666801, -4.42666116106828],
-            [-3.02346932078505, +0.04438199934191, -0.27636197425010],
-            [+1.11508390868455, -0.97617412809198, +6.25462847718180],
-            [+0.61938955433011, +2.17903547389232, -6.21279842416963],
-            [-2.67491681346835, +3.00175899761859, +1.05038813614845],
-            [-4.13181080289514, -2.34226739863660, -3.44356159392859],
-            [+2.85007173009739, -2.64884892757600, +0.71010806424206],
-        ]
-    )
+def test_bp_d3_zerom(atm: bool, model: DispersionModel) -> None:
     ref = -0.026013316869036292 if atm else -0.026113216333026695
-    model = DispersionModel(numbers, positions)
-    res = model.get_dispersion(ModifiedZeroDampingParam(method="bp", atm=atm), grad=False)
-    assert approx(res.get("energy")) == ref
-
-
-@mark.parametrize("atm", [True, False])
-def test_bp_d3_op(atm):
-
-    numbers = np.array([1, 1, 6, 5, 1, 15, 8, 17, 13, 15, 5, 1, 9, 15, 1, 15])
-    positions = np.array(
-        [  # Coordinates in Bohr
-            [+2.79274810283778, +3.82998228828316, -2.79287054959216],
-            [-1.43447454186833, +0.43418729987882, +5.53854345129809],
-            [-3.26268343665218, -2.50644032426151, -1.56631149351046],
-            [+2.14548759959147, -0.88798018953965, -2.24592534506187],
-            [-4.30233097423181, -3.93631518670031, -0.48930754109119],
-            [+0.06107643564880, -3.82467931731366, -2.22333344469482],
-            [+0.41168550401858, +0.58105573172764, +5.56854609916143],
-            [+4.41363836635653, +3.92515871809283, +2.57961724984000],
-            [+1.33707758998700, +1.40194471661647, +1.97530004949523],
-            [+3.08342709834868, +1.72520024666801, -4.42666116106828],
-            [-3.02346932078505, +0.04438199934191, -0.27636197425010],
-            [+1.11508390868455, -0.97617412809198, +6.25462847718180],
-            [+0.61938955433011, +2.17903547389232, -6.21279842416963],
-            [-2.67491681346835, +3.00175899761859, +1.05038813614845],
-            [-4.13181080289514, -2.34226739863660, -3.44356159392859],
-            [+2.85007173009739, -2.64884892757600, +0.71010806424206],
-        ]
+    res = model.get_dispersion(
+        ModifiedZeroDampingParam(method="bp", atm=atm), grad=False
     )
-    ref = -0.07681029606751344 if atm else -0.07681029606751344
-    model = DispersionModel(numbers, positions)
-    res = model.get_dispersion(OptimizedPowerDampingParam(method="b97d"), grad=False)
     assert approx(res.get("energy")) == ref
 
 
-def test_pair_resolved():
+def test_b97d_d3_op(atm: bool, model: DispersionModel) -> None:
+    ref = -0.07681029606751344 if atm else -0.07691018779028679
+    res = model.get_dispersion(
+        OptimizedPowerDampingParam(method="b97d", atm=atm), grad=False
+    )
+    assert approx(res.get("energy")) == ref
+
+
+def test_gcp_empty(numbers: np.ndarray, positions: np.ndarray) -> None:
+    gcp = GeometricCounterpoise(
+        numbers,
+        positions,
+    )
+
+    res = gcp.get_counterpoise(grad=False)
+    assert approx(res.get("energy")) == 0.0
+
+
+@pytest.mark.parametrize("method", ["b973c"])
+def test_gcp_3c(numbers: np.ndarray, positions: np.ndarray, method: str) -> None:
+    gcp = GeometricCounterpoise(
+        numbers,
+        positions,
+        method=method,
+    )
+    ref = {
+        "b973c": -0.07653225860427701,
+        "pbeh3c": 0.04977771585466725,
+    }[method]
+
+    res = gcp.get_counterpoise(grad=False)
+    assert approx(res.get("energy")) == ref, res.get("energy")
+
+
+def test_pair_resolved() -> None:
     """Calculate pairwise resolved dispersion energy for a molecule"""
     thr = 1.0e-8
 
