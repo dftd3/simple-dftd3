@@ -22,7 +22,7 @@ module dftd3_param
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3
+      & doi_wb97x_d3, doi_hse06_d3, doi_cf22d
    implicit none
 
    public :: d3_param
@@ -82,7 +82,8 @@ module dftd3_param
          & p_dsd_tpss_df, p_dsd_tpssb95_df, p_dsd_olyp_df, p_dsd_xlyp_df, &
          & p_dsd_xb95_df, p_dsd_b98_df, p_dsd_bmk_df, p_dsd_thcth_df, &
          & p_dsd_hcth407_df, p_dod_svwn5_df, p_dod_blyp_df, p_dod_pbe_df, &
-         & p_dod_pbep86_df, p_dod_pbeb95_df, p_dod_hsep86_df, p_dod_pbehb95_df
+         & p_dod_pbep86_df, p_dod_pbeb95_df, p_dod_hsep86_df, p_dod_pbehb95_df, &
+         & p_cf22d_df
    end enum
 
 contains
@@ -130,6 +131,7 @@ function get_method_id(method) result(id)
    case("bp", "bp86"); id = p_bp_df
    case("bpbe"); id = p_bpbe_df
    case("camb3lyp"); id = p_camb3lyp_df
+   case("cf22d"); id = p_cf22d_df
    case("dftb3"); id = p_dftb3_df
    case("dm21"); id = p_dm21_df
    case("dm21m"); id = p_dm21m_df
@@ -1057,6 +1059,9 @@ subroutine get_zero_damping(param, method, error, s9, citation)
    case(p_pwp_df)
       param = d3_param(rs6=2.1040_wp, s8=0.8747_wp)
       doi = doi_gmtkn55
+   case(p_cf22d_df)
+      param = d3_param(rs6=1.53_wp, s8=0.0_wp)
+      doi = doi_cf22d
    end select
 
    if (.not.allocated(doi)) doi = doi_dftd3_0

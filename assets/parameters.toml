@@ -612,6 +612,9 @@ d3.bj = {s6=0.69, a1=0.0, s8=0.0, a2=5.4, doi="10.1002/jcc.23391"}
 [parameter.dodpbehb95]
 d3.bj = {s6=0.67, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}
 
+[parameter.cf22d]
+d3.zero = {rs6=1.53, doi="10.1038/s43588-022-00371-5"}
+
 [citation."10.1063/1.3382344"]  # DFT-D3(0)
 title = "A consistent and accurate ab initio parametrization of density functional dispersion correction (DFT-D) for the 94 elements H-Pu"
 author = ["Stefan Grimme", "Jens Antony", "Stephan Ehrlich", "Helge Krieg"]
@@ -863,3 +866,13 @@ volume = "118"
 pages = "7615-7621"
 year = "2014"
 published = 2014-03-13
+
+[citation."10.1038/s43588-022-00371-5"]  # CF22D
+title = "Supervised learning of a chemistry functional with damped dispersion"
+author = ["Yiwei Liu", "Cheng Zhang", "Zhonghua Liu", "Donald G. Truhlar", "Ying Wang", "Xiao He"]
+journal = "Nat. Comput. Sci."
+issue = "1"
+volume = "3"
+pages = "48–58"
+year = "2023"
+published = 2022-12-23

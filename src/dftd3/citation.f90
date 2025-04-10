@@ -26,7 +26,7 @@ module dftd3_citation
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3, doi_joss
+      & doi_wb97x_d3, doi_hse06_d3, doi_joss, doi_cf22d
 
    !> Represents an author to allow creating author lists
    type :: author_type
@@ -83,7 +83,8 @@ module dftd3_citation
       & doi_b97m_d3 = "10.1021/acs.jctc.8b00842", &
       & doi_wb97x_d3 = "10.1021/ct300715s", &
       & doi_hse06_d3 = "10.1021/jp501237c", &
-      & doi_joss = "10.21105/joss.07169"
+      & doi_joss = "10.21105/joss.07169", &
+      & doi_cf22d = "10.1038/s43588-022-00371-5"
 
 contains
 
@@ -618,6 +619,24 @@ pure function get_citation(doi) result(citation)
          volume="9", &
          pages="7169", &
          year="2024" &
+      )
+
+   case(doi_cf22d)
+      citation = new_citation( &
+         doi=doi, &
+         title="Supervised learning of a chemistry functional with damped dispersion", &
+         author=[ &
+         & author_name("Yiwei Liu"), &
+         & author_name("Cheng Zhang"), &
+         & author_name("Zhonghua Liu"), &
+         & author_name("Donald G. Truhlar"), &
+         & author_name("Ying Wang"), &
+         & author_name("Xiao He")], &
+         journal="Nat. Comput. Sci.", &
+         issue="1", &
+         volume="3", &
+         pages="48–58", &
+         year="2023" &
       )
    end select
 end function get_citation
