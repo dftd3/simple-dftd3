@@ -227,6 +227,7 @@ def test_gradient_hf():
     assert grad.kernel() == approx(ref, abs=1.0e-7)
 
 
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_issue_gh73():
     mol = gto.M(
         atom="""

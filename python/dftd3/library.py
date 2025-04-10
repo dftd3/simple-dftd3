@@ -172,7 +172,9 @@ def new_zero_damping(
 
 def load_zero_damping(method: str, atm: bool) -> ParamHandle:
     """Load zero damping parameters from internal storage"""
-    return ParamHandle.with_gc(error_check(lib.dftd3_load_zero_damping)(_char(method), atm))
+    return ParamHandle.with_gc(
+        error_check(lib.dftd3_load_zero_damping)(_char(method), atm)
+    )
 
 
 def new_rational_damping(
@@ -186,7 +188,9 @@ def new_rational_damping(
 
 def load_rational_damping(method: str, atm: bool) -> ParamHandle:
     """Load rational damping parameters from internal storage"""
-    return ParamHandle.with_gc(error_check(lib.dftd3_load_rational_damping)(_char(method), atm))
+    return ParamHandle.with_gc(
+        error_check(lib.dftd3_load_rational_damping)(_char(method), atm)
+    )
 
 
 def new_mzero_damping(
@@ -200,7 +204,9 @@ def new_mzero_damping(
 
 def load_mzero_damping(method: str, atm: bool) -> ParamHandle:
     """Load modified zero damping parameters from internal storage"""
-    return ParamHandle.with_gc(error_check(lib.dftd3_load_mzero_damping)(_char(method), atm))
+    return ParamHandle.with_gc(
+        error_check(lib.dftd3_load_mzero_damping)(_char(method), atm)
+    )
 
 
 def new_mrational_damping(
@@ -280,10 +286,12 @@ def get_pairwise_dispersion(
     )
 
 
-def load_gcp_param(mol, method: Optional[str], basis: Optional[str]) -> GCPHandle:
+def load_gcp_param(
+    mol: StructureHandle, method: Optional[str], basis: Optional[str]
+) -> GCPHandle:
     """Load GCP parameters from internal storage"""
     return GCPHandle.with_gc(
-        error_check(lib.dftd3_load_gcp_param)(mol, _char(method), _char(basis))
+        error_check(lib.dftd3_load_gcp_param)(mol.handle, _char(method), _char(basis))
     )
 
 
@@ -299,7 +307,7 @@ def get_counterpoise(
     sigma: Optional[np.ndarray],
 ) -> None:
     """Get the counterpoise energy"""
-    return error_check(lib.dftd3_get_counterpoise_energy)(
+    return error_check(lib.dftd3_get_counterpoise)(
         mol.handle,
         gcp.handle,
         _cast("double*", energy),
