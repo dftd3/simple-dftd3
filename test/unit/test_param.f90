@@ -211,7 +211,7 @@ subroutine test_d3zero_mb09(error)
       & "pw1pw", "pbehpbe", "xlyp", "mpwpw", "hcth407", "revtpss", "tauhcth", &
       & "b3p", "b1p", "b1lyp", "mpw1pw", "mpw1kcis", "pbeh1pbe", "pbe1kcis", &
       & "x3lyp", "o3lyp", "b971", "b972", "b98", "hiss", "hse03", "revtpssh", &
-      & "revtpss0", "tpss1kcis", "tauhcthhyb", "mpw2plyp", "b973c"]
+      & "revtpss0", "tpss1kcis", "tauhcthhyb", "mpw2plyp", "b973c", "cf22d"]
    real(wp), parameter :: ref(*) = [&
       & 1.4617000329030605E-1_wp,-1.4741267229767294E-2_wp,-1.3716369898239468E-2_wp, &
       &-2.0673049860038258E-2_wp,-1.8741296181572904E-2_wp,-6.7002000141365174E-3_wp, &
@@ -241,7 +241,7 @@ subroutine test_d3zero_mb09(error)
       &-1.0148393050164134E-2_wp,-1.1462890566584262E-2_wp,-5.8934014233026572E-3_wp, &
       &-7.1067312076729611E-3_wp,-8.9020818106658166E-3_wp,-8.0382680164769616E-3_wp, &
       &-1.2773548954558107E-2_wp,-1.0444034180767760E-2_wp,-4.8721698293720563E-3_wp, &
-      &-1.4639383757783959E-2_wp]
+      &-1.4639383757783959E-2_wp,-5.8016654989627144E-4_wp]
 
    call get_structure(mol, "MB16-43", "09")
    do ii = 1, size(func)
@@ -336,7 +336,7 @@ subroutine test_d3zeroatm_mb25(error)
       & "pw1pw", "pbehpbe", "xlyp", "mpwpw", "hcth407", "revtpss", "tauhcth", &
       & "b3p", "b1p", "b1lyp", "mpw1pw", "mpw1kcis", "pbeh1pbe", "pbe1kcis", &
       & "x3lyp", "o3lyp", "b971", "b972", "b98", "hiss", "hse03", "revtpssh", &
-      & "revtpss0", "tpss1kcis", "tauhcthhyb", "mpw2plyp", "b973c"]
+      & "revtpss0", "tpss1kcis", "tauhcthhyb", "mpw2plyp", "b973c", "cf22d"]
    real(wp), parameter :: ref(*) = [&
       & 1.0613154373646663E-1_wp,-1.8876259384422459E-2_wp,-1.7576377305669005E-2_wp, &
       &-2.3748702681871504E-2_wp,-2.2303369775790879E-2_wp,-8.6007220574423112E-3_wp, &
@@ -366,7 +366,7 @@ subroutine test_d3zeroatm_mb25(error)
       &-1.2723713762009774E-2_wp,-1.4469421175303927E-2_wp,-7.4336230287781746E-3_wp, &
       &-8.9126407786282984E-3_wp,-1.1258613133535007E-2_wp,-1.0204599751079367E-2_wp, &
       &-1.6065929734220732E-2_wp,-1.3083826111391977E-2_wp,-6.0511412375980119E-3_wp, &
-      &-1.8691177475853686E-2_wp]
+      &-1.8691177475853686E-2_wp,-5.7926845557257388E-4_wp]
 
    call get_structure(mol, "MB16-43", "25")
    do ii = 1, size(func)
