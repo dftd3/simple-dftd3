@@ -18,12 +18,6 @@ jobs:
         version: [10]
 
         include:
-        - os: ubuntu-20.04
-          build: cmake
-          build-type: debug
-          compiler: gnu
-          version: 8
-
         - os: macos-13
           build: cmake
           build-type: debug
@@ -48,7 +42,19 @@ jobs:
           compiler: gnu
           version: 11
 
-        - os: ubuntu-20.04
+        - os: ubuntu-latest
+          build: meson
+          build-type: debug
+          compiler: gnu
+          version: 12
+
+        - os: ubuntu-latest
+          build: meson
+          build-type: debug
+          compiler: gnu
+          version: 13
+
+        - os: ubuntu-latest
           build: meson
           build-type: debug
           compiler: intel
@@ -141,6 +147,7 @@ jobs:
         --libdir=lib
         --warnlevel=0
         -Db_coverage=${{ env.COVERAGE }}
+        -Dapi=${{ matrix.compiler == 'intel' && 'false' || 'true' }}
       env:
         COVERAGE: ${{ matrix.build-type == 'coverage' }}
 
