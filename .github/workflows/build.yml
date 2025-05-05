@@ -147,6 +147,7 @@ jobs:
         --libdir=lib
         --warnlevel=0
         -Db_coverage=${{ env.COVERAGE }}
+        -Dapi=${{ matrix.compiler == 'intel' && 'false' || 'true' }}
       env:
         COVERAGE: ${{ matrix.build-type == 'coverage' }}
 
