@@ -192,7 +192,7 @@ class DFTD3Dispersion(lib.StreamObject):
         Returns
         -------
         float, ndarray
-            The energy and gradient of the DFT-D4 dispersion correction.
+            The energy and gradient of the DFT-D3 dispersion correction.
 
         Examples
         --------
@@ -207,8 +207,8 @@ class DFTD3Dispersion(lib.StreamObject):
         ...          H     0.000000    0.000000   -5.444276
         ...          '''
         ... )
-        >>> d4 = disp.DFTD3Dispersion(mol, xc="PBE0")
-        >>> energy, gradient = d4.kernel()
+        >>> d3 = disp.DFTD3Dispersion(mol, xc="PBE0")
+        >>> energy, gradient = d3.kernel()
         >>> energy
         array(-0.00303589)
         >>> gradient
