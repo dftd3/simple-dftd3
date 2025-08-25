@@ -54,7 +54,7 @@ must be provided
  s9                       1.0         Scaling of the three-body dispersion energy
  a1                       None        Scaling of the critical radii
  a2                       None        Offset of the critical radii
- alp                      16.0        Exponent of the zero damping (ATM only)
+ alp                      14.0        Exponent of the zero damping (ATM only)
 ======================== =========== ============================================
 
 Either method or s8, a1 and a2 must be provided, s9 can be used to overwrite
