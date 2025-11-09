@@ -180,7 +180,7 @@ jobs:
          --print-errorlogs
          --no-rebuild
          --num-processes 1
-         --suite s-dftd3
+         #--suite s-dftd3
          -t 2
       env:
         OMP_NUM_THREADS: 1,2,1
@@ -193,7 +193,7 @@ jobs:
          --print-errorlogs
          --no-rebuild
          --num-processes 1
-         --suite s-dftd3
+         #--suite s-dftd3
          -t 2
          --benchmark
 
