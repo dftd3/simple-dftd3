@@ -193,7 +193,7 @@ jobs:
          --print-errorlogs
          --no-rebuild
          --num-processes 1
-         #--suite s-dftd3
+         --suite s-dftd3
          -t 2
          --benchmark
 
