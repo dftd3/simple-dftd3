@@ -267,7 +267,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - run: pip3 install coverage
+    #- run: pip3 install coverage
 
     - name: Install dependencies
       uses: mamba-org/setup-micromamba@v1
@@ -275,6 +275,8 @@ jobs:
         environment-file: assets/ci/python-env.yaml
         create-args: |
           python=${{ matrix.python_v }}
+          
+    - run: python -m pip install --upgrade pip && python -m pip install coverage
 
     - name: Install GCC (OSX)
       if: ${{ contains(matrix.os, 'macos') }}
@@ -309,7 +311,7 @@ jobs:
         cp assets/parameters.toml python/dftd3
 
     - name: Install Python extension module (pip)
-      run: pip3 install . -vv
+      run: python3 -m pip install . -vv
       working-directory: python
       env:
         PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD3_PREFIX }}/lib/pkgconfig
