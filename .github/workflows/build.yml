@@ -15,14 +15,14 @@ jobs:
         build: [meson, cmake, fpm]
         build-type: [debug]
         compiler: [gnu]
-        version: [10]
+        version: [12]
 
         include:
-        - os: macos-13
+        - os: macos-15-intel
           build: cmake
           build-type: debug
           compiler: gnu
-          version: 10
+          version: 14
 
         - os: ubuntu-latest
           build: meson
@@ -30,11 +30,11 @@ jobs:
           compiler: gnu
           version: 9
 
-        - os: macos-13
+        - os: macos-15-intel
           build: meson
           build-type: debug
           compiler: gnu
-          version: 10
+          version: 14
 
         - os: ubuntu-latest
           build: meson
@@ -68,7 +68,7 @@ jobs:
       FC: ${{ matrix.compiler == 'intel' && 'ifort' || 'gfortran' }}
       CC: ${{ matrix.compiler == 'intel' && 'icc' || 'gcc' }}
       GCC_V: ${{ matrix.version }}
-      PYTHON_V: 3.8
+      PYTHON_V: 3.9
 
     steps:
     - name: Checkout code
@@ -252,7 +252,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        gcc_v: [10]
+        gcc_v: [12]
         python_v: ['3.8', '3.9', '3.10', '3.11', '3.12']
 
     env:
@@ -267,7 +267,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - run: pip3 install coverage
+    #- run: pip3 install coverage
 
     - name: Install dependencies
       uses: mamba-org/setup-micromamba@v1
@@ -275,6 +275,8 @@ jobs:
         environment-file: assets/ci/python-env.yaml
         create-args: |
           python=${{ matrix.python_v }}
+          
+    - run: python -m pip install --upgrade pip && python -m pip install coverage
 
     - name: Install GCC (OSX)
       if: ${{ contains(matrix.os, 'macos') }}
@@ -309,7 +311,7 @@ jobs:
         cp assets/parameters.toml python/dftd3
 
     - name: Install Python extension module (pip)
-      run: pip3 install . -vv
+      run: python3 -m pip install . -vv
       working-directory: python
       env:
         PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD3_PREFIX }}/lib/pkgconfig

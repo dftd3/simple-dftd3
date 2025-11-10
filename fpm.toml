@@ -9,7 +9,7 @@ keywords = ["dispersion-correction", "quantum-chemistry"]
 
 [dependencies]
 mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
-mctc-lib.tag = "v0.4.1"
+mctc-lib.tag = "v0.5.1"
 
 [dev-dependencies]
 mstore.git = "https://github.com/grimme-lab/mstore"
@@ -21,6 +21,7 @@ auto-tests = false
 [[executable]]
 name = "s-dftd3"
 dependencies.toml-f.git = "https://github.com/toml-f/toml-f"
+dependencies.toml-f.tag = "v0.4.3"
 
 [[test]]
 name = "tester"
