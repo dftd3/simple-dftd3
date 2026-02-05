@@ -18,11 +18,11 @@ jobs:
         version: [10]
 
         include:
-        - os: macos-13
+        - os: macos-14
           build: cmake
           build-type: debug
           compiler: gnu
-          version: 10
+          version: 12
 
         - os: ubuntu-latest
           build: meson
@@ -30,11 +30,11 @@ jobs:
           compiler: gnu
           version: 9
 
-        - os: macos-13
+        - os: macos-14
           build: meson
           build-type: debug
           compiler: gnu
-          version: 10
+          version: 12
 
         - os: ubuntu-latest
           build: meson
@@ -78,9 +78,9 @@ jobs:
       if: ${{ contains(matrix.os, 'macos') && matrix.compiler == 'gnu' }}
       run: |
         brew install gcc@${{ env.GCC_V }}
-        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
-        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
-        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+        ln -s /opt/homebrew/bin/gfortran-${{ env.GCC_V }} /opt/homebrew/bin/gfortran
+        ln -s /opt/homebrew/bin/gcc-${{ env.GCC_V }} /opt/homebrew/bin/gcc
+        ln -s /opt/homebrew/bin/g++-${{ env.GCC_V }} /opt/homebrew/bin/g++
 
     - name: Install GCC (Linux)
       if: ${{ contains(matrix.os, 'ubuntu') && matrix.compiler == 'gnu' }}
@@ -279,9 +279,9 @@ jobs:
     - name: Install GCC (OSX)
       if: ${{ contains(matrix.os, 'macos') }}
       run: |
-        ln -s /usr/local/bin/gfortran-${{ env.GCC_V }} /usr/local/bin/gfortran
-        ln -s /usr/local/bin/gcc-${{ env.GCC_V }} /usr/local/bin/gcc
-        ln -s /usr/local/bin/g++-${{ env.GCC_V }} /usr/local/bin/g++
+        ln -s /opt/homebrew/bin/gfortran-${{ env.GCC_V }} /opt/homebrew/bin/gfortran
+        ln -s /opt/homebrew/bin/gcc-${{ env.GCC_V }} /opt/homebrew/bin/gcc
+        ln -s /opt/homebrew/bin/g++-${{ env.GCC_V }} /opt/homebrew/bin/g++
 
     - name: Install GCC (Linux)
       if: ${{ contains(matrix.os, 'ubuntu') }}
