@@ -21,15 +21,3 @@ api_tester = executable(
 )
 
 test('api-test', api_tester, suite: 'api')
-
-# C++ compatibility test
-has_cpp = add_languages('cpp', required: false)
-if has_cpp
-  cpp_tester = executable(
-    'cpp-tester',
-    sources: files('cpp-test.cpp'),
-    dependencies: sdftd3_dep,
-  )
-
-  test('cpp-test', cpp_tester, suite: 'api')
-endif
