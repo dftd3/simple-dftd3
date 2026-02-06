@@ -308,8 +308,8 @@ jobs:
       run: |
         cp assets/parameters.toml python/dftd3
 
-    - name: Install Python extension module (pip)
-      run: pip3 install . -vv
+    - name: Install Python extension module (meson-python)
+      run: pip3 install . -vv --no-build-isolation
       working-directory: python
       env:
         PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}:${{ env.DFTD3_PREFIX }}/lib/pkgconfig
