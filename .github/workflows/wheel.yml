@@ -68,7 +68,6 @@ jobs:
         os:
         - ubuntu-latest
         - windows-latest
-        - macos-13
         - macos-14
 
     defaults:
@@ -96,10 +95,10 @@ jobs:
           CIBW_ARCHS: auto64
           CIBW_SKIP: "{cp38-macosx_arm64,pp37-win_amd64,pp39-win_amd64,pp310-win_amd64}"
           CIBW_BUILD_VERBOSITY: 1
-          CIBW_ARCHS_MACOS: ${{ matrix.os == 'macos-14' && 'arm64' || 'x86_64' }}
+          CIBW_ARCHS_MACOS: arm64
           CIBW_ENVIRONMENT_MACOS: >
              CC=gcc-14 CXX=g++-14 FC=gfortran-14
-             MACOSX_DEPLOYMENT_TARGET=${{ matrix.os == 'macos-14' && '14.0' || '13.0' }}
+             MACOSX_DEPLOYMENT_TARGET=14.0
           CIBW_BEFORE_ALL_MACOS: brew install gcc@14
           CIBW_BEFORE_BUILD_WINDOWS: choco upgrade mingw && pip install delvewheel
           CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel show {wheel} && delvewheel repair -w {dest_dir} {wheel} --no-mangle-all"
