@@ -50,6 +50,7 @@ typedef struct _dftd3_param* dftd3_param;
  * Type generic macro for convenience
 **/
 
+#ifndef __cplusplus
 #define dftd3_delete(ptr) _Generic((ptr), \
                        dftd3_error: dftd3_delete_error, \
                    dftd3_structure: dftd3_delete_structure, \
@@ -57,6 +58,7 @@ typedef struct _dftd3_param* dftd3_param;
                        dftd3_param: dftd3_delete_param, \
                          dftd3_gcp: dftd3_delete_gcp \
                                   )(&ptr)
+#endif
 
 /*
  * Global API queries
