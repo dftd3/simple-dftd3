@@ -26,7 +26,7 @@ module dftd3_citation
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3, doi_joss, doi_cf22d
+      & doi_wb97x_d3, doi_hse06_d3, doi_joss, doi_cf22d, doi_skala
 
    !> Represents an author to allow creating author lists
    type :: author_type
@@ -84,7 +84,8 @@ module dftd3_citation
       & doi_wb97x_d3 = "10.1021/ct300715s", &
       & doi_hse06_d3 = "10.1021/jp501237c", &
       & doi_joss = "10.21105/joss.07169", &
-      & doi_cf22d = "10.1038/s43588-022-00371-5"
+      & doi_cf22d = "10.1038/s43588-022-00371-5", &
+      & doi_skala = "10.48550/arXiv.2506.14665"
 
 contains
 
