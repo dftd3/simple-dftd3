@@ -39,3 +39,4 @@
 # Outputs
 .EDISP
 .CPC
+subprojects/.wraplock

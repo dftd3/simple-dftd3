@@ -639,6 +639,27 @@ pure function get_citation(doi) result(citation)
          pages="48–58", &
          year="2023" &
       )
+
+   case(doi_skala)
+      citation = new_citation( &
+         doi=doi, &
+         title="Accurate and scalable exchange-correlation with deep learning", &
+         author=[ &
+         & author_name("Giulia Luise"), &
+         & author_name("Chin-Wei Huang"), &
+         & author_name("Thijs Vogels"), &
+         & author_name("Derk P. Kooi"), &
+         & author_name("Sebastian Ehlert"), &
+         & author_name("Stephanie Lanius"), &
+         & author_name("Klaas J. H. Giesbertz"), &
+         & author_name("Amir Karton"), &
+         & author_name("Deniz Gunceler"), &
+         & author_name("Megan Stanley")], &
+         journal="arXiv", &
+         volume="2506.14665", &
+         pages="2506.14665", &
+         year="2025" &
+      )
    end select
 end function get_citation
 
