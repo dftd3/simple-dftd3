@@ -615,6 +615,13 @@ d3.bj = {s6=0.67, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}
 [parameter.cf22d]
 d3.zero = {rs6=1.53, doi="10.1038/s43588-022-00371-5"}
 
+[parameter.skala]
+d3.bj = {a1=0.3981, s8=1.9889, a2=4.4211, doi="10.1002/jcc.21759"}
+d3.zero = {rs6=1.261, s8=1.703, doi="10.1063/1.3382344"}
+d3.bjm = {a1=0.278672, s8=1.466677, a2=4.606311, doi="10.1021/acs.jpclett.6b00780"}
+d3.zerom = {rs6=1.338153, s8=1.532981, bet=0.013988, doi="10.1021/acs.jpclett.6b00780"}
+d3.op = {s6=1.0, s8=0.78311, a1=0.300, a2=4.25, bet=4.0, doi="10.1021/acs.jctc.7b00176"}
+
 [citation."10.1063/1.3382344"]  # DFT-D3(0)
 title = "A consistent and accurate ab initio parametrization of density functional dispersion correction (DFT-D) for the 94 elements H-Pu"
 author = ["Stefan Grimme", "Jens Antony", "Stephan Ehrlich", "Helge Krieg"]
