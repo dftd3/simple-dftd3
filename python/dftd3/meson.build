@@ -21,6 +21,7 @@ python = pymod.find_installation(
   get_option('python_version'),
   modules: [
     'cffi',  # Needed for generating the FFI interface
+    'setuptools',  # Needed for running ffi-builder.py
   ],
 )
 python_dep = python.dependency(required: true)
