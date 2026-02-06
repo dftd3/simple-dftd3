@@ -22,7 +22,7 @@ module dftd3_param
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3, doi_cf22d
+      & doi_wb97x_d3, doi_hse06_d3, doi_cf22d, doi_skala
    implicit none
 
    public :: d3_param
@@ -339,10 +339,12 @@ subroutine get_rational_damping(param, method, error, s9, citation)
    case(p_rpw86pbe_df)
       param = d3_param(a1=0.4613_wp, s8=1.3845_wp, a2=4.5062_wp)
       doi = doi_dftd3_bj
-   case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df, &
-      & p_skala_df)
+   case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(a1=0.3981_wp, s8=1.9889_wp, a2=4.4211_wp)
       doi = doi_dftd3_bj
+   case(p_skala_df)
+      param = d3_param(a1=0.3981_wp, s8=1.9889_wp, a2=4.4211_wp)
+      doi = doi_skala
    case(p_tpss_df)
       param = d3_param(a1=0.4535_wp, s8=1.9435_wp, a2=4.4752_wp)
       doi = doi_dftd3_bj

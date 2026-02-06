@@ -616,7 +616,7 @@ d3.bj = {s6=0.67, a1=0.0, s8=0.0, a2=6.0, doi="10.1002/jcc.23391"}
 d3.zero = {rs6=1.53, doi="10.1038/s43588-022-00371-5"}
 
 [parameter.skala]
-d3.bj = {a1=0.3981, s8=1.9889, a2=4.4211, doi="10.1002/jcc.21759"}
+d3.bj = {a1=0.3981, s8=1.9889, a2=4.4211, doi="10.48550/arXiv.2506.14665"}
 
 [citation."10.1063/1.3382344"]  # DFT-D3(0)
 title = "A consistent and accurate ab initio parametrization of density functional dispersion correction (DFT-D) for the 94 elements H-Pu"
@@ -879,3 +879,9 @@ volume = "3"
 pages = "48–58"
 year = "2023"
 published = 2022-12-23
+
+[citation."10.48550/arXiv.2506.14665"]  # Skala
+title = "Accurate and scalable exchange-correlation with deep learning"
+author = ["Giulia Luise", "Chin-Wei Huang", "Thijs Vogels", "Derk P. Kooi", "Sebastian Ehlert", "Stephanie Lanius", "Klaas J. H. Giesbertz", "Amir Karton", "Deniz Gunceler", "Megan Stanley"]
+journal = "arXiv preprint"
+year = "2025"
