@@ -110,7 +110,7 @@ For convenience ``DFTD3`` allows to combine itself with another calculator by us
 
    >>> from ase.build import molecule
    >>> from ase.calculators.emt import EMT
-   >>> from dftd4.ase import DFTD3
+   >>> from dftd3.ase import DFTD3
    >>> atoms = molecule("C60")
    >>> atoms.calc = DFTD3(method="pbe", damping="d3bj").add_calculator(EMT())
    >>> atoms.get_potential_energy()

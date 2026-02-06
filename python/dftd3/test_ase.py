@@ -36,7 +36,7 @@ def get_calcs(calc) -> Iterator[ase.calculators.calculator.Calculator]:
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")
-def test_ase_scand4():
+def test_ase_scand3():
     thr = 1.0e-6
 
     forces = np.array(
@@ -67,7 +67,7 @@ def test_ase_scand4():
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")
-def test_ase_tpssd4():
+def test_ase_tpssd3():
     thr = 1.0e-6
 
     forces = np.array(
