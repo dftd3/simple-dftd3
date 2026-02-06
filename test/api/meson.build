@@ -30,6 +30,6 @@ if has_cpp
     sources: files('cpp-test.cpp'),
     dependencies: sdftd3_dep,
   )
-  
+
   test('cpp-test', cpp_tester, suite: 'api')
 endif
