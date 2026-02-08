@@ -654,7 +654,22 @@ pure function get_citation(doi) result(citation)
          & author_name("Klaas J. H. Giesbertz"), &
          & author_name("Amir Karton"), &
          & author_name("Deniz Gunceler"), &
-         & author_name("Megan Stanley")], &
+         & author_name("Megan Stanley"), &
+         & author_name("Wessel P. Bruinsma"), &
+         & author_name("Lin Huang"), &
+         & author_name("Xinran Wei"), &
+         & author_name("José Garrido Torres"), &
+         & author_name("Abylay Katbashev"), &
+         & author_name("Rodrigo Chavez Zavaleta"), &
+         & author_name("Bálint Máté"), &
+         & author_name("Sékou-Oumar Kaba"), &
+         & author_name("Roberto Sordillo"), &
+         & author_name("Yingrong Chen"), &
+         & author_name("David B. Williams-Young"), &
+         & author_name("Christopher M. Bishop"), &
+         & author_name("Jan Hermann"), &
+         & author_name("Rianne van den Berg"), &
+         & author_name("Paola Gori-Giorgi")], &
          journal="arXiv", &
          volume="2506.14665", &
          pages="2506.14665", &

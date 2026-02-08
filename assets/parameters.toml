@@ -882,7 +882,7 @@ published = 2022-12-23
 
 [citation."10.48550/arXiv.2506.14665"]  # Skala
 title = "Accurate and scalable exchange-correlation with deep learning"
-author = ["Giulia Luise", "Chin-Wei Huang", "Thijs Vogels", "Derk P. Kooi", "Sebastian Ehlert", "Stephanie Lanius", "Klaas J. H. Giesbertz", "Amir Karton", "Deniz Gunceler", "Megan Stanley"]
+author = ["Giulia Luise", "Chin-Wei Huang", "Thijs Vogels", "Derk P. Kooi", "Sebastian Ehlert", "Stephanie Lanius", "Klaas J. H. Giesbertz", "Amir Karton", "Deniz Gunceler", "Megan Stanley", "Wessel P. Bruinsma", "Lin Huang", "Xinran Wei", "José Garrido Torres", "Abylay Katbashev", "Rodrigo Chavez Zavaleta", "Bálint Máté", "Sékou-Oumar Kaba", "Roberto Sordillo", "Yingrong Chen", "David B. Williams-Young", "Christopher M. Bishop", "Jan Hermann", "Rianne van den Berg", "Paola Gori-Giorgi"]
 journal = "arXiv"
 volume = "2506.14665"
 pages = "2506.14665"
