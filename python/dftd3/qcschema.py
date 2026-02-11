@@ -34,7 +34,7 @@ Supported keywords are
 ======================== =========== ============================================
 
 Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``/``"d3mbj"``,
-``"d3mzero"``/``"d3zerom"``, and ``"d3op"``.
+``"d3mzero"``/``"d3zerom"``, ``"d3op"``, and ``"d3cso"``.
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided for rational damping, while s8 and rs6 are required in case

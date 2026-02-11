@@ -93,6 +93,7 @@ module dftd3_app_help
       "    d3.bjm = {s6=1.0, s9=0.0, alp=14.0, damping=""rational""}"//nl//&
       "    d3.zerom = {s6=1.0, s9=0.0, rs8=1.0, alp=14.0, damping=""mzero""}"//nl//&
       "    d3.op = {s9=0.0, alp=14.0, damping=""optimizedpower""}"//nl//&
+      "    d3.cso = {s6=1.0, s9=0.0, a2=2.5, rs6=0.0, rs8=6.25, alp=14.0, damping=""cso""}"//nl//&
       ""//nl//&
       "    [parameter.bp]"//nl//&
       "    d3.bj = {a1=0.3946, s8=3.2822, a2=4.8516}"//nl//&
