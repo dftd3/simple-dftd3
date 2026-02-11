@@ -40,3 +40,4 @@
 .EDISP
 .CPC
 subprojects/.wraplock
+_codeql_detected_source_root

@@ -25,7 +25,7 @@ from dftd3.interface import (
     GeometricCounterpoise,
 )
 import pytest
-from pytest import approx, raises, mark
+from pytest import approx, raises
 import numpy as np
 
 
