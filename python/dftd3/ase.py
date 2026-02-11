@@ -39,8 +39,8 @@ Supported keywords are
 ======================== ============ ============================================
  method                   None         Method to calculate dispersion for
  damping                  None         Damping function to use
- params_tweaks            None         Optional dict with the damping parameters
- realspace_cutoff         None         Optional dict to override cutoff values
+ params_tweaks            {}           Optional dict with the damping parameters
+ realspace_cutoff         {}           Optional dict to override cutoff values
  cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
 
@@ -76,7 +76,7 @@ interactions are considered
 ================== =========== ==========================================
 
 Values provided in the dict are expected to be in Angstrom. When providing values
-in Bohr divide the inputs by the `ase.units.Bohr` constant.
+in Bohr multiply the inputs by the `ase.units.Bohr` constant.
 
 Example
 -------
@@ -254,17 +254,20 @@ class DFTD3(Calculator):
         except RuntimeError as e:
             raise InputError("Cannot construct dispersion model for dftd3") from e
 
+        return disp
+
+    def _apply_realspace_cutoff(self, disp: DispersionModel) -> None:
+        """Apply realspace cutoff parameters to dispersion model"""
+
         try:
             if self.parameters.realspace_cutoff:
                 disp2 = self.parameters.realspace_cutoff.get("disp2", 60.0 * Bohr) / Bohr
-                disp3 = self.parameters.realspace_cutoff.get("disp3", 40.0 * Bohr ) / Bohr
-                cn = self.parameters.realspace_cutoff.get("cn", 40.0 * Bohr ) / Bohr
+                disp3 = self.parameters.realspace_cutoff.get("disp3", 40.0 * Bohr) / Bohr
+                cn = self.parameters.realspace_cutoff.get("cn", 40.0 * Bohr) / Bohr
 
                 disp.set_realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn)
         except RuntimeError as e:
             raise InputError("Cannot update realspace cutoff for dftd3") from e
-
-        return disp
 
     def _create_damping_param(self) -> DampingParam:
         """Create a new API damping parameter object"""
@@ -294,6 +297,9 @@ class DFTD3(Calculator):
 
         if self._disp is None:
             self._disp = self._create_api_calculator()
+
+        # Apply realspace cutoff before evaluation (works with cached calculator)
+        self._apply_realspace_cutoff(self._disp)
 
         _dpar = self._create_damping_param()
 
