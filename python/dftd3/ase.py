@@ -39,7 +39,8 @@ Supported keywords are
 ======================== ============ ============================================
  method                   None         Method to calculate dispersion for
  damping                  None         Damping function to use
- params_tweaks            None         Optional dict with the damping parameters
+ params_tweaks            {}           Optional dict with the damping parameters
+ realspace_cutoff         {}           Optional dict to override cutoff values
  cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
 
@@ -62,6 +63,20 @@ the ATM scaling if the method is provided in the model.
 Disabling the three-body dispersion (s9=0.0) changes the internal selection rules
 for damping parameters of a given method and prefers special two-body only
 damping parameters if available!
+
+The realspace cutoff parameters allow adjusting the distance values for which
+interactions are considered
+
+================== =========== ==========================================
+ Realspace cutoff   Default     Description
+================== =========== ==========================================
+ disp2              60 * Bohr   Pairwise dispersion interactions
+ disp3              40 * Bohr   Triple dispersion interactions
+ cn                 40 * Bohr   Coordination number counting
+================== =========== ==========================================
+
+Values provided in the dict are expected to be in Angstrom. When providing values
+in Bohr multiply the inputs by the `ase.units.Bohr` constant.
 
 Example
 -------
@@ -146,6 +161,7 @@ class DFTD3(Calculator):
         "method": None,
         "damping": None,
         "params_tweaks": {},
+        "realspace_cutoff": {},
         "cache_api": True,
     }
 
@@ -237,10 +253,23 @@ class DFTD3(Calculator):
                 _periodic,
             )
 
-        except RuntimeError:
-            raise InputError("Cannot construct dispersion model for dftd3")
+        except RuntimeError as e:
+            raise InputError("Cannot construct dispersion model for dftd3") from e
 
         return disp
+
+    def _apply_realspace_cutoff(self, disp: DispersionModel) -> None:
+        """Apply realspace cutoff parameters to dispersion model"""
+
+        try:
+            if self.parameters.realspace_cutoff:
+                disp2 = self.parameters.realspace_cutoff.get("disp2", 60.0 * Bohr) / Bohr
+                disp3 = self.parameters.realspace_cutoff.get("disp3", 40.0 * Bohr) / Bohr
+                cn = self.parameters.realspace_cutoff.get("cn", 40.0 * Bohr) / Bohr
+
+                disp.set_realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn)
+        except RuntimeError as e:
+            raise InputError("Cannot update realspace cutoff for dftd3") from e
 
     def _create_damping_param(self) -> DampingParam:
         """Create a new API damping parameter object"""
@@ -249,8 +278,8 @@ class DFTD3(Calculator):
             params_tweaks = self.parameters.params_tweaks if self.parameters.params_tweaks else {"method": self.parameters.get("method")} 
             dpar = _damping_param[self.parameters.get("damping")](**params_tweaks)
 
-        except RuntimeError:
-            raise InputError("Cannot construct damping parameter for dftd3")
+        except RuntimeError as e:
+            raise InputError("Cannot construct damping parameter for dftd3") from e
 
         return dpar
 
@@ -271,12 +300,15 @@ class DFTD3(Calculator):
         if self._disp is None:
             self._disp = self._create_api_calculator()
 
+        # Apply realspace cutoff before evaluation (works with cached calculator)
+        self._apply_realspace_cutoff(self._disp)
+
         _dpar = self._create_damping_param()
 
         try:
             _res = self._disp.get_dispersion(param=_dpar, grad=True)
-        except RuntimeError:
-            raise CalculationFailed("dftd3 could not evaluate input")
+        except RuntimeError as e:
+            raise CalculationFailed("dftd3 could not evaluate input") from e
 
         # These properties are garanteed to exist for all implemented calculators
         self.results["energy"] = _res.get("energy") * Hartree
