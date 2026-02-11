@@ -900,12 +900,12 @@ subroutine test_b3lypd3cso_mb01(error)
    type(structure_type) :: mol
    type(cso_damping_param) :: param
    type(d3_param) :: inp = d3_param(&
-      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.86_wp, a2 = 2.5_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
 
    call get_structure(mol, "MB16-43", "01")
    call new_cso_damping(param, inp)
-   call test_dftd3_gen(error, mol, param, -3.7938076863396855E-002_wp)
+   call test_dftd3_gen(error, mol, param, -3.8002950817452329E-002_wp)
    if (allocated(error)) return
    call test_numgrad(error, mol, param)
 
@@ -920,12 +920,12 @@ subroutine test_pbed3cso_mb02(error)
    type(structure_type) :: mol
    type(cso_damping_param) :: param
    type(d3_param) :: inp = d3_param(&
-      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.24_wp, a2 = 2.5_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
 
    call get_structure(mol, "MB16-43", "02")
    call new_cso_damping(param, inp)
-   call test_dftd3_gen(error, mol, param, -3.8229908827789316E-002_wp)
+   call test_dftd3_gen(error, mol, param, -3.8319397315123641E-002_wp)
    if (allocated(error)) return
    call test_numsigma(error, mol, param)
 

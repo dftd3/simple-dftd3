@@ -76,7 +76,7 @@ class DFTD3Dispersion(lib.StreamObject):
     Custom parameters can be provided with the `param` dictionary.
     The `param` dict contains the damping parameters, at least s8, a1 and a2
     must be provided for rational damping, while s8 and rs6 are required in case
-    of zero damping.
+    of zero damping. For CSO damping, a1 must be provided.
 
     Parameters for (modified) rational damping are:
 
@@ -117,6 +117,20 @@ class DFTD3Dispersion(lib.StreamObject):
     a2                       None        Offset of the critical radii
     alp                      14.0        Exponent of the zero damping (ATM only)
     bet                      None        Power for the zero-damping component
+    ======================== =========== ============================================
+
+    Parameters for CSO (C6-scaled only) damping are:
+
+    ======================== =========== ============================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ============================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    a1                       None        Sigmoid amplitude parameter
+    a2                       2.5         Sigmoid reference distance scale
+    a3                       0.0         Denominator critical radii scale
+    a4                       6.25        Denominator constant offset
+    alp                      14.0        Exponent of the zero damping (ATM only)
     ======================== =========== ============================================
 
     The version of the damping can be changed after constructing the dispersion correction.
