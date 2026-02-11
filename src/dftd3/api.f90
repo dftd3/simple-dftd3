@@ -24,6 +24,7 @@ module dftd3_api
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io_structure, only : structure_type, new
    use dftd3_cutoff, only : realspace_cutoff
+   use dftd3_damping_cso, only : cso_damping_param, new_cso_damping
    use dftd3_damping_mzero, only : mzero_damping_param, new_mzero_damping
    use dftd3_damping_optimizedpower, only : optimizedpower_damping_param, &
       & new_optimizedpower_damping
@@ -34,7 +35,8 @@ module dftd3_api
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_model, only : d3_model, new_d3_model
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
-      & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping
+      & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
+      & get_cso_damping
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_version, only : get_dftd3_version
    implicit none
@@ -57,6 +59,7 @@ module dftd3_api
    public :: new_mzero_damping_api, load_mzero_damping_api
    public :: new_mrational_damping_api, load_mrational_damping_api
    public :: new_optimizedpower_damping_api, load_optimizedpower_damping_api
+   public :: new_cso_damping_api, load_cso_damping_api
    public :: delete_param_api
 
    public :: vp_gcp
@@ -684,6 +687,75 @@ function load_optimizedpower_damping_api(verror, charptr, atm) &
    vparam = c_loc(param)
 
 end function load_optimizedpower_damping_api
+
+
+!> Create new CSO damping parameters
+function new_cso_damping_api(verror, s6, s9, a1, a2, a3, a4, alp) &
+      & result(vparam) &
+      & bind(C, name=namespace//"new_cso_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   real(c_double), value, intent(in) :: s6
+   real(c_double), value, intent(in) :: s9
+   real(c_double), value, intent(in) :: a1
+   real(c_double), value, intent(in) :: a2
+   real(c_double), value, intent(in) :: a3
+   real(c_double), value, intent(in) :: a4
+   real(c_double), value, intent(in) :: alp
+   type(c_ptr) :: vparam
+   type(cso_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   allocate(tmp)
+   call new_cso_damping(tmp, d3_param(s6=s6, s9=s9, a1=a1, a2=a2, &
+      & rs6=a3, rs8=a4, alp=alp))
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function new_cso_damping_api
+
+
+!> Load CSO damping parameters from internal storage
+function load_cso_damping_api(verror, charptr, atm) &
+      & result(vparam) &
+      & bind(C, name=namespace//"load_cso_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   character(kind=c_char), intent(in) :: charptr(*)
+   logical(c_bool), value, intent(in) :: atm
+   character(len=:, kind=c_char), allocatable :: method
+   type(c_ptr) :: vparam
+   type(cso_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+   type(d3_param) :: inp
+   real(wp), allocatable :: s9
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   call c_f_character(charptr, method)
+
+   if (atm) s9 = 1.0_wp
+   call get_cso_damping(inp, method, error%ptr, s9)
+   if (allocated(error%ptr)) return
+
+   allocate(tmp)
+   call new_cso_damping(tmp, inp)
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function load_cso_damping_api
 
 
 !> Delete damping parameters

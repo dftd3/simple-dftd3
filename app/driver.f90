@@ -23,7 +23,9 @@ module dftd3_app_driver
       & get_rational_damping, rational_damping_param, new_rational_damping, &
       & get_mzero_damping, mzero_damping_param, new_mzero_damping, get_mrational_damping, &
       & get_optimizedpower_damping, optimizedpower_damping_param, &
-      & new_optimizedpower_damping, new_d3_model, get_pairwise_dispersion, &
+      & new_optimizedpower_damping, &
+      & get_cso_damping, cso_damping_param, new_cso_damping, &
+      & new_d3_model, get_pairwise_dispersion, &
       & realspace_cutoff, get_lattice_points, get_coordination_number
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_output, only : ascii_damping_param, ascii_atomic_radii, &
@@ -32,7 +34,8 @@ module dftd3_app_driver
       & turbomole_gradient, turbomole_gradlatt, ascii_gcp_param
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_citation, only : format_bibtex, is_citation_present, citation_type, &
-      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, doi_joss, same_citation
+      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
+      & doi_dftd3_cso, doi_joss, same_citation
    use dftd3_app_help, only : header
    use dftd3_app_cli, only : app_config, run_config, param_config, gcp_config, get_arguments
    use dftd3_app_toml, only : param_database
@@ -179,6 +182,29 @@ subroutine run_driver(config, error)
             allocate(oparam)
             call new_optimizedpower_damping(oparam, inp)
             call move_alloc(oparam, param)
+         end block
+      end if
+   end if
+   if (config%cso) then
+      citation = get_citation(doi_dftd3_cso)
+      if (.not.config%has_param) then
+         if (allocated(config%db)) then
+            call from_db(param, config%db, config%method, "cso", error)
+         else
+            call get_cso_damping(inp, config%method, error, s9, param_citation)
+         end if
+         if (allocated(error)) return
+      else
+         inp%a2 = 2.5_wp
+         inp%rs6 = 0.0_wp
+         inp%rs8 = 6.25_wp
+      end if
+      if (.not.allocated(param)) then
+         block
+            type(cso_damping_param), allocatable :: cparam
+            allocate(cparam)
+            call new_cso_damping(cparam, inp)
+            call move_alloc(cparam, param)
          end block
       end if
    end if

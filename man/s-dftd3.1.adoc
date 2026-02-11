@@ -53,6 +53,13 @@ Use modified zero damping function
 Specify parameters for optimized power damping,
 expected order is s6, s8, a1, a2, beta (requires five arguments)
 
+*--cso* _method_::
+Use CSO (C6-scaled only) damping function
+
+*--cso-param* _list_::
+Specify parameters for CSO damping,
+expected order is s6, a1 (requires two arguments)
+
 *--atm*::
 Use ATM three-body dispersion
 

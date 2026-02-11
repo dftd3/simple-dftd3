@@ -21,7 +21,7 @@ module dftd3_citation
 
    public :: citation_type, author_name, new_citation, is_citation_present
    public :: format_bibtex, get_citation, same_citation
-   public :: doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
+   public :: doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, doi_dftd3_cso, &
       & doi_gmtkn30_0, doi_gmtkn30_bj, doi_gmtkn55, doi_dsd, doi_dsdpbep86, &
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
@@ -84,6 +84,7 @@ module dftd3_citation
       & doi_wb97x_d3 = "10.1021/ct300715s", &
       & doi_hse06_d3 = "10.1021/jp501237c", &
       & doi_joss = "10.21105/joss.07169", &
+      & doi_dftd3_cso = "10.1021/acs.jctc.5b00400", &
       & doi_cf22d = "10.1038/s43588-022-00371-5", &
       & doi_skala = "10.48550/arXiv.2506.14665"
 
@@ -658,11 +659,11 @@ pure function get_citation(doi) result(citation)
          & author_name("Wessel P. Bruinsma"), &
          & author_name("Lin Huang"), &
          & author_name("Xinran Wei"), &
-         & author_name("José Garrido Torres"), &
+         & author_name("Jos{\'e} Garrido Torres"), &
          & author_name("Abylay Katbashev"), &
          & author_name("Rodrigo Chavez Zavaleta"), &
-         & author_name("Bálint Máté"), &
-         & author_name("Sékou-Oumar Kaba"), &
+         & author_name("B{\'a}lint M{\'a}t{\'e}"), &
+         & author_name("S{\'e}kou-Oumar Kaba"), &
          & author_name("Roberto Sordillo"), &
          & author_name("Yingrong Chen"), &
          & author_name("David B. Williams-Young"), &
@@ -674,6 +675,21 @@ pure function get_citation(doi) result(citation)
          volume="2506.14665", &
          pages="2506.14665", &
          year="2025" &
+      )
+
+   case(doi_dftd3_cso)
+      citation = new_citation( &
+         doi=doi, &
+         title="Reformulation of the D3(Becke-Johnson) Dispersion Correction "// &
+         & "without Resorting to Higher than C6 Dispersion Coefficients", &
+         author=[ &
+         & author_name("Heiner Schroeder"), &
+         & author_name("Jens Creon"), &
+         & author_name("Tobias Schwabe")], &
+         journal="J. Chem. Theory Comput.", &
+         volume="11", &
+         pages="3163--3170", &
+         year="2015" &
       )
    end select
 end function get_citation

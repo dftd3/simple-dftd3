@@ -44,6 +44,9 @@ module dftd3_app_help
       "   --op <method>         Use optimized power damping function"//nl//&
       "   --op-param <list>     Specify parameters for optimized power,"//nl//&
       "                         expected order is s6, s8, a1, a2, bet (requires five arguments)"//nl//&
+      "   --cso <method>        Use CSO (C6-scaled only) damping function"//nl//&
+      "   --cso-param <list>    Specify parameters for CSO damping,"//nl//&
+      "                         expected order is s6, a1 (requires two arguments)"//nl//&
       "   --atm                 Use ATM three-body dispersion"//nl//&
       "   --atm-scale <s9>      Use scaled ATM three-body dispersion"//nl//&
       "   --gcp <basis>         Include geometric counter-poise correction for given basis set"//nl//&
