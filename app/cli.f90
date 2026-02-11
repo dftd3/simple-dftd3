@@ -471,7 +471,7 @@ subroutine get_run_arguments(config, list, start, error)
 
    if (count([config%zero, config%rational, config%mzero, config%mrational, &
       & config%optimizedpower, config%cso]) > 1) then
-      call fatal_error(error, "Can only select zero or rational damping function")
+      call fatal_error(error, "Can only select one damping scheme (zero, rational, mzero, mrational, optimizedpower, or cso)")
       return
    end if
 
