@@ -425,7 +425,7 @@ subroutine get_run_arguments(config, list, start, error)
          if (allocated(error)) exit
          iarg = iarg + 1
          call list%get(iarg, arg)
-          call get_argument_as_real(arg, config%inp%bet, error)
+         call get_argument_as_real(arg, config%inp%bet, error)
          if (allocated(error)) exit
       case("--cso")
          config%cso = .true.

@@ -683,7 +683,7 @@ pure function get_citation(doi) result(citation)
          title="Reformulation of the D3(Becke-Johnson) Dispersion Correction "// &
          & "without Resorting to Higher than C6 Dispersion Coefficients", &
          author=[ &
-         & author_name("Heiner Schroeder"), &
+         & author_name('Heiner Schr{\"o}der'), &
          & author_name("Jens Creon"), &
          & author_name("Tobias Schwabe")], &
          journal="J. Chem. Theory Comput.", &
