@@ -1,0 +1,367 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="A simple reimplementation of the DFT-D3 dispersion model">
+    <meta name="author" content="Sebastian Ehlert" >
+    <link rel="icon" href="./favicon.png">
+
+    <title> Simple DFT-D3 </title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="./css/fontawesome.min.css" rel="stylesheet">
+    <link href="./css/brands.min.css" rel="stylesheet">
+    <link href="./css/regular.min.css" rel="stylesheet">
+    <link href="./css/solid.min.css" rel="stylesheet">
+    <link href="./css/v4-font-face.min.css" rel="stylesheet">
+    <link href="./css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="./css/local.css" rel="stylesheet">
+    <link href="./css/pygments.css" rel="stylesheet">
+    <script src="./js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="./index.html">Simple DFT-D3 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="./lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="./lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="./lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="./lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="./lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="./program/dftd3_main.html">Program</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="./search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <!-- Main component for a primary marketing message or call to action -->
+    <div class="p-5 mb-4 bg-light border rounded-3" id="jumbotron">
+      <p>A simple reimplementation of the DFT-D3 dispersion model</p>
+        <p> Find us on&hellip;</p>
+      <p>
+        <a class="btn btn-lg btn-primary" href="https://github.com/dftd3/simple-dftd3" role="button">GitHub</a>
+        
+        
+        
+        <a class="btn btn-lg btn-primary" href="https://dftd3.readthedocs.io" role="button">The Web</a>
+        <a class="btn btn-lg btn-danger" style="float:right" href="https://github.com/dftd3/simple-dftd3/releases" role="button">Download the Source</a>
+      </p>
+    </div>
+
+      <div class="row" id='text'>
+        <div class=col-md-8>
+          <h1>Simple DFT-D3</h1>
+          <p>A simple drop-in replacement for <code>dftd3</code>.</p>
+<p>This program provides a small and easy to use implementation of the DFT-D3 dispersion correction
+(see <a href="https://dx.doi.org/10.1063/1.3382344"><em>JCP</em> <strong>132</strong>, 154104 (2010)</a>
+and <a href="https://dx.doi.org/10.1002/jcc.21759"><em>JCC</em> <strong>32</strong>, 1456 (2011)</a> for details).</p>
+<p>It is mostly based on the <a href="https://github.com/dftd4/dftd4"><code>dftd4</code></a> program and
+borrows one or two ideas from the implementation in <a href="https://github.com/ehermes/ased3"><code>ased3</code></a>.</p>
+<div class="toc">
+<ul>
+<li><a href="#usage">Usage</a><ul>
+<li><a href="#fortran-api">Fortran API</a></li>
+<li><a href="#c-api">C API</a></li>
+</ul>
+</li>
+<li><a href="#getting-started">Getting Started</a><ul>
+<li><a href="#meson">Meson</a></li>
+<li><a href="#fortran-package-manager-fpm">Fortran Package Manager (fpm)</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="usage">Usage</h2>
+<p>To use DFT-D3 in your application you can either use the Fortran API or the C API.</p>
+<h3 id="fortran-api">Fortran API</h3>
+<p>To perform a D3(BJ)-ATM calculation in a Fortran program, the <a href="module/dftd3.html">dftd3</a> module should be imported.
+Other data types to communicate with the library are obtained from the <a href="https://grimme-lab.github.io/mctc-lib">MCTC library</a> using the environment module (<a href="https://grimme-lab.github.io/mctc-lib/modules/mctc_env.html">mctc_env</a>) and the IO module (<a href="https://grimme-lab.github.io/mctc-lib/modules/mctc_io.html">mctc_io</a>).</p>
+<div class="codehilite"><pre><span></span><code><span class="k">subroutine </span><span class="n">calc_dftd3</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="n">gradient</span><span class="p">,</span><span class="w"> </span><span class="n">sigma</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">)</span>
+<span class="w">   </span><span class="k">use </span><span class="n">mctc_env</span>
+<span class="w">   </span><span class="k">use </span><span class="n">mctc_io</span>
+<span class="w">   </span><span class="k">use </span><span class="n">dftd3</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">structure_type</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">mol</span>
+<span class="w">   </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">method</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">energy</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">gradient</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">sigma</span><span class="p">(:,</span><span class="w"> </span><span class="p">:)</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">error_type</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">d3_model</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">disp</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">d3_param</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">inp</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">rational_damping_param</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">param</span>
+
+<span class="w">   </span><span class="k">call </span><span class="n">get_rational_damping</span><span class="p">(</span><span class="n">inp</span><span class="p">,</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">s9</span><span class="o">=</span><span class="mf">1.0_wp</span><span class="p">)</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">allocated</span><span class="p">(</span><span class="n">error</span><span class="p">))</span><span class="w"> </span><span class="k">return</span>
+<span class="k">   call </span><span class="n">new_rational_damping</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="w"> </span><span class="n">inp</span><span class="p">)</span>
+
+<span class="w">   </span><span class="k">call </span><span class="n">new_d3_model</span><span class="p">(</span><span class="n">disp</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">)</span>
+
+<span class="w">   </span><span class="k">call </span><span class="n">get_dispersion</span><span class="p">(</span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">,</span><span class="w"> </span><span class="n">param</span><span class="p">,</span><span class="w"> </span><span class="n">realspace_cutoff</span><span class="p">(),</span><span class="w"> </span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="p">&amp;</span>
+<span class="w">      </span><span class="p">&amp;</span><span class="w"> </span><span class="n">gradient</span><span class="p">,</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span>
+
+<span class="k">end subroutine </span><span class="n">calc_dftd3</span>
+</code></pre></div>
+
+<h3 id="c-api">C API</h3>
+<p>An example wrapper for a DFT-D3(BJ)-ATM calculation is given here.</p>
+<div class="codehilite"><pre><span></span><code><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdbool.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdio.h&gt;</span>
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;stdlib.h&gt;</span>
+
+<span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;dftd3.h&quot;</span>
+
+<span class="k">static</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">buffersize</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">512</span><span class="p">;</span>
+
+<span class="kt">int</span>
+<span class="nf">calc_dftd3</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">natoms</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="o">*</span><span class="w"> </span><span class="n">numbers</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">positions</span><span class="p">,</span>
+<span class="w">           </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">lattice</span><span class="p">,</span><span class="w"> </span><span class="kt">bool</span><span class="o">*</span><span class="w"> </span><span class="n">periodic</span><span class="p">,</span><span class="w"> </span><span class="kt">char</span><span class="o">*</span><span class="w"> </span><span class="n">method</span><span class="p">,</span>
+<span class="w">           </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">gradient</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="o">*</span><span class="w"> </span><span class="n">sigma</span><span class="p">)</span>
+<span class="p">{</span>
+<span class="w">   </span><span class="c1">// Local API objects from the s-dftd3 library</span>
+<span class="w">   </span><span class="n">dftd3_error</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_new_error</span><span class="p">();</span>
+<span class="w">   </span><span class="n">dftd3_structure</span><span class="w"> </span><span class="n">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">   </span><span class="n">dftd3_model</span><span class="w"> </span><span class="n">disp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">   </span><span class="n">dftd3_param</span><span class="w"> </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">NULL</span><span class="p">;</span>
+<span class="w">   </span><span class="kt">int</span><span class="w"> </span><span class="n">stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">EXIT_SUCCESS</span><span class="p">;</span>
+
+<span class="w">   </span><span class="c1">// Create a new geometry for the library to work with</span>
+<span class="w">   </span><span class="n">mol</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_new_structure</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">natoms</span><span class="p">,</span><span class="w"> </span><span class="n">numbers</span><span class="p">,</span><span class="w"> </span><span class="n">positions</span><span class="p">,</span><span class="w"> </span><span class="n">lattice</span><span class="p">,</span><span class="w"> </span><span class="n">periodic</span><span class="p">);</span>
+<span class="w">   </span><span class="n">stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_check_error</span><span class="p">(</span><span class="n">error</span><span class="p">);</span>
+
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">stat</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Initialize the D3 dispersion model for the given structure,</span>
+<span class="w">      </span><span class="c1">// this step depends on the atomic numbers, but not on the actual geometry</span>
+<span class="w">      </span><span class="n">disp</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_new_d3_model</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">);</span>
+<span class="w">      </span><span class="n">stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_check_error</span><span class="p">(</span><span class="n">error</span><span class="p">);</span>
+<span class="w">   </span><span class="p">}</span>
+
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">stat</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Load D3(BJ)-ATM parameters for the given method from internal storage,</span>
+<span class="w">      </span><span class="c1">// this step depends on the atomic numbers, but not on the actual geometry</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_load_rational_damping</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="nb">true</span><span class="p">);</span>
+<span class="w">      </span><span class="n">stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_check_error</span><span class="p">(</span><span class="n">error</span><span class="p">);</span>
+<span class="w">   </span><span class="p">}</span>
+
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">stat</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="c1">// Evaluate the dispersion energy, gradient and virial,</span>
+<span class="w">      </span><span class="c1">// the gradient and virial are optional and can be replaced by NULL</span>
+<span class="w">      </span><span class="n">dftd3_get_dispersion</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">mol</span><span class="p">,</span><span class="w"> </span><span class="n">disp</span><span class="p">,</span><span class="w"> </span><span class="n">param</span><span class="p">,</span><span class="w"> </span><span class="o">&amp;</span><span class="n">energy</span><span class="p">,</span><span class="w"> </span><span class="n">gradient</span><span class="p">,</span><span class="w"> </span><span class="n">sigma</span><span class="p">);</span>
+<span class="w">      </span><span class="n">stat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">dftd3_check_error</span><span class="p">(</span><span class="n">error</span><span class="p">);</span>
+<span class="w">   </span><span class="p">}</span>
+
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">stat</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="kt">char</span><span class="w"> </span><span class="n">buffer</span><span class="p">[</span><span class="n">buffersize</span><span class="p">];</span>
+<span class="w">      </span><span class="n">dftd3_get_error</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">,</span><span class="w"> </span><span class="n">buffersize</span><span class="p">);</span>
+<span class="w">      </span><span class="n">printf</span><span class="p">(</span><span class="s">&quot;[Error] %s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">buffer</span><span class="p">);</span>
+<span class="w">   </span><span class="p">}</span>
+
+<span class="w">   </span><span class="c1">// Always free the used memory</span>
+<span class="w">   </span><span class="n">dftd3_delete_error</span><span class="p">(</span><span class="o">&amp;</span><span class="n">error</span><span class="p">);</span>
+<span class="w">   </span><span class="n">dftd3_delete_structure</span><span class="p">(</span><span class="o">&amp;</span><span class="n">mol</span><span class="p">);</span>
+<span class="w">   </span><span class="n">dftd3_delete_model</span><span class="p">(</span><span class="o">&amp;</span><span class="n">disp</span><span class="p">);</span>
+<span class="w">   </span><span class="n">dftd3_delete_param</span><span class="p">(</span><span class="o">&amp;</span><span class="n">param</span><span class="p">);</span>
+
+<span class="w">   </span><span class="k">return</span><span class="w"> </span><span class="n">stat</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>Overall, any DFT-D3 calculation requires the creation of four API objects.</p>
+<p>The error handling is done with a <code>dftd3_error</code> handle, it can be checked using the <code>dftd3_error_check</code> function and returns zero values on success and non-zero values on failures.
+On failures the error handle can be queried for the error message with <code>dftd3_get_error</code>.
+The library itself will not attempt to write or terminate on any encounter of an error.</p>
+<p>To pass the geometry information a <code>dftd3_structure</code> object is used.
+The object has immutable number of atoms, atomic numbers and boundary conditions, but allows updating the coordinates and lattice vectors after creation.
+The structure object is required to initialize system specific data of other API objects.
+Atomic numbers are allowed in a range of 1 to 118, but the used dispersion model might support a smaller range.</p>
+<p>The actual D3 dispersion model is created as <code>dftd3_model</code> object using the <code>new_d3_model</code> constructor.
+It contains the interpolation scheme for the dispersion coefficients, which is common to all DFT-D3 dispersion corrections independently of the damping function.
+In principle this part can be replaced by a different scheme to evaluate the dispersion coefficients.
+This step might require an internal initialization on the first invocation.
+The internal initialization is done once and in an OpenMP thread-safe way in case the library is compiled OpenMP threading.
+Otherwise guard this API call with a <code>critical</code> pragma if you require thread-safe execution.</p>
+<p>Finally, to evaluate dispersion energies and gradients a damping function is required to connect the dispersion model to a method like a density functional.
+The damping parameters are stored as <code>dftd3_param</code> object and can either be loaded from the internal storage of the library or created by supplying the parameters directly.</p>
+<p>Make sure to delete the API objects after you are done with them.
+The deconstructor will return without any action in case a null pointer is passed.
+After deconstructing the API objects are overwritten with a null pointer.</p>
+<h2 id="getting-started">Getting Started</h2>
+<h3 id="meson">Meson</h3>
+<p>Create a new meson project and include <code>s-dftd3</code> either as git-submodule in your subprojects directory or create a wrap file to fetch it from upstream:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">[wrap-git]</span>
+<span class="na">directory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">s-dftd3</span>
+<span class="na">url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">https://github.com/dftd3/simple-dftd3</span>
+<span class="na">revision</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">head</span>
+</code></pre></div>
+
+<p>To load the project the necessary boilerplate code for subprojects is just</p>
+<!--pygments doesn't know about meson, python highlighting looks okayish-->
+
+<div class="codehilite"><pre><span></span><code><span class="n">sdftd3_prj</span> <span class="o">=</span> <span class="n">subproject</span><span class="p">(</span>
+  <span class="s1">&#39;s-dftd3&#39;</span><span class="p">,</span>
+  <span class="n">version</span><span class="p">:</span> <span class="s1">&#39;&gt;=0.1&#39;</span><span class="p">,</span>
+  <span class="n">default_options</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s1">&#39;default_library=static&#39;</span><span class="p">,</span>
+  <span class="p">],</span>
+<span class="p">)</span>
+<span class="n">sdftd3_dep</span> <span class="o">=</span> <span class="n">sdftd3_prj</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s1">&#39;sdftd3_dep&#39;</span><span class="p">)</span>
+</code></pre></div>
+
+<p>Now you can add <code>sdftd3_dep</code> to your dependencies and access the public API by the <code>dftd3</code> module.</p>
+<p>We recommend to set the default library type of <code>s-dftd3</code> to static when linking your applications or library against it.
+Note for library type both and shared <code>s-dftd3</code> will install itself along with your project.</p>
+<p>For more fine-tuned control you can access:</p>
+<ul>
+<li>the library target with <code>sdftd3_lib</code></li>
+<li>the private include dir of this target, containing the Fortran module files, with <code>sdftd3_inc</code></li>
+<li>the license files of <code>s-dftd3</code> with <code>sdftd3_lic</code></li>
+</ul>
+<p>If you are linking your application statically against <code>s-dftd3</code> and still want to distribute the license files of <code>s-dftd3</code> (thank you), just use</p>
+<div class="codehilite"><pre><span></span><code><span class="n">install_data</span><span class="p">(</span>
+  <span class="n">sdftd3_prj</span><span class="o">.</span><span class="n">get_variable</span><span class="p">(</span><span class="s1">&#39;sdftd3_lic&#39;</span><span class="p">),</span>
+  <span class="n">install_dir</span><span class="p">:</span> <span class="n">get_option</span><span class="p">(</span><span class="s1">&#39;datadir&#39;</span><span class="p">)</span><span class="o">/</span><span class="s1">&#39;licenses&#39;</span><span class="o">/</span><span class="n">meson</span><span class="o">.</span><span class="n">project_name</span><span class="p">()</span><span class="o">/</span><span class="s1">&#39;s-dftd3&#39;</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+
+<h3 id="fortran-package-manager-fpm">Fortran Package Manager (fpm)</h3>
+<p>This project supports <a href="https://github.com/fortran-lang/fpm">fpm</a> as build system as well.
+Just add it to the dependencies in your <code>fpm.toml</code> file:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">[dependencies]</span>
+<span class="n">s-dftd3</span><span class="p">.</span><span class="n">git</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;https://github.com/dftd3/simple-dftd3&quot;</span>
+</code></pre></div>
+        </div>
+          <div class="col-md-4">
+            <div class="card card-body bg-light">
+              <h2 class="card-title">Developer Info</h2>
+              <h4 class="card-text">Sebastian Ehlert</h4>
+              <p class="card-text"><p>Quantum chemistry researcher developing semi-empirical quantum chemistry in Fortran and Python.</p></p>
+                <div class="text-center"><div class="btn-group" role="group">
+                    
+                    <a class="btn btn-lg btn-primary" href="https://github.com/awvwgk"><i class="fa fa-github fa-lg"></i></a>
+                    
+                    
+                    
+                    
+                    
+                    
+                </div></div>
+            </div>
+          </div>
+      </div>
+        <div class="row">
+          <hr>
+          <div class="col-xs-6 col-sm-3">
+            <div>
+              <h3>Source Files</h3>
+              <ul><li><a href='sourcefile/api.f90.html'>api.f90</a></li><li><a href='sourcefile/argument.f90.html'>argument.f90</a></li><li><a href='sourcefile/atm.f90.html'>atm.f90</a></li><li><a href='sourcefile/citation.f90.html'>citation.f90</a></li><li><a href='sourcefile/cli.f90.html'>cli.f90</a></li><li><a href='sourcefile/cso.f90.html'>cso.f90</a></li><li><a href='sourcefile/cutoff.f90.html'>cutoff.f90</a></li><li><a href='sourcefile/damping.f90.html'>damping.f90</a></li><li><a href='sourcefile/data.f90.html'>data.f90</a></li><li><a href='sourcefile/dftd3.f90.html'>dftd3.f90</a></li></ul>
+            </div>
+            <div>
+              <ul>
+                <li><a href="./lists/files.html"><em>All source files&hellip;</em></a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-xs-6 col-sm-3">
+            <div>
+              <h3>Modules</h3>
+              <ul><li><a href='module/dftd3.html'>dftd3</a></li><li><a href='module/dftd3_api.html'>dftd3_api</a></li><li><a href='module/dftd3_app_argument.html'>dftd3_app_argument</a></li><li><a href='module/dftd3_app_cli.html'>dftd3_app_cli</a></li><li><a href='module/dftd3_app_driver.html'>dftd3_app_driver</a></li><li><a href='module/dftd3_app_help.html'>dftd3_app_help</a></li><li><a href='module/dftd3_app_toml.html'>dftd3_app_toml</a></li><li><a href='module/dftd3_citation.html'>dftd3_citation</a></li><li><a href='module/dftd3_cutoff.html'>dftd3_cutoff</a></li><li><a href='module/dftd3_damping.html'>dftd3_damping</a></li></ul>
+            </div>
+            <div>
+              <ul>
+                <li><a href="./lists/modules.html"><em>All modules&hellip;</em></a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-xs-6 col-sm-3">
+            <div>
+              <h3>Procedures</h3>
+              <ul><li><a href='proc/add_coordination_number_derivs.html'>add_coordination_number_derivs</a></li><li><a href='proc/app_driver.html'>app_driver</a></li><li><a href='interface/argument_list.html'>argument_list</a></li><li><a href='proc/ascii_atomic_radii.html'>ascii_atomic_radii</a></li><li><a href='proc/ascii_atomic_references.html'>ascii_atomic_references</a></li><li><a href='proc/ascii_damping_param.html'>ascii_damping_param</a></li><li><a href='proc/ascii_energy_atom.html'>ascii_energy_atom</a></li><li><a href='proc/ascii_gcp_param.html'>ascii_gcp_param</a></li><li><a href='proc/ascii_pairwise.html'>ascii_pairwise</a></li><li><a href='proc/ascii_results.html'>ascii_results</a></li></ul>
+            </div>
+            <div>
+              <ul>
+                <li><a href="./lists/procedures.html"><em>All procedures&hellip;</em></a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-xs-6 col-sm-3">
+            <div>
+              <h3>Derived Types</h3>
+              <ul><li><a href='type/app_config.html'>app_config</a></li><li><a href='type/argument_list.html'>argument_list</a></li><li><a href='type/citation_type.html'>citation_type</a></li><li><a href='type/cso_damping_param.html'>cso_damping_param</a></li><li><a href='type/d3_model.html'>d3_model</a></li><li><a href='type/d3_param.html'>d3_param</a></li><li><a href='type/damping_param.html'>damping_param</a></li><li><a href='type/gcp_config.html'>gcp_config</a></li><li><a href='type/gcp_param.html'>gcp_param</a></li><li><a href='type/mzero_damping_param.html'>mzero_damping_param</a></li></ul>
+            </div>
+            <div>
+              <ul>
+                <li><a href="./lists/types.html"><em>All derived types&hellip;</em></a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              Simple DFT-D3
+ was developed by Sebastian Ehlert<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-11 16:50 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,801 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="A simple reimplementation of the DFT-D3 dispersion model">
+    <meta name="author" content="Sebastian Ehlert" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>get_rational_damping &ndash; Simple DFT-D3</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">Simple DFT-D3 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../program/dftd3_main.html">Program</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>get_rational_damping
+      <small>Subroutine</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title="10.2% of total for procedures.">477 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/param.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/param.f90~2.html'>param.f90</a></li>
+                <li class="breadcrumb-item"><a href='../module/dftd3_param.html'>dftd3_param</a></li>
+            <li class="breadcrumb-item active" aria-current="page">get_rational_damping</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+  
+  <div class="row">
+    <div class="col-md-3 hidden-xs hidden-sm visible-md visible-lg">
+      <div id="sidebar">
+      <h3>Contents</h3>
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+    <div class="card card-primary">
+      <div class="card-header text-left"><h3 class="card-title">Source Code</h3></div>
+      <div class="list-group">
+        <a class="list-group-item" href="../proc/get_rational_damping.html#src">get_rational_damping</a>
+      </div>
+    </div>
+
+
+  </div>
+
+    </div>
+    
+    <div class="col-md-9" id='text'>
+    <h2>public  subroutine get_rational_damping(param, method, error, s9, citation)  
+</h2>
+    
+
+
+
+    <h3>Arguments</h3>
+        <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param~22"></span>
+              type(<a href='../type/d3_param.html'>d3_param</a>),
+            </td>
+<td>intent(out)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>param</strong></td>
+            <td>
+                <p>Loaded parameter record</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-method~15"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>method</strong></td>
+            <td>
+                <p>Name of the method to look up</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-error~39"></span>
+              type(error_type),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>error</strong></td>
+            <td>
+                <p>Error handling</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-s9~17"></span>
+              real(kind=wp),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>s9</strong></td>
+            <td>
+                <p>Overwrite s9</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-citation~4"></span>
+              type(<a href='../type/citation_type.html'>citation_type</a>),
+            </td>
+<td>intent(out),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>citation</strong></td>
+            <td>
+                <p>Citation information</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <br>
+
+
+    
+    
+
+    
+    
+
+
+
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="hl codehilite"><pre><span></span><span class="k">subroutine </span><span class="n">get_rational_damping</span><span class="p">(</span><span class="n">param</span><span class="p">,</span><span class="w"> </span><span class="n">method</span><span class="p">,</span><span class="w"> </span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="n">s9</span><span class="p">,</span><span class="w"> </span><span class="n">citation</span><span class="p">)</span>
+
+<span class="w">   </span><span class="c">!&gt; Loaded parameter record</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">d3_param</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">param</span>
+
+<span class="w">   </span><span class="c">!&gt; Name of the method to look up</span>
+<span class="w">   </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=*</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">method</span>
+
+<span class="w">   </span><span class="c">!&gt; Overwrite s9</span>
+<span class="w">   </span><span class="kt">real</span><span class="p">(</span><span class="n">wp</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">in</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">s9</span>
+
+<span class="w">   </span><span class="c">!&gt; Citation information</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">citation_type</span><span class="p">),</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">),</span><span class="w"> </span><span class="k">optional</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">citation</span>
+
+<span class="w">   </span><span class="c">!&gt; Error handling</span>
+<span class="w">   </span><span class="k">type</span><span class="p">(</span><span class="n">error_type</span><span class="p">),</span><span class="w"> </span><span class="k">allocatable</span><span class="p">,</span><span class="w"> </span><span class="k">intent</span><span class="p">(</span><span class="n">out</span><span class="p">)</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">error</span>
+
+<span class="w">   </span><span class="kt">character</span><span class="p">(</span><span class="nb">len</span><span class="o">=</span><span class="p">:),</span><span class="w"> </span><span class="k">allocatable</span><span class="w"> </span><span class="kd">::</span><span class="w"> </span><span class="n">doi</span>
+
+<span class="w">   </span><span class="k">select case</span><span class="p">(</span><span class="n">get_method_id</span><span class="p">(</span><span class="n">method</span><span class="p">))</span>
+<span class="w">   </span><span class="k">case </span><span class="n">default</span>
+<span class="w">      </span><span class="k">call </span><span class="n">fatal_error</span><span class="p">(</span><span class="n">error</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;No entry for &#39;&quot;</span><span class="o">//</span><span class="n">method</span><span class="o">//</span><span class="s2">&quot;&#39; present&quot;</span><span class="p">)</span>
+<span class="w">      </span><span class="k">return</span>
+<span class="k">   case</span><span class="p">(</span><span class="n">p_bp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3946_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">3.2822_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.8516_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_blyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4298_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.6996_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.2359_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5238_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.3550_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.5016_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_rpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1820_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.8318_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.0094_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="c">! TODO: find reference (it is not GMTKN55)</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b97d_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5545_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.2609_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.2297_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b973c_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.37_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.50_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.10_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_b973c</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4289_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.7875_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.4407_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_rpw86pbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4613_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.3845_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5062_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b3lyp_df</span><span class="p">,</span><span class="w"> </span><span class="n">p_b3lyp_g_df</span><span class="p">,</span><span class="w"> </span><span class="n">p_dm21_df</span><span class="p">,</span><span class="w"> </span><span class="n">p_dm21m_df</span><span class="p">,</span><span class="w"> </span><span class="n">p_dm21mc_df</span><span class="p">,</span><span class="w"> </span><span class="n">p_dm21mu_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3981_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.9889_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.4211_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_skala_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3981_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.9889_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.4211_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_skala</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_tpss_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4535_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.9435_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.4752_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hf_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3385_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.9171_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">2.8830_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_tpss0_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3768_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.2576_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5865_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pbe0_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4145_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.2177_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.8593_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hse06_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.383_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.310_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.685_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_hse06_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revpbe38_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4309_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.4760_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.9446_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pw6b95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2076_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.7257_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.3750_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b2plyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3065_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.9147_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.0570_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s6</span><span class="o">=</span><span class="mf">0.64_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsdblyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.2130_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0519_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s6</span><span class="o">=</span><span class="mf">0.50_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsdblypfc_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0009_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.2112_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.9807_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s6</span><span class="o">=</span><span class="mf">0.50_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_bop_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4870_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">3.2950_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.5043_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mpwlyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4831_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.0077_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5323_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_olyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5299_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.6205_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">2.8065_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pbesol_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4466_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.9491_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.1742_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_bpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4567_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">4.0728_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.3908_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_opbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5512_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">3.3816_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">2.9444_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_ssb_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=-</span><span class="mf">0.0952_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=-</span><span class="mf">0.1744_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.2170_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revssb_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4720_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.4389_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.0986_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_otpss_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4634_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.7495_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.3153_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b3pw91_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4312_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.8524_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.4693_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_bhlyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2793_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.0354_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.9615_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revpbe0_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4679_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.7588_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.7619_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_tpssh_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4529_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.2382_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.6550_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mpw1b95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1955_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.0508_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.4177_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pwb6k_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1805_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.9383_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">7.7627_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b1b95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2092_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.4507_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5545_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_bmk_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1940_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.0860_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.9197_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_camb3lyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3708_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.0674_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.4743_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_lcwpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3919_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.8541_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.0897_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b2gpplyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.2597_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.3332_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s6</span><span class="o">=</span><span class="mf">0.560_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_ptpss_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.2804_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.5745_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s6</span><span class="o">=</span><span class="mf">0.750_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pwpb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.2904_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">7.3141_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s6</span><span class="o">=</span><span class="mf">0.820_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn30_bj</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pw91_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.6319_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.9598_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5718_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_pw91_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hf_mixed_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5607_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">3.9027_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5622_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gcp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hf_sv_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4249_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.1849_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.2783_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gcp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hf_minis_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1702_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.9841_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.8506_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gcp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b3lyp_631gd_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5014_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">4.0672_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.8409_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gcp</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hcth120_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3563_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.0821_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.3359_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="c">! TODO: find reference</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dftb3_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5719_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.5883_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.6017_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="c">! TODO: find reference</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pw1pw_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3807_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.3363_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.8844_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pwgga_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2211_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.6910_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.7278_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="c">! TODO: find reference</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hsesol_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4650_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.9215_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.2003_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="c">! TODO: find reference</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hf3c_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4171_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.8777_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">2.9149_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_hf3c</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hf3cv_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3063_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.5022_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.9856_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_hf3c</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pbeh3c_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4860_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5000_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_pbeh3c</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_scan_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5380_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.4200_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_scan_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_rscan_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.47023427_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.08859014_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.73408312_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_r2scan_d4</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_r2scan_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.49484001_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.78981345_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.73083694_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_r2scan_d4</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_r2scanh_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s8</span><span class="o">=</span><span class="mf">1.1236_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4709_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.9157_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_r2scan_hyb</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_r2scan0_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s8</span><span class="o">=</span><span class="mf">1.1846_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4534_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.8972_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_r2scan_hyb</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_r2scan50_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s8</span><span class="o">=</span><span class="mf">1.3294_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4311_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.9240_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_r2scan_hyb</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_wb97x_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.2641_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.4959_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="c">! TODO: find reference</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_wb97m_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.5660_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.3908_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.1280_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_b97m_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b97m_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=-</span><span class="mf">0.0780_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.1384_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5946_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_b97m_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pbehpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.1152_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.7184_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_xlyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0809_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.5669_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.3166_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mpwpw_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3168_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.7974_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.7732_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hcth407_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.6490_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.8162_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revtpss_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4326_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.4023_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.4723_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_tauhcth_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.2626_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.6162_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b3p_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4601_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">3.3211_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.9858_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b1p_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4724_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">3.5681_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.9858_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b1lyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1986_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.1167_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.3875_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mpwb1k_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1474_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.9499_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.6223_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mpw1pw_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3342_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.8744_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.9819_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mpw1kcis_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0576_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.0893_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5314_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pbeh1pbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.4877_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">7.0385_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_pbe1kcis_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.7688_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.2794_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_x3lyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2022_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.5744_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.4184_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_o3lyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0963_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.8171_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.9940_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b97_1_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.4814_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.2279_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b97_2_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.9448_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.9940_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_b98_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.7086_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0672_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hiss_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.6112_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">7.3539_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_hse03_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.1243_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.8889_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revtpssh_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2660_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.4076_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.3761_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revtpss0_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2218_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.6151_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.7985_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_tpss1kcis_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.0542_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0201_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_tauhcthhyb_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.9585_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mi">1</span><span class="mf">0.1389_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_m11_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.8112_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mi">1</span><span class="mf">0.1389_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_minnesota_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_sogga11x_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.1330_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.1426_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.7381_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_minnesota_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_n12sx_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.3283_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.4900_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.7898_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_minnesota_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mn12sx_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0983_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.1674_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">8.0259_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_minnesota_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mn12l_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0000_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">2.2674_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">9.1494_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_minnesota_d3</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mn15_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">2.0971_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.7862_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">7.5923_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_lc_whpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">a1</span><span class="o">=</span><span class="mf">0.2746_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">1.1908_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.3157_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_mpw2plyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.66_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.4105_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.6223_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.0136_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_gmtkn55</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dodscan66_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.3152_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.75_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdsdblyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.5451_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdsdpbep86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.4377_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdsdpbeb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.3686_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdsdpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.5746_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdodblyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.6145_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdodpbep86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.4770_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdodpbeb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.4107_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_revdodpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.6067_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_revdsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_drpa75_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.3754_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5048_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_drpa</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_scs_drpa75_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.2528_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5050_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_drpa</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_optscs_drpa75_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.2546_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5050_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_drpa</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_pbe_drpa75_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.3223_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5050_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_drpa</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_pbep86_drpa75_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.3012_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.5050_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_drpa</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsdpbep86_2011_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.418_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.65_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_svwn5_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.46_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_sp86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.30_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.8_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_slyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.30_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_spbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.40_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_bvwn5_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.61_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_blyp_2013_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.57_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.4_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_bpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">1.22_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_bp86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.76_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_bpw91_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">1.14_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_bb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">1.02_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.8_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_pbevwn5_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.54_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.1_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_pbelyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.43_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsdpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.78_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.1_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsdpbep86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.48_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_pbepw91_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.73_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsdpbeb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.61_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_pbehb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.58_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_pbehp86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.46_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_mpwlyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.48_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.3_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_mpwpw91_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.90_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_mpwp86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.59_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.8_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_mpwpbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.96_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.3_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_mpwb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.82_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_hsepbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.79_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.1_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_hsepw91_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.74_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_hsep86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.46_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_hselyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.40_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.2_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_tpss_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.72_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.5_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_tpssb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.91_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">7.9_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_olyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.93_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.8_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_xlyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.51_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.3_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_xb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.92_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.7_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_b98_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.07_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.7_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_bmk_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.17_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">3.9_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_thcth_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.39_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">4.8_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dsd_hcth407_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.53_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.0_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dod_svwn5_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.57_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.6_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dod_blyp_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.96_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.1_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dod_pbe_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.91_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.9_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dod_pbep86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.72_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.4_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dod_pbeb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.71_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dod_hsep86_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.69_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">5.4_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">case</span><span class="p">(</span><span class="n">p_dod_pbehb95_df</span><span class="p">)</span>
+<span class="w">      </span><span class="n">param</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">d3_param</span><span class="p">(</span><span class="n">s6</span><span class="o">=</span><span class="mf">0.67_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a1</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">s8</span><span class="o">=</span><span class="mf">0.0_wp</span><span class="p">,</span><span class="w"> </span><span class="n">a2</span><span class="o">=</span><span class="mf">6.0_wp</span><span class="p">)</span>
+<span class="w">      </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dsd</span>
+<span class="w">   </span><span class="k">end select</span>
+
+<span class="k">   if</span><span class="w"> </span><span class="p">(.</span><span class="nb">not</span><span class="p">.</span><span class="nb">allocated</span><span class="p">(</span><span class="n">doi</span><span class="p">))</span><span class="w"> </span><span class="n">doi</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">doi_dftd3_bj</span>
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">present</span><span class="p">(</span><span class="n">citation</span><span class="p">))</span><span class="w"> </span><span class="n">citation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">get_citation</span><span class="p">(</span><span class="n">doi</span><span class="p">)</span>
+
+<span class="w">   </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">present</span><span class="p">(</span><span class="n">s9</span><span class="p">))</span><span class="w"> </span><span class="k">then</span>
+<span class="k">      </span><span class="n">param</span><span class="p">%</span><span class="n">s9</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">s9</span>
+<span class="w">   </span><span class="k">end if</span>
+
+<span class="k">end subroutine </span><span class="n">get_rational_damping</span>
+</pre></div>
+
+    </section>
+    <br>
+    
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              Simple DFT-D3
+ was developed by Sebastian Ehlert<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-11 16:50 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

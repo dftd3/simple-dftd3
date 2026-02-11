@@ -1,0 +1,1381 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="A simple reimplementation of the DFT-D3 dispersion model">
+    <meta name="author" content="Sebastian Ehlert" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>dftd3_citation &ndash; Simple DFT-D3</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">Simple DFT-D3 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../program/dftd3_main.html">Program</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>dftd3_citation
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 1.7% of total for modules and submodules.">143 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/citation.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/citation.f90.html'>citation.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">dftd3_citation</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_b973c">doi_b973c</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_b97m_d3">doi_b97m_d3</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_cf22d">doi_cf22d</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_d3pbc">doi_d3pbc</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_dftd3_0">doi_dftd3_0</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_dftd3_bj">doi_dftd3_bj</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_dftd3_cso">doi_dftd3_cso</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_dftd3_m">doi_dftd3_m</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_dftd3_op">doi_dftd3_op</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_drpa">doi_drpa</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_dsd">doi_dsd</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_dsdpbep86">doi_dsdpbep86</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_gcp">doi_gcp</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_gmtkn30_0">doi_gmtkn30_0</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_gmtkn30_bj">doi_gmtkn30_bj</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_gmtkn55">doi_gmtkn55</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_hf3c">doi_hf3c</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_hse06_d3">doi_hse06_d3</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_hse3c">doi_hse3c</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_joss">doi_joss</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_minnesota_d3">doi_minnesota_d3</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_pbeh3c">doi_pbeh3c</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_pw91_d3">doi_pw91_d3</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_r2scan_d4">doi_r2scan_d4</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_r2scan_dhdf">doi_r2scan_dhdf</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_r2scan_hyb">doi_r2scan_hyb</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_revdsd">doi_revdsd</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_scan_d3">doi_scan_d3</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_skala">doi_skala</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#variable-doi_wb97x_d3">doi_wb97x_d3</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#types-0"
+         aria-expanded="false" aria-controls="types-0">
+         <h4 class="card-header bg-primary text-white">Derived Types</h4>
+      </a>
+      <div id="types-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd3_citation.html#type-citation_type">citation_type</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#funcs-0"
+         aria-expanded="false" aria-controls="funcs-0">
+         <h4 class="card-header bg-primary text-white">Functions</h4>
+      </a>
+      <div id="funcs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd3_citation.html#proc-author_name">author_name</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#proc-get_citation">get_citation</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#proc-is_citation_present">is_citation_present</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#proc-new_citation">new_citation</a>
+            <a class="list-group-item" href="../module/dftd3_citation.html#proc-same_citation">same_citation</a>
+        </div>
+      </div>
+    </div>
+
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd3_citation.html#proc-format_bibtex">format_bibtex</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      <p>Module for handling citation data</p>
+      
+      
+      <br>
+
+
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_b973c"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_b973c</strong></td>
+<td> =</td>
+                <td>&#34;10.1063/1.5012601&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_b97m_d3"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_b97m_d3</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/acs.jctc.8b00842&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_cf22d"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_cf22d</strong></td>
+<td> =</td>
+                <td>&#34;10.1038/s43588-022-00371-5&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_d3pbc"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_d3pbc</strong></td>
+<td> =</td>
+                <td>&#34;10.1002/cphc.201100521&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_dftd3_0"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_dftd3_0</strong></td>
+<td> =</td>
+                <td>&#34;10.1063/1.3382344&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_dftd3_bj"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_dftd3_bj</strong></td>
+<td> =</td>
+                <td>&#34;10.1002/jcc.21759&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_dftd3_cso"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_dftd3_cso</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/acs.jctc.5b00400&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_dftd3_m"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_dftd3_m</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/acs.jpclett.6b00780&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_dftd3_op"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_dftd3_op</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/acs.jctc.7b00176&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_drpa"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_drpa</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/acs.jpca.1c01295&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_dsd"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_dsd</strong></td>
+<td> =</td>
+                <td>&#34;10.1002/jcc.23391&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_dsdpbep86"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_dsdpbep86</strong></td>
+<td> =</td>
+                <td>&#34;10.1039/c1cp22592h&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_gcp"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_gcp</strong></td>
+<td> =</td>
+                <td>&#34;10.1063/1.3700154&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_gmtkn30_0"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_gmtkn30_0</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/ct100466k&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_gmtkn30_bj"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_gmtkn30_bj</strong></td>
+<td> =</td>
+                <td>&#34;10.1039/c0cp02984j&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_gmtkn55"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_gmtkn55</strong></td>
+<td> =</td>
+                <td>&#34;10.1039/c7cp04913g&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_hf3c"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_hf3c</strong></td>
+<td> =</td>
+                <td>&#34;10.1002/jcc.23317&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_hse06_d3"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_hse06_d3</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/jp501237c&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_hse3c"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_hse3c</strong></td>
+<td> =</td>
+                <td>&#34;10.1039/c6cp01697a&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_joss"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_joss</strong></td>
+<td> =</td>
+                <td>&#34;10.21105/joss.07169&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_minnesota_d3"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_minnesota_d3</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/acs.jpclett.5b01591&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_pbeh3c"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_pbeh3c</strong></td>
+<td> =</td>
+                <td>&#34;10.1063/1.4927476&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_pw91_d3"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_pw91_d3</strong></td>
+<td> =</td>
+                <td>&#34;10.1073/pnas.1516984112&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_r2scan_d4"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_r2scan_d4</strong></td>
+<td> =</td>
+                <td>&#34;10.1063/5.0041008&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_r2scan_dhdf"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_r2scan_dhdf</strong></td>
+<td> =</td>
+                <td>&#34;10.1063/5.0174988&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_r2scan_hyb"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_r2scan_hyb</strong></td>
+<td> =</td>
+                <td>&#34;10.1063/5.0086040&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_revdsd"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_revdsd</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/acs.jpca.9b03157&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_scan_d3"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_scan_d3</strong></td>
+<td> =</td>
+                <td>&#34;10.1103/physrevb.94.115144&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_skala"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_skala</strong></td>
+<td> =</td>
+                <td>&#34;10.48550/arXiv.2506.14665&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi_wb97x_d3"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>doi_wb97x_d3</strong></td>
+<td> =</td>
+                <td>&#34;10.1021/ct300715s&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
+
+
+
+
+        <section>
+          <h2>Derived Types</h2>
+              <div class="card">
+    <div class="card-header codesum">
+      <span class="anchor" id="type-citation_type"></span>
+      <h3>
+        type, public&nbsp;::&nbsp;
+        <a href='../type/citation_type.html'>citation_type</a>
+        
+      </h3>
+    </div>
+    <div class="card-body">
+      <p>Represents a citation</p>
+
+        <h4>Components</h4>
+          <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-author"></span>
+              type(author_type),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>author</strong>(:)</td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Authors of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi~3"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>doi</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Digital Object Identifier (DOI) of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-issue"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>issue</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Issue of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-journal"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>journal</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Journal of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-pages"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>pages</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Page numbers of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-title"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>title</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Title of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-volume"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>volume</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Volume of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-year"></span>
+              character(len=:),
+            </td>
+              <td>public,</td>
+            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>year</strong></td>
+                <td></td>
+                <td></td>
+            <td>
+<p>Year of the publication</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Functions</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-author_name"></span> <h3>public pure function <a href='../proc/author_name.html'>author_name</a>(name) result(author)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create an author</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-name~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>name</strong></td>
+            <td>
+<p>Name of the author</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(author_type)</small>
+    </h4>
+    <p>The new author</p>
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-get_citation"></span> <h3>public pure function <a href='../proc/get_citation.html'>get_citation</a>(doi) result(citation)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Get citation data for a given DOI</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi~5"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>doi</strong></td>
+            <td>
+<p>Digital Object Identifier (DOI) of the publication</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(<a href='../type/citation_type.html'>citation_type</a>)</small>
+    </h4>
+    <p>The citation data</p>
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-is_citation_present"></span> <h3>public pure function <a href='../proc/is_citation_present.html'>is_citation_present</a>(citation) result(is_present)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Check if citation data is present</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-citation~11"></span>
+              type(<a href='../type/citation_type.html'>citation_type</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>citation</strong></td>
+            <td>
+<p>The citation to check</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>logical</small>
+    </h4>
+    <p>Whether the citation data is present</p>
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-new_citation"></span> <h3>public pure function <a href='../proc/new_citation.html'>new_citation</a>(title, author, journal, issue, volume, year, pages, doi) result(citation)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Create a new citation</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-title~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>title</strong></td>
+            <td>
+<p>Title of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-author~2"></span>
+              type(author_type),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>author</strong>(:)</td>
+            <td>
+<p>Authors of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-journal~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>journal</strong></td>
+            <td>
+<p>Journal of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-issue~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in),</td>
+              <td>optional</td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>issue</strong></td>
+            <td>
+<p>Issue of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-volume~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>volume</strong></td>
+            <td>
+<p>Volume of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-year~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>year</strong></td>
+            <td>
+<p>Year of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-pages~2"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>pages</strong></td>
+            <td>
+<p>Page numbers of the publication</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-doi~4"></span>
+              character(len=*),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>doi</strong></td>
+            <td>
+<p>Digital Object Identifier (DOI) of the publication</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>type(<a href='../type/citation_type.html'>citation_type</a>)</small>
+    </h4>
+    <p>The new citation</p>
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-same_citation"></span> <h3>public pure function <a href='../proc/same_citation.html'>same_citation</a>(lhs, rhs) result(same)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Check if two citations are the same</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-lhs~3"></span>
+              type(<a href='../type/citation_type.html'>citation_type</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>lhs</strong></td>
+            <td>
+<p>The first citation</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-rhs~3"></span>
+              type(<a href='../type/citation_type.html'>citation_type</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>rhs</strong></td>
+            <td>
+<p>The second citation</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+    <h4>
+    Return Value
+    <small>logical</small>
+    </h4>
+    <p>Whether the citations are the same</p>
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-format_bibtex"></span> <h3>public  subroutine <a href='../proc/format_bibtex.html'>format_bibtex</a>(string, citation)  
+</h3></div>
+    <div class="card-body">
+          
+  <p>Format a citation as a BibTeX entry</p>
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-string"></span>
+              character(len=:),
+            </td>
+<td>intent(out),</td>
+              <td></td>            <td>
+              allocatable
+            </td>
+            <td>::</td>
+            <td><strong>string</strong></td>
+            <td>
+<p>The formatted BibTeX entry</p>
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-citation~12"></span>
+              class(<a href='../type/citation_type.html'>citation_type</a>),
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>citation</strong></td>
+            <td>
+<p>The citation to format</p>
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              Simple DFT-D3
+ was developed by Sebastian Ehlert<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-11 16:50 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>

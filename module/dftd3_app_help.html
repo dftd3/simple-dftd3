@@ -1,0 +1,422 @@
+<!-- -*- mode: jinja2 -*- -->
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="description" content="A simple reimplementation of the DFT-D3 dispersion model">
+    <meta name="author" content="Sebastian Ehlert" >
+    <link rel="icon" href="../favicon.png">
+
+    <title>dftd3_app_help &ndash; Simple DFT-D3</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <!-- Font Awesome -->
+    <link href="../css/fontawesome.min.css" rel="stylesheet">
+    <link href="../css/brands.min.css" rel="stylesheet">
+    <link href="../css/regular.min.css" rel="stylesheet">
+    <link href="../css/solid.min.css" rel="stylesheet">
+    <link href="../css/v4-font-face.min.css" rel="stylesheet">
+    <link href="../css/v4-shims.min.css" rel="stylesheet">
+    <!-- MathJax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        TeX: { equationNumbers: { autoNumber: "AMS" } }
+      });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@2.7.9/MathJax.js?config=TeX-AMS-MML_HTMLorMML" async
+            integrity="sha256-DViIOMYdwlM/axqoGDPeUyf0urLoHMN4QACBKyB58Uw=" crossorigin="anonymous"></script>
+    <!-- Other scripts and stylesheets -->
+    <link href="../css/local.css" rel="stylesheet">
+    <link href="../css/pygments.css" rel="stylesheet">
+    <script src="../js/svg-pan-zoom.min.js"></script>
+  </head>
+
+  <body>
+
+    <!-- Fixed navbar -->
+    <div class="container-fluid mb-sm-4 mb-xl-2">
+      <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container">
+          <a class="navbar-brand" href="../index.html">Simple DFT-D3 </a>
+          <button type="button" class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navbar"
+                  aria-expanded="false" aria-controls="navbar" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon">
+          </button>
+
+          <div id="navbar" class="navbar-collapse collapse">
+            <ul class="navbar-nav">
+                  <li class="nav-item">
+                    <a class="nav-link" href="../lists/files.html">Source Files</a>
+                  </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/modules.html">Modules</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/procedures.html">Procedures</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/absint.html">Abstract Interfaces</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../lists/types.html">Derived Types</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="../program/dftd3_main.html">Program</a>
+                </li>
+            </ul>
+              <div class="d-flex align-items-end flex-grow-1">
+                <form action="../search.html" role="search" class="ms-auto">
+                  <input type="text" class="form-control" aria-label="Search" placeholder="Search" name="q" id="tipue_search_input" autocomplete="off" required>
+                </form>
+              </div>
+          </div><!--/.nav-collapse -->
+        </div>
+      </nav>
+    </div>
+
+    <div class="container">
+  <div class="row">
+    <h1>dftd3_app_help
+      <small>Module</small>
+      
+    </h1>
+      <div class="container p-2 mb-4 bg-light border rounded-3">
+    <div class="row align-items-center justify-content-between" id="info-bar">
+      <div class="col">
+        <ul class="list-inline" style="margin-bottom:0px;display:inline">
+
+            <li class="list-inline-item" id="statements"><i class="fa fa-list-ol"></i>
+              <a data-bs-toggle="tooltip" data-bs-placement="bottom" data-bs-html="true"
+                 title=" 0.3% of total for modules and submodules.">27 statements</a>
+            </li>
+
+            <li class="list-inline-item" id="source-file">
+              <i class="fa fa-code"></i>
+              <a href="../src/help.f90"> Source File</a>
+            </li>
+        </ul>
+      </div>
+      <div class="col">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb justify-content-end mb-0">
+                <li class="breadcrumb-item"><a href='../sourcefile/help.f90.html'>help.f90</a></li>
+            <li class="breadcrumb-item active" aria-current="page">dftd3_app_help</li>
+          </ol>
+        </nav>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Enable Bootstrap tooltips
+    (function () {
+      const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+      const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+    })();
+  </script>
+
+  </div>
+
+  <div class="row">
+    <div class="col-md-3">
+        <div id="sidebar">
+      <h3>Contents</h3>
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#vars-0"
+         aria-expanded="false" aria-controls="vars-0">
+         <h4 class="card-header bg-primary text-white">Variables</h4>
+      </a>
+      <div id="vars-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd3_app_help.html#variable-gcp_help_text">gcp_help_text</a>
+            <a class="list-group-item" href="../module/dftd3_app_help.html#variable-help_text">help_text</a>
+            <a class="list-group-item" href="../module/dftd3_app_help.html#variable-param_help_text">param_help_text</a>
+            <a class="list-group-item" href="../module/dftd3_app_help.html#variable-prog_name">prog_name</a>
+            <a class="list-group-item" href="../module/dftd3_app_help.html#variable-run_help_text">run_help_text</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+      <div class="card mb-4">
+      <a data-bs-toggle="collapse" href="#subs-0"
+         aria-expanded="false" aria-controls="subs-0">
+         <h4 class="card-header bg-primary text-white">Subroutines</h4>
+      </a>
+      <div id="subs-0" class="collapse">
+        <div class="list-group list-group-flush">
+            <a class="list-group-item" href="../module/dftd3_app_help.html#proc-header">header</a>
+            <a class="list-group-item" href="../module/dftd3_app_help.html#proc-version">version</a>
+        </div>
+      </div>
+    </div>
+
+  
+  
+  
+  
+  
+  
+  
+
+
+  </div>
+
+    </div>
+
+    <div class="col-md-9" id='text'>
+      
+<br>          <div class="card mb-4">
+      <h3 class="card-header card-title bg-light">Uses</h3>
+      <div class="card-body">
+        <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <ul class="list-inline">
+                  <li class="list-inline-item"><a href='dftd3.html'>dftd3</a></li>
+              </ul>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+      
+      <br>
+
+
+        <section>
+          <h2>Variables</h2>
+            <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Visibility</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+<th></th><th scope="col">Initial</th>        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-gcp_help_text"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>gcp_help_text</strong></td>
+<td> =</td>
+                <td>&#34;Usage: &#34;//prog_name//&#34; gcp [options] &lt;input&gt;&#34;//nl//&#34;&#34;//nl//&#34;Takes an geometry input to calculate the geometric counter-poise correction.&#34;//nl//&#34;Periodic calculations are performed automatically for periodic input formats.&#34;//nl//&#34;Specify the level of theory to select the correct parameters.&#34;//nl//&#34;&#34;//nl//&#34;-i,--input &lt;format&gt;      Hint for the format of the input file&#34;//nl//&#34;-l,--level &lt;method&gt;[/&lt;basis&gt;]&#34;//nl//&#34;                         Level of theory, basis set is inferred for 3c methods&#34;//nl//&#34;   --nocpc               Disable writing of dispersion energy to .CPC file&#34;//nl//&#34;   --json [file]         Dump results to JSON output (default: gcp.json)&#34;//nl//&#34;   --grad [file]         Request gradient evaluation,&#34;//nl//&#34;                         write results to file (default: gcp.txt),&#34;//nl//&#34;                         attempts to add to Turbomole gradient and gradlatt files&#34;//nl//&#34;-v,--verbose             Show more, can be used multiple times&#34;//nl//&#34;-s,--silent              Show less, use twice to supress all output&#34;//nl//&#34;   --version             Print program version and exit&#34;//nl//&#34;   --help                Show this help message&#34;//nl//&#34;&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-help_text"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>help_text</strong></td>
+<td> =</td>
+                <td>&#34;Usage: &#34;//prog_name//&#34; [run|param|gcp] [options] ...&#34;//nl//&#34;&#34;//nl//&#34;Commands&#34;//nl//&#34;&#34;//nl//&#34;  run       Evaluate dispersion correction on the provided input structure.&#34;//nl//&#34;            Periodic calculations are performed automatically for periodic inputs&#34;//nl//&#34;            If no command is specified run is selected by default.&#34;//nl//&#34;&#34;//nl//&#34;  param     Inspect and manipulate damping parameter data file.&#34;//nl//&#34;&#34;//nl//&#34;Options&#34;//nl//&#34;&#34;//nl//run_options_text//nl//&#34;&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-param_help_text"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>param_help_text</strong></td>
+<td> =</td>
+                <td>&#34;Usage: &#34;//prog_name//&#34; param [options] &lt;input&gt; [method] [damping]&#34;//nl//&#34;&#34;//nl//&#34;Takes a damping parameter data file and performs queries for damping&#34;//nl//&#34;parameters if a method is provided, if no damping function is provided&#34;//nl//&#34;the default damping functions as provided in the data file will be used.&#34;//nl//&#34;The data file is provided in TOML format.&#34;//nl//&#34;&#34;//nl//&#34;Example:&#34;//nl//&#34;&#34;//nl//&#34;    [default]&#34;//nl//&#34;    d3 = [&#34;&#34;bj&#34;&#34;, &#34;&#34;zero&#34;&#34;]&#34;//nl//&#34;&#34;//nl//&#34;    [default.parameter]&#34;//nl//&#34;    d3.bj = {s6=1.0, s9=0.0, alp=14.0, damping=&#34;&#34;rational&#34;&#34;}&#34;//nl//&#34;    d3.zero = {s6=1.0, s9=0.0, rs8=1.0, alp=14.0, damping=&#34;&#34;zero&#34;&#34;}&#34;//nl//&#34;    d3.bjm = {s6=1.0, s9=0.0, alp=14.0, damping=&#34;&#34;rational&#34;&#34;}&#34;//nl//&#34;    d3.zerom = {s6=1.0, s9=0.0, rs8=1.0, alp=14.0, damping=&#34;&#34;mzero&#34;&#34;}&#34;//nl//&#34;    d3.op = {s9=0.0, alp=14.0, damping=&#34;&#34;optimizedpower&#34;&#34;}&#34;//nl//&#34;    d3.cso = {s6=1.0, s9=0.0, a2=2.5, rs6=0.0, rs8=6.25, alp=14.0, damping=&#34;&#34;cso&#34;&#34;}&#34;//nl//&#34;&#34;//nl//&#34;    [parameter.bp]&#34;//nl//&#34;    d3.bj = {a1=0.3946, s8=3.2822, a2=4.8516}&#34;//nl//&#34;    d3.zero = {rs6=1.139, s8=1.683}&#34;//nl//&#34;    d3.bjm = {a1=0.821850, s8=3.140281, a2=2.728151}&#34;//nl//&#34;    d3.zerom = {rs6=1.233460, s8=1.945174, bet=0.000000}&#34;//nl//&#34;&#34;//nl//&#34;    [parameter.blyp]&#34;//nl//&#34;    d3.bj = {a1=0.4298, s8=2.6996, a2=4.2359}&#34;//nl//&#34;    d3.zero = {rs6=1.094, s8=1.682}&#34;//nl//&#34;    d3.bjm = {a1=0.448486, s8=1.875007, a2=3.610679}&#34;//nl//&#34;    d3.zerom = {rs6=1.279637, s8=1.841686, bet=0.014370}&#34;//nl//&#34;    d3.op = {s6=1.0, s8=1.31867, a1=0.425, a2=3.50, bet=2.0}&#34;//nl//&#34;&#34;//nl//&#34;    [parameter.revpbe]&#34;//nl//&#34;    d3.bj = {a1=0.5238, s8=2.3550, a2=3.5016}&#34;//nl//&#34;    d3.zero = {rs6=0.923, s8=1.010}&#34;//nl//&#34;    d3.op = {s6=1.0, s8=1.44765, a1=0.600, a2=2.50, bet=0.0}&#34;//nl//&#34;&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-prog_name"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>prog_name</strong></td>
+<td> =</td>
+                <td>&#34;s-dftd3&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-run_help_text"></span>
+              character(len=*),
+            </td>
+              <td>public,</td>
+            <td>
+parameter               
+            </td>
+            <td>::</td>
+            <td><strong>run_help_text</strong></td>
+<td> =</td>
+                <td>&#34;Usage: &#34;//prog_name//&#34; [run] [options] &lt;input&gt;&#34;//nl//&#34;&#34;//nl//&#34;Takes an geometry input to calculate the D3 dispersion correction.&#34;//nl//&#34;Periodic calculations are performed automatically for periodic input formats.&#34;//nl//&#34;Specify the functional to select the correct parameters.&#34;//nl//&#34;&#34;//nl//run_options_text//nl//&#34;&#34;</td>
+            <td>
+                
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+        </section>
+        <br>
+
+
+
+
+
+
+        <section>
+          <h2>Subroutines</h2>
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-header"></span> <h3>public  subroutine <a href='../proc/header.html'>header</a>(unit)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-unit~6"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>unit</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+              <div class="card">
+    <div class="card-header codesum"><span class="anchor" id="proc-version"></span> <h3>public  subroutine <a href='../proc/version.html'>version</a>(unit)  
+</h3></div>
+    <div class="card-body">
+          
+  
+
+  <h4>Arguments</h4>
+      <table class="table table-striped varlist">
+    <thead>
+      <tr>
+        <th scope="col">Type</th>
+<th scope="col">Intent</th><th scope="col">Optional</th>        <th scope="col">Attributes</th>
+        <th scope="col"></th>
+        <th scope="col">Name</th>
+        <th scope="col"></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+              <span class="anchor" id="variable-unit~7"></span>
+              integer,
+            </td>
+<td>intent(in)</td>
+              <td></td>            <td>
+              
+            </td>
+            <td>::</td>
+            <td><strong>unit</strong></td>
+            <td>
+
+            </td>
+        </tr>
+    </tbody>
+  </table>
+
+
+    </div>
+  </div>
+
+        </section>
+        <br>
+
+
+
+    </div>
+  </div>
+
+      <hr>
+    </div> <!-- /container -->
+    <footer>
+      <div class="container">
+        <div class="row justify-content-between">
+          <div class="col">
+            <p>
+              Simple DFT-D3
+ was developed by Sebastian Ehlert<br>              &copy; 2026 
+</p>
+          </div>
+          <div class="col">
+            <p class="text-end">
+              Documentation generated by
+              <a href="https://github.com/Fortran-FOSS-Programmers/ford">FORD</a>
+ on 2026-02-11 16:50 +0000             </p>
+          </div>
+        </div>
+        <br>
+      </div> <!-- /container -->
+    </footer>
+  </body>
+</html>
