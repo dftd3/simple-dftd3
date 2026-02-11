@@ -16,6 +16,7 @@
 
 srcs += files(
   'atm.f90',
+  'cso.f90',
   'mzero.f90',
   'optimizedpower.f90',
   'rational.f90',
