@@ -26,7 +26,7 @@ extensions = [
     "sphinxcontrib.bibtex",
 ]
 
-nb_execution_mode = "off"
+nb_execution_mode = "auto"
 myst_enable_extensions = ["dollarmath"]
 
 html_theme = "sphinx_book_theme"
@@ -45,7 +45,7 @@ html_css_files = []
 html_static_path = ["_static"]
 templates_path = ["_templates"]
 locale_dirs = ["locales"]
-autodoc_mock_imports = ["dftd3.library", "numpy", "ase", "qcelemental", "pyscf"]
+autodoc_mock_imports = ["numpy", "ase", "qcelemental", "pyscf"]
 bibtex_bibfiles = ["_static/references.bib"]
 
 master_doc = "index"
