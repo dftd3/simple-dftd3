@@ -121,7 +121,7 @@ subroutine test_d3bj_mb01(error)
       & "dsdmpwb95", "dsdhsepbe", "dsdhsepw91", "dsdhsep86", "dsdhselyp", "dsdtpss", &
       & "dsdtpsstpss", "dsdtpssb95", "dsdolyp", "dsdxlyp", "dsdxb95", "dsdb98", "dsdbmk", &
       & "dsdthcth", "dsdhcth407", "dodsvwn5", "dodblyp", "dodpbe", "dodpbep86", &
-      & "dodpbeb95", "dodhsep86", "dodpbehb95", "dsdpbep86_2011"]
+      & "dodpbeb95", "dodhsep86", "dodpbehb95", "dsdpbep86_2011", "skala-1.0"]
    real(wp), parameter :: ref(*) = [&
       &-2.9551694676908012E-2_wp,-1.6638703086788331E-2_wp,-1.6725877716130381E-2_wp, &
       &-3.3014429592265318E-2_wp,-2.2051435219996540E-2_wp,-3.3481565825316001E-2_wp, &
@@ -176,7 +176,7 @@ subroutine test_d3bj_mb01(error)
       &-2.3395356334306699E-2_wp,-2.7235779991786224E-2_wp,-1.8637388512470085E-2_wp, &
       &-4.5692905041335857E-2_wp,-2.3906657015347409E-2_wp,-2.7313595202479946E-2_wp, &
       &-1.7359235198347055E-2_wp,-2.6175528735709948E-2_wp,-1.6381250116750040E-2_wp, &
-      &-1.3173453514111508E-2_wp]
+      &-1.3173453514111508E-2_wp,-3.3014429592265318E-2_wp]
 
    call get_structure(mol, "MB16-43", "01")
    do ii = 1, size(func)
@@ -275,7 +275,7 @@ subroutine test_d3bjatm_mb17(error)
       & "scan", "rscan", "r2scan", "b97m", "wb97m", "wb97x", &
       & "r2scanh", "r2scan0", "r2scan50", "b973c", "dsdpbep86", "dsdpbeb95", "dsdpbe", &
       & "dodscan66", "revdsdblyp", "revdsdpbep86", "revdsdpbeb95", "revdsdpbe", &
-      & "revdodblyp", "revdodpbep86", "revdodpbeb95", "revdodpbe"]
+      & "revdodblyp", "revdodpbep86", "revdodpbeb95", "revdodpbe", "skala-1.0"]
    real(wp), parameter :: ref(*) = [&
       &-2.3886024757749025E-2_wp,-1.2511386468651674E-2_wp,-1.4044660238061260E-2_wp, &
       &-2.8422909990177846E-2_wp,-1.9411341783127211E-2_wp,-2.9014208237027887E-2_wp, &
@@ -301,7 +301,7 @@ subroutine test_d3bjatm_mb17(error)
       &-1.0353655269088267E-2_wp,-1.4237858050055431E-2_wp,-7.3827880103746520E-3_wp, &
       &-1.9570555815441794E-2_wp,-1.2421141218402177E-2_wp,-1.0448640892029166E-2_wp, &
       &-1.6329032603068817E-2_wp,-2.2071530109002500E-2_wp,-1.3542982938032555E-2_wp, &
-      &-1.1650410265984359E-2_wp,-1.7245346068721114E-2_wp]
+      &-1.1650410265984359E-2_wp,-1.7245346068721114E-2_wp,-2.8422909990177846E-2_wp]
 
    call get_structure(mol, "MB16-43", "17")
    do ii = 1, size(func)
