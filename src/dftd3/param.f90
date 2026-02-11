@@ -22,7 +22,7 @@ module dftd3_param
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3, doi_cf22d
+      & doi_wb97x_d3, doi_hse06_d3, doi_cf22d, doi_skala
    implicit none
 
    public :: d3_param
@@ -83,7 +83,7 @@ module dftd3_param
          & p_dsd_xb95_df, p_dsd_b98_df, p_dsd_bmk_df, p_dsd_thcth_df, &
          & p_dsd_hcth407_df, p_dod_svwn5_df, p_dod_blyp_df, p_dod_pbe_df, &
          & p_dod_pbep86_df, p_dod_pbeb95_df, p_dod_hsep86_df, p_dod_pbehb95_df, &
-         & p_cf22d_df
+         & p_cf22d_df, p_skala_df
    end enum
 
 contains
@@ -99,6 +99,7 @@ function get_method_id(method) result(id)
    integer :: id
    integer :: i, j
 
+   lc_method = ' '
    j = 0
    do i = 1, len(method)
       if (method(i:i) /= "-") then
@@ -273,6 +274,7 @@ function get_method_id(method) result(id)
    case("rscan"); id = p_rscan_df
    case("scan"); id = p_scan_df
    case("scsdrpa75"); id = p_scs_drpa75_df
+   case("skala1.0"); id = p_skala_df
    case("slaterdiracexchange"); id = p_slaterdiracexchange_df
    case("sogga11x"); id = p_sogga11x_df
    case("ssb"); id = p_ssb_df
@@ -341,6 +343,9 @@ subroutine get_rational_damping(param, method, error, s9, citation)
    case(p_b3lyp_df, p_b3lyp_g_df, p_dm21_df, p_dm21m_df, p_dm21mc_df, p_dm21mu_df)
       param = d3_param(a1=0.3981_wp, s8=1.9889_wp, a2=4.4211_wp)
       doi = doi_dftd3_bj
+   case(p_skala_df)
+      param = d3_param(a1=0.3981_wp, s8=1.9889_wp, a2=4.4211_wp)
+      doi = doi_skala
    case(p_tpss_df)
       param = d3_param(a1=0.4535_wp, s8=1.9435_wp, a2=4.4752_wp)
       doi = doi_dftd3_bj

@@ -26,7 +26,7 @@ module dftd3_citation
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3, doi_joss, doi_cf22d
+      & doi_wb97x_d3, doi_hse06_d3, doi_joss, doi_cf22d, doi_skala
 
    !> Represents an author to allow creating author lists
    type :: author_type
@@ -84,7 +84,8 @@ module dftd3_citation
       & doi_wb97x_d3 = "10.1021/ct300715s", &
       & doi_hse06_d3 = "10.1021/jp501237c", &
       & doi_joss = "10.21105/joss.07169", &
-      & doi_cf22d = "10.1038/s43588-022-00371-5"
+      & doi_cf22d = "10.1038/s43588-022-00371-5", &
+      & doi_skala = "10.48550/arXiv.2506.14665"
 
 contains
 
@@ -637,6 +638,42 @@ pure function get_citation(doi) result(citation)
          volume="3", &
          pages="48–58", &
          year="2023" &
+      )
+
+   case(doi_skala)
+      citation = new_citation( &
+         doi=doi, &
+         title="Accurate and scalable exchange-correlation with deep learning", &
+         author=[ &
+         & author_name("Giulia Luise"), &
+         & author_name("Chin-Wei Huang"), &
+         & author_name("Thijs Vogels"), &
+         & author_name("Derk P. Kooi"), &
+         & author_name("Sebastian Ehlert"), &
+         & author_name("Stephanie Lanius"), &
+         & author_name("Klaas J. H. Giesbertz"), &
+         & author_name("Amir Karton"), &
+         & author_name("Deniz Gunceler"), &
+         & author_name("Megan Stanley"), &
+         & author_name("Wessel P. Bruinsma"), &
+         & author_name("Lin Huang"), &
+         & author_name("Xinran Wei"), &
+         & author_name("José Garrido Torres"), &
+         & author_name("Abylay Katbashev"), &
+         & author_name("Rodrigo Chavez Zavaleta"), &
+         & author_name("Bálint Máté"), &
+         & author_name("Sékou-Oumar Kaba"), &
+         & author_name("Roberto Sordillo"), &
+         & author_name("Yingrong Chen"), &
+         & author_name("David B. Williams-Young"), &
+         & author_name("Christopher M. Bishop"), &
+         & author_name("Jan Hermann"), &
+         & author_name("Rianne van den Berg"), &
+         & author_name("Paola Gori-Giorgi")], &
+         journal="arXiv", &
+         volume="2506.14665", &
+         pages="2506.14665", &
+         year="2025" &
       )
    end select
 end function get_citation
