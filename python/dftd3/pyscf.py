@@ -31,6 +31,7 @@ from typing import Dict, Optional, Tuple
 
 from .interface import (
     DispersionModel,
+    GeometricCounterpoise,
     RationalDampingParam,
     ZeroDampingParam,
     ModifiedRationalDampingParam,
@@ -426,3 +427,232 @@ def d3_grad(scf_grad: GradientsBase, **kwargs):
 
 energy = d3_energy
 grad = d3_grad
+
+
+class CounterpoiseCorrection(lib.StreamObject):
+    """
+    Implementation of the interface for using the geometric counterpoise
+    correction (gCP) in pyscf.
+    The `method` and optional `basis` can be provided in the constructor
+    to load the appropriate gCP parameters.
+
+    Examples
+    --------
+    >>> from pyscf import gto
+    >>> import dftd3.pyscf as disp
+    >>> mol = gto.M(
+    ...     atom='''
+    ...          O  -1.551007  -0.114520   0.000000
+    ...          H  -1.934259   0.762503   0.000000
+    ...          H  -0.599677   0.040712   0.000000
+    ...          O   1.350625   0.111469   0.000000
+    ...          H   1.680398  -0.373741  -0.758561
+    ...          H   1.680398  -0.373741   0.758561
+    ...          '''
+    ... )
+    >>> gcp = disp.CounterpoiseCorrection(mol, method="b973c")
+    >>> gcp.kernel()[0]
+    array(-0.00093628)
+    """
+
+    def __init__(
+        self,
+        mol: gto.Mole,
+        method: Optional[str] = None,
+        basis: Optional[str] = None,
+    ):
+        self.mol = mol
+        self.verbose = mol.verbose
+        self.method = method
+        self.basis = basis
+
+    def dump_flags(self, verbose: Optional[bool] = None):
+        """
+        Show options used for the gCP correction.
+        """
+        lib.logger.info(self, "** gCP parameter **")
+        lib.logger.info(self, "method %s", self.method)
+        if self.basis is not None:
+            lib.logger.info(self, "basis %s", self.basis)
+        return self
+
+    def kernel(self) -> Tuple[float, np.ndarray]:
+        """
+        Compute the geometric counterpoise correction.
+
+        Returns
+        -------
+        float, ndarray
+            The energy and gradient of the gCP correction.
+        """
+        mol = self.mol
+
+        numbers = np.array(
+            [gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]
+        )
+        positions = mol.atom_coords()
+
+        lattice = None
+        periodic = None
+        if hasattr(mol, "lattice_vectors"):
+            lattice = mol.lattice_vectors()
+            periodic = np.array([True, True, True], dtype=bool)
+
+        gcp = GeometricCounterpoise(
+            numbers,
+            positions,
+            lattice=lattice,
+            periodic=periodic,
+            method=self.method,
+            basis=self.basis,
+        )
+
+        res = gcp.get_counterpoise(grad=True)
+
+        return res.get("energy"), res.get("gradient")
+
+    def reset(self, mol: gto.Mole):
+        """Reset mol and clean up relevant attributes for scanner mode"""
+        self.mol = mol
+        return self
+
+
+class _GCP:
+    """
+    Stub class used to identify instances of the `GCP` class
+    """
+
+    pass
+
+
+class _GCPGrad:
+    """
+    Stub class used to identify instances of the `GCPGrad` class
+    """
+
+    pass
+
+
+def gcp_energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
+    """
+    Apply geometric counterpoise corrections to SCF or MCSCF methods by
+    returning an instance of a new class built from the original instances class.
+    The counterpoise correction is stored in the `with_gcp` attribute of
+    the class.
+
+    Parameters
+    ----------
+    mf: scf.hf.SCF
+        The method to which gCP corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `CounterpoiseCorrection` class.
+
+    Returns
+    -------
+    The method with gCP corrections applied.
+
+    Examples
+    --------
+    >>> from pyscf import gto, scf
+    >>> import dftd3.pyscf as disp
+    >>> mol = gto.M(
+    ...     atom='''
+    ...          O  -1.551007  -0.114520   0.000000
+    ...          H  -1.934259   0.762503   0.000000
+    ...          H  -0.599677   0.040712   0.000000
+    ...          O   1.350625   0.111469   0.000000
+    ...          H   1.680398  -0.373741  -0.758561
+    ...          H   1.680398  -0.373741   0.758561
+    ...          '''
+    ... )
+    >>> mf = disp.gcp_energy(scf.RHF(mol), method="b973c")
+    >>> mf.with_gcp.kernel()[0]
+    array(-0.00093628)
+    """
+
+    if not isinstance(mf, (scf.hf.SCF, mcscf.casci.CASCI)):
+        raise TypeError("mf must be an instance of SCF or CASCI")
+
+    with_gcp = CounterpoiseCorrection(
+        mf.mol,
+        **kwargs,
+    )
+
+    if isinstance(mf, _GCP):
+        mf.with_gcp = with_gcp
+        return mf
+
+    class GCP(_GCP, mf.__class__):
+        def __init__(self, method, with_gcp):
+            self.__dict__.update(method.__dict__)
+            self.with_gcp = with_gcp
+            self._keys.update(["with_gcp"])
+
+        def dump_flags(self, verbose=None):
+            mf.__class__.dump_flags(self, verbose)
+            if self.with_gcp:
+                self.with_gcp.dump_flags(verbose)
+            return self
+
+        def energy_nuc(self):
+            enuc = mf.__class__.energy_nuc(self)
+            if self.with_gcp:
+                egcp = self.with_gcp.kernel()[0]
+                mf.scf_summary["counterpoise"] = egcp
+                enuc += egcp
+            return enuc
+
+        def reset(self, mol=None):
+            self.with_gcp.reset(mol)
+            return mf.__class__.reset(self, mol)
+
+        def nuc_grad_method(self):
+            scf_grad = mf.__class__.nuc_grad_method(self)
+            return gcp_grad(scf_grad)
+
+        Gradients = lib.alias(nuc_grad_method, alias_name="Gradients")
+
+    return GCP(mf, with_gcp)
+
+
+def gcp_grad(scf_grad: GradientsBase, **kwargs):
+    """
+    Apply geometric counterpoise corrections to SCF or MCSCF nuclear
+    gradients methods by returning an instance of a new class built from
+    the original class.
+    The counterpoise correction is stored in the `with_gcp` attribute of
+    the class.
+
+    Parameters
+    ----------
+    scf_grad: rhf_grad.Gradients
+        The method to which gCP corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `CounterpoiseCorrection` class.
+
+    Returns
+    -------
+    The method with gCP corrections applied.
+    """
+
+    if not isinstance(scf_grad, GradientsBase):
+        raise TypeError("scf_grad must be an instance of Gradients")
+
+    # Ensure that the zeroth order results include gCP corrections
+    if not getattr(scf_grad.base, "with_gcp", None):
+        scf_grad.base = gcp_energy(scf_grad.base, **kwargs)
+
+    class GCPGrad(_GCPGrad, scf_grad.__class__):
+        def grad_nuc(self, mol=None, atmlst=None):
+            nuc_g = scf_grad.__class__.grad_nuc(self, mol, atmlst)
+            with_gcp = getattr(self.base, "with_gcp", None)
+            if with_gcp:
+                gcp_g = with_gcp.kernel()[1]
+                if atmlst is not None:
+                    gcp_g = gcp_g[atmlst]
+                nuc_g += gcp_g
+            return nuc_g
+
+    mfgrad = GCPGrad.__new__(GCPGrad)
+    mfgrad.__dict__.update(scf_grad.__dict__)
+    return mfgrad
