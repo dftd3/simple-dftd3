@@ -113,8 +113,7 @@ def test_ase_realspace_cutoff():
     energy_default = atoms.get_potential_energy()
     forces_default = atoms.get_forces()
     
-    # Test with very small cutoffs (smaller than H2O bond length ~1 Angstrom)
-    # This should give zero or very small interactions
+    # Test with very small cutoffs (smaller than H2O bond length ~1 Angstrom) - should give zero or very small interactions
     calc_custom = DFTD3(
         method="PBE", 
         damping="d3bj",
@@ -146,5 +145,6 @@ def test_ase_realspace_cutoff():
     
     # Empty dict should behave like no cutoff override (same as default)
     assert energy_empty == approx(energy_default, abs=thr)
+
 
 
