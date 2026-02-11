@@ -97,3 +97,54 @@ def test_ase_tpssd3():
     assert atoms.get_potential_energy() == approx(4.963774668847532, abs=thr)
     energies = [calc.get_potential_energy() for calc in get_calcs(atoms.calc)]
     assert energies == approx([-0.14230914516094673, 5.106083814008478], abs=thr)
+
+
+@pytest.mark.skipif(ase is None, reason="requires ase")
+def test_ase_realspace_cutoff():
+    """Test that realspace_cutoff parameter works and can be updated with cache_api=True"""
+    from ase.units import Bohr
+    
+    thr = 1.0e-6
+    atoms = molecule("H2O")
+    
+    # Test with default cutoffs
+    calc_default = DFTD3(method="PBE", damping="d3bj", cache_api=True)
+    atoms.calc = calc_default
+    energy_default = atoms.get_potential_energy()
+    forces_default = atoms.get_forces()
+    
+    # Test with very small cutoffs (smaller than H2O bond length ~1 Angstrom)
+    # This should give zero or very small interactions
+    calc_custom = DFTD3(
+        method="PBE", 
+        damping="d3bj",
+        realspace_cutoff={"disp2": 0.5, "disp3": 0.5, "cn": 0.5},
+        cache_api=True
+    )
+    atoms.calc = calc_custom
+    energy_custom = atoms.get_potential_energy()
+    forces_custom = atoms.get_forces()
+    
+    # With very small cutoffs, energy should be much smaller (closer to zero)
+    assert abs(energy_custom) < abs(energy_default)
+    assert not np.allclose(forces_custom, forces_default, atol=thr)
+    
+    # Test updating cutoff via set() with cache_api=True
+    # Reset to default-like cutoffs using set()
+    calc_custom.set(realspace_cutoff={"disp2": 60.0 * Bohr, "disp3": 40.0 * Bohr, "cn": 40.0 * Bohr})
+    energy_updated = atoms.get_potential_energy()
+    forces_updated = atoms.get_forces()
+    
+    # Should match the default energy/forces
+    assert energy_updated == approx(energy_default, abs=thr)
+    assert forces_updated == approx(forces_default, abs=thr)
+    
+    # Test with empty dict (should use library defaults)
+    calc_empty = DFTD3(method="PBE", damping="d3bj", realspace_cutoff={}, cache_api=True)
+    atoms.calc = calc_empty
+    energy_empty = atoms.get_potential_energy()
+    
+    # Empty dict should behave like no cutoff override (same as default)
+    assert energy_empty == approx(energy_default, abs=thr)
+
+
