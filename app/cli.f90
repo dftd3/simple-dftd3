@@ -54,6 +54,7 @@ module dftd3_app_cli
       logical :: mzero = .false.
       logical :: mrational = .false.
       logical :: optimizedpower = .false.
+      logical :: cso = .false.
       logical :: has_param = .false.
       integer :: verbosity = 2
       logical :: pair_resolved = .false.
@@ -426,6 +427,26 @@ subroutine get_run_arguments(config, list, start, error)
          call list%get(iarg, arg)
          call get_argument_as_real(arg, config%inp%bet, error)
          if (allocated(error)) exit
+      case("--cso")
+         config%cso = .true.
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for method")
+            exit
+         end if
+         call move_alloc(arg, config%method)
+      case("--cso-param")
+         config%cso = .true.
+         config%has_param = .true.
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         call get_argument_as_real(arg, config%inp%s6, error)
+         if (allocated(error)) exit
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         call get_argument_as_real(arg, config%inp%a1, error)
+         if (allocated(error)) exit
       case("--db")
          iarg = iarg + 1
          call list%get(iarg, arg)
@@ -449,8 +470,8 @@ subroutine get_run_arguments(config, list, start, error)
    end if
 
    if (count([config%zero, config%rational, config%mzero, config%mrational, &
-      & config%optimizedpower]) > 1) then
-      call fatal_error(error, "Can only select zero or rational damping function")
+      & config%optimizedpower, config%cso]) > 1) then
+      call fatal_error(error, "Can only select one damping scheme (zero, rational, mzero, mrational, optimizedpower, or cso)")
       return
    end if
 

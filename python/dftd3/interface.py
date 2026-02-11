@@ -421,6 +421,49 @@ class OptimizedPowerDampingParam(DampingParam):
         )
 
 
+class CSODampingParam(DampingParam):
+    r"""
+    CSO (C6-scaled only) damping function.\ :footcite:`schroeder2015`
+    Reformulation of the D3(Becke-Johnson) dispersion correction using only C6
+    dispersion coefficients with a sigmoidal interpolation function.
+
+    This constructor allows to automatically load the parameterized damping function
+    from the library. Only eight functionals are parametrized with this scheme.
+    """
+
+    def __init__(self, **kwargs):
+        _rename_kwargs(kwargs, "alpha6", "alp")
+        DampingParam.__init__(self, **kwargs)
+
+    @staticmethod
+    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
+        return library.load_cso_damping(
+            method,
+            atm,
+        )
+
+    @staticmethod
+    def new_param(
+        *,
+        s6: float = 1.0,
+        s9: float = 1.0,
+        a1: float,
+        a2: float = 2.5,
+        a3: float = 0.0,
+        a4: float = 6.25,
+        alp: float = 14.0,
+    ) -> library.ParamHandle:
+        return library.new_cso_damping(
+            s6,
+            s9,
+            a1,
+            a2,
+            a3,
+            a4,
+            alp,
+        )
+
+
 class DispersionModel(Structure):
     """
     .. Dispersion model

@@ -75,6 +75,13 @@ OptimizedPowerDampingParam
    :members:
 
 
+CSODampingParam
+~~~~~~~~~~~~~~~
+
+.. autoclass:: CSODampingParam
+   :members:
+
+
 QCSchema support
 ----------------
 

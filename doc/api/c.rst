@@ -260,6 +260,29 @@ Standard damping parameters like the rational damping are independent of the mol
 
    Load optimized power damping parameters from internal storage
 
+.. c:function:: dftd3_param dftd3_new_cso_damping(dftd3_error error, double s6, double s9, double a1, double a2, double a3, double a4, double alp);
+
+   :param error: Error handle
+   :param s6: Scaling of induced dipole-dipole dispersion energy
+   :param s9: Scaling of induced triple-dipole dispersion energy
+   :param a1: Sigmoid amplitude parameter
+   :param a2: Sigmoid reference distance scale
+   :param a3: Denominator critical radii scale
+   :param a4: Denominator constant offset
+   :param alp: Exponent for the zero damping function (used for induced triple-dipole dispersion energy)
+   :returns: New damping parameter handle
+
+   Create new CSO (C6-scaled only) damping parameters
+
+.. c:function:: dftd3_param dftd3_load_cso_damping(dftd3_error error, char* method, bool atm);
+
+   :param error: Error handle
+   :param method: Name of the method to load parameters for
+   :param atm: Use three-body dispersion
+   :returns: New damping parameter handle
+
+   Load CSO damping parameters from internal storage
+
 .. c:function:: void dftd3_delete_param(dftd3_param* param);
 
    :param param: Dispersion parameter handle

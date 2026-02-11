@@ -241,6 +241,22 @@ def load_optimizedpower_damping(method: str, atm: bool) -> ParamHandle:
     )
 
 
+def new_cso_damping(
+    s6: float, s9: float, a1: float, a2: float, a3: float, a4: float, alp: float
+) -> ParamHandle:
+    """Create new CSO (C6-scaled only) damping parameters"""
+    return ParamHandle.with_gc(
+        error_check(lib.dftd3_new_cso_damping)(s6, s9, a1, a2, a3, a4, alp)
+    )
+
+
+def load_cso_damping(method: str, atm: bool) -> ParamHandle:
+    """Load CSO damping parameters from internal storage"""
+    return ParamHandle.with_gc(
+        error_check(lib.dftd3_load_cso_damping)(_char(method), atm)
+    )
+
+
 def update_structure(
     mol: StructureHandle, positions: np.ndarray, lattice: Optional[np.ndarray]
 ) -> None:
