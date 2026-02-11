@@ -121,6 +121,7 @@ from .interface import (
     ModifiedRationalDampingParam,
     ModifiedZeroDampingParam,
     OptimizedPowerDampingParam,
+    CSODampingParam,
 )
 from .library import get_api_version
 import numpy as np
@@ -140,6 +141,7 @@ _available_levels = [
     "d3zerom",
     "d3mzero",
     "d3op",
+    "d3cso",
 ]
 
 _damping_param = {
@@ -150,6 +152,7 @@ _damping_param = {
     "d3zerom": ModifiedZeroDampingParam,
     "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
+    "d3cso": CSODampingParam,
 }
 
 _clean_dashlevel = str.maketrans("", "", "()")

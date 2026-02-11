@@ -11,6 +11,7 @@ Supported features include:
 - Zero damping function D3(0).\ :footcite:`grimme2010`
 - Modified rational and zero damping functions, D3M(BJ) and D3M(0).\ :footcite:`smith2016`
 - Optimized power damping function, D3(op).\ :footcite:`witte2017`
+- CSO (C6-scaled only) damping function, D3(CSO).\ :footcite:`schroeder2015`
 - Axilrod-Teller-Muto three-center contribution.
 - Pairwise analysis of dispersion contributions.
 - Extensive parameter support for (almost) all published D3 parameters.

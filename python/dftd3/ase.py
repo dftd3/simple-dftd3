@@ -96,6 +96,7 @@ from .interface import (
     ModifiedRationalDampingParam,
     ModifiedZeroDampingParam,
     OptimizedPowerDampingParam,
+    CSODampingParam,
 )
 from ase.calculators.calculator import (
     Calculator,
@@ -116,6 +117,7 @@ _damping_param = {
     "d3zerom": ModifiedZeroDampingParam,
     "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
+    "d3cso": CSODampingParam,
 }
 
 
