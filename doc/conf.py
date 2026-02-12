@@ -45,7 +45,6 @@ html_css_files = []
 html_static_path = ["_static"]
 templates_path = ["_templates"]
 locale_dirs = ["locales"]
-autodoc_mock_imports = ["numpy", "ase", "qcelemental", "pyscf"]
 bibtex_bibfiles = ["_static/references.bib"]
 
 master_doc = "index"
