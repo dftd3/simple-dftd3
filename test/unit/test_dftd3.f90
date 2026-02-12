@@ -78,6 +78,8 @@ subroutine collect_dftd3(testsuite)
       & new_unittest("lc-wPBE-D3(0M)", test_lcwpbed3zerom_mb36), &
       & new_unittest("B97h-D3(op)", test_b97hd3op_mb37), &
       & new_unittest("TPSSh-D3(op)", test_tpsshd3op_mb38), &
+      & new_unittest("B3LYP-D3(CSO)", test_b3lypd3cso_mb01), &
+      & new_unittest("PBE-D3(CSO)-ATM", test_pbed3cso_mb02), &
       & new_unittest("PBE-D3(BJ) Actinides", test_pbed3bj_actinides) &
       & ]
 
@@ -888,6 +890,46 @@ subroutine test_tpsshd3op_mb38(error)
    call test_numsigma(error, mol, param)
 
 end subroutine test_tpsshd3op_mb38
+
+
+subroutine test_b3lypd3cso_mb01(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(cso_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
+      & a1 = 0.86_wp, a2 = 2.5_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_cso_damping(param, inp)
+   call test_dftd3_gen(error, mol, param, -3.8002950817452329E-002_wp)
+   if (allocated(error)) return
+   call test_numgrad(error, mol, param)
+
+end subroutine test_b3lypd3cso_mb01
+
+
+subroutine test_pbed3cso_mb02(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(cso_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
+      & a1 = 0.24_wp, a2 = 2.5_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
+
+   call get_structure(mol, "MB16-43", "02")
+   call new_cso_damping(param, inp)
+   call test_dftd3_gen(error, mol, param, -3.8229908827789316E-002_wp)
+   if (allocated(error)) return
+   call test_numsigma(error, mol, param)
+
+end subroutine test_pbed3cso_mb02
 
 
 subroutine test_pbed3bj_actinides(error)

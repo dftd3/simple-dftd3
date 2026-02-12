@@ -18,6 +18,7 @@ module dftd3_param
    use mctc_env, only : wp, error_type, fatal_error
    use dftd3_citation, only : citation_type, author_name, new_citation, &
       & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
+      & doi_dftd3_cso, &
       & doi_gmtkn30_0, doi_gmtkn30_bj, doi_gmtkn55, doi_dsd, doi_dsdpbep86, &
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
@@ -29,6 +30,7 @@ module dftd3_param
    public :: get_rational_damping, get_zero_damping
    public :: get_mrational_damping, get_mzero_damping
    public :: get_optimizedpower_damping
+   public :: get_cso_damping
 
 
    type :: d3_param
@@ -1233,6 +1235,55 @@ subroutine get_optimizedpower_damping(param, method, error, s9, citation)
    end if
 
 end subroutine get_optimizedpower_damping
+
+
+!> Load CSO (C6-Scaled Only) damping parameters from internal storage
+subroutine get_cso_damping(param, method, error, s9, citation)
+
+   !> Loaded parameter record
+   type(d3_param), intent(out) :: param
+
+   !> Name of the method to look up
+   character(len=*), intent(in) :: method
+
+   !> Overwrite s9
+   real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select case(get_method_id(method))
+   case default
+      call fatal_error(error, "No entry for '"//method//"' present")
+      return
+   case(p_blyp_df)
+      param = d3_param(s6=1.0_wp, a1=1.28_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   case(p_bp_df)
+      param = d3_param(s6=1.0_wp, a1=1.01_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   case(p_pbe_df)
+      param = d3_param(s6=1.0_wp, a1=0.24_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   case(p_tpss_df)
+      param = d3_param(s6=1.0_wp, a1=0.72_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   case(p_b3lyp_df, p_b3lyp_g_df)
+      param = d3_param(s6=1.0_wp, a1=0.86_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   case(p_pbe0_df)
+      param = d3_param(s6=1.0_wp, a1=0.20_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   case(p_pw6b95_df)
+      param = d3_param(s6=1.0_wp, a1=-0.15_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   case(p_b2plyp_df)
+      param = d3_param(s6=0.73_wp, a1=0.24_wp, a2=2.5_wp, rs6=0.0_wp, rs8=6.25_wp)
+   end select
+
+   if (present(citation)) citation = get_citation(doi_dftd3_cso)
+
+   if (present(s9)) then
+      param%s9 = s9
+   end if
+
+end subroutine get_cso_damping
 
 
 !> Convert string to lower case

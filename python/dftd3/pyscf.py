@@ -37,6 +37,7 @@ from .interface import (
     ModifiedRationalDampingParam,
     ModifiedZeroDampingParam,
     OptimizedPowerDampingParam,
+    CSODampingParam,
 )
 
 GradientsBase = getattr(rhf_grad, "GradientsBase", rhf_grad.Gradients)
@@ -49,6 +50,7 @@ _damping_param = {
     "d3zerom": ModifiedZeroDampingParam,
     "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
+    "d3cso": CSODampingParam,
 }
 
 
@@ -69,11 +71,13 @@ class DFTD3Dispersion(lib.StreamObject):
         Modified version of the zero damping function
     ``"d3op"``
         Optimized power damping function
+    ``"d3cso"``
+        CSO (C6-scaled only) damping function
 
     Custom parameters can be provided with the `param` dictionary.
     The `param` dict contains the damping parameters, at least s8, a1 and a2
     must be provided for rational damping, while s8 and rs6 are required in case
-    of zero damping.
+    of zero damping. For CSO damping, a1 must be provided.
 
     Parameters for (modified) rational damping are:
 
@@ -114,6 +118,20 @@ class DFTD3Dispersion(lib.StreamObject):
     a2                       None        Offset of the critical radii
     alp                      14.0        Exponent of the zero damping (ATM only)
     bet                      None        Power for the zero-damping component
+    ======================== =========== ============================================
+
+    Parameters for CSO (C6-scaled only) damping are:
+
+    ======================== =========== ============================================
+    Tweakable parameter      Default     Description
+    ======================== =========== ============================================
+    s6                       1.0         Scaling of the dipole-dipole dispersion
+    s9                       1.0         Scaling of the three-body dispersion energy
+    a1                       None        Sigmoid amplitude parameter
+    a2                       2.5         Sigmoid reference distance scale
+    a3                       0.0         Denominator critical radii scale
+    a4                       6.25        Denominator constant offset
+    alp                      14.0        Exponent of the zero damping (ATM only)
     ======================== =========== ============================================
 
     The version of the damping can be changed after constructing the dispersion correction.

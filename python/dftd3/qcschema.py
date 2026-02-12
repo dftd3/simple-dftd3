@@ -34,11 +34,11 @@ Supported keywords are
 ======================== =========== ============================================
 
 Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``/``"d3mbj"``,
-``"d3mzero"``/``"d3zerom"``, and ``"d3op"``.
+``"d3mzero"``/``"d3zerom"``, ``"d3op"``, and ``"d3cso"``.
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided for rational damping, while s8 and rs6 are required in case
-of zero damping.
+of zero damping. For CSO damping, a1 must be provided.
 
 Parameters for (modified) rational damping are:
 
@@ -81,6 +81,20 @@ Parameters for optimized power damping are:
  bet                      None        Power for the zero-damping component
 ======================== =========== ============================================
 
+Parameters for CSO (C6-scaled only) damping are:
+
+======================== =========== ============================================
+ Tweakable parameter      Default     Description
+======================== =========== ============================================
+ s6                       1.0         Scaling of the dipole-dipole dispersion
+ s9                       1.0         Scaling of the three-body dispersion energy
+ a1                       None        Sigmoid amplitude parameter
+ a2                       2.5         Sigmoid reference distance scale
+ a3                       0.0         Denominator critical radii scale
+ a4                       6.25        Denominator constant offset
+ alp                      14.0        Exponent of the zero damping (ATM only)
+======================== =========== ============================================
+
 .. note::
 
     input_data.model.method with a full method name and input_data.keywords["params_tweaks"]
@@ -121,6 +135,7 @@ from .interface import (
     ModifiedRationalDampingParam,
     ModifiedZeroDampingParam,
     OptimizedPowerDampingParam,
+    CSODampingParam,
 )
 from .library import get_api_version
 import numpy as np
@@ -140,6 +155,7 @@ _available_levels = [
     "d3zerom",
     "d3mzero",
     "d3op",
+    "d3cso",
 ]
 
 _damping_param = {
@@ -150,6 +166,7 @@ _damping_param = {
     "d3zerom": ModifiedZeroDampingParam,
     "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
+    "d3cso": CSODampingParam,
 }
 
 _clean_dashlevel = str.maketrans("", "", "()")

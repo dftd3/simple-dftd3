@@ -49,11 +49,14 @@ subroutine collect_param(testsuite)
       & new_unittest("DFT-D3(BJM)-ATM", test_d3bjmatm_mb04), &
       & new_unittest("DFT-D3(0M)-ATM", test_d3zeromatm_mb05), &
       & new_unittest("DFT-D3(op)-ATM", test_d3opatm_mb07), &
+      & new_unittest("DFT-D3(CSO)", test_d3cso_mb01), &
+      & new_unittest("DFT-D3(CSO)-ATM", test_d3csoatm_mb02), &
       & new_unittest("unknown-D3(BJ)", test_d3bj_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(0)", test_d3zero_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(BJM)", test_d3bjm_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(0M)", test_d3zerom_unknown, should_fail=.true.), &
-      & new_unittest("unknown-D3(op)", test_d3op_unknown, should_fail=.true.) &
+      & new_unittest("unknown-D3(op)", test_d3op_unknown, should_fail=.true.), &
+      & new_unittest("unknown-D3(CSO)", test_d3cso_unknown, should_fail=.true.) &
       & ]
 
 end subroutine collect_param
@@ -618,6 +621,76 @@ subroutine test_d3op_unknown(error)
    call get_optimizedpower_damping(inp, "unknown", error)
 
 end subroutine test_d3op_unknown
+
+
+subroutine test_d3cso_mb01(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(cso_damping_param) :: param
+   type(d3_param) :: inp
+
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      & "blyp", "bp86", "pbe", "tpss", "b3lyp", "pbe0", "pw6b95", "b2plyp"]
+   real(wp), parameter :: ref(*) = [&
+      &-4.6561914861742063E-2_wp,-4.1059723690412941E-2_wp,-2.5368289609215090E-2_wp, &
+      &-3.5149962802689075E-2_wp,-3.8002950817452322E-2_wp,-2.4553150176425589E-2_wp, &
+      &-1.7420680139517471E-2_wp,-1.9839377295845999E-2_wp]
+
+   call get_structure(mol, "MB16-43", "01")
+   do ii = 1, size(func)
+      call get_cso_damping(inp, trim(func(ii)), error)
+      if (allocated(error)) exit
+      call new_cso_damping(param, inp)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3cso_mb01
+
+
+subroutine test_d3csoatm_mb02(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(cso_damping_param) :: param
+   type(d3_param) :: inp
+
+   integer :: ii
+   character(len=*), parameter :: func(*) = [character(len=20)::&
+      & "blyp", "bp86", "pbe", "tpss", "b3lyp", "pbe0", "pw6b95", "b2plyp"]
+   real(wp), parameter :: ref(*) = [&
+      &-7.0301894479094934E-2_wp,-6.1975513588852130E-2_wp,-3.8229908827789323E-2_wp, &
+      &-5.3032363743776519E-2_wp,-5.7349746427606110E-2_wp,-3.6996370918123717E-2_wp, &
+      &-2.6202914208549720E-2_wp,-2.9882002966364205E-2_wp]
+
+   call get_structure(mol, "MB16-43", "02")
+   do ii = 1, size(func)
+      call get_cso_damping(inp, trim(func(ii)), error, s9=1.0_wp)
+      if (allocated(error)) return
+      call new_cso_damping(param, inp)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3csoatm_mb02
+
+
+subroutine test_d3cso_unknown(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(d3_param) :: inp
+
+   call get_cso_damping(inp, "unknown", error)
+
+end subroutine test_d3cso_unknown
 
 
 end module test_param
