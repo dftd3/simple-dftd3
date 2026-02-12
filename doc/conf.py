@@ -13,6 +13,7 @@ version = dftd3.__version__
 release = version
 
 extensions = [
+    "myst_nb",
     "sphinx_design",
     "sphinx_copybutton",
     "sphinx.ext.autosummary",
@@ -24,6 +25,9 @@ extensions = [
     "sphinx.ext.extlinks",
     "sphinxcontrib.bibtex",
 ]
+
+nb_execution_mode = "auto"
+myst_enable_extensions = ["dollarmath"]
 
 html_theme = "sphinx_book_theme"
 html_title = "Simple DFT-D3"
@@ -41,7 +45,6 @@ html_css_files = []
 html_static_path = ["_static"]
 templates_path = ["_templates"]
 locale_dirs = ["locales"]
-autodoc_mock_imports = ["dftd3.library", "numpy", "ase", "qcelemental", "pyscf"]
 bibtex_bibfiles = ["_static/references.bib"]
 
 master_doc = "index"
