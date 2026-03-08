@@ -254,3 +254,42 @@ def test_issue_gh73():
     e_pbc_disp = disp.DFTD3Dispersion(pmol, xc=xc, version="d3bj").kernel()[0]
 
     assert e_mol_disp != e_pbc_disp
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_gcp_energy_b973c():
+    mol = gto.M(
+        atom="""
+             O  -1.551007  -0.114520   0.000000
+             H  -1.934259   0.762503   0.000000
+             H  -0.599677   0.040712   0.000000
+             O   1.350625   0.111469   0.000000
+             H   1.680398  -0.373741  -0.758561
+             H   1.680398  -0.373741   0.758561
+             """
+    )
+
+    gcp = disp.CounterpoiseCorrection(mol, method="b973c")
+    energy, gradient = gcp.kernel()
+    assert energy != approx(0.0, abs=1.0e-10)
+    assert gradient.shape == (mol.natm, 3)
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_gcp_scf_b973c():
+    mol = gto.M(
+        atom="""
+             O  -1.551007  -0.114520   0.000000
+             H  -1.934259   0.762503   0.000000
+             H  -0.599677   0.040712   0.000000
+             O   1.350625   0.111469   0.000000
+             H   1.680398  -0.373741  -0.758561
+             H   1.680398  -0.373741   0.758561
+             """
+    )
+
+    mf = disp.gcp_energy(scf.RHF(mol), method="b973c")
+    assert hasattr(mf, "with_gcp")
+    energy, gradient = mf.with_gcp.kernel()
+    assert energy != approx(0.0, abs=1.0e-10)
+    assert gradient.shape == (mol.natm, 3)

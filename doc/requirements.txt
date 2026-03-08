@@ -2,6 +2,7 @@ sphinx-book-theme
 sphinx-copybutton
 sphinx-design
 sphinxcontrib-bibtex
+myst-nb
 numpy
 ase
 cffi

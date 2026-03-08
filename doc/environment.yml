@@ -1,0 +1,25 @@
+name: dftd3-docs
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  # documentation dependencies
+  - myst-nb
+  - sphinx-book-theme
+  - sphinx-copybutton
+  - sphinx-design
+  - sphinxcontrib-bibtex
+  # package dependencies
+  - ase
+  - cffi
+  - numpy
+  - qcelemental
+  # extra dependencies for notebooks
+  - pyscf
+  # build dependencies
+  - c-compiler
+  - fortran-compiler
+  - meson !=1.8.0
+  - ninja
+  - pkg-config
+  - pip
