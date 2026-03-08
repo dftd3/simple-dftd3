@@ -17,6 +17,7 @@ build:
     install:
       - tar --exclude=./python -cvf ./python/s-dftd3.tar . && mkdir -p ./python/subprojects/s-dftd3 && tar xvf ./python/s-dftd3.tar -C ./python/subprojects/s-dftd3
       - pip install ./python -v
+      - pushd ./python/dftd3 && ln -s $PWD/.mesonpy-*/dftd3/_libdftd3.*.so && popd
 
 # Get dependencies for docs, package and build from conda-forge
 conda:
