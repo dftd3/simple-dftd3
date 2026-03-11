@@ -68,6 +68,8 @@ A list of projects currently using this DFT-D3 implementation is given here.
   Platform for Machine Learning-Enhanced Computational Chemistry Simulations and Workflows.\ :footcite:`dral2024`
 `FHI-aims <https://fhi-aims.org/>`_: (since 240920)
   All-electron electronic structure theory with numeric atom-centered orbitals.\ :footcite:`blum2009`
+`VASP <https://www.vasp.at/>`_: (since 6.6.0)
+  The Vienna Ab initio Simulation Package: atomic scale materials modelling from first principles.\ :footcite:`kresse1999`
 
 If your project is using *s-dftd3* feel free to add your project to this list.
 
