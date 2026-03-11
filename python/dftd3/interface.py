@@ -72,6 +72,10 @@ class Structure:
         immutable atomic species and boundary condition, also the total number of
         atoms cannot be changed.
 
+        Cartesian coordinates and lattice vectors are expected in atomic units
+        (Bohr). Periodicity is given as a boolean array for the three lattice
+        directions.
+
         Raises
         ------
         ValueError
@@ -488,12 +492,16 @@ class DispersionModel(Structure):
         self._disp = library.new_d3_model(self._mol)
 
     def set_realspace_cutoff(self, disp2: float, disp3: float, cn: float):
-        """Set realspace cutoff for evaluation of interactions"""
+        """Set realspace cutoffs in Bohr for pair, triple, and CN evaluations."""
 
         library.set_model_realspace_cutoff(self._disp, disp2, disp3, cn)
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
-        """Perform actual evaluation of the dispersion correction"""
+        """Perform actual evaluation of the dispersion correction.
+
+        Returns the dispersion energy in Hartree. If ``grad=True`` the gradient
+        is returned in Hartree / Bohr and the virial in Hartree.
+        """
 
         _energy = np.array(0.0)
         if grad:
