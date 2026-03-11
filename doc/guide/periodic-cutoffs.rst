@@ -108,7 +108,7 @@ To pass the same numerical cutoff as the library defaults, multiply by
 
    setups = {
        "D3(BJ)": {"params_tweaks": {"method": "PBE", "atm": False}},
-       "D3(BJ)-ATM": {"method": "PBE"},
+       "D3(BJ)-ATM": {"params_tweaks": {"method": "PBE", "atm": True}},
    }
 
    cutoffs = [
