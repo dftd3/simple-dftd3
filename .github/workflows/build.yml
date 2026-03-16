@@ -270,9 +270,18 @@ jobs:
     - run: pip3 install coverage
 
     - name: Install dependencies
+      if: "(matrix.python_v != '3.14')"
       uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: assets/ci/python-env.yaml
+        create-args: |
+          python=${{ matrix.python_v }}
+
+    - name: Install dependencies
+      if: "(matrix.python_v == '3.14')"
+      uses: mamba-org/setup-micromamba@v1
+      with:
+        environment-file: assets/ci/python-env-alt.yaml
         create-args: |
           python=${{ matrix.python_v }}
 

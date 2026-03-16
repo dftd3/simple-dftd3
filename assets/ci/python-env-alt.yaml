@@ -6,14 +6,13 @@ dependencies:
   - pip
   - python-build
   - pkgconfig
-  - pyscf
   - pytest
   - pytest-cov
   - coverage
   - cffi
   - numpy
   - ase
-  - qcelemental
+  - conda-forge/label/qcelemental_dev::qcelemental=0.50.0rc3
   - matplotlib-base
   - meson >=1.2.3,!=1.8.0
   - meson-python
