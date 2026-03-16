@@ -426,7 +426,7 @@ def test_error_nomethod(schver):
             )
         )
     else:
-        assert schver in [1, 2], f"QCSchema v{schver} NYI"
+        raise RuntimeError(f"QCSchema v{schver} NYI")
 
     error = ComputeError(
         error_type="input error",
