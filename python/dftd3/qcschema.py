@@ -173,15 +173,29 @@ _clean_dashlevel = str.maketrans("", "", "()")
 
 
 def run_qcschema(
-    input_data: Union[dict, qcel.models.AtomicInput]
-) -> qcel.models.AtomicResult:
+    input_data: Union[dict, qcel.models.AtomicInput, "qcel.models.v2.AtomicInput"]
+) -> Union[qcel.models.AtomicResult, "qcel.models.v2.AtomicResult"]:
     """Perform disperson correction based on an atomic inputmodel"""
 
-    if not isinstance(input_data, qcel.models.AtomicInput):
-        atomic_input = qcel.models.AtomicInput(**input_data)
-    else:
+    v2_available = hasattr(qcel.models, "v2")
+
+    if v2_available and isinstance(input_data, qcel.models.v2.AtomicInput):
         atomic_input = input_data
-    ret_data = atomic_input.dict()
+    elif isinstance(input_data, qcel.models.AtomicInput):
+        atomic_input = input_data
+    elif v2_available and input_data.get("specification"):
+        atomic_input = qcel.models.v2.AtomicInput(**input_data)
+    else:
+        atomic_input = qcel.models.AtomicInput(**input_data)
+
+    if (schver := atomic_input.schema_version) == 1:
+        from qcelemental.models import AtomicInput, AtomicResult, ComputeError
+
+        ret_data = atomic_input.dict()
+    elif schver == 2:
+        from qcelemental.models.v2 import AtomicInput, AtomicResult, ComputeError, FailedOperation
+
+        ret_data = {"input_data": atomic_input, "extras": {}, "molecule": atomic_input.molecule}
 
     provenance = {
         "creator": "s-dftd3",
@@ -194,24 +208,29 @@ def run_qcschema(
 
     # Since it is a level hint we a forgiving if it is not present,
     # we are much less forgiving if the wrong level is hinted here.
-    _level = atomic_input.keywords.get("level_hint", "d3bj")
+    atin_keywords = atomic_input.keywords if schver == 1 else atomic_input.specification.keywords
+    _level = atin_keywords.get("level_hint", "d3bj")
     if _level.lower() not in _available_levels:
-        ret_data.update(
-            provenance=provenance,
-            success=success,
-            properties=properties,
-            return_result=return_result,
-            error=qcel.models.ComputeError(
-                error_type="input error",
-                error_message="Level '{}' is invalid for this dispersion correction".format(
-                    _level
-                ),
+        error=ComputeError(
+            error_type="input error",
+            error_message="Level '{}' is invalid for this dispersion correction".format(
+                _level
             ),
         )
-        return qcel.models.AtomicResult(**ret_data)
+        if schver == 1:
+            ret_data.update(
+                provenance=provenance,
+                success=success,
+                properties=properties,
+                return_result=return_result,
+                error=error,
+            )
+            return AtomicResult(**ret_data)
+        elif schver == 2:
+            return FailedOperation(input_data=atomic_input, error=error)
 
     # Check if the method is provided and strip the “dashlevel” from the method
-    _method = atomic_input.model.method.split("-")
+    _method = atomic_input.model.method.split("-") if schver == 1 else atomic_input.specification.model.method.split("-")
     if _method[-1].lower().translate(_clean_dashlevel) == _level.lower():
         _method.pop()
     _method = "-".join(_method)
@@ -219,7 +238,7 @@ def run_qcschema(
         _method = None
 
     # Obtain the parameters for the damping function
-    _input_param = atomic_input.keywords.get("params_tweaks", {"method": _method})
+    _input_param = atin_keywords.get("params_tweaks", {"method": _method})
 
     try:
         param = _damping_param[_level](
@@ -231,13 +250,14 @@ def run_qcschema(
             atomic_input.molecule.geometry[atomic_input.molecule.real],
         )
 
+        driver = atomic_input.driver if schver == 1 else atomic_input.specification.driver
         res = disp.get_dispersion(
             param=param,
-            grad=atomic_input.driver == "gradient",
+            grad=driver == "gradient",
         )
         extras = {"dftd3": res}
 
-        if atomic_input.driver == "gradient":
+        if driver == "gradient":
             if all(atomic_input.molecule.real):
                 fullgrad = res.get("gradient")
             else:
@@ -247,18 +267,18 @@ def run_qcschema(
 
         properties.update(return_energy=res.get("energy"))
 
-        if atomic_input.keywords.get("pair_resolved", False):
+        if atin_keywords.get("pair_resolved", False):
             res = disp.get_pairwise_dispersion(param=param)
             extras["dftd3"].update(res)
 
-        success = atomic_input.driver in _supported_drivers
-        if atomic_input.driver == "energy":
+        success = driver in _supported_drivers
+        if driver == "energy":
             return_result = properties["return_energy"]
-        elif atomic_input.driver == "gradient":
+        elif driver == "gradient":
             return_result = fullgrad
         else:
             ret_data.update(
-                error=qcel.models.ComputeError(
+                error=ComputeError(
                     error_type="input error",
                     error_message="Calculation succeeded but invalid driver request provided",
                 ),
@@ -268,7 +288,7 @@ def run_qcschema(
 
     except (RuntimeError, TypeError) as e:
         ret_data.update(
-            error=qcel.models.ComputeError(
+            error=ComputeError(
                 error_type="input error", error_message=str(e)
             ),
         ),
@@ -280,4 +300,7 @@ def run_qcschema(
         return_result=return_result,
     )
 
-    return qcel.models.AtomicResult(**ret_data)
+    if schver == 2 and "error" in ret_data:
+        return FailedOperation(input_data=atomic_input, error=ret_data["error"])
+
+    return AtomicResult(**ret_data)

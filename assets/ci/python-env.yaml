@@ -1,6 +1,7 @@
 name: python
 channels:
   - conda-forge
+  - conda-forge/label/qcelemental_dev
 dependencies:
   - python
   - pip
