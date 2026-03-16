@@ -332,8 +332,6 @@ def test_gradient_tpss_d3zero(schver):
     pytest.param(2, marks=v2_available),
 ])
 def test_error_noargs(schver):
-    thr = 1e-9
-
     molecule={
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
@@ -381,8 +379,6 @@ def test_error_noargs(schver):
     pytest.param(2, marks=v2_available),
 ])
 def test_error_nomethod(schver):
-    thr = 1e-9
-
     molecule={
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
@@ -429,6 +425,8 @@ def test_error_nomethod(schver):
                 },
             )
         )
+    else:
+        assert schver in [1, 2], f"QCSchema v{schver} NYI"
 
     error = ComputeError(
         error_type="input error",
@@ -447,8 +445,6 @@ def test_error_nomethod(schver):
     pytest.param(2, marks=v2_available),
 ])
 def test_error_level(schver):
-    thr = 1e-9
-
     molecule={
         "symbols": "C C C C N C S H H H H H".split(),
         "geometry": [
@@ -495,6 +491,8 @@ def test_error_level(schver):
                 },
             )
         )
+    else:
+        assert schver in [1, 2], f"QCSchema v{schver} NYI"
 
     error = ComputeError(
         error_type="input error",
