@@ -253,7 +253,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         gcc_v: [10]
-        python_v: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.14']
+        python_v: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
 
     env:
       FC: gfortran
@@ -270,7 +270,7 @@ jobs:
     - run: pip3 install coverage
 
     - name: Install dependencies
-      if: "(matrix.python_v != '3.14')"
+      if: ((matrix.python_v != '3.14') && (matrix.python_v != '3.13'))
       uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: assets/ci/python-env.yaml
@@ -278,7 +278,7 @@ jobs:
           python=${{ matrix.python_v }}
 
     - name: Install dependencies
-      if: "(matrix.python_v == '3.14')"
+      if: ((matrix.python_v == '3.14') || (matrix.python_v == '3.13'))
       uses: mamba-org/setup-micromamba@v1
       with:
         environment-file: assets/ci/python-env-alt.yaml
