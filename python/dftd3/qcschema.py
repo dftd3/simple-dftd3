@@ -19,6 +19,12 @@ QCSchema Support
 
 Integration with the `QCArchive infrastructure <http://docs.qcarchive.molssi.org>`_.
 
+If the QCElemental package is installed the ``dftd3.qcschema`` module becomes
+importable and provides the ``run_qcschema`` function supporting QCSchema v1.
+If the QCElemental package is >=0.50.0, ``dftd3.qcschema`` supports QCSchema v1
+and v2, returning whichever version was submitted. Note that Python 3.14+ only
+works with QCSchema v2 due to Pydantic restrictions.
+
 This module provides a way to translate QCSchema or QCElemental Atomic Input
 into a format understandable by the ``dftd3`` API which in turn provides the
 calculation results in a QCSchema compatible format.
