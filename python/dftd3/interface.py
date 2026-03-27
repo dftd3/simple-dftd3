@@ -218,7 +218,7 @@ class RationalDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
+    def load_param(method: str, atm: bool = False) -> library.ParamHandle:
         return library.load_rational_damping(
             method,
             atm,
@@ -261,7 +261,7 @@ class ZeroDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
+    def load_param(method: str, atm: bool = False) -> library.ParamHandle:
         return library.load_zero_damping(
             method,
             atm,
@@ -303,7 +303,7 @@ class ModifiedRationalDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
+    def load_param(method: str, atm: bool = False) -> library.ParamHandle:
         return library.load_mrational_damping(
             method,
             atm,
@@ -348,7 +348,7 @@ class ModifiedZeroDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
+    def load_param(method: str, atm: bool = False) -> library.ParamHandle:
         return library.load_mzero_damping(
             method,
             atm,
@@ -393,7 +393,7 @@ class OptimizedPowerDampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
+    def load_param(method: str, atm: bool = False) -> library.ParamHandle:
         return library.load_optimizedpower_damping(
             method,
             atm,
@@ -436,7 +436,7 @@ class CSODampingParam(DampingParam):
         DampingParam.__init__(self, **kwargs)
 
     @staticmethod
-    def load_param(method: str, atm: bool = True) -> library.ParamHandle:
+    def load_param(method: str, atm: bool = False) -> library.ParamHandle:
         return library.load_cso_damping(
             method,
             atm,

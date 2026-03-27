@@ -162,29 +162,38 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
    !> derivative of the weighting function w.r.t. the coordination number
    real(wp), intent(out), optional :: gwdcn(:, :)
 
-   integer :: iat, izp, iref
+   integer :: iat, izp, iref, mref
    real(wp) :: norm, dnorm, gw, expw, expd, gwk, dgwk
+   real(wp) :: wf2, dcn
+   real(wp), allocatable :: gwt(:)
+
+   mref = maxval(self%ref)
 
    if (present(gwdcn)) then
       gwvec(:, :) = 0.0_wp
       gwdcn(:, :) = 0.0_wp
+      wf2 = 2 * self%wf
 
-      !$omp parallel do schedule(runtime) default(none) &
-      !$omp shared(gwvec, gwdcn, mol, self, cn) &
-      !$omp private(iat, izp, iref, norm, dnorm, gw, expw, expd, gwk, dgwk)
+      !$omp parallel default(none) &
+      !$omp shared(gwvec, gwdcn, mol, self, cn, wf2, mref) &
+      !$omp private(iat, izp, iref, norm, dnorm, gw, expw, expd, gwk, dgwk, dcn, gwt)
+      allocate(gwt(mref))
+      !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          norm = 0.0_wp
          dnorm = 0.0_wp
          do iref = 1, self%ref(izp)
             gw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
+            gwt(iref) = gw
             norm = norm + gw
-            dnorm = dnorm + 2*self%wf * (self%cn(iref, izp) - cn(iat)) * gw
+            dnorm = dnorm + wf2 * (self%cn(iref, izp) - cn(iat)) * gw
          end do
          norm = 1.0_wp / norm
          do iref = 1, self%ref(izp)
-            expw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
-            expd = 2*self%wf * (self%cn(iref, izp) - cn(iat)) * expw
+            expw = gwt(iref)
+            dcn = self%cn(iref, izp) - cn(iat)
+            expd = wf2 * dcn * expw
             gwk = expw * norm
             if (is_exceptional(gwk)) then
                if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
@@ -202,25 +211,30 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
             gwdcn(iref, iat) = dgwk
          end do
       end do
+      !$omp end do
+      deallocate(gwt)
+      !$omp end parallel
 
    else
 
       gwvec(:, :) = 0.0_wp
 
-      !$omp parallel do schedule(runtime) default(none) &
-      !$omp shared(gwvec, mol, self, cn) &
-      !$omp private(iat, izp, iref, norm, gw, expw, gwk)
+      !$omp parallel default(none) &
+      !$omp shared(gwvec, mol, self, cn, mref) &
+      !$omp private(iat, izp, iref, norm, gw, expw, gwk, gwt)
+      allocate(gwt(mref))
+      !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          norm = 0.0_wp
          do iref = 1, self%ref(izp)
             gw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
+            gwt(iref) = gw
             norm = norm + gw
          end do
          norm = 1.0_wp / norm
          do iref = 1, self%ref(izp)
-            expw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
-            gwk = expw * norm
+            gwk = gwt(iref) * norm
             if (is_exceptional(gwk)) then
                if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
                   gwk = 1.0_wp
@@ -231,6 +245,9 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
             gwvec(iref, iat) = gwk
          end do
       end do
+      !$omp end do
+      deallocate(gwt)
+      !$omp end parallel
    end if
 
 end subroutine weight_references
