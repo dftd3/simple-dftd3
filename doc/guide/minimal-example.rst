@@ -89,5 +89,5 @@ You can run the example code with
       .. code-block:: shell
 
          ❯ python energy.py
-         Dispersion energy for PBE0-D3(BJ) is -0.0009218696 Hartree
+         Dispersion energy for PBE0-D3(BJ) is -0.0009219059 Hartree
 

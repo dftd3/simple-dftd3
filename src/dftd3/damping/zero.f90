@@ -161,6 +161,7 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, r1, r6, r8, t6, t8, f6, f8, alp6, alp8
    real(wp) :: edisp, cutoff2, r0ij, rrij, c6ij, dE
+   real(wp) :: rs6r0, rs8r0
 
    ! Thread-private array for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -173,7 +174,7 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
    !$omp parallel default(none) &
    !$omp shared(mol, self, c6, trans, cutoff2, alp6, alp8, rvdw, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r1, r6, r8, t6, t8, f6, &
-   !$omp& f8, edisp, r0ij, rrij, c6ij, dE) &
+   !$omp& f8, edisp, r0ij, rrij, c6ij, dE, rs6r0, rs8r0) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -185,6 +186,8 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = rvdw(jzp, izp)
          c6ij = c6(jat, iat)
+         rs6r0 = self%rs6*r0ij
+         rs8r0 = self%rs8*r0ij
          do jtr = 1, size(trans, 2)
             vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
             r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
@@ -194,8 +197,8 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
             r6 = r2*r2*r2
             r8 = r6*r2
 
-            t6 = (self%rs6*r0ij/r1)**alp6
-            t8 = (self%rs8*r0ij/r1)**alp8
+            t6 = (rs6r0/r1)**alp6
+            t8 = (rs8r0/r1)**alp8
 
             f6 = 1.0_wp / (1.0_wp + 6.0_wp*t6)
             f8 = 1.0_wp / (1.0_wp + 6.0_wp*t8)
@@ -261,9 +264,10 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
    !> Dispersion virial
    real(wp), intent(inout) :: sigma(:, :)
 
-   integer :: iat, jat, izp, jzp, jtr
+   integer :: iat, jat, izp, jzp, jtr, ic, jc
    real(wp) :: vec(3), r2, r1, r6, r8, t6, t8, d6, d8, f6, f8, alp6, alp8
    real(wp) :: edisp, gdisp, cutoff2, r0ij, rrij, c6ij, dE, dG(3), dS(3, 3)
+   real(wp) :: rs6r0, rs8r0
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -278,8 +282,8 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
 
    !$omp parallel default(none) &
    !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, alp6, alp8, r4r2, rvdw) &
-   !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r1, r6, r8, t6, t8, d6, &
-   !$omp& d8, f6, f8, edisp, gdisp, r0ij, rrij, c6ij, dE, dG, dS) &
+   !$omp private(iat, jat, izp, jzp, jtr, ic, jc, vec, r2, r1, r6, r8, t6, t8, d6, &
+   !$omp& d8, f6, f8, edisp, gdisp, r0ij, rrij, c6ij, dE, dG, dS, rs6r0, rs8r0) &
    !$omp shared(energy, gradient, sigma, dEdcn) &
    !$omp private(energy_local, gradient_local, sigma_local, dEdcn_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -294,6 +298,8 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = rvdw(jzp, izp)
          c6ij = c6(jat, iat)
+         rs6r0 = self%rs6*r0ij
+         rs8r0 = self%rs8*r0ij
          do jtr = 1, size(trans, 2)
             vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
             r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
@@ -303,8 +309,8 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
             r6 = r2*r2*r2
             r8 = r6*r2
 
-            t6 = (self%rs6*r0ij/r1)**alp6
-            t8 = (self%rs8*r0ij/r1)**alp8
+            t6 = (rs6r0/r1)**alp6
+            t8 = (rs8r0/r1)**alp8
 
             f6 = 1.0_wp / (1.0_wp + 6.0_wp*t6)
             f8 = 1.0_wp / (1.0_wp + 6.0_wp*t8)
@@ -319,7 +325,11 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
 
             dE = -c6ij*edisp * 0.5_wp
             dG(:) = -c6ij*gdisp*vec
-            dS(:, :) = spread(dG, 1, 3) * spread(vec, 2, 3) * 0.5_wp
+            do ic = 1, 3
+               do jc = 1, 3
+                  dS(ic, jc) = dG(ic) * vec(jc) * 0.5_wp
+               end do
+            end do
 
             energy_local(iat) = energy_local(iat) + dE
             dEdcn_local(iat) = dEdcn_local(iat) - dc6dcn(iat, jat) * edisp
@@ -426,6 +436,7 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, r1, r6, r8, t6, t8, f6, f8, alp6, alp8
    real(wp) :: edisp, cutoff2, r0ij, rrij, c6ij, dE
+   real(wp) :: rs6r0, rs8r0
 
    ! Thread-private array for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -438,7 +449,7 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
    !$omp parallel default(none) &
    !$omp shared(mol, self, c6, trans, cutoff2, alp6, alp8, rvdw, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r1, r6, r8, t6, t8, f6, &
-   !$omp& f8, edisp, r0ij, rrij, c6ij, dE) &
+   !$omp& f8, edisp, r0ij, rrij, c6ij, dE, rs6r0, rs8r0) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1), size(energy, 2)), source=0.0_wp)
@@ -450,6 +461,8 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = rvdw(jzp, izp)
          c6ij = c6(jat, iat)
+         rs6r0 = self%rs6*r0ij
+         rs8r0 = self%rs8*r0ij
          do jtr = 1, size(trans, 2)
             vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
             r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
@@ -459,8 +472,8 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
             r6 = r2*r2*r2
             r8 = r6*r2
 
-            t6 = (self%rs6*r0ij/r1)**alp6
-            t8 = (self%rs8*r0ij/r1)**alp8
+            t6 = (rs6r0/r1)**alp6
+            t8 = (rs8r0/r1)**alp8
 
             f6 = 1.0_wp / (1.0_wp + 6.0_wp*t6)
             f8 = 1.0_wp / (1.0_wp + 6.0_wp*t8)

@@ -162,6 +162,7 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
 
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, cutoff2, r0ij, rrij, c6ij, t6, t8, edisp, dE, rb, ab
+   real(wp) :: r0ij2, r0ij6, r0ij8, abr0ij6, abr0ij8, r4
 
    ! Thread-private array for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -172,7 +173,7 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
    !$omp parallel default(none) &
    !$omp shared(mol, self, c6, trans, cutoff2, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r0ij, rrij, c6ij, t6, &
-   !$omp& t8, edisp, dE, rb, ab) &
+   !$omp& t8, edisp, dE, rb, ab, r0ij2, r0ij6, r0ij8, abr0ij6, abr0ij8, r4) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -184,15 +185,21 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = self%a1 * sqrt(rrij) + self%a2
          c6ij = c6(jat, iat)
+         r0ij2 = r0ij * r0ij
+         r0ij6 = r0ij2 * r0ij2 * r0ij2
+         r0ij8 = r0ij6 * r0ij2
+         ab = r0ij**self%bet
+         abr0ij6 = ab * r0ij6
+         abr0ij8 = ab * r0ij8
          do jtr = 1, size(trans, 2)
             vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
             r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
             if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
 
             rb = r2**(self%bet*0.5_wp)
-            ab = r0ij**self%bet
-            t6 = rb/(rb*r2**3 + ab*r0ij**6)
-            t8 = rb/(rb*r2**4 + ab*r0ij**8)
+            r4 = r2 * r2
+            t6 = rb/(rb*r4*r2 + abr0ij6)
+            t8 = rb/(rb*r4*r4 + abr0ij8)
 
             edisp = self%s6*t6 + self%s8*rrij*t8
 
@@ -255,9 +262,10 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
    !> Dispersion virial
    real(wp), intent(inout) :: sigma(:, :)
 
-   integer :: iat, jat, izp, jzp, jtr
+   integer :: iat, jat, izp, jzp, jtr, ic, jc
    real(wp) :: vec(3), r2, cutoff2, r0ij, rrij, c6ij, t6, t8, d6, d8, edisp, gdisp
    real(wp) :: dE, dG(3), dS(3, 3), rb, ab
+   real(wp) :: r0ij2, r0ij6, r0ij8, abr0ij6, abr0ij8, r4
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -270,8 +278,9 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
 
    !$omp parallel default(none) &
    !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, r4r2) &
-   !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r0ij, rrij, c6ij, t6, t8, &
-   !$omp& d6, d8, edisp, gdisp, dE, dG, dS, rb, ab) &
+   !$omp private(iat, jat, izp, jzp, jtr, ic, jc, vec, r2, r0ij, rrij, c6ij, t6, t8, &
+   !$omp& d6, d8, edisp, gdisp, dE, dG, dS, rb, ab, &
+   !$omp& r0ij2, r0ij6, r0ij8, abr0ij6, abr0ij8, r4) &
    !$omp shared(energy, gradient, sigma, dEdcn) &
    !$omp private(energy_local, gradient_local, sigma_local, dEdcn_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -286,25 +295,35 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = self%a1 * sqrt(rrij) + self%a2
          c6ij = c6(jat, iat)
+         r0ij2 = r0ij * r0ij
+         r0ij6 = r0ij2 * r0ij2 * r0ij2
+         r0ij8 = r0ij6 * r0ij2
+         ab = r0ij**self%bet
+         abr0ij6 = ab * r0ij6
+         abr0ij8 = ab * r0ij8
          do jtr = 1, size(trans, 2)
             vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
             r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
             if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
 
             rb = r2**(self%bet*0.5_wp)
-            ab = r0ij**self%bet
-            t6 = rb/(rb*r2**3 + ab*r0ij**6)
-            t8 = rb/(rb*r2**4 + ab*r0ij**8)
+            r4 = r2 * r2
+            t6 = rb/(rb*r4*r2 + abr0ij6)
+            t8 = rb/(rb*r4*r4 + abr0ij8)
 
-            d6 = -6*r2**2*t6**2 + self%bet*ab*r0ij**6 * t6**2 / (rb*r2)
-            d8 = -8*r2**3*t8**2 + self%bet*ab*r0ij**8 * t8**2 / (rb*r2)
+            d6 = -6*r4*t6*t6 + self%bet*abr0ij6 * t6*t6 / (rb*r2)
+            d8 = -8*r4*r2*t8*t8 + self%bet*abr0ij8 * t8*t8 / (rb*r2)
 
             edisp = self%s6*t6 + self%s8*rrij*t8
             gdisp = self%s6*d6 + self%s8*rrij*d8
 
             dE = -c6ij*edisp * 0.5_wp
             dG(:) = -c6ij*gdisp*vec
-            dS(:, :) = spread(dG, 1, 3) * spread(vec, 2, 3) * 0.5_wp
+            do ic = 1, 3
+               do jc = 1, 3
+                  dS(ic, jc) = dG(ic) * vec(jc) * 0.5_wp
+               end do
+            end do
 
             energy_local(iat) = energy_local(iat) + dE
             dEdcn_local(iat) = dEdcn_local(iat) - dc6dcn(iat, jat) * edisp
@@ -432,13 +451,13 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = self%a1 * sqrt(rrij) + self%a2
          c6ij = c6(jat, iat)
+         ab = r0ij**self%bet
          do jtr = 1, size(trans, 2)
             vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
             r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
             if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
 
             rb = r2**(self%bet*0.5_wp)
-            ab = r0ij**self%bet
             t6 = rb/(rb*r2**3 + ab*r0ij**6)
             t8 = rb/(rb*r2**4 + ab*r0ij**8)
 

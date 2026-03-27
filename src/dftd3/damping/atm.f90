@@ -117,16 +117,17 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
-   real(wp) :: cutoff2, c9, dE
+   real(wp) :: cutoff2, c9, dE, alp3
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
    real(wp), allocatable :: energy_local(:)
 
    cutoff2 = cutoff*cutoff
+   alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, rs9, alp, rvdw, cutoff2) &
+   !$omp shared(mol, trans, c6, s9, rs9, alp3, rvdw, cutoff2) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
    !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
@@ -165,7 +166,7 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                   r3 = r2 * r1
                   r5 = r3 * r2
 
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(alp / 3.0_wp))
+                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**alp3)
                   ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
                      & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
 
@@ -233,10 +234,11 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
    !> Dispersion virial
    real(wp), intent(inout) :: sigma(:, :)
 
-   integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
+   integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr, ic, jc
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang
    real(wp) :: cutoff2, c9, dE, dGij(3), dGjk(3), dGik(3), dS(3, 3)
+   real(wp) :: alp3, r0r1alp3
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -246,13 +248,14 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
    real(wp), allocatable :: sigma_local(:, :)
 
    cutoff2 = cutoff*cutoff
+   alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, rs9, alp, rvdw, cutoff2, dc6dcn) &
-   !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
+   !$omp shared(mol, trans, c6, s9, rs9, alp, alp3, rvdw, cutoff2, dc6dcn) &
+   !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, ic, jc, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
    !$omp& r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang, c9, dE, dGij, dGjk, &
-   !$omp& dGik, dS) &
+   !$omp& dGik, dS, r0r1alp3) &
    !$omp shared(energy, gradient, sigma, dEdcn) &
    !$omp private(energy_local, gradient_local, sigma_local, dEdcn_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -291,13 +294,14 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                   r3 = r2 * r1
                   r5 = r3 * r2
 
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(alp / 3.0_wp))
+                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**alp3)
                   ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
                      & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
 
                   rr = ang*fdmp
 
-                  dfdmp = -2.0_wp * alp * (r0 / r1)**(alp / 3.0_wp) * fdmp**2
+                  r0r1alp3 = (r0 / r1)**alp3
+                  dfdmp = -2.0_wp * alp * r0r1alp3 * fdmp**2
 
                   ! d/drij
                   dang = -0.375_wp * (r2ij**3 + r2ij**2 * (r2jk + r2ik)&
@@ -329,9 +333,12 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                   gradient_local(:, jat) = gradient_local(:, jat) + dGij - dGjk
                   gradient_local(:, kat) = gradient_local(:, kat) + dGik + dGjk
 
-                  dS(:, :) = spread(dGij, 1, 3) * spread(vij, 2, 3)&
-                     & + spread(dGik, 1, 3) * spread(vik, 2, 3)&
-                     & + spread(dGjk, 1, 3) * spread(vjk, 2, 3)
+                  do ic = 1, 3
+                     do jc = 1, 3
+                        dS(ic, jc) = dGij(ic)*vij(jc) + dGik(ic)*vik(jc) &
+                           & + dGjk(ic)*vjk(jc)
+                     end do
+                  end do
 
                   sigma_local(:, :) = sigma_local + dS * triple
 
@@ -396,7 +403,7 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
-   real(wp) :: cutoff2, c9, dE
+   real(wp) :: cutoff2, c9, dE, alp3
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -404,9 +411,10 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
 
    if (abs(s9) < epsilon(1.0_wp)) return
    cutoff2 = cutoff*cutoff
+   alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, cutoff2, s9, rs9, alp, rvdw) &
+   !$omp shared(mol, trans, c6, cutoff2, s9, rs9, alp3, rvdw) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
    !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
@@ -445,7 +453,7 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
                   r3 = r2 * r1
                   r5 = r3 * r2
 
-                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**(alp / 3.0_wp))
+                  fdmp = 1.0_wp / (1.0_wp + 6.0_wp * (r0 / r1)**alp3)
                   ang = 0.375_wp*(r2ij + r2jk - r2ik)*(r2ij - r2jk + r2ik)&
                      & *(-r2ij + r2jk + r2ik) / r5 + 1.0_wp / r3
 
