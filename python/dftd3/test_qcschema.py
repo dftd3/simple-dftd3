@@ -25,8 +25,12 @@ except ModuleNotFoundError:
     qcel_v1 = None
     qcel_v2 = None
 
-v1_available = mark.skipif(qcel_v1 is None, reason="QCSchema v1 not available for py314+")
-v2_available = mark.skipif(qcel_v2 is None, reason="QCSchema v2 not available in current QCElemental")
+v1_available = mark.skipif(
+    qcel_v1 is None, reason="QCSchema v1 not available for py314+"
+)
+v2_available = mark.skipif(
+    qcel_v2 is None, reason="QCSchema v2 not available in current QCElemental"
+)
 
 
 def get_molecule(name: str) -> dict:
@@ -106,7 +110,7 @@ def get_atomic_input(
             "model": {
                 "method": method,
             },
-            "keywords": {}
+            "keywords": {},
         }
         if params_tweaks is not None:
             input_data["keywords"]["params_tweaks"] = params_tweaks
@@ -126,7 +130,7 @@ def get_atomic_input(
                 "model": {
                     "method": method,
                 },
-                "keywords": {}
+                "keywords": {},
             },
         }
         if params_tweaks is not None:
@@ -135,26 +139,25 @@ def get_atomic_input(
             input_data["specification"]["keywords"]["level_hint"] = level_hint
 
         if qcel_object:
-            return qcel_v2.AtomicInput(**input_data) 
+            return qcel_v2.AtomicInput(**input_data)
         return input_data
 
     raise ValueError(f"Unsupported version: {version}")
 
 
-@pytest.fixture(params=["qcschema_v1", "qcschema_v2"])
+@pytest.fixture(params=[pytest.param(1, marks=v1_available), pytest.param(2, marks=v2_available)])
 def qcsk_version(request):
-    if request.param == "qcschema_v1":
-        return pytest.param(1, marks=v1_available)
-    
-    if request.param == "qcschema_v2":
-        return pytest.param(2, marks=v2_available)
-    
-    raise ValueError(f"Unknown QCSchema version: {request.param}")
+    return request.param
+
+@pytest.fixture(params=["D3", "D3ATM"])
+def atm(request):
+    return request.param == "D3ATM"
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
-@mark.parametrize("atm", [True, False])
-def test_energy_r2scan_d3bj(atm, qcsk_version):
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
+def test_energy_r2scan_d3bj(atm: bool, qcsk_version: int) -> None:
     thr = 1e-9
 
     atomic_input = get_atomic_input(
@@ -177,9 +180,10 @@ def test_energy_r2scan_d3bj(atm, qcsk_version):
     assert approx(atomic_result.return_result, abs=thr) == ref
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
-@mark.parametrize("atm", [True, False])
-def test_energy_bp_d3zero(atm, qcsk_version):
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
+def test_energy_bp_d3zero(atm: bool, qcsk_version: int) -> None:
     thr = 1e-9
 
     atomic_input = get_atomic_input(
@@ -203,8 +207,10 @@ def test_energy_bp_d3zero(atm, qcsk_version):
     assert approx(atomic_result.return_result, abs=thr) == ref
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
-def test_gradient_b97d_d3bj_atm(qcsk_version):
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
+def test_gradient_b97d_d3bj(atm: bool, qcsk_version: int) -> None:
     thr = 1e-9
 
     atomic_input = get_atomic_input(
@@ -214,32 +220,56 @@ def test_gradient_b97d_d3bj_atm(qcsk_version):
         method="b97d-d3(bj)",
         params_tweaks={
             "method": "b97d",
-            "atm": True,
+            "atm": atm,
         },
         qcel_object=True,
     )
-    gradient = np.array(
-        [
-            [-2.2443259092095252e-4, -5.9115746657000033e-4, -2.3329260776706518e-4],
-            [+1.5024984250557624e-4, -2.8252993039799747e-4, -1.1514673689182528e-4],
-            [+6.4022428072682536e-4, -1.9311563977342141e-4, -8.5242235769601618e-5],
-            [-3.8718976343890316e-4, +3.3773870712256794e-4, +1.4637097756315060e-4],
-            [-1.5079749995767366e-4, +2.7785809307656525e-4, +1.3482408063774428e-4],
-            [-5.4334015754870673e-5, +4.8740178552571852e-4, +2.0162061388786579e-4],
-            [+4.2524309694851151e-4, -1.0353034250430949e-3, +5.4187321009509747e-4],
-            [+2.5238880483243874e-4, -4.7570815576830443e-4, -1.9406096040939865e-4],
-            [+5.0428650201581710e-4, +2.5654485601078660e-4, +9.9141715771808528e-5],
-            [+5.7124533738733385e-4, -3.7922753617903088e-5, -2.2970835136004695e-5],
-            [-5.2629396330476706e-4, -2.1821084773584023e-4, -7.7771997956860579e-5],
-            [-3.1447177050715551e-4, -4.4596903523484569e-4, -1.7470534972738137e-4],
-            [-4.7241980717575030e-4, +5.7789501566979232e-4, +6.3391340634065063e-4],
-            [-4.4295668215519951e-4, +4.4288999267499747e-5, +2.9913326488103452e-4],
-            [-5.5532764141529982e-5, +5.0128482842532645e-4, -2.3745756890447453e-4],
-            [+1.6636630001049617e-4, +2.9846431594745745e-4, -1.7829054133393723e-4],
-            [-4.6582228517614413e-5, +2.5574634046668398e-4, -4.7454953681660685e-4],
-            [-3.4993078552581617e-5, +2.4269431262900884e-4, -2.6338889846419609e-4],
-        ]
-    )
+    if atm:
+        gradient = np.array(
+            [
+                [-2.2443259092095252e-4, -5.9115746657000033e-4, -2.3329260776706518e-4],
+                [+1.5024984250557624e-4, -2.8252993039799747e-4, -1.1514673689182528e-4],
+                [+6.4022428072682536e-4, -1.9311563977342141e-4, -8.5242235769601618e-5],
+                [-3.8718976343890316e-4, +3.3773870712256794e-4, +1.4637097756315060e-4],
+                [-1.5079749995767366e-4, +2.7785809307656525e-4, +1.3482408063774428e-4],
+                [-5.4334015754870673e-5, +4.8740178552571852e-4, +2.0162061388786579e-4],
+                [+4.2524309694851151e-4, -1.0353034250430949e-3, +5.4187321009509747e-4],
+                [+2.5238880483243874e-4, -4.7570815576830443e-4, -1.9406096040939865e-4],
+                [+5.0428650201581710e-4, +2.5654485601078660e-4, +9.9141715771808528e-5],
+                [+5.7124533738733385e-4, -3.7922753617903088e-5, -2.2970835136004695e-5],
+                [-5.2629396330476706e-4, -2.1821084773584023e-4, -7.7771997956860579e-5],
+                [-3.1447177050715551e-4, -4.4596903523484569e-4, -1.7470534972738137e-4],
+                [-4.7241980717575030e-4, +5.7789501566979232e-4, +6.3391340634065063e-4],
+                [-4.4295668215519951e-4, +4.4288999267499747e-5, +2.9913326488103452e-4],
+                [-5.5532764141529982e-5, +5.0128482842532645e-4, -2.3745756890447453e-4],
+                [+1.6636630001049617e-4, +2.9846431594745745e-4, -1.7829054133393723e-4],
+                [-4.6582228517614413e-5, +2.5574634046668398e-4, -4.7454953681660685e-4],
+                [-3.4993078552581617e-5, +2.4269431262900884e-4, -2.6338889846419609e-4],
+            ]
+        )
+    else:
+        gradient = np.array(
+            [
+                [-2.2562967976217643e-04, -5.8711103078133340e-04, -2.3061961042068857e-04],
+                [+1.5075490579531149e-04, -2.8381505981386033e-04, -1.1485932659166404e-04],
+                [+6.3724554206790829e-04, -1.8986067913445720e-04, -8.2853482732288822e-05],
+                [-3.8832449621583123e-04, +3.3282825489958215e-04, +1.4481440153935071e-04],
+                [-1.5045846438610337e-04, +2.7794484580385330e-04, +1.3314407954925452e-04],
+                [-4.9560016743308596e-05, +4.8509857651717612e-04, +2.0112762761380736e-04],
+                [+4.2275101080035900e-04, -1.0281087399068071e-03, +5.3322479935030958e-04],
+                [+2.5240228222254599e-04, -4.7591532248547261e-04, -1.9359997368309395e-04],
+                [+5.0291675303562318e-04, +2.5554376917832927e-04, +9.9031452660504099e-05],
+                [+5.7163177819497945e-04, -4.0110024194130451e-05, -2.3133113964066147e-05],
+                [-5.2462065805044188e-04, -2.1790929154673013e-04, -7.7260813677796259e-05],
+                [-3.1304532783227779e-04, -4.4767282257326171e-04, -1.7470716818989833e-04],
+                [-4.7193012650844176e-04, +5.7610764389933421e-04, +6.3567846119653526e-04],
+                [-4.4301897860924111e-04, +4.4549998176073525e-05, +2.9945109087021988e-04],
+                [-5.8493469864357109e-05, +5.0096942382815647e-04, -2.4093109056512457e-04],
+                [+1.6568457442979896e-04, +2.9913845360379754e-04, -1.7797313385544664e-04],
+                [-4.4555263684831344e-05, +2.5438217773443301e-04, -4.6925288218547617e-04],
+                [-3.3750364889515759e-05, +2.4393982679531790e-04, -2.6128131691443809e-04],
+            ]
+        )
 
     atomic_result = run_qcschema(atomic_input)
 
@@ -247,51 +277,14 @@ def test_gradient_b97d_d3bj_atm(qcsk_version):
     assert approx(atomic_result.return_result, abs=thr) == gradient
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
-def test_gradient_b97d_d3bj(qcsk_version):
-    thr = 1e-9
 
-    atomic_input = get_atomic_input(
-        version=qcsk_version,
-        molecule=get_molecule("molecule1"),
-        driver="gradient",
-        method="b97d-d3(bj)",
-    )
-    gradient = np.array(
-        [
-            [-2.2562967976217643e-04, -5.8711103078133340e-04, -2.3061961042068857e-04],
-            [+1.5075490579531149e-04, -2.8381505981386033e-04, -1.1485932659166404e-04],
-            [+6.3724554206790829e-04, -1.8986067913445720e-04, -8.2853482732288822e-05],
-            [-3.8832449621583123e-04, +3.3282825489958215e-04, +1.4481440153935071e-04],
-            [-1.5045846438610337e-04, +2.7794484580385330e-04, +1.3314407954925452e-04],
-            [-4.9560016743308596e-05, +4.8509857651717612e-04, +2.0112762761380736e-04],
-            [+4.2275101080035900e-04, -1.0281087399068071e-03, +5.3322479935030958e-04],
-            [+2.5240228222254599e-04, -4.7591532248547261e-04, -1.9359997368309395e-04],
-            [+5.0291675303562318e-04, +2.5554376917832927e-04, +9.9031452660504099e-05],
-            [+5.7163177819497945e-04, -4.0110024194130451e-05, -2.3133113964066147e-05],
-            [-5.2462065805044188e-04, -2.1790929154673013e-04, -7.7260813677796259e-05],
-            [-3.1304532783227779e-04, -4.4767282257326171e-04, -1.7470716818989833e-04],
-            [-4.7193012650844176e-04, +5.7610764389933421e-04, +6.3567846119653526e-04],
-            [-4.4301897860924111e-04, +4.4549998176073525e-05, +2.9945109087021988e-04],
-            [-5.8493469864357109e-05, +5.0096942382815647e-04, -2.4093109056512457e-04],
-            [+1.6568457442979896e-04, +2.9913845360379754e-04, -1.7797313385544664e-04],
-            [-4.4555263684831344e-05, +2.5438217773443301e-04, -4.6925288218547617e-04],
-            [-3.3750364889515759e-05, +2.4393982679531790e-04, -2.6128131691443809e-04],
-        ]
-    )
-
-    atomic_result = run_qcschema(atomic_input)
-
-    print(atomic_result.return_result)
-    assert atomic_result.success
-    assert approx(atomic_result.return_result, abs=thr) == gradient
-
-
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
 def test_gradient_tpss_d3zero(qcsk_version):
     thr = 1.0e-9
 
-    molecule={
+    molecule = {
         "symbols": "O C C F O F H".split(),
         "geometry": [
             [+4.877023733, -3.909030492, +1.796260143],
@@ -304,7 +297,7 @@ def test_gradient_tpss_d3zero(qcsk_version):
         ],
         "molecular_charge": -1,
     }
-    keywords={
+    keywords = {
         "params_tweaks": {
             "sr6": 1.166,
             "s8": 1.105,
@@ -349,9 +342,11 @@ def test_gradient_tpss_d3zero(qcsk_version):
     assert "virial" in atomic_result.extras["dftd3"]
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
 def test_error_noargs(qcsk_version):
-    molecule=get_molecule("molecule2")
+    molecule = get_molecule("molecule2")
 
     atomic_input = get_atomic_input(
         version=qcsk_version,
@@ -366,9 +361,11 @@ def test_error_noargs(qcsk_version):
     assert atomic_result.error.error_type == "input error"
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
 def test_error_nomethod(qcsk_version):
-    molecule=get_molecule("molecule2")
+    molecule = get_molecule("molecule2")
 
     atomic_input = get_atomic_input(
         version=qcsk_version,
@@ -396,9 +393,11 @@ def test_error_nomethod(qcsk_version):
     assert atomic_result.error == error
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
 def test_error_level(qcsk_version):
-    molecule=get_molecule("molecule2")
+    molecule = get_molecule("molecule2")
 
     atomic_input = get_atomic_input(
         version=qcsk_version,
@@ -426,45 +425,10 @@ def test_error_level(qcsk_version):
     assert atomic_result.error == error
 
 
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
-def test_ghost_pbe_d3bj(qcsk_version):
-    thr = 1e-9
-
-    molecule=get_molecule("counterpoise")
-
-    atomic_input = get_atomic_input(
-        version=qcsk_version,
-        molecule=molecule,
-        driver="gradient",
-        method="pbe",
-        params_tweaks={
-            "method": "pbe",
-            "atm": True,
-        },
-    )
-
-    gradient = np.array(
-        [
-            [+0.00000000e-0, +1.15093229e-7, +0.00000000e-0],
-            [+5.37509663e-5, -1.90067439e-5, +0.00000000e-0],
-            [-2.68754977e-5, -1.90067527e-5, -4.65496968e-5],
-            [-2.68754977e-5, -1.90067527e-5, +4.65496968e-5],
-            [+0.00000000e-0, +5.69051561e-5, +0.00000000e-0],
-            [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
-            [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
-            [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
-            [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
-        ]
-    )
-
-    atomic_result = run_qcschema(atomic_input)
-
-    assert atomic_result.success
-    assert approx(atomic_result.return_result, abs=thr) == gradient
-
-
-@pytest.mark.skipif(qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models")
-def test_ghost_pbe_d3bj(qcsk_version):
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
+def test_ghost_pbe_d3bj(atm: bool, qcsk_version: int) -> None:
     thr = 1e-9
 
     molecule = get_molecule("counterpoise")
@@ -476,22 +440,38 @@ def test_ghost_pbe_d3bj(qcsk_version):
         method="pbe",
         params_tweaks={
             "method": "pbe",
-            "atm": False,
+            "atm": atm,
         },
-     )
-    gradient = np.array(
-        [
-            [+3.6009409394390283e-11, +1.1526637296579583e-07, +0.0000000000000000e+00],
-            [+5.3425212496378062e-05, -1.8891583140214365e-05, +0.0000000000000000e+00],
-            [-2.6712623930671679e-05, -1.8891594924889618e-05, -4.6267592357667043e-05],
-            [-2.6712623930671679e-05, -1.8891594924889618e-05, +4.6267592357667043e-05],
-            [-6.4444409450829659e-13, +5.6559506617027801e-05, +0.0000000000000000e+00],
-            [+0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00],
-            [+0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00],
-            [+0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00],
-            [+0.0000000000000000e+00, +0.0000000000000000e+00, +0.0000000000000000e+00],
-        ]
     )
+
+    if atm:
+        gradient = np.array(
+            [
+                [+0.00000000e-0, +1.15093229e-7, +0.00000000e-0],
+                [+5.37509663e-5, -1.90067439e-5, +0.00000000e-0],
+                [-2.68754977e-5, -1.90067527e-5, -4.65496968e-5],
+                [-2.68754977e-5, -1.90067527e-5, +4.65496968e-5],
+                [+0.00000000e-0, +5.69051561e-5, +0.00000000e-0],
+                [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
+                [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
+                [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
+                [+0.00000000e-0, +0.00000000e-0, +0.00000000e-0],
+            ]
+        )
+    else:
+        gradient = np.array(
+            [
+                [+3.6009409394390283e-11, +1.1526637296579583e-07, +0.0000000000000000e00],
+                [+5.3425212496378062e-05, -1.8891583140214365e-05, +0.0000000000000000e00],
+                [-2.6712623930671679e-05, -1.8891594924889618e-05, -4.6267592357667043e-05],
+                [-2.6712623930671679e-05, -1.8891594924889618e-05, +4.6267592357667043e-05],
+                [-6.4444409450829659e-13, +5.6559506617027801e-05, +0.0000000000000000e00],
+                [+0.0000000000000000e00, +0.0000000000000000e00, +0.0000000000000000e00],
+                [+0.0000000000000000e00, +0.0000000000000000e00, +0.0000000000000000e00],
+                [+0.0000000000000000e00, +0.0000000000000000e00, +0.0000000000000000e00],
+                [+0.0000000000000000e00, +0.0000000000000000e00, +0.0000000000000000e00],
+            ]
+        )
 
     atomic_result = run_qcschema(atomic_input)
 

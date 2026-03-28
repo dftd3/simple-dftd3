@@ -148,7 +148,10 @@ from .library import get_api_version
 import numpy as np
 
 if sys.version_info < (3, 14):
-    import qcelemental.models as qcel_v1
+    try:
+        import qcelemental.models.v1 as qcel_v1
+    except ModuleNotFoundError:
+        import qcelemental.models as qcel_v1
 else:
     qcel_v1 = None
 
@@ -160,7 +163,8 @@ except ModuleNotFoundError:
 
 if qcel_v1 is None and qcel_v2 is None:
     raise ModuleNotFoundError(
-        "The qcelemental package is required for qcschema support. Please install it with 'pip install qcelemental'."
+        "The qcelemental package is required for qcschema support. "
+        "Please install it with 'pip install qcelemental'."
     )
 
 
@@ -204,12 +208,20 @@ def error_return_result(driver, molecule):
 
 
 if qcel_v1 is not None:
+
     @overload
-    def run_qcschema(input_data: Union[dict, "qcel_v1.AtomicInput"]) -> "qcel_v1.AtomicResult": ...
+    def run_qcschema(
+        input_data: Union[dict, "qcel_v1.AtomicInput"],
+    ) -> "qcel_v1.AtomicResult": ...
+
 
 if qcel_v2 is not None:
+
     @overload
-    def run_qcschema(input_data: Union[dict, "qcel_v2.AtomicInput"]) -> "qcel_v2.AtomicResult": ...
+    def run_qcschema(
+        input_data: Union[dict, "qcel_v2.AtomicInput"],
+    ) -> "qcel_v2.AtomicResult": ...
+
 
 def run_qcschema(input_data):
     """Perform disperson correction based on an atomic inputmodel"""
@@ -223,7 +235,9 @@ def run_qcschema(input_data):
     elif qcel_v1 is not None:
         atomic_input = qcel_v1.AtomicInput(**input_data)
     else:
-        raise ValueError("Input data is not a valid QCSchema AtomicInput for either v1 or v2.")
+        raise ValueError(
+            "Input data is not a valid QCSchema AtomicInput for either v1 or v2."
+        )
 
     schema_version = atomic_input.schema_version
     if schema_version == 1:
@@ -232,7 +246,11 @@ def run_qcschema(input_data):
         input_method = atomic_input.model.method
         input_driver = atomic_input.driver
     elif schema_version == 2:
-        ret_data = {"input_data": atomic_input, "extras": {}, "molecule": atomic_input.molecule}
+        ret_data = {
+            "input_data": atomic_input,
+            "extras": {},
+            "molecule": atomic_input.molecule,
+        }
         input_keywords = atomic_input.specification.keywords
         input_method = atomic_input.specification.model.method
         input_driver = atomic_input.specification.driver
@@ -250,7 +268,7 @@ def run_qcschema(input_data):
     # we are much less forgiving if the wrong level is hinted here.
     _level = input_keywords.get("level_hint", "d3bj")
     if _level.lower() not in _available_levels:
-        error=dict(
+        error = dict(
             error_type="input error",
             error_message="Level '{}' is invalid for this dispersion correction".format(
                 _level
@@ -266,7 +284,9 @@ def run_qcschema(input_data):
             )
             return qcel_v1.AtomicResult(**ret_data)
         elif schema_version == 2:
-            return qcel_v2.FailedOperation(input_data=atomic_input, error=qcel_v2.ComputeError(**error))
+            return qcel_v2.FailedOperation(
+                input_data=atomic_input, error=qcel_v2.ComputeError(**error)
+            )
 
     # Check if the method is provided and strip the “dashlevel” from the method
     _method = input_method.split("-")
@@ -326,11 +346,11 @@ def run_qcschema(input_data):
         ret_data["extras"].update(extras)
 
     except (RuntimeError, TypeError) as e:
-        ret_data.update(
-            error=dict(
-                error_type="input error", error_message=str(e)
+        (
+            ret_data.update(
+                error=dict(error_type="input error", error_message=str(e)),
             ),
-        ),
+        )
 
     ret_data.update(
         provenance=provenance,
@@ -343,5 +363,7 @@ def run_qcschema(input_data):
         return qcel_v1.AtomicResult(**ret_data)
     if schema_version == 2:
         if "error" in ret_data:
-            return qcel_v2.FailedOperation(input_data=atomic_input, error=ret_data["error"])
+            return qcel_v2.FailedOperation(
+                input_data=atomic_input, error=ret_data["error"]
+            )
         return qcel_v2.AtomicResult(**ret_data)

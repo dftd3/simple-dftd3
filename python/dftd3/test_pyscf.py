@@ -248,7 +248,7 @@ def test_issue_gh73():
         a=[[3, 0, 0], [0, 3, 0], [0, 0, 3]],
     )
 
-    xc = 'pbe'
+    xc = "pbe"
 
     e_mol_disp = disp.DFTD3Dispersion(mol, xc=xc, version="d3bj").kernel()[0]
     e_pbc_disp = disp.DFTD3Dispersion(pmol, xc=xc, version="d3bj").kernel()[0]
