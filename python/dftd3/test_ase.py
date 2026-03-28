@@ -36,7 +36,7 @@ def get_calcs(calc) -> Iterator[ase.calculators.calculator.Calculator]:
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")
-def test_ase_scand3():
+def test_ase_scand3_atm():
     thr = 1.0e-6
 
     forces = np.array(
@@ -55,19 +55,54 @@ def test_ase_scand3():
     )
 
     atoms = molecule("methylenecyclopropane")
-    atoms.calc = DFTD3(method="SCAN", damping="d3bj")
+    atoms.calc = DFTD3(
+        method="SCAN", damping="d3bj", params_tweaks={"method": "SCAN", "atm": True}
+    )
 
     assert atoms.get_potential_energy() == approx(-0.03880921894019244, abs=thr)
     assert atoms.get_forces() == approx(forces, abs=thr)
 
-    atoms.calc = DFTD3(method="SCAN", damping="d3bj").add_calculator(EMT())
+    atoms.calc = DFTD3(
+        method="SCAN", damping="d3bj", params_tweaks={"method": "SCAN", "atm": True}
+    ).add_calculator(EMT())
     assert atoms.get_potential_energy() == approx(3.6452960962398406, abs=thr)
     energies = [calc.get_potential_energy() for calc in get_calcs(atoms.calc)]
     assert energies == approx([-0.03880921894019244, 3.684105315180033], abs=thr)
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")
-def test_ase_tpssd3():
+def test_ase_scand3():
+    thr = 1.0e-6
+
+    forces = np.array(
+        [
+            [-0.00000000e+00, -1.36113078e-21, -6.16745949e-05],
+            [-1.08890463e-20, +3.10643080e-04, +6.89816195e-04],
+            [+1.08890463e-20, -3.10643080e-04, +6.89816195e-04],
+            [-0.00000000e+00, -0.00000000e+00, -1.54664530e-03],
+            [+2.90862635e-04, +5.36974154e-04, +6.87685696e-04],
+            [-2.90862635e-04, +5.36974154e-04, +6.87685696e-04],
+            [-2.90862635e-04, -5.36974154e-04, +6.87685696e-04],
+            [+2.90862635e-04, -5.36974154e-04, +6.87685696e-04],
+            [-0.00000000e+00, +2.75841655e-04, -1.26102764e-03],
+            [-0.00000000e+00, -2.75841655e-04, -1.26102764e-03],
+        ]
+    )
+
+    atoms = molecule("methylenecyclopropane")
+    atoms.calc = DFTD3(method="SCAN", damping="d3bj")
+
+    assert atoms.get_potential_energy() == approx(-0.03898577243903914, abs=thr)
+    assert atoms.get_forces() == approx(forces, abs=thr)
+
+    atoms.calc = DFTD3(method="SCAN", damping="d3bj").add_calculator(EMT())
+    assert atoms.get_potential_energy() == approx(3.645119542740994, abs=thr)
+    energies = [calc.get_potential_energy() for calc in get_calcs(atoms.calc)]
+    assert energies == approx([-0.03898577243903914, 3.684105315180033], abs=thr)
+
+
+@pytest.mark.skipif(ase is None, reason="requires ase")
+def test_ase_tpssd3_atm():
     thr = 1.0e-6
 
     forces = np.array(
@@ -88,12 +123,16 @@ def test_ase_tpssd3():
     )
 
     atoms = molecule("C2H6CHOH")
-    atoms.calc = DFTD3(method="TPSS", damping="d3zero")
+    atoms.calc = DFTD3(
+        method="TPSS", damping="d3zero", params_tweaks={"method": "TPSS", "atm": True}
+    )
 
     assert atoms.get_potential_energy() == approx(-0.14230914516094673, abs=thr)
     assert atoms.get_forces() == approx(forces, abs=thr)
 
-    atoms.calc = DFTD3(method="TPSS", damping="d3zero").add_calculator(EMT())
+    atoms.calc = DFTD3(
+        method="TPSS", damping="d3zero", params_tweaks={"method": "TPSS", "atm": True}
+    ).add_calculator(EMT())
     assert atoms.get_potential_energy() == approx(4.963774668847532, abs=thr)
     energies = [calc.get_potential_energy() for calc in get_calcs(atoms.calc)]
     assert energies == approx([-0.14230914516094673, 5.106083814008478], abs=thr)
@@ -148,3 +187,34 @@ def test_ase_realspace_cutoff():
 
 
 
+@pytest.mark.skipif(ase is None, reason="requires ase")
+def test_ase_tpssd3():
+    thr = 1.0e-6
+
+    forces = np.array(
+        [
+            [+1.21877896e-03, +2.15213419e-03, -1.16587717e-02],
+            [-5.83752484e-04, +9.03161776e-03, +7.80662422e-03],
+            [-4.29910142e-03, +4.66684847e-03, -4.56953656e-03],
+            [-1.17172870e-03, -8.37195662e-03, +1.62139446e-02],
+            [-6.96988440e-03, -5.09878876e-03, -1.75893974e-03],
+            [+1.04161844e-02, -1.69289311e-02, -2.74875712e-03],
+            [+5.52837716e-03, +3.32800644e-03, -1.02268960e-03],
+            [-5.07390896e-03, +6.03647311e-03, -5.99714947e-05],
+            [+3.34598807e-03, +3.95742085e-03, -5.56259794e-04],
+            [-2.11534607e-03, +2.76307015e-03, -4.68480172e-04],
+            [+4.31430409e-03, -1.56090240e-03, -6.80734794e-04],
+            [-4.60991066e-03, +2.50079580e-05, -4.96427929e-04],
+        ]
+    )
+
+    atoms = molecule("C2H6CHOH")
+    atoms.calc = DFTD3(method="TPSS", damping="d3zero")
+
+    assert atoms.get_potential_energy() == approx(-0.14270927858918006, abs=thr)
+    assert atoms.get_forces() == approx(forces, abs=thr)
+
+    atoms.calc = DFTD3(method="TPSS", damping="d3zero").add_calculator(EMT())
+    assert atoms.get_potential_energy() == approx(4.963374535419293, abs=thr)
+    energies = [calc.get_potential_energy() for calc in get_calcs(atoms.calc)]
+    assert energies == approx([-0.14270927858918006, 5.106083814008478], abs=thr)

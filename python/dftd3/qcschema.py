@@ -133,7 +133,8 @@ Example
 -0.00042042440936212056
 """
 
-from typing import Union
+import sys
+from typing import Union, overload
 from .interface import (
     DispersionModel,
     RationalDampingParam,
@@ -145,7 +146,22 @@ from .interface import (
 )
 from .library import get_api_version
 import numpy as np
-import qcelemental as qcel
+
+if sys.version_info < (3, 14):
+    import qcelemental.models as qcel_v1
+else:
+    qcel_v1 = None
+
+try:
+    import qcelemental.models.v2 as qcel_v2
+except ModuleNotFoundError:
+    qcel_v2 = None
+
+
+if qcel_v1 is None and qcel_v2 is None:
+    raise ModuleNotFoundError(
+        "The qcelemental package is required for qcschema support. Please install it with 'pip install qcelemental'."
+    )
 
 
 _supported_drivers = [
@@ -178,30 +194,48 @@ _damping_param = {
 _clean_dashlevel = str.maketrans("", "", "()")
 
 
-def run_qcschema(
-    input_data: Union[dict, qcel.models.AtomicInput, "qcel.models.v2.AtomicInput"]
-) -> Union[qcel.models.AtomicResult, "qcel.models.v2.AtomicResult"]:
+def error_return_result(driver, molecule):
+    if driver == "energy":
+        return 0.0
+    if driver == "gradient":
+        natoms = len(molecule.symbols)
+        return np.zeros((natoms, 3))
+    return None
+
+
+if qcel_v1 is not None:
+    @overload
+    def run_qcschema(input_data: Union[dict, "qcel_v1.AtomicInput"]) -> "qcel_v1.AtomicResult": ...
+
+if qcel_v2 is not None:
+    @overload
+    def run_qcschema(input_data: Union[dict, "qcel_v2.AtomicInput"]) -> "qcel_v2.AtomicResult": ...
+
+def run_qcschema(input_data):
     """Perform disperson correction based on an atomic inputmodel"""
 
-    v2_available = hasattr(qcel.models, "v2")
-
-    if v2_available and isinstance(input_data, qcel.models.v2.AtomicInput):
+    if qcel_v2 is not None and isinstance(input_data, qcel_v2.AtomicInput):
         atomic_input = input_data
-    elif isinstance(input_data, qcel.models.AtomicInput):
+    elif qcel_v1 is not None and isinstance(input_data, qcel_v1.AtomicInput):
         atomic_input = input_data
-    elif v2_available and input_data.get("specification"):
-        atomic_input = qcel.models.v2.AtomicInput(**input_data)
+    elif qcel_v2 is not None and input_data.get("specification"):
+        atomic_input = qcel_v2.AtomicInput(**input_data)
+    elif qcel_v1 is not None:
+        atomic_input = qcel_v1.AtomicInput(**input_data)
     else:
-        atomic_input = qcel.models.AtomicInput(**input_data)
+        raise ValueError("Input data is not a valid QCSchema AtomicInput for either v1 or v2.")
 
-    if (schver := atomic_input.schema_version) == 1:
-        from qcelemental.models import AtomicInput, AtomicResult, ComputeError
-
+    schema_version = atomic_input.schema_version
+    if schema_version == 1:
         ret_data = atomic_input.dict()
-    elif schver == 2:
-        from qcelemental.models.v2 import AtomicInput, AtomicResult, ComputeError, FailedOperation
-
+        input_keywords = atomic_input.keywords
+        input_method = atomic_input.model.method
+        input_driver = atomic_input.driver
+    elif schema_version == 2:
         ret_data = {"input_data": atomic_input, "extras": {}, "molecule": atomic_input.molecule}
+        input_keywords = atomic_input.specification.keywords
+        input_method = atomic_input.specification.model.method
+        input_driver = atomic_input.specification.driver
 
     provenance = {
         "creator": "s-dftd3",
@@ -214,29 +248,28 @@ def run_qcschema(
 
     # Since it is a level hint we a forgiving if it is not present,
     # we are much less forgiving if the wrong level is hinted here.
-    atin_keywords = atomic_input.keywords if schver == 1 else atomic_input.specification.keywords
-    _level = atin_keywords.get("level_hint", "d3bj")
+    _level = input_keywords.get("level_hint", "d3bj")
     if _level.lower() not in _available_levels:
-        error=ComputeError(
+        error=dict(
             error_type="input error",
             error_message="Level '{}' is invalid for this dispersion correction".format(
                 _level
             ),
         )
-        if schver == 1:
+        if schema_version == 1:
             ret_data.update(
                 provenance=provenance,
                 success=success,
                 properties=properties,
                 return_result=return_result,
-                error=error,
+                error=qcel_v1.ComputeError(**error),
             )
-            return AtomicResult(**ret_data)
-        elif schver == 2:
-            return FailedOperation(input_data=atomic_input, error=error)
+            return qcel_v1.AtomicResult(**ret_data)
+        elif schema_version == 2:
+            return qcel_v2.FailedOperation(input_data=atomic_input, error=qcel_v2.ComputeError(**error))
 
     # Check if the method is provided and strip the “dashlevel” from the method
-    _method = atomic_input.model.method.split("-") if schver == 1 else atomic_input.specification.model.method.split("-")
+    _method = input_method.split("-")
     if _method[-1].lower().translate(_clean_dashlevel) == _level.lower():
         _method.pop()
     _method = "-".join(_method)
@@ -244,7 +277,7 @@ def run_qcschema(
         _method = None
 
     # Obtain the parameters for the damping function
-    _input_param = atin_keywords.get("params_tweaks", {"method": _method})
+    _input_param = input_keywords.get("params_tweaks", {"method": _method})
 
     try:
         param = _damping_param[_level](
@@ -256,7 +289,7 @@ def run_qcschema(
             atomic_input.molecule.geometry[atomic_input.molecule.real],
         )
 
-        driver = atomic_input.driver if schver == 1 else atomic_input.specification.driver
+        driver = input_driver
         res = disp.get_dispersion(
             param=param,
             grad=driver == "gradient",
@@ -273,7 +306,7 @@ def run_qcschema(
 
         properties.update(return_energy=res.get("energy"))
 
-        if atin_keywords.get("pair_resolved", False):
+        if input_keywords.get("pair_resolved", False):
             res = disp.get_pairwise_dispersion(param=param)
             extras["dftd3"].update(res)
 
@@ -284,7 +317,7 @@ def run_qcschema(
             return_result = fullgrad
         else:
             ret_data.update(
-                error=ComputeError(
+                error=dict(
                     error_type="input error",
                     error_message="Calculation succeeded but invalid driver request provided",
                 ),
@@ -294,7 +327,7 @@ def run_qcschema(
 
     except (RuntimeError, TypeError) as e:
         ret_data.update(
-            error=ComputeError(
+            error=dict(
                 error_type="input error", error_message=str(e)
             ),
         ),
@@ -306,7 +339,9 @@ def run_qcschema(
         return_result=return_result,
     )
 
-    if schver == 2 and "error" in ret_data:
-        return FailedOperation(input_data=atomic_input, error=ret_data["error"])
-
-    return AtomicResult(**ret_data)
+    if schema_version == 1:
+        return qcel_v1.AtomicResult(**ret_data)
+    if schema_version == 2:
+        if "error" in ret_data:
+            return qcel_v2.FailedOperation(input_data=atomic_input, error=ret_data["error"])
+        return qcel_v2.AtomicResult(**ret_data)

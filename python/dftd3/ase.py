@@ -85,15 +85,15 @@ Example
 >>> atoms = molecule('H2O')
 >>> atoms.calc = DFTD3(method="TPSS", damping="d3bj")
 >>> atoms.get_potential_energy()
--0.0114416338147162
+-0.011441640787279111
 >>> atoms.calc.set(method="PBE")
 {'method': 'PBE'}
 >>> atoms.get_potential_energy()
--0.005358475432239303
+-0.009781920198843976
 >>> atoms.get_forces()
-array([[-0.        , -0.        ,  0.00296845],
-       [-0.        ,  0.00119152, -0.00148423],
-       [-0.        , -0.00119152, -0.00148423]])
+array([[-0.        , -0.        ,  0.00009572],
+       [-0.        , -0.00004060, -0.00004786],
+       [-0.        ,  0.00004060, -0.00004786]])
 """
 
 try:
@@ -135,10 +135,12 @@ _damping_param = {
     "d3cso": CSODampingParam,
 }
 
+_inv_bohr = 1.0 / Bohr
+_hartree_per_bohr = Hartree / Bohr
 
 class DFTD3(Calculator):
     """
-    ASE calculator for DFT-D4 related methods.
+    ASE calculator for DFT-D3 related methods.
     The DFTD3 class can access all methods exposed by the ``dftd3`` API.
 
     Example
@@ -166,6 +168,7 @@ class DFTD3(Calculator):
     }
 
     _disp = None
+    _dpar = None
 
     def __init__(
         self,
@@ -189,9 +192,9 @@ class DFTD3(Calculator):
         >>> atoms = molecule("C60")
         >>> atoms.calc = DFTD3(method="pbe", damping="d3bj").add_calculator(EMT())
         >>> atoms.get_potential_energy()
-        7.513593999944226
+        7.389424410228332
         >>> [calc.get_potential_energy() for calc in atoms.calc.calcs]
-        [-4.85002582336782, 12.363619823312046]
+        [-4.974195589771621, 12.363619999999953]
         """
         return SumCalculator([self, other])
 
@@ -212,45 +215,42 @@ class DFTD3(Calculator):
 
         if not self.parameters.cache_api:
             self._disp = None
+        self._dpar = None
 
     def _check_api_calculator(self, system_changes: List[str]) -> None:
         """Check state of API calculator and reset if necessary"""
 
+        if not system_changes:
+            return
+
         # Changes in positions and cell parameters can use a normal update
-        _reset = system_changes.copy()
-        if "positions" in _reset:
-            _reset.remove("positions")
-        if "cell" in _reset:
-            _reset.remove("cell")
+        _changes = set(system_changes)
+        _changes.discard("positions")
+        _changes.discard("cell")
 
         # Invalidate cached calculator and results object
-        if _reset:
+        if _changes:
             self._disp = None
-        else:
-            if system_changes and self._disp is not None:
-                try:
-                    _cell = self.atoms.cell
-                    self._disp.update(
-                        self.atoms.positions / Bohr,
-                        _cell / Bohr,
-                    )
-                # An exception in this part means the geometry is bad,
-                # still we will give a complete reset a try as well
-                except RuntimeError:
-                    self._disp = None
+        elif self._disp is not None:
+            try:
+                self._disp.update(
+                    self.atoms.positions * _inv_bohr,
+                    self.atoms.cell[:] * _inv_bohr,
+                )
+            # An exception in this part means the geometry is bad,
+            # still we will give a complete reset a try as well
+            except RuntimeError:
+                self._disp = None
 
     def _create_api_calculator(self) -> DispersionModel:
         """Create a new API calculator object"""
 
         try:
-            _cell = self.atoms.cell
-            _periodic = self.atoms.pbc
-
             disp = DispersionModel(
                 self.atoms.numbers,
-                self.atoms.positions / Bohr,
-                _cell / Bohr,
-                _periodic,
+                self.atoms.positions * _inv_bohr,
+                self.atoms.cell[:] * _inv_bohr,
+                self.atoms.pbc,
             )
 
         except RuntimeError as e:
@@ -303,18 +303,25 @@ class DFTD3(Calculator):
         # Apply realspace cutoff before evaluation (works with cached calculator)
         self._apply_realspace_cutoff(self._disp)
 
-        _dpar = self._create_damping_param()
+        if self._dpar is None:
+            self._dpar = self._create_damping_param()
+
+        _need_grad = "forces" in properties or "stress" in properties
 
         try:
-            _res = self._disp.get_dispersion(param=_dpar, grad=True)
-        except RuntimeError as e:
-            raise CalculationFailed("dftd3 could not evaluate input") from e
+            _res = self._disp.get_dispersion(param=self._dpar, grad=_need_grad)
+        except RuntimeError:
+            raise CalculationFailed("dftd3 could not evaluate input")
 
         # These properties are garanteed to exist for all implemented calculators
-        self.results["energy"] = _res.get("energy") * Hartree
+        self.results["energy"] = float(_res.get("energy")) * Hartree
         self.results["free_energy"] = self.results["energy"]
-        self.results["forces"] = -_res.get("gradient") * Hartree / Bohr
-        # stress tensor is only returned for periodic systems
-        if self.atoms.pbc.any():
-            _stress = _res.get("virial") * Hartree / self.atoms.get_volume()
-            self.results["stress"] = _stress.flat[[0, 4, 8, 5, 2, 1]]
+        if _need_grad:
+            _gradient = _res.get("gradient")
+            _gradient *= -_hartree_per_bohr
+            self.results["forces"] = _gradient
+            # stress tensor is only returned for periodic systems
+            if self.atoms.pbc.any():
+                _virial = _res.get("virial")
+                _virial *= Hartree / self.atoms.get_volume()
+                self.results["stress"] = _virial.flat[[0, 4, 8, 5, 2, 1]]
