@@ -14,6 +14,8 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Optional
+
 import numpy as np
 import pytest
 from pytest import approx
@@ -99,8 +101,8 @@ def get_atomic_input(
     molecule: dict,
     driver: str,
     method: str,
-    params_tweaks: dict | None = None,
-    level_hint: str | None = None,
+    params_tweaks: Optional[dict] = None,
+    level_hint: Optional[str] = None,
     qcel_object: bool = False,
 ) -> dict:
     if version == 1:
