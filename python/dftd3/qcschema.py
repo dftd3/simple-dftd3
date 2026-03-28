@@ -254,6 +254,10 @@ def run_qcschema(input_data):
         input_keywords = atomic_input.specification.keywords
         input_method = atomic_input.specification.model.method
         input_driver = atomic_input.specification.driver
+    else:
+        raise ValueError(
+            f"Unsupported QCSchema version: {schema_version}. Only v1 and v2 are supported."
+        )
 
     provenance = {
         "creator": "s-dftd3",
