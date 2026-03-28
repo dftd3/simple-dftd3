@@ -14,10 +14,9 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-import sys
 import numpy as np
 import pytest
-from pytest import approx, mark
+from pytest import approx
 
 try:
     from dftd3.qcschema import run_qcschema, qcel_v1, qcel_v2
@@ -25,10 +24,10 @@ except ModuleNotFoundError:
     qcel_v1 = None
     qcel_v2 = None
 
-v1_available = mark.skipif(
+v1_available = pytest.mark.skipif(
     qcel_v1 is None, reason="QCSchema v1 not available for py314+"
 )
-v2_available = mark.skipif(
+v2_available = pytest.mark.skipif(
     qcel_v2 is None, reason="QCSchema v2 not available in current QCElemental"
 )
 
@@ -93,6 +92,7 @@ def get_molecule(name: str) -> dict:
             "real": [True] * 5 + [False] * 4,
         }
 
+    raise ValueError(f"Unknown molecule name: {name}")
 
 def get_atomic_input(
     version: int,
