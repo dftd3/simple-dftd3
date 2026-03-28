@@ -275,8 +275,7 @@ jobs:
         environment-file: assets/ci/python-env.yaml
         create-args: >-
           python=${{ matrix.python_v }}
-          ${{ (matrix.python_v == '3.14' || matrix.python_v == '3.13') && 'conda-forge/label/qcelemental_dev::qcelemental>=0.50.0rc3' || 'qcelemental' }}
-          ${{ (matrix.python_v == '3.14') && '' || 'pyscf' }}
+          ${{ (matrix.python_v == '3.14' || matrix.python_v == '3.13') && 'conda-forge/label/qcelemental_dev::qcelemental>=0.50.0rc3' || 'qcelemental pyscf' }}
 
     - name: Install GCC (OSX)
       if: ${{ contains(matrix.os, 'macos') }}
