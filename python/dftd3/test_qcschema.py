@@ -299,14 +299,6 @@ def test_gradient_tpss_d3zero(qcsk_version):
         ],
         "molecular_charge": -1,
     }
-    keywords = {
-        "params_tweaks": {
-            "sr6": 1.166,
-            "s8": 1.105,
-            "alpha6": 14.0,
-        },
-        "level_hint": "d3zero",
-    }
 
     atomic_input = get_atomic_input(
         version=qcsk_version,
