@@ -55,7 +55,14 @@ def get_data_file_name(base_name: str = "parameters.toml") -> str:
     if not exists(data_file):
         # for Windows install layout
         data_file = join(
-            dirname(__file__), "..", "..", "..", "Library", "share", "s-dftd3", base_name
+            dirname(__file__),
+            "..",
+            "..",
+            "..",
+            "Library",
+            "share",
+            "s-dftd3",
+            base_name,
         )
         if not exists(data_file):
             data_file = join(dirname(__file__), base_name)
@@ -74,7 +81,8 @@ def _get_params(entry: dict, base: dict, defaults: list, keep_meta=False) -> dic
             params.update(**entry[default])
             if not keep_meta:
                 for key in ("mbd", "damping", "doi"):
-                    if key in params: del params[key]
+                    if key in params:
+                        del params[key]
             return params
         except KeyError:
             continue
@@ -92,7 +100,6 @@ def get_damping_param(
     global _data_base
 
     if _data_base is None:
-
         if data_file is None:
             data_file = get_data_file_name()
 
@@ -117,7 +124,6 @@ def get_all_damping_params(
     global _data_base
 
     if _data_base is None:
-
         if data_file is None:
             data_file = get_data_file_name()
 

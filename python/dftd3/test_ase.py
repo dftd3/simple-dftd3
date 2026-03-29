@@ -76,16 +76,16 @@ def test_ase_scand3():
 
     forces = np.array(
         [
-            [-0.00000000e+00, -1.36113078e-21, -6.16745949e-05],
+            [-0.00000000e00, -1.36113078e-21, -6.16745949e-05],
             [-1.08890463e-20, +3.10643080e-04, +6.89816195e-04],
             [+1.08890463e-20, -3.10643080e-04, +6.89816195e-04],
-            [-0.00000000e+00, -0.00000000e+00, -1.54664530e-03],
+            [-0.00000000e00, -0.00000000e00, -1.54664530e-03],
             [+2.90862635e-04, +5.36974154e-04, +6.87685696e-04],
             [-2.90862635e-04, +5.36974154e-04, +6.87685696e-04],
             [-2.90862635e-04, -5.36974154e-04, +6.87685696e-04],
             [+2.90862635e-04, -5.36974154e-04, +6.87685696e-04],
-            [-0.00000000e+00, +2.75841655e-04, -1.26102764e-03],
-            [-0.00000000e+00, -2.75841655e-04, -1.26102764e-03],
+            [-0.00000000e00, +2.75841655e-04, -1.26102764e-03],
+            [-0.00000000e00, -2.75841655e-04, -1.26102764e-03],
         ]
     )
 
@@ -142,49 +142,52 @@ def test_ase_tpssd3_atm():
 def test_ase_realspace_cutoff():
     """Test that realspace_cutoff parameter works and can be updated with cache_api=True"""
     from ase.units import Bohr
-    
+
     thr = 1.0e-6
     atoms = molecule("H2O")
-    
+
     # Test with default cutoffs
     calc_default = DFTD3(method="PBE", damping="d3bj", cache_api=True)
     atoms.calc = calc_default
     energy_default = atoms.get_potential_energy()
     forces_default = atoms.get_forces()
-    
+
     # Test with very small cutoffs (smaller than H2O bond length ~1 Angstrom) - should give zero or very small interactions
     calc_custom = DFTD3(
-        method="PBE", 
+        method="PBE",
         damping="d3bj",
         realspace_cutoff={"disp2": 0.5, "disp3": 0.5, "cn": 0.5},
-        cache_api=True
+        cache_api=True,
     )
     atoms.calc = calc_custom
     energy_custom = atoms.get_potential_energy()
     forces_custom = atoms.get_forces()
-    
+
     # With very small cutoffs, energy should be much smaller (closer to zero)
     assert abs(energy_custom) < abs(energy_default)
     assert not np.allclose(forces_custom, forces_default, atol=thr)
-    
+
     # Test updating cutoff via set() with cache_api=True
     # Reset to default-like cutoffs using set()
-    calc_custom.set(realspace_cutoff={"disp2": 60.0 * Bohr, "disp3": 40.0 * Bohr, "cn": 40.0 * Bohr})
+    calc_custom.set(
+        realspace_cutoff={"disp2": 60.0 * Bohr, "disp3": 40.0 * Bohr, "cn": 40.0 * Bohr}
+    )
     energy_updated = atoms.get_potential_energy()
     forces_updated = atoms.get_forces()
-    
+
     # Should match the default energy/forces
     assert energy_updated == approx(energy_default, abs=thr)
     assert forces_updated == approx(forces_default, abs=thr)
-    
+
     # Test with empty dict (should use library defaults)
-    calc_empty = DFTD3(method="PBE", damping="d3bj", realspace_cutoff={}, cache_api=True)
+    calc_empty = DFTD3(
+        method="PBE", damping="d3bj", realspace_cutoff={}, cache_api=True
+    )
     atoms.calc = calc_empty
     energy_empty = atoms.get_potential_energy()
-    
+
     # Empty dict should behave like no cutoff override (same as default)
     assert energy_empty == approx(energy_default, abs=thr)
-
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")

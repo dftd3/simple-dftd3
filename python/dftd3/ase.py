@@ -138,6 +138,7 @@ _damping_param = {
 _inv_bohr = 1.0 / Bohr
 _hartree_per_bohr = Hartree / Bohr
 
+
 class DFTD3(Calculator):
     """
     ASE calculator for DFT-D3 related methods.
@@ -263,8 +264,12 @@ class DFTD3(Calculator):
 
         try:
             if self.parameters.realspace_cutoff:
-                disp2 = self.parameters.realspace_cutoff.get("disp2", 60.0 * Bohr) / Bohr
-                disp3 = self.parameters.realspace_cutoff.get("disp3", 40.0 * Bohr) / Bohr
+                disp2 = (
+                    self.parameters.realspace_cutoff.get("disp2", 60.0 * Bohr) / Bohr
+                )
+                disp3 = (
+                    self.parameters.realspace_cutoff.get("disp3", 40.0 * Bohr) / Bohr
+                )
                 cn = self.parameters.realspace_cutoff.get("cn", 40.0 * Bohr) / Bohr
 
                 disp.set_realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn)
@@ -275,7 +280,11 @@ class DFTD3(Calculator):
         """Create a new API damping parameter object"""
 
         try:
-            params_tweaks = self.parameters.params_tweaks if self.parameters.params_tweaks else {"method": self.parameters.get("method")} 
+            params_tweaks = (
+                self.parameters.params_tweaks
+                if self.parameters.params_tweaks
+                else {"method": self.parameters.get("method")}
+            )
             dpar = _damping_param[self.parameters.get("damping")](**params_tweaks)
 
         except RuntimeError as e:
