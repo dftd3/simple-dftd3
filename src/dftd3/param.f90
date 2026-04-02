@@ -523,13 +523,13 @@ subroutine get_rational_damping(param, method, error, s9, citation)
       param = d3_param(a1=0.0000_wp, s8=0.6490_wp, a2=4.8162_wp)
       doi = doi_gmtkn55
    case(p_revtpss_df)
-      param = d3_param(a1=0.4326_wp, s8=1.4023_wp, a2=4.4723_wp)
+      param = d3_param(a1=0.4426_wp, s8=1.4023_wp, a2=4.4723_wp)
       doi = doi_gmtkn55
    case(p_tauhcth_df)
       param = d3_param(a1=0.0000_wp, s8=1.2626_wp, a2=5.6162_wp)
       doi = doi_gmtkn55
    case(p_b3p_df)
-      param = d3_param(a1=0.4601_wp, s8=3.3211_wp, a2=4.9858_wp)
+      param = d3_param(a1=0.4601_wp, s8=3.3211_wp, a2=4.9294_wp)
       doi = doi_gmtkn55
    case(p_b1p_df)
       param = d3_param(a1=0.4724_wp, s8=3.5681_wp, a2=4.9858_wp)
@@ -545,6 +545,9 @@ subroutine get_rational_damping(param, method, error, s9, citation)
       doi = doi_gmtkn55
    case(p_mpw1kcis_df)
       param = d3_param(a1=0.0576_wp, s8=1.0893_wp, a2=5.5314_wp)
+      doi = doi_gmtkn55
+   case(p_mpwkcis1k_df)
+      param = d3_param(a1=0.0855_wp, s8=1.2875_wp, a2=5.8961_wp)
       doi = doi_gmtkn55
    case(p_pbeh1pbe_df)
       param = d3_param(a1=0.0000_wp, s8=1.4877_wp, a2=7.0385_wp)
@@ -562,7 +565,7 @@ subroutine get_rational_damping(param, method, error, s9, citation)
       param = d3_param(a1=0.0000_wp, s8=0.4814_wp, a2=6.2279_wp)
       doi = doi_gmtkn55
    case(p_b97_2_df)
-      param = d3_param(a1=0.0000_wp, s8=0.9448_wp, a2=5.9940_wp)
+      param = d3_param(a1=0.0000_wp, s8=0.9448_wp, a2=5.4603_wp)
       doi = doi_gmtkn55
    case(p_b98_df)
       param = d3_param(a1=0.0000_wp, s8=0.7086_wp, a2=6.0672_wp)
