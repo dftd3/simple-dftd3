@@ -78,7 +78,7 @@ jobs:
       # Used to host cibuildwheel
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.14'
 
       - name: Set cibuildwheel cache path
         run: echo "CIBW_CACHE_PATH=${{ github.workspace }}/.cibw-cache" >> $GITHUB_ENV
