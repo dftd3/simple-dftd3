@@ -18,6 +18,12 @@ Library interface
 
 .. automodule:: dftd3.interface
 
+.. note::
+
+   For periodic structures, cutoff selection, ATM settings, and unit
+   conversions across the executable, Python API, and ASE calculator are
+   summarized in :doc:`../guide/periodic-cutoffs`.
+
 
 Structure
 ~~~~~~~~~

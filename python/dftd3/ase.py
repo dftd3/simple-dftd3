@@ -78,6 +78,9 @@ interactions are considered
 Values provided in the dict are expected to be in Angstrom. When providing values
 in Bohr multiply the inputs by the `ase.units.Bohr` constant.
 
+All returned properties follow ASE conventions: energies are reported in eV,
+forces in eV / Angstrom, and stress in eV / Angstrom^3.
+
 Example
 -------
 >>> from ase.build import molecule
