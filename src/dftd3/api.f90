@@ -964,7 +964,7 @@ end subroutine set_gcp_realspace_cutoff
 subroutine delete_gcp_api(vgcp) &
       & bind(C, name=namespace//"delete_gcp")
    type(c_ptr), intent(inout) :: vgcp
-   type(vp_error), pointer :: gcp
+   type(vp_gcp), pointer :: gcp
 
    if (c_associated(vgcp)) then
       call c_f_pointer(vgcp, gcp)
