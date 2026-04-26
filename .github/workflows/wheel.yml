@@ -156,9 +156,43 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
 
-      - name: Publish to PyPI
-        if: ${{ github.event_name == 'release' }}
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_TOKEN }}
+  publish-to-pypi:
+    name: Publish to PyPI
+    if: startsWith(github.ref, 'refs/tags/')  # only publish to PyPI on tag pushes
+    needs:
+      - sdist
+      - wheels
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/dftd3
+    permissions:
+      id-token: write  # IMPORTANT: mandatory for trusted publishing
+
+    steps:
+    - name: Download sdist
+      uses: actions/download-artifact@v4
+      with:
+        name: dftd3-python-sdist
+        path: dist/
+
+    - name: Download manylinux wheels
+      uses: actions/download-artifact@v4
+      with:
+        name: dftd3-python-ubuntu-latest
+        path: dist/
+
+    - name: Download windows wheels
+      uses: actions/download-artifact@v4
+      with:
+        name: dftd3-python-windows-latest
+        path: dist/
+
+    - name: Download osx wheels
+      uses: actions/download-artifact@v4
+      with:
+        name: dftd3-python-macos-14
+        path: dist/
+
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
