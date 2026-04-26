@@ -70,6 +70,10 @@ A list of projects currently using this DFT-D3 implementation is given here.
   All-electron electronic structure theory with numeric atom-centered orbitals.\ :footcite:`blum2009`
 `VASP <https://www.vasp.at/>`_: (since 6.6.0)
   The Vienna Ab initio Simulation Package: atomic scale materials modelling from first principles.\ :footcite:`kresse1999`
+`REST <https://gitee.com/RESTGroup/rest>`_:
+  Rust-based Electronic Structure Toolkit is a next-generation electronic structure calculation platform
+  developed by the Research Center for Chemical Theory (RCCT) at Fudan University.
+  Provides Rust bindings in `dftd3-rs <https://github.com/RESTGroup/dftd3-rs>`_.
 
 If your project is using *s-dftd3* feel free to add your project to this list.
 
