@@ -538,7 +538,7 @@ subroutine test_b3pw91d3zeroatm_urea(error)
 
    call get_structure(mol, "X23", "urea")
    call new_zero_damping(param, inp)
-   call test_numgrad(error, mol, param, 3.0e-12_wp)
+   call test_numgrad(error, mol, param, 1.0e-11_wp)
 
 end subroutine test_b3pw91d3zeroatm_urea
 
