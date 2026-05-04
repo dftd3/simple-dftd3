@@ -99,6 +99,7 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
    call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, c6, dc6dcn, &
       & energies, dEdcn, gradient, sigma)
    if (grad) then
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
          & gradient, sigma)
    end if
