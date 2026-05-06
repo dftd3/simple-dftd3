@@ -38,16 +38,16 @@ module dftd3_damping_optimizedpower
    contains
 
       !> Evaluate pairwise dispersion energy expression
-      procedure :: get_dispersion2
+      procedure :: get_dispersion2_impl => get_dispersion2
 
       !> Evaluate ATM three-body dispersion energy expression
-      procedure :: get_dispersion3
+      procedure :: get_dispersion3_impl => get_dispersion3
 
       !> Evaluate pairwise representation of additive dispersion energy
-      procedure :: get_pairwise_dispersion2
+      procedure :: get_pairwise_dispersion2_impl => get_pairwise_dispersion2
 
       !> Evaluate pairwise representation of non-additive dispersion energy
-      procedure :: get_pairwise_dispersion3
+      procedure :: get_pairwise_dispersion3_impl => get_pairwise_dispersion3
 
    end type optimizedpower_damping_param
 
