@@ -280,7 +280,7 @@ test_d3 (void) {
    if (dftd3_check_error(error)) {return 1;}
    dftd3_delete(param);
 
-   dftd3_set_model_realspace_cutoff(error, disp, 50.0, 30.0, 25.0);
+   dftd3_set_model_realspace_cutoff_smooth(error, disp, 50.0, 30.0, 25.0, 5.0, 3.0);
    if (dftd3_check_error(error)) {return 1;}
 
    // DSD-BLYP-D3(BJ)-ATM

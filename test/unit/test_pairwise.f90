@@ -53,13 +53,14 @@ subroutine collect_pairwise(testsuite)
       & new_unittest("PBE0-D3M(0)-ATM", test_pbe0d3_mzero_atm_mb06), &
       & new_unittest("BP86-D3M(0)-ATM", test_bpd3_mzero_atm_co2), &
       & new_unittest("PBE0-D3(op)", test_revtpssd3_op_mb07), &
-      & new_unittest("PBE0-D3(op)-ATM", test_revpbed3_op_atm_mb08) &
+      & new_unittest("PBE0-D3(op)-ATM", test_revpbed3_op_atm_mb08), &
+      & new_unittest("PBE-D3(BJ)-ATM smooth cutoff", test_pbed3_bj_atm_smooth) &
       & ]
 
 end subroutine collect_pairwise
 
 
-subroutine test_dftd3_pairwise(error, mol, param)
+subroutine test_dftd3_pairwise(error, mol, param, rcut)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -70,14 +71,20 @@ subroutine test_dftd3_pairwise(error, mol, param)
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
+   !> Realspace cutoff
+   type(realspace_cutoff), intent(in), optional :: rcut
+
    type(d3_model) :: d3
+   type(realspace_cutoff) :: cutoff_
    real(wp) :: energy
    real(wp), allocatable :: energy2(:, :), energy3(:, :)
 
    allocate(energy2(mol%nat, mol%nat), energy3(mol%nat, mol%nat))
    call new_d3_model(d3, mol)
-   call get_dispersion(mol, d3, param, cutoff, energy)
-   call get_pairwise_dispersion(mol, d3, param, cutoff, energy2, energy3)
+   cutoff_ = cutoff
+   if (present(rcut)) cutoff_ = rcut
+   call get_dispersion(mol, d3, param, cutoff_, energy)
+   call get_pairwise_dispersion(mol, d3, param, cutoff_, energy2, energy3)
 
    call check(error, energy, sum(energy2) + sum(energy3), thr=thr)
    if (allocated(error)) then
@@ -117,6 +124,24 @@ subroutine test_b97d3_bj_atm_mb02(error)
    call test_dftd3_pairwise(error, mol, param)
 
 end subroutine test_b97d3_bj_atm_mb02
+
+
+subroutine test_pbed3_bj_atm_smooth(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param = rational_damping_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
+      & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
+   type(realspace_cutoff) :: smooth_cutoff = &
+      & realspace_cutoff(cn=30_wp, disp2=8.0_wp, disp3=8.0_wp, width2=4.0_wp, width3=4.0_wp)
+
+   call get_structure(mol, "MB16-43", "01")
+   call test_dftd3_pairwise(error, mol, param, smooth_cutoff)
+
+end subroutine test_pbed3_bj_atm_smooth
 
 
 subroutine test_tpssd3_bj_atm_ammonia(error)

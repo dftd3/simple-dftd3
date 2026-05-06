@@ -487,10 +487,17 @@ class DispersionModel(Structure):
 
         self._disp = library.new_d3_model(self._mol)
 
-    def set_realspace_cutoff(self, disp2: float, disp3: float, cn: float):
+    def set_realspace_cutoff(
+        self,
+        disp2: float,
+        disp3: float,
+        cn: float,
+        width2: float = 0.0,
+        width3: float = 0.0,
+    ):
         """Set realspace cutoff for evaluation of interactions"""
 
-        library.set_model_realspace_cutoff(self._disp, disp2, disp3, cn)
+        library.set_model_realspace_cutoff(self._disp, disp2, disp3, cn, width2, width3)
 
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """Perform actual evaluation of the dispersion correction"""

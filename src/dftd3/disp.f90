@@ -93,11 +93,11 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
       sigma(:, :) = 0.0_wp
    end if
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-   call param%get_dispersion2(mol, lattr, cutoff%disp2, disp%rvdw, disp%r4r2, c6, dc6dcn, &
-      & energies, dEdcn, gradient, sigma)
+    call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, disp%rvdw, &
+       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient, sigma)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, c6, dc6dcn, &
-      & energies, dEdcn, gradient, sigma)
+    call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, disp%rvdw, &
+       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient, sigma)
    if (grad) then
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
@@ -181,12 +181,12 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
    energy2(:, :) = 0.0_wp
    energy3(:, :) = 0.0_wp
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-   call param%get_pairwise_dispersion2(mol, lattr, cutoff%disp2, disp%rvdw, disp%r4r2, &
-      & c6, energy2)
+    call param%get_pairwise_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, &
+       & disp%rvdw, disp%r4r2, c6, energy2)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_pairwise_dispersion3(mol, lattr, cutoff%disp3, disp%rvdw, disp%r4r2, &
-      & c6, energy3)
+    call param%get_pairwise_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
+       & disp%rvdw, disp%r4r2, c6, energy3)
 
 end subroutine get_pairwise_dispersion
 

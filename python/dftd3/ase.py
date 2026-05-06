@@ -73,6 +73,8 @@ interactions are considered
  disp2              60 * Bohr   Pairwise dispersion interactions
  disp3              40 * Bohr   Triple dispersion interactions
  cn                 40 * Bohr   Coordination number counting
+ width2             0 * Bohr    Smooth cutoff width for pairwise dispersion
+ width3             0 * Bohr    Smooth cutoff width for triple dispersion
 ================== =========== ==========================================
 
 Values provided in the dict are expected to be in Angstrom. When providing values
@@ -271,8 +273,16 @@ class DFTD3(Calculator):
                     self.parameters.realspace_cutoff.get("disp3", 40.0 * Bohr) / Bohr
                 )
                 cn = self.parameters.realspace_cutoff.get("cn", 40.0 * Bohr) / Bohr
+                width2 = self.parameters.realspace_cutoff.get("width2", 0.0) / Bohr
+                width3 = self.parameters.realspace_cutoff.get("width3", 0.0) / Bohr
 
-                disp.set_realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn)
+                disp.set_realspace_cutoff(
+                    disp2=disp2,
+                    disp3=disp3,
+                    cn=cn,
+                    width2=width2,
+                    width3=width3,
+                )
         except RuntimeError as e:
             raise InputError("Cannot update realspace cutoff for dftd3") from e
 

@@ -18,7 +18,7 @@ module dftd3_cutoff
    use mctc_env, only : wp
    implicit none
 
-   public :: realspace_cutoff, get_lattice_points
+   public :: realspace_cutoff, get_lattice_points, smooth_cutoff
 
 
    !> Coordination number cutoff
@@ -50,6 +50,12 @@ module dftd3_cutoff
       !> Three-body interaction cutoff
       real(wp) :: disp3 = disp3_default
 
+      !> Width of smooth two-body interaction cutoff
+      real(wp) :: width2 = 0.0_wp
+
+      !> Width of smooth three-body interaction cutoff
+      real(wp) :: width3 = 0.0_wp
+
       !> Counter-poise correction cutoff
       real(wp) :: gcp = gcp_default
 
@@ -60,6 +66,36 @@ module dftd3_cutoff
 
 
 contains
+
+
+!> Smooth polynomial switch for realspace cutoffs
+pure subroutine smooth_cutoff(r, cutoff, width, sw, dswdr)
+   real(wp), intent(in) :: r
+   real(wp), intent(in) :: cutoff
+   real(wp), intent(in) :: width
+   real(wp), intent(out) :: sw
+   real(wp), intent(out) :: dswdr
+
+   real(wp) :: inner, x
+
+   if (width <= 0.0_wp .or. width >= cutoff) then
+      sw = 1.0_wp
+      dswdr = 0.0_wp
+   else
+      inner = cutoff - width
+      if (r <= inner) then
+         sw = 1.0_wp
+         dswdr = 0.0_wp
+      else if (r >= cutoff) then
+         sw = 0.0_wp
+         dswdr = 0.0_wp
+      else
+         x = (cutoff - r) / width
+         sw = x**3 * (10.0_wp + x*(-15.0_wp + 6.0_wp*x))
+         dswdr = -30.0_wp * x**2 * (1.0_wp - x)**2 / width
+      end if
+   end if
+end subroutine smooth_cutoff
 
 
 subroutine get_lattice_points(periodic, lat, rthr, trans)

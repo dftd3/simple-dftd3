@@ -225,6 +225,16 @@ def test_pbe0_d3_bj(atm: bool, model: DispersionModel) -> None:
     assert approx(res.get("energy")) == ref
 
 
+def test_smooth_realspace_cutoff(model: DispersionModel) -> None:
+    param = RationalDampingParam(method="pbe0", atm=True)
+    ref = model.get_dispersion(param, grad=False).get("energy")
+
+    model.set_realspace_cutoff(disp2=8.0, disp3=8.0, cn=40.0, width2=4.0, width3=4.0)
+    res = model.get_dispersion(param, grad=False).get("energy")
+
+    assert res != approx(ref)
+
+
 def test_b3lyp_d3_zero(atm: bool, model: DispersionModel) -> None:
     ref = -0.022714272555175656 if atm else -0.022814172019166058
     res = model.get_dispersion(ZeroDampingParam(method="b3lyp", atm=atm), grad=False)

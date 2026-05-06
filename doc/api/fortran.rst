@@ -121,6 +121,8 @@ Performing calculations
 -----------------------
 
 An example for performing a calculation with DFT-D3(BJ)-ATM is shown below
+The ``realspace_cutoff`` constructor also accepts optional ``width2`` and
+``width3`` values to enable smooth cutoffs for two- and three-body dispersion.
 
 .. code-block:: fortran
 

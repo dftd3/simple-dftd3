@@ -15,6 +15,7 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_damping_cso
+   use dftd3_cutoff, only : smooth_cutoff
    use dftd3_damping, only : damping_param
    use dftd3_damping_atm, only : get_atm_dispersion, get_atm_pairwise_dispersion
    use dftd3_param, only : d3_param
@@ -78,7 +79,7 @@ end subroutine new_cso_damping
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
+subroutine get_dispersion2(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
 
    !> Damping parameters
@@ -92,6 +93,9 @@ subroutine get_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Van-der-Waals radii for damping function
    real(wp), intent(in) :: rvdw(:, :)
@@ -124,17 +128,17 @@ subroutine get_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
       & .and. present(sigma)
 
    if (grad) then
-      call get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
+      call get_dispersion_derivs(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
          & energy, dEdcn, gradient, sigma)
    else
-      call get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energy)
+      call get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy)
    end if
 
 end subroutine get_dispersion2
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energy)
+subroutine get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy)
 
    !> Damping parameters
    class(cso_damping_param), intent(in) :: self
@@ -147,6 +151,9 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Van-der-Waals radii for damping function
    real(wp), intent(in) :: rvdw(:, :)
@@ -162,7 +169,7 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
 
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, cutoff2, rrij, r0ij, rij, d6, ef, sf, sig, t6
-   real(wp) :: c6ij, edisp, dE
+   real(wp) :: c6ij, edisp, dE, sw, dswdr
    real(wp) :: d6_6, a2r0ij, r4
 
    ! Thread-private array for reduction
@@ -172,9 +179,9 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
    cutoff2 = cutoff*cutoff
 
    !$omp parallel default(none) &
-   !$omp shared(mol, self, c6, trans, cutoff2, r4r2) &
+   !$omp shared(mol, self, c6, trans, cutoff2, cutoff, width, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, vec, r2, rrij, r0ij, rij, d6, ef, &
-   !$omp& sf, sig, t6, c6ij, edisp, dE, d6_6, a2r0ij, r4) &
+   !$omp& sf, sig, t6, c6ij, edisp, dE, d6_6, a2r0ij, r4, sw, dswdr) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -195,13 +202,14 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, rvdw, r4r2, c6, energ
             if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
 
             rij = sqrt(r2)
+            call smooth_cutoff(rij, cutoff, width, sw, dswdr)
             ef = exp(rij - a2r0ij)
             sf = 1.0_wp / (1.0_wp + ef)
             sig = self%s6 + self%a1 * sf
             r4 = r2 * r2
             t6 = 1.0_wp / (r4 * r2 + d6_6)
 
-            edisp = sig * t6
+            edisp = sw * sig * t6
 
             dE = -c6ij*edisp * 0.5_wp
 
@@ -223,7 +231,7 @@ end subroutine get_dispersion_energy
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
+subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
 
    !> Damping parameters
@@ -237,6 +245,9 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Van-der-Waals radii for damping function
    real(wp), intent(in) :: rvdw(:, :)
@@ -264,7 +275,7 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
 
    integer :: iat, jat, izp, jzp, jtr, ic, jc
    real(wp) :: vec(3), r2, cutoff2, rrij, r0ij, rij, d6, ef, sf, sig, t6
-   real(wp) :: c6ij, dsig, dt6, edisp, gdisp
+   real(wp) :: c6ij, dsig, dt6, edisp0, gdisp0, edisp, gdisp, sw, dswdr
    real(wp) :: dE, dG(3), dS(3, 3)
    real(wp) :: d6_6, a2r0ij, r4
 
@@ -278,9 +289,10 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
    cutoff2 = cutoff*cutoff
 
    !$omp parallel default(none) &
-   !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, r4r2) &
+   !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, cutoff, width, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, ic, jc, vec, r2, rrij, r0ij, rij, d6, ef, &
-   !$omp& sf, sig, t6, c6ij, dsig, dt6, edisp, gdisp, dE, dG, dS, d6_6, a2r0ij, r4) &
+   !$omp& sf, sig, t6, c6ij, dsig, dt6, edisp0, gdisp0, edisp, gdisp, dE, &
+   !$omp& dG, dS, d6_6, a2r0ij, r4, sw, dswdr) &
    !$omp shared(energy, gradient, sigma, dEdcn) &
    !$omp private(energy_local, gradient_local, sigma_local, dEdcn_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -304,6 +316,7 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
             if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
 
             rij = sqrt(r2)
+            call smooth_cutoff(rij, cutoff, width, sw, dswdr)
             ef = exp(rij - a2r0ij)
             sf = 1.0_wp / (1.0_wp + ef)
             sig = self%s6 + self%a1 * sf
@@ -313,8 +326,10 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dc
             dsig = -self%a1 * sf * (1.0_wp - sf) / rij
             dt6 = -6*r4*t6*t6
 
-            edisp = sig * t6
-            gdisp = dsig * t6 + sig * dt6
+            edisp0 = sig * t6
+            gdisp0 = dsig * t6 + sig * dt6
+            edisp = sw * edisp0
+            gdisp = sw * gdisp0 + dswdr * edisp0 / rij
 
             dE = -c6ij*edisp * 0.5_wp
             dG(:) = -c6ij*gdisp*vec
@@ -354,7 +369,7 @@ end subroutine get_dispersion_derivs
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
+subroutine get_dispersion3(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
 
    !> Damping parameters
@@ -368,6 +383,9 @@ subroutine get_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Van-der-Waals radii for damping function
    real(wp), intent(in) :: rvdw(:, :)
@@ -393,14 +411,14 @@ subroutine get_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
-   call get_atm_dispersion(mol, trans, cutoff, self%s9, rs9, self%alp+2, &
+   call get_atm_dispersion(mol, trans, cutoff, width, self%s9, rs9, self%alp+2, &
       & rvdw, c6, dc6dcn, energy, dEdcn, gradient, sigma)
 
 end subroutine get_dispersion3
 
 
 !> Evaluation of the dispersion energy expression projected on atomic pairs
-subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, energy)
+subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy)
 
    !> Damping parameters
    class(cso_damping_param), intent(in) :: self
@@ -413,6 +431,9 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Van-der-Waals radii for damping function
    real(wp), intent(in) :: rvdw(:, :)
@@ -428,7 +449,7 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
 
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, cutoff2, rrij, r0ij, rij, d6, ef, sf, sig, t6
-   real(wp) :: c6ij, edisp, dE
+   real(wp) :: c6ij, edisp, dE, sw, dswdr
    real(wp) :: d6_6, a2r0ij, r4
 
    ! Thread-private array for reduction
@@ -438,9 +459,9 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
    cutoff2 = cutoff*cutoff
 
    !$omp parallel default(none) &
-   !$omp shared(mol, self, c6, trans, cutoff2, r4r2) &
+   !$omp shared(mol, self, c6, trans, cutoff2, cutoff, width, r4r2) &
    !$omp private(iat, jat, izp, jzp, jtr, vec, r2, rrij, r0ij, rij, d6, ef, &
-   !$omp& sf, sig, t6, c6ij, edisp, dE, d6_6, a2r0ij, r4) &
+   !$omp& sf, sig, t6, c6ij, edisp, dE, d6_6, a2r0ij, r4, sw, dswdr) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1), size(energy, 2)), source=0.0_wp)
@@ -461,13 +482,14 @@ subroutine get_pairwise_dispersion2(self, mol, trans, cutoff, rvdw, r4r2, c6, en
             if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
 
             rij = sqrt(r2)
+            call smooth_cutoff(rij, cutoff, width, sw, dswdr)
             ef = exp(rij - a2r0ij)
             sf = 1.0_wp / (1.0_wp + ef)
             sig = self%s6 + self%a1 * sf
             r4 = r2 * r2
             t6 = 1.0_wp / (r4 * r2 + d6_6)
 
-            edisp = sig * t6
+            edisp = sw * sig * t6
 
             dE = -c6ij*edisp * 0.5_wp
 
@@ -489,7 +511,7 @@ end subroutine get_pairwise_dispersion2
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, energy)
+subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy)
 
    !> Damping parameters
    class(cso_damping_param), intent(in) :: self
@@ -503,6 +525,9 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, en
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
 
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
    !> Van-der-Waals radii for damping function
    real(wp), intent(in) :: rvdw(:, :)
 
@@ -515,7 +540,7 @@ subroutine get_pairwise_dispersion3(self, mol, trans, cutoff, rvdw, r4r2, c6, en
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:, :)
 
-   call get_atm_pairwise_dispersion(mol, trans, cutoff, self%s9, rs9, self%alp+2, &
+   call get_atm_pairwise_dispersion(mol, trans, cutoff, width, self%s9, rs9, self%alp+2, &
       & rvdw, c6, energy)
 
 end subroutine get_pairwise_dispersion3

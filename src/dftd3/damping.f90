@@ -33,7 +33,7 @@ module dftd3_damping
 
    abstract interface
       !> Evaluation of the dispersion energy expression
-      subroutine dispersion_interface(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
+      subroutine dispersion_interface(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
             & energy, dEdcn, gradient, sigma)
          import :: structure_type, damping_param, wp
 
@@ -48,6 +48,9 @@ module dftd3_damping
 
          !> Real space cutoff
          real(wp), intent(in) :: cutoff
+
+         !> Width of smooth cutoff
+         real(wp), intent(in) :: width
 
          !> Van-der-Waals radii for damping function
          real(wp), intent(in) :: rvdw(:, :)
@@ -76,7 +79,7 @@ module dftd3_damping
 
 
       !> Evaluation of the pairwise representation of the dispersion energy
-      subroutine pairwise_dispersion_interface(self, mol, trans, cutoff, rvdw, r4r2, c6, &
+      subroutine pairwise_dispersion_interface(self, mol, trans, cutoff, width, rvdw, r4r2, c6, &
             & energy)
          import :: structure_type, damping_param, wp
 
@@ -91,6 +94,9 @@ module dftd3_damping
 
          !> Real space cutoff
          real(wp), intent(in) :: cutoff
+
+         !> Width of smooth cutoff
+         real(wp), intent(in) :: width
 
          !> Van-der-Waals radii for damping function
          real(wp), intent(in) :: rvdw(:, :)

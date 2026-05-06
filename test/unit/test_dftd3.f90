@@ -80,7 +80,8 @@ subroutine collect_dftd3(testsuite)
       & new_unittest("TPSSh-D3(op)", test_tpsshd3op_mb38), &
       & new_unittest("B3LYP-D3(CSO)", test_b3lypd3cso_mb01), &
       & new_unittest("PBE-D3(CSO)-ATM", test_pbed3cso_mb02), &
-      & new_unittest("PBE-D3(BJ) Actinides", test_pbed3bj_actinides) &
+      & new_unittest("PBE-D3(BJ) Actinides", test_pbed3bj_actinides), &
+      & new_unittest("PBE-D3(BJ)-ATM smooth cutoff gradient", test_pbed3bjatm_smooth_cutoff_grad) &
       & ]
 
 end subroutine collect_dftd3
@@ -114,7 +115,7 @@ subroutine test_dftd3_gen(error, mol, param, ref)
 end subroutine test_dftd3_gen
 
 
-subroutine test_numgrad(error, mol, param)
+subroutine test_numgrad(error, mol, param, cutoff)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -125,27 +126,33 @@ subroutine test_numgrad(error, mol, param)
    !> Damping parameters
    class(damping_param), intent(in) :: param
 
+   !> Realspace cutoff
+   type(realspace_cutoff), intent(in), optional :: cutoff
+
    integer :: iat, ic
    type(d3_model) :: d3
+   type(realspace_cutoff) :: rcut
    real(wp) :: energy, er, el, sigma(3, 3)
    real(wp), allocatable :: gradient(:, :), numgrad(:, :)
    real(wp), parameter :: step = 1.0e-6_wp
 
    allocate(gradient(3, mol%nat), numgrad(3, mol%nat))
    call new_d3_model(d3, mol)
+   rcut = realspace_cutoff()
+   if (present(cutoff)) rcut = cutoff
 
    do iat = 1, mol%nat
       do ic = 1, 3
          mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
-         call get_dispersion(mol, d3, param, realspace_cutoff(), er)
+         call get_dispersion(mol, d3, param, rcut, er)
          mol%xyz(ic, iat) = mol%xyz(ic, iat) - 2*step
-         call get_dispersion(mol, d3, param, realspace_cutoff(), el)
+         call get_dispersion(mol, d3, param, rcut, el)
          mol%xyz(ic, iat) = mol%xyz(ic, iat) + step
          numgrad(ic, iat) = 0.5_wp*(er - el)/step
       end do
    end do
 
-   call get_dispersion(mol, d3, param, realspace_cutoff(), energy, gradient, sigma)
+   call get_dispersion(mol, d3, param, rcut, energy, gradient, sigma)
 
    if (any(abs(gradient - numgrad) > thr2)) then
       call test_failed(error, "Gradient of dispersion energy does not match")
@@ -153,6 +160,26 @@ subroutine test_numgrad(error, mol, param)
    end if
 
 end subroutine test_numgrad
+
+
+subroutine test_pbed3bjatm_smooth_cutoff_grad(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(rational_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
+      & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
+   type(realspace_cutoff) :: cutoff = realspace_cutoff(&
+      & cn=40.0_wp, disp2=8.0_wp, disp3=8.0_wp, width2=4.0_wp, width3=4.0_wp)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_rational_damping(param, inp)
+   call test_numgrad(error, mol, param, cutoff)
+
+end subroutine test_pbed3bjatm_smooth_cutoff_grad
 
 
 subroutine test_numsigma(error, mol, param)

@@ -79,6 +79,7 @@ We start with checking the signature of this function:
 The main inputs we need to construct are the ``d3_model``, the ``damping_param`` and the ``realspace_cutoff`` objects.
 We check the documentation and find that the ``d3_model`` can be constructed from a ``structure_type``.
 Similarly, for the ``realspace_cutoff`` we find that the derived type is rather simple and can be easily constructed.
+Optional ``width2`` and ``width3`` values enable smooth cutoffs for two- and three-body dispersion contributions.
 For the ``damping_param`` we find that there are several implementations available.
 Our goal is to scan through the damping functions, therefore we will have a closer look to ``damping_param`` soon.
 First, we use ``get_dispersion`` to define our own dispersion energy evaluator for our reaction values.

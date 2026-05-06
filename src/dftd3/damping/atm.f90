@@ -15,6 +15,7 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_damping_atm
+   use dftd3_cutoff, only : smooth_cutoff
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -26,7 +27,7 @@ contains
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn, &
+subroutine get_atm_dispersion(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
 
    !> Molecular structure data
@@ -37,6 +38,9 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Scaling for dispersion coefficients
    real(wp), intent(in) :: s9
@@ -75,17 +79,17 @@ subroutine get_atm_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn
       & .and. present(sigma)
 
    if (grad) then
-      call get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn, &
+      call get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
    else
-      call get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, energy)
+      call get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, energy)
    end if
 
 end subroutine get_atm_dispersion
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, energy)
+subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, energy)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -95,6 +99,9 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Scaling for dispersion coefficients
    real(wp), intent(in) :: s9
@@ -115,9 +122,11 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
    real(wp), intent(inout) :: energy(:)
 
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
-   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
+   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, rij, rjk, rik
+   real(wp) :: c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
    real(wp) :: cutoff2, c9, dE, alp3
+   real(wp) :: swij, swjk, swik, dswdr, sw
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -127,10 +136,11 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
    alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, rs9, alp3, rvdw, cutoff2) &
+   !$omp shared(mol, trans, c6, s9, rs9, alp3, rvdw, cutoff2, cutoff, width) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
-   !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
-   !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
+   !$omp& r2ij, r2jk, r2ik, rij, rjk, rik, c6ij, c6jk, c6ik, triple, &
+   !$omp& r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang, c9, dE, &
+   !$omp& swij, swjk, swik, dswdr, sw) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -145,6 +155,8 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
             vij(:) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
             r2ij = vij(1)*vij(1) + vij(2)*vij(2) + vij(3)*vij(3)
             if (r2ij > cutoff2 .or. r2ij < epsilon(1.0_wp)) cycle
+            rij = sqrt(r2ij)
+            call smooth_cutoff(rij, cutoff, width, swij, dswdr)
             do kat = 1, jat
                kzp = mol%id(kat)
                c6ik = c6(kat, iat)
@@ -158,9 +170,14 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
+                  rik = sqrt(r2ik)
+                  call smooth_cutoff(rik, cutoff, width, swik, dswdr)
                   vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
+                  rjk = sqrt(r2jk)
+                  call smooth_cutoff(rjk, cutoff, width, swjk, dswdr)
+                  sw = swij * swik * swjk
                   r2 = r2ij*r2ik*r2jk
                   r1 = sqrt(r2)
                   r3 = r2 * r1
@@ -172,7 +189,7 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
 
                   rr = ang*fdmp
 
-                  dE = rr * c9 * triple / 3.0_wp
+                  dE = rr * c9 * triple * sw / 3.0_wp
                   energy_local(iat) = energy_local(iat) - dE
                   energy_local(jat) = energy_local(jat) - dE
                   energy_local(kat) = energy_local(kat) - dE
@@ -192,7 +209,7 @@ end subroutine get_atm_dispersion_energy
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, dc6dcn, &
+subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, dc6dcn, &
       & energy, dEdcn, gradient, sigma)
 
    !> Molecular structure data
@@ -203,6 +220,9 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Scaling for dispersion coefficients
    real(wp), intent(in) :: s9
@@ -235,10 +255,12 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
    real(wp), intent(inout) :: sigma(:, :)
 
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr, ic, jc
-   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
+   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, rij, rjk, rik
+   real(wp) :: c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang
-   real(wp) :: cutoff2, c9, dE, dGij(3), dGjk(3), dGik(3), dS(3, 3)
+   real(wp) :: cutoff2, c9, dE, dE0, dGij(3), dGjk(3), dGik(3), dS(3, 3)
    real(wp) :: alp3, r0r1alp3
+   real(wp) :: swij, swjk, swik, dswijdr, dswjkdr, dswikdr, sw
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -251,11 +273,12 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
    alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, rs9, alp, alp3, rvdw, cutoff2, dc6dcn) &
+   !$omp shared(mol, trans, c6, s9, rs9, alp, alp3, rvdw, cutoff2, cutoff, width, dc6dcn) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, ic, jc, vij, vjk, vik, &
-   !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
-   !$omp& r1, r2, r3, r5, rr, fdmp, dfdmp, ang, dang, c9, dE, dGij, dGjk, &
-   !$omp& dGik, dS, r0r1alp3) &
+   !$omp& r2ij, r2jk, r2ik, rij, rjk, rik, c6ij, c6jk, c6ik, triple, &
+   !$omp& r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, dfdmp, ang, &
+   !$omp& dang, c9, dE, dE0, dGij, dGjk, dGik, dS, r0r1alp3, swij, &
+   !$omp& swjk, swik, dswijdr, dswjkdr, dswikdr, sw) &
    !$omp shared(energy, gradient, sigma, dEdcn) &
    !$omp private(energy_local, gradient_local, sigma_local, dEdcn_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -273,6 +296,8 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
             vij(:) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
             r2ij = vij(1)*vij(1) + vij(2)*vij(2) + vij(3)*vij(3)
             if (r2ij > cutoff2 .or. r2ij < epsilon(1.0_wp)) cycle
+            rij = sqrt(r2ij)
+            call smooth_cutoff(rij, cutoff, width, swij, dswijdr)
             do kat = 1, jat
                kzp = mol%id(kat)
                c6ik = c6(kat, iat)
@@ -286,9 +311,14 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
+                  rik = sqrt(r2ik)
+                  call smooth_cutoff(rik, cutoff, width, swik, dswikdr)
                   vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
+                  rjk = sqrt(r2jk)
+                  call smooth_cutoff(rjk, cutoff, width, swjk, dswjkdr)
+                  sw = swij * swik * swjk
                   r2 = r2ij*r2ik*r2jk
                   r1 = sqrt(r2)
                   r3 = r2 * r1
@@ -308,23 +338,27 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, s9, rs9, alp, rvdw, c6,
                      & + r2ij * (3.0_wp * r2jk**2 + 2.0_wp * r2jk*r2ik&
                      & + 3.0_wp * r2ik**2)&
                      & - 5.0_wp * (r2jk - r2ik)**2 * (r2jk + r2ik)) / r5
-                  dGij(:) = c9 * (-dang*fdmp + ang*dfdmp) / r2ij * vij
+                  dE0 = rr * c9
+                  dGij(:) = sw * c9 * (-dang*fdmp + ang*dfdmp) / r2ij * vij &
+                     & - dE0 * dswijdr / rij * swik * swjk * vij
 
                   ! d/drik
                   dang = -0.375_wp * (r2ik**3 + r2ik**2 * (r2jk + r2ij)&
                      & + r2ik * (3.0_wp * r2jk**2 + 2.0_wp * r2jk * r2ij&
                      & + 3.0_wp * r2ij**2)&
                      & - 5.0_wp * (r2jk - r2ij)**2 * (r2jk + r2ij)) / r5
-                  dGik(:) = c9 * (-dang * fdmp + ang * dfdmp) / r2ik * vik
+                  dGik(:) = sw * c9 * (-dang * fdmp + ang * dfdmp) / r2ik * vik &
+                     & - dE0 * dswikdr / rik * swij * swjk * vik
 
                   ! d/drjk
                   dang = -0.375_wp * (r2jk**3 + r2jk**2*(r2ik + r2ij)&
                      & + r2jk * (3.0_wp * r2ik**2 + 2.0_wp * r2ik * r2ij&
                      & + 3.0_wp * r2ij**2)&
                      & - 5.0_wp * (r2ik - r2ij)**2 * (r2ik + r2ij)) / r5
-                  dGjk(:) = c9 * (-dang * fdmp + ang * dfdmp) / r2jk * vjk
+                  dGjk(:) = sw * c9 * (-dang * fdmp + ang * dfdmp) / r2jk * vjk &
+                     & - dE0 * dswjkdr / rjk * swij * swik * vjk
 
-                  dE = rr * c9 * triple
+                  dE = dE0 * triple * sw
                   energy_local(iat) = energy_local(iat) - dE/3.0_wp
                   energy_local(jat) = energy_local(jat) - dE/3.0_wp
                   energy_local(kat) = energy_local(kat) - dE/3.0_wp
@@ -370,7 +404,7 @@ end subroutine get_atm_dispersion_derivs
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c6, &
+subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, &
       & energy)
 
    !> Molecular structure data
@@ -381,6 +415,9 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
 
    !> Real space cutoff
    real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
 
    !> Scaling for dispersion coefficients
    real(wp), intent(in) :: s9
@@ -401,9 +438,11 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
    real(wp), intent(inout) :: energy(:, :)
 
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
-   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple
+   real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, rij, rjk, rik
+   real(wp) :: c6ij, c6jk, c6ik, triple
    real(wp) :: r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang
    real(wp) :: cutoff2, c9, dE, alp3
+   real(wp) :: swij, swjk, swik, dswdr, sw
 
    ! Thread-private arrays for reduction
    ! Set to 0 explicitly as the shared variants are potentially non-zero (inout)
@@ -414,10 +453,11 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
    alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, cutoff2, s9, rs9, alp3, rvdw) &
+   !$omp shared(mol, trans, c6, cutoff2, cutoff, width, s9, rs9, alp3, rvdw) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
-   !$omp& r2ij, r2jk, r2ik, c6ij, c6jk, c6ik, triple, r0ij, r0jk, r0ik, r0, &
-   !$omp& r1, r2, r3, r5, rr, fdmp, ang, c9, dE) &
+   !$omp& r2ij, r2jk, r2ik, rij, rjk, rik, c6ij, c6jk, c6ik, triple, &
+   !$omp& r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang, c9, dE, &
+   !$omp& swij, swjk, swik, dswdr, sw) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1), size(energy, 2)), source=0.0_wp)
@@ -432,6 +472,8 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
             vij(:) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
             r2ij = vij(1)*vij(1) + vij(2)*vij(2) + vij(3)*vij(3)
             if (r2ij > cutoff2 .or. r2ij < epsilon(1.0_wp)) cycle
+            rij = sqrt(r2ij)
+            call smooth_cutoff(rij, cutoff, width, swij, dswdr)
             do kat = 1, jat
                kzp = mol%id(kat)
                c6ik = c6(kat, iat)
@@ -445,9 +487,14 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
                   vik(:) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
                   r2ik = vik(1)*vik(1) + vik(2)*vik(2) + vik(3)*vik(3)
                   if (r2ik > cutoff2 .or. r2ik < epsilon(1.0_wp)) cycle
+                  rik = sqrt(r2ik)
+                  call smooth_cutoff(rik, cutoff, width, swik, dswdr)
                   vjk(:) = vik(:) - vij(:)
                   r2jk = vjk(1)*vjk(1) + vjk(2)*vjk(2) + vjk(3)*vjk(3)
                   if (r2jk > cutoff2 .or. r2jk < epsilon(1.0_wp)) cycle
+                  rjk = sqrt(r2jk)
+                  call smooth_cutoff(rjk, cutoff, width, swjk, dswdr)
+                  sw = swij * swik * swjk
                   r2 = r2ij*r2ik*r2jk
                   r1 = sqrt(r2)
                   r3 = r2 * r1
@@ -459,7 +506,7 @@ subroutine get_atm_pairwise_dispersion(mol, trans, cutoff, s9, rs9, alp, rvdw, c
 
                   rr = ang*fdmp
 
-                  dE = rr * c9 * triple / 6.0_wp
+                  dE = rr * c9 * triple * sw / 6.0_wp
                   energy_local(jat, iat) = energy_local(jat, iat) - dE
                   energy_local(kat, iat) = energy_local(kat, iat) - dE
                   energy_local(iat, jat) = energy_local(iat, jat) - dE

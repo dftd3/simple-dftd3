@@ -345,6 +345,32 @@ subroutine set_model_realspace_cutoff(verror, vdisp, disp2, disp3, cn) &
 end subroutine set_model_realspace_cutoff
 
 
+subroutine set_model_realspace_cutoff_smooth(verror, vdisp, disp2, disp3, cn, width2, width3) &
+      & bind(C, name=namespace//"set_model_realspace_cutoff_smooth")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   real(c_double), value, intent(in) :: disp2
+   real(c_double), value, intent(in) :: disp3
+   real(c_double), value, intent(in) :: cn
+   real(c_double), value, intent(in) :: width2
+   real(c_double), value, intent(in) :: width3
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "D3 dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   disp%cutoff = realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn, &
+      & width2=width2, width3=width3)
+end subroutine set_model_realspace_cutoff_smooth
+
+
 !> Delete dispersion model
 subroutine delete_model_api(vdisp) &
       & bind(C, name=namespace//"delete_model")

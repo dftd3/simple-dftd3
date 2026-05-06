@@ -153,11 +153,16 @@ def new_d3_model(mol: StructureHandle) -> ModelHandle:
 
 
 def set_model_realspace_cutoff(
-    disp: ModelHandle, disp2: float, disp3: float, cn: float
+    disp: ModelHandle,
+    disp2: float,
+    disp3: float,
+    cn: float,
+    width2: float = 0.0,
+    width3: float = 0.0,
 ) -> None:
     """Set the realspace cutoff for the dispersion model"""
-    return error_check(lib.dftd3_set_model_realspace_cutoff)(
-        disp.handle, disp2, disp3, cn
+    return error_check(lib.dftd3_set_model_realspace_cutoff_smooth)(
+        disp.handle, disp2, disp3, cn, width2, width3
     )
 
 

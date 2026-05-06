@@ -131,6 +131,16 @@ dftd3_set_model_realspace_cutoff(dftd3_error /* error */,
                                  double /* disp3 */,
                                  double /* cn */) SDFTD3_API_SUFFIX__V_0_5;
 
+/// Set realspace cutoffs with smoothing widths (quantities in Bohr)
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_model_realspace_cutoff_smooth(dftd3_error /* error */,
+                                        dftd3_model /* model */,
+                                        double /* disp2 */,
+                                        double /* disp3 */,
+                                        double /* cn */,
+                                        double /* width2 */,
+                                        double /* width3 */) SDFTD3_API_SUFFIX__V_0_5;
+
 /// Delete dispersion model
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
 dftd3_delete_model(dftd3_model* /* disp */) SDFTD3_API_SUFFIX__V_0_2;
