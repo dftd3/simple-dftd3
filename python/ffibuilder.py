@@ -56,7 +56,7 @@ else:
 
         if not pkgconfig.exists(library):
             raise ModuleNotFoundError("Unable to find pkg-config package 's-dftd3'")
-        if pkgconfig.installed(library, "< 0.4"):
+        if pkgconfig.installed(library, "< 1.4"):
             raise Exception(
                 "Installed 's-dftd3' version is too old, 0.4 or newer is required"
             )
