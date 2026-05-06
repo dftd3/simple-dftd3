@@ -204,7 +204,6 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6
             if (r2 > cutoff2 .or. r2 < epsilon(1.0_wp)) cycle
             r1 = sqrt(r2)
             call smooth_cutoff(r1, cutoff, width, sw, dswdr)
-            call smooth_cutoff(r1, cutoff, width, sw, dswdr)
 
             r6 = r2*r2*r2
             r8 = r6*r2
