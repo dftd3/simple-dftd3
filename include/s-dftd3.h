@@ -30,6 +30,7 @@
 #define SDFTD3_API_SUFFIX__V_0_4
 #define SDFTD3_API_SUFFIX__V_0_5
 #define SDFTD3_API_SUFFIX__V_1_3
+#define SDFTD3_API_SUFFIX__V_1_4
 
 /// Error handle class
 typedef struct _dftd3_error* dftd3_error;
@@ -139,7 +140,7 @@ dftd3_set_model_realspace_cutoff_smooth(dftd3_error /* error */,
                                         double /* disp3 */,
                                         double /* cn */,
                                         double /* width2 */,
-                                        double /* width3 */) SDFTD3_API_SUFFIX__V_0_5;
+                                        double /* width3 */) SDFTD3_API_SUFFIX__V_1_4;
 
 /// Delete dispersion model
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
