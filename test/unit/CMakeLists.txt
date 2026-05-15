@@ -21,7 +21,10 @@ set(
   "dftd3"
   "param"
   "pairwise"
-  "periodic"
+  "periodic_1d"
+  "periodic_2d"
+  "periodic_3d"
+  "periodic_atm"
   "gcp"
   "regression"
 )

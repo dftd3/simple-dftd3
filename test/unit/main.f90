@@ -24,7 +24,10 @@ program tester
    use test_model, only : collect_model
    use test_param, only : collect_param
    use test_pairwise, only : collect_pairwise
-   use test_periodic, only : collect_periodic
+   use test_periodic_1d, only : collect_periodic_1d
+   use test_periodic_2d, only : collect_periodic_2d
+   use test_periodic_3d, only : collect_periodic_3d
+   use test_periodic_atm, only : collect_periodic_atm
    use test_regression, only : collect_regression
    implicit none
    integer :: stat, is
@@ -39,7 +42,10 @@ program tester
       & new_testsuite("dftd3", collect_dftd3), &
       & new_testsuite("param", collect_param), &
       & new_testsuite("pairwise", collect_pairwise), &
-      & new_testsuite("periodic", collect_periodic), &
+      & new_testsuite("periodic_1d", collect_periodic_1d), &
+      & new_testsuite("periodic_2d", collect_periodic_2d), &
+      & new_testsuite("periodic_3d", collect_periodic_3d), &
+      & new_testsuite("periodic_atm", collect_periodic_atm), &
       & new_testsuite("gcp", collect_gcp), &
       & new_testsuite("regression", collect_regression) &
       & ]
