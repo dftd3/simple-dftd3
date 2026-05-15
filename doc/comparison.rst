@@ -9,21 +9,23 @@ It is however not the only project providing an implementation of DFT-D3, many f
 
 A non-comprehensive list of DFT-D3 implementations is provided here:
 
-============================== =========== ==================== ==========================
- repository                     license     APIs                 notes
-============================== =========== ==================== ==========================
- `dftd3`_                       GPL-1.0     Fortran              reference implementation
- `dftd3/simple-dftd3`_          LGPL-3.0    Fortran, C, Python
- `dftd3/tad-dftd3`_             Apache-2.0  Python               torch
- `dftbplus/dftd3-lib`_          GPL-1.0     Fortran              patched fork (archived)
- `ehermes/ased3`_               LGPL-3.0    Python               f2py, ASE
- `pfnet-research/torch-dftd`_   MIT         Python               torch
- `cuanto/libdftd3`_             GPL-3.0     Fortran, Python      ctypes, pyscf
- `cresset-group/dftd3`_         GPL-1.0     Fortran              patched fork
- `loriab/dftd3`_                GPL-1.0     Fortran              patched fork, Windows
- `f3rmion/dftd3`_               GPL-1.0     Fortran              patched fork
- `bobbypaton/pydftd3`_          MIT         Python               Gaussian
-============================== =========== ==================== ==========================
+================================= =========== ==================== ==========================
+ repository                        license     APIs                 notes
+================================= =========== ==================== ==========================
+ `dftd3`_                          GPL-1.0     Fortran              reference implementation
+ `dftd3/simple-dftd3`_             LGPL-3.0    Fortran, C, Python
+ `dftd3/tad-dftd3`_                Apache-2.0  Python               torch
+ `dftbplus/dftd3-lib`_             GPL-1.0     Fortran              patched fork (archived)
+ `ehermes/ased3`_                  LGPL-3.0    Python               f2py, ASE
+ `pfnet-research/torch-dftd`_      MIT         Python               torch
+ `cuanto/libdftd3`_                GPL-3.0     Fortran, Python      ctypes, pyscf
+ `cresset-group/dftd3`_            GPL-1.0     Fortran              patched fork
+ `loriab/dftd3`_                   GPL-1.0     Fortran              patched fork, Windows
+ `f3rmion/dftd3`_                  GPL-1.0     Fortran              patched fork
+ `bobbypaton/pydftd3`_             MIT         Python               Gaussian
+ `LipidL/LASP-D3`_                 N/A         C                    CUDA implementation
+ `NVIDIA/nvalchemi-toolkit-ops`_   Apache-2.0  Python               Python with Nvidia Wrap
+================================= =========== ==================== ==========================
 
 .. _dftd3: http://mctc.uni-bonn.de/software/dft-d3
 .. _dftd3/simple-dftd3: https://github.com/dftd3/simple-dftd3
@@ -36,6 +38,8 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
 .. _loriab/dftd3: https://github.com/loriab/dftd3
 .. _f3rmion/dftd3: https://github.com/f3rmion/dftd3
 .. _bobbypaton/pydftd3: https://github.com/bobbypaton/pyDFTD3
+.. _NVIDIA/nvalchemi-toolkit-ops: https://github.com/NVIDIA/nvalchemi-toolkit-ops/tree/619af5b0b5b19f1f78bd05fb1e3ac9143fc4b631/examples/dispersion
+.. _LipidL/LASP-D3: https://github.com/LipidL/LASP-D3
 
 Many more versions are probably around or redistributed in various quantum chemistry programs.
 
