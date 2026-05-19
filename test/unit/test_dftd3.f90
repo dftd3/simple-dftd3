@@ -79,6 +79,8 @@ subroutine collect_dftd3(testsuite)
       & new_unittest("B97h-D3(op)", test_b97hd3op_mb37), &
       & new_unittest("TPSSh-D3(op)", test_tpsshd3op_mb38), &
       & new_unittest("B3LYP-D3(CSO)", test_b3lypd3cso_mb01), &
+      & new_unittest("PBE-D3(Z)", test_pbed3z_mb39), &
+      & new_unittest("PBE-D3(Z) sensitive gradient", test_pbed3z_sensitive_grad), &
       & new_unittest("PBE-D3(CSO)-ATM", test_pbed3cso_mb02), &
       & new_unittest("PBE-D3(BJ) Actinides", test_pbed3bj_actinides), &
       & new_unittest("PBE-D3(BJ)-ATM smooth cutoff gradient", test_pbed3bjatm_smooth_cutoff_grad) &
@@ -957,6 +959,43 @@ subroutine test_pbed3cso_mb02(error)
    call test_numsigma(error, mol, param)
 
 end subroutine test_pbed3cso_mb02
+
+subroutine test_pbed3z_mb39(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(z_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
+      & a1 = 200770.0_wp, a2 = 0.0_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
+
+   call get_structure(mol, "MB16-43", "39")
+   call new_z_damping(param, inp)
+   call test_dftd3_gen(error, mol, param, -6.7659132584659484E-003_wp)
+   if (allocated(error)) return
+   call test_numgrad(error, mol, param)
+
+end subroutine test_pbed3z_mb39
+
+
+subroutine test_pbed3z_sensitive_grad(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(z_damping_param) :: param
+   type(d3_param) :: inp = d3_param(&
+      & s6 = 1.0_wp, s8 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
+      & a1 = 1.0_wp, a2 = 0.0_wp)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_z_damping(param, inp)
+   call test_numgrad(error, mol, param)
+
+end subroutine test_pbed3z_sensitive_grad
 
 
 subroutine test_pbed3bj_actinides(error)

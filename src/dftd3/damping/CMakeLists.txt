@@ -23,6 +23,7 @@ list(
   "${dir}/mzero.f90"
   "${dir}/optimizedpower.f90"
   "${dir}/rational.f90"
+  "${dir}/z.f90"
   "${dir}/zero.f90"
 )
 

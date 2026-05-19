@@ -51,12 +51,15 @@ subroutine collect_param(testsuite)
       & new_unittest("DFT-D3(op)-ATM", test_d3opatm_mb07), &
       & new_unittest("DFT-D3(CSO)", test_d3cso_mb01), &
       & new_unittest("DFT-D3(CSO)-ATM", test_d3csoatm_mb02), &
+      & new_unittest("DFT-D3(Z)", test_d3z_mb01), &
+      & new_unittest("DFT-D3(Z)-ATM", test_d3zatm_mb02), &
       & new_unittest("unknown-D3(BJ)", test_d3bj_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(0)", test_d3zero_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(BJM)", test_d3bjm_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(0M)", test_d3zerom_unknown, should_fail=.true.), &
       & new_unittest("unknown-D3(op)", test_d3op_unknown, should_fail=.true.), &
-      & new_unittest("unknown-D3(CSO)", test_d3cso_unknown, should_fail=.true.) &
+      & new_unittest("unknown-D3(CSO)", test_d3cso_unknown, should_fail=.true.), &
+      & new_unittest("unknown-D3(Z)", test_d3z_unknown, should_fail=.true.) &
       & ]
 
 end subroutine collect_param
@@ -692,6 +695,73 @@ subroutine test_d3cso_unknown(error)
    call get_cso_damping(inp, "unknown", error)
 
 end subroutine test_d3cso_unknown
+
+subroutine test_d3z_mb01(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(z_damping_param) :: param
+   type(d3_param) :: inp
+
+   integer :: ii
+   real(wp), parameter :: z_damp(*) = [ &
+      & 200770.0_wp, 116996.0_wp, 39880.0_wp, 238489.0_wp, 153336.0_wp, 65559.0_wp, 78928.0_wp]
+   real(wp), parameter :: ref(*) = [&
+      & -6.2551783612163356E-03_wp,-9.8808891435433581E-03_wp,-2.3868703941633478E-02_wp, &
+      & -5.3958245893503216E-03_wp,-7.8680209293576029E-03_wp,-1.5960626009467203E-02_wp, &
+      & -1.3704275549415742E-02_wp]
+
+   call get_structure(mol, "MB16-43", "01")
+   do ii = 1, size(z_damp)
+      inp = d3_param(s6=1.0_wp, s8=1.0_wp, s9=0.0_wp, a1=z_damp(ii), a2=0.0_wp, alp=14.0_wp)
+      call new_z_damping(param, inp)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3z_mb01
+
+
+subroutine test_d3zatm_mb02(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(z_damping_param) :: param
+   type(d3_param) :: inp
+
+   integer :: ii
+   real(wp), parameter :: z_damp(*) = [ &
+      & 200770.0_wp, 116996.0_wp, 39880.0_wp, 238489.0_wp, 153336.0_wp, 65559.0_wp, 78928.0_wp]
+   real(wp), parameter :: ref(*) = [&
+      & -5.1690503588685066E-03_wp,-8.2906998571292134E-03_wp,-2.0256565057237101E-02_wp, &
+      & -4.4307492007790387E-03_wp,-6.5571365397258143E-03_wp,-1.3513507792727777E-02_wp, &
+      & -1.1578682848794588E-02_wp]
+
+   call get_structure(mol, "MB16-43", "02")
+   do ii = 1, size(z_damp)
+      inp = d3_param(s6=1.0_wp, s8=1.0_wp, s9=1.0_wp, a1=z_damp(ii), a2=0.0_wp, alp=14.0_wp)
+      call new_z_damping(param, inp)
+      call test_dftd3_gen(error, mol, param, ref(ii))
+      if (allocated(error)) exit
+   end do
+
+end subroutine test_d3zatm_mb02
+
+
+subroutine test_d3z_unknown(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(d3_param) :: inp
+
+   call get_z_damping(inp, "unknown", error)
+
+end subroutine test_d3z_unknown
 
 
 end module test_param

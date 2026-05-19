@@ -315,6 +315,28 @@ test_d3 (void) {
    if (dftd3_check_error(error)) {return 1;}
    dftd3_delete(param);
 
+   // PBE-D3(Z)
+   param = dftd3_new_z_damping(error, 1.0, 1.0, 0.0, 200770.0, 14.0);
+   if (dftd3_check_error(error)) {return 1;}
+   assert(!!param);
+   dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
+   if (dftd3_check_error(error)) {return 1;}
+   dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
+   if (dftd3_check_error(error)) {return 1;}
+   dftd3_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
+   if (dftd3_check_error(error)) {return 1;}
+   dftd3_delete(param);
+
+   // PBE-D3(Z)-ATM
+   param = dftd3_new_z_damping(error, 1.0, 1.0, 1.0, 200770.0, 14.0);
+   if (dftd3_check_error(error)) {return 1;}
+   assert(!!param);
+   dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
+   if (dftd3_check_error(error)) {return 1;}
+   dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
+   if (dftd3_check_error(error)) {return 1;}
+   dftd3_delete(param);
+
    // PBE-D3(CSO)-ATM
    param = dftd3_load_cso_damping(error, "pbe", true);
    if (dftd3_check_error(error)) {return 1;}

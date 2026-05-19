@@ -82,6 +82,13 @@ CSODampingParam
    :members:
 
 
+ZDampingParam
+~~~~~~~~~~~~~
+
+.. autoclass:: ZDampingParam
+   :members:
+
+
 QCSchema support
 ----------------
 

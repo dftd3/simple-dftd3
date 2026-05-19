@@ -40,7 +40,7 @@ Supported keywords are
 ======================== =========== ============================================
 
 Allowed level hints are ``"d3bj"``, ``"d3zero"``, ``"d3bjm"``/``"d3mbj"``,
-``"d3mzero"``/``"d3zerom"``, ``"d3op"``, and ``"d3cso"``.
+``"d3mzero"``/``"d3zerom"``, ``"d3op"``, ``"d3cso"``, and ``"d3z"``.
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided for rational damping, while s8 and rs6 are required in case
@@ -143,6 +143,7 @@ from .interface import (
     ModifiedZeroDampingParam,
     OptimizedPowerDampingParam,
     CSODampingParam,
+    ZDampingParam,
 )
 from .library import get_api_version
 import numpy as np
@@ -182,6 +183,7 @@ _available_levels = [
     "d3mzero",
     "d3op",
     "d3cso",
+    "d3z",
 ]
 
 _damping_param = {
@@ -193,6 +195,7 @@ _damping_param = {
     "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
     "d3cso": CSODampingParam,
+    "d3z": ZDampingParam,
 }
 
 _clean_dashlevel = str.maketrans("", "", "()")

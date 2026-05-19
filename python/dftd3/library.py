@@ -262,6 +262,20 @@ def load_cso_damping(method: str, atm: bool) -> ParamHandle:
     )
 
 
+def new_z_damping(
+    s6: float, s8: float, s9: float, a1: float, alp: float
+) -> ParamHandle:
+    """Create new Z damping parameters"""
+    return ParamHandle.with_gc(
+        error_check(lib.dftd3_new_z_damping)(s6, s8, s9, a1, alp)
+    )
+
+
+def load_z_damping(method: str, atm: bool) -> ParamHandle:
+    """Load Z damping parameters from internal storage"""
+    return ParamHandle.with_gc(error_check(lib.dftd3_load_z_damping)(_char(method), atm))
+
+
 def update_structure(
     mol: StructureHandle, positions: np.ndarray, lattice: Optional[np.ndarray]
 ) -> None:

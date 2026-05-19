@@ -464,6 +464,44 @@ class CSODampingParam(DampingParam):
         )
 
 
+class ZDampingParam(DampingParam):
+    r"""
+    Z damping function for DFT-D3, based on the atomic-number damping form
+    proposed for XDM(Z).
+
+    No dedicated D3(Z) parameters are available; the internal parameter loader
+    uses XDM(Z) values for the supported functionals.
+    """
+
+    def __init__(self, **kwargs):
+        _rename_kwargs(kwargs, "alpha6", "alp")
+        DampingParam.__init__(self, **kwargs)
+
+    @staticmethod
+    def load_param(method: str, atm: bool = False) -> library.ParamHandle:
+        return library.load_z_damping(
+            method,
+            atm,
+        )
+
+    @staticmethod
+    def new_param(
+        *,
+        s6: float = 1.0,
+        s8: float = 1.0,
+        s9: float = 1.0,
+        a1: float,
+        alp: float = 14.0,
+    ) -> library.ParamHandle:
+        return library.new_z_damping(
+            s6,
+            s8,
+            s9,
+            a1,
+            alp,
+        )
+
+
 class DispersionModel(Structure):
     """
     .. Dispersion model

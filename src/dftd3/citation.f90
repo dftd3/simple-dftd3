@@ -22,6 +22,7 @@ module dftd3_citation
    public :: citation_type, author_name, new_citation, is_citation_present
    public :: format_bibtex, get_citation, same_citation
    public :: doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, doi_dftd3_cso, &
+      & doi_z_damping, &
       & doi_gmtkn30_0, doi_gmtkn30_bj, doi_gmtkn55, doi_dsd, doi_dsdpbep86, &
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
@@ -61,6 +62,7 @@ module dftd3_citation
       & doi_dftd3_bj = "10.1002/jcc.21759", &
       & doi_dftd3_m = "10.1021/acs.jpclett.6b00780", &
       & doi_dftd3_op = "10.1021/acs.jctc.7b00176", &
+      & doi_z_damping = "10.1063/5.0207682", &
       & doi_gmtkn30_0 = "10.1021/ct100466k", &
       & doi_gmtkn30_bj = "10.1039/c0cp02984j", &
       & doi_gmtkn55 = "10.1039/c7cp04913g", &
@@ -262,6 +264,33 @@ pure function get_citation(doi) result(citation)
          volume="13", &
          pages="2043-2052", &
          year="2017" &
+      )
+
+   case(doi_dftd3_cso)
+      citation = new_citation( &
+         doi=doi, &
+         title="Reformulation of the D3(Becke-Johnson) Dispersion Correction "// &
+         & "without Resorting to Higher than C6 Dispersion Coefficients", &
+         author=[ &
+         & author_name('Heiner Schr{\"o}der'), &
+         & author_name("Jens Creon"), &
+         & author_name("Tobias Schwabe")], &
+         journal="J. Chem. Theory Comput.", &
+         volume="11", &
+         pages="3163--3170", &
+         year="2015" &
+      )
+
+   case(doi_z_damping)
+      citation = new_citation( &
+         doi=doi, &
+         title="A remarkably simple dispersion damping scheme and the DH24 double hybrid density functional", &
+         author=[ &
+         & author_name("Axel D. Becke")], &
+         journal="J. Chem. Phys.", &
+         volume="160", &
+         pages="204118", &
+         year="2024" &
       )
       
    case(doi_gmtkn30_0)
@@ -675,21 +704,6 @@ pure function get_citation(doi) result(citation)
          volume="2506.14665", &
          pages="2506.14665", &
          year="2025" &
-      )
-
-   case(doi_dftd3_cso)
-      citation = new_citation( &
-         doi=doi, &
-         title="Reformulation of the D3(Becke-Johnson) Dispersion Correction "// &
-         & "without Resorting to Higher than C6 Dispersion Coefficients", &
-         author=[ &
-         & author_name('Heiner Schr{\"o}der'), &
-         & author_name("Jens Creon"), &
-         & author_name("Tobias Schwabe")], &
-         journal="J. Chem. Theory Comput.", &
-         volume="11", &
-         pages="3163--3170", &
-         year="2015" &
       )
    end select
 end function get_citation

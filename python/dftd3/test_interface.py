@@ -21,6 +21,7 @@ from dftd3.interface import (
     ModifiedZeroDampingParam,
     ModifiedRationalDampingParam,
     OptimizedPowerDampingParam,
+    ZDampingParam,
     DispersionModel,
     GeometricCounterpoise,
 )
@@ -185,6 +186,19 @@ def test_optimized_power_damping_noargs() -> None:
         OptimizedPowerDampingParam(s8=1.0, a1=0.3, a2=4.2, bet=1.0, method="abc")
 
 
+def test_z_damping_noargs() -> None:
+    """Check constructor of Z damping parameters for insufficient arguments"""
+
+    with raises(TypeError):
+        ZDampingParam()
+
+    with raises(TypeError, match="a1"):
+        ZDampingParam(s8=1.0)
+
+    with raises(TypeError):
+        ZDampingParam(a1=200770.0, method="abc")
+
+
 @pytest.mark.parametrize("cls", [Structure, DispersionModel, GeometricCounterpoise])
 def test_structure(cls, numbers: np.ndarray, positions: np.ndarray) -> None:
     """check if the molecular structure data is working as expected."""
@@ -262,6 +276,12 @@ def test_b97d_d3_op(atm: bool, model: DispersionModel) -> None:
     res = model.get_dispersion(
         OptimizedPowerDampingParam(method="b97d", atm=atm), grad=False
     )
+    assert approx(res.get("energy")) == ref
+
+
+def test_pbe_d3_z(atm: bool, model: DispersionModel) -> None:
+    ref = -0.005741490224533363 if atm else -0.005841389688523762
+    res = model.get_dispersion(ZDampingParam(a1=200770.0, s9=1.0 if atm else 0.0), grad=False)
     assert approx(res.get("energy")) == ref
 
 

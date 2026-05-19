@@ -20,5 +20,6 @@ srcs += files(
   'mzero.f90',
   'optimizedpower.f90',
   'rational.f90',
+  'z.f90',
   'zero.f90',
 )

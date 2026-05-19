@@ -37,6 +37,7 @@ from .interface import (
     ModifiedZeroDampingParam,
     OptimizedPowerDampingParam,
     CSODampingParam,
+    ZDampingParam,
 )
 
 GradientsBase = getattr(rhf_grad, "GradientsBase", rhf_grad.Gradients)
@@ -50,6 +51,7 @@ _damping_param = {
     "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
     "d3cso": CSODampingParam,
+    "d3z": ZDampingParam,
 }
 
 
@@ -72,11 +74,13 @@ class DFTD3Dispersion(lib.StreamObject):
         Optimized power damping function
     ``"d3cso"``
         CSO (C6-scaled only) damping function
+    ``"d3z"``
+        Z damping function
 
     Custom parameters can be provided with the `param` dictionary.
     The `param` dict contains the damping parameters, at least s8, a1 and a2
     must be provided for rational damping, while s8 and rs6 are required in case
-    of zero damping. For CSO damping, a1 must be provided.
+    of zero damping. For CSO and Z damping, a1 must be provided.
 
     Parameters for (modified) rational damping are:
 

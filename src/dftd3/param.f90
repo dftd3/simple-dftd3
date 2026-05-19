@@ -18,7 +18,7 @@ module dftd3_param
    use mctc_env, only : wp, error_type, fatal_error
    use dftd3_citation, only : citation_type, author_name, new_citation, &
       & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
-      & doi_dftd3_cso, &
+      & doi_dftd3_cso, doi_z_damping, &
       & doi_gmtkn30_0, doi_gmtkn30_bj, doi_gmtkn55, doi_dsd, doi_dsdpbep86, &
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
@@ -31,6 +31,7 @@ module dftd3_param
    public :: get_mrational_damping, get_mzero_damping
    public :: get_optimizedpower_damping
    public :: get_cso_damping
+   public :: get_z_damping
 
 
    type :: d3_param
@@ -85,7 +86,7 @@ module dftd3_param
          & p_dsd_xb95_df, p_dsd_b98_df, p_dsd_bmk_df, p_dsd_thcth_df, &
          & p_dsd_hcth407_df, p_dod_svwn5_df, p_dod_blyp_df, p_dod_pbe_df, &
          & p_dod_pbep86_df, p_dod_pbeb95_df, p_dod_hsep86_df, p_dod_pbehb95_df, &
-         & p_cf22d_df, p_skala_df
+         & p_cf22d_df, p_skala_df, p_b86bpbe_df, p_b86bpbe0_df
    end enum
 
 contains
@@ -121,6 +122,8 @@ function get_method_id(method) result(id)
    case("b3lyp/631gd"); id = p_b3lyp_631gd_df
    case("b3p", "b3p86"); id = p_b3p_df
    case("b3pw91"); id = p_b3pw91_df
+   case("b86bpbe"); id = p_b86bpbe_df
+   case("b86bpbe0"); id = p_b86bpbe0_df
    case("b971"); id = p_b97_1_df
    case("b972"); id = p_b97_2_df
    case("b97d"); id = p_b97d_df
@@ -1287,6 +1290,39 @@ subroutine get_cso_damping(param, method, error, s9, citation)
    end if
 
 end subroutine get_cso_damping
+
+
+!> Load Z damping parameters from internal storage
+subroutine get_z_damping(param, method, error, s9, citation)
+
+   !> Loaded parameter record
+   type(d3_param), intent(out) :: param
+
+   !> Name of the method to look up
+   character(len=*), intent(in) :: method
+
+   !> Overwrite s9
+   real(wp), intent(in), optional :: s9
+
+   !> Citation information
+   type(citation_type), intent(out), optional :: citation
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   select case(get_method_id(method))
+   case default
+      call fatal_error(error, "No entry for '"//method//"' present")
+      return
+   end select
+
+   if (present(citation)) citation = get_citation(doi_z_damping)
+
+   if (present(s9)) then
+      param%s9 = s9
+   end if
+
+end subroutine get_z_damping
 
 
 !> Convert string to lower case

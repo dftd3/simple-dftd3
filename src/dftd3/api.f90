@@ -30,13 +30,14 @@ module dftd3_api
       & new_optimizedpower_damping
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
+   use dftd3_damping_z, only : z_damping_param, new_z_damping
    use dftd3_damping, only : damping_param
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_model, only : d3_model, new_d3_model
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
-      & get_cso_damping
+      & get_cso_damping, get_z_damping
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_version, only : get_dftd3_version
    implicit none
@@ -60,6 +61,7 @@ module dftd3_api
    public :: new_mrational_damping_api, load_mrational_damping_api
    public :: new_optimizedpower_damping_api, load_optimizedpower_damping_api
    public :: new_cso_damping_api, load_cso_damping_api
+   public :: new_z_damping_api, load_z_damping_api
    public :: delete_param_api
 
    public :: vp_gcp
@@ -782,6 +784,73 @@ function load_cso_damping_api(verror, charptr, atm) &
    vparam = c_loc(param)
 
 end function load_cso_damping_api
+
+
+!> Create new Z damping parameters
+function new_z_damping_api(verror, s6, s8, s9, a1, alp) &
+      & result(vparam) &
+      & bind(C, name=namespace//"new_z_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   real(c_double), value, intent(in) :: s6
+   real(c_double), value, intent(in) :: s8
+   real(c_double), value, intent(in) :: s9
+   real(c_double), value, intent(in) :: a1
+   real(c_double), value, intent(in) :: alp
+   type(c_ptr) :: vparam
+   type(z_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   allocate(tmp)
+   call new_z_damping(tmp, d3_param(s6=s6, s8=s8, s9=s9, a1=a1, &
+      & a2=0.0_wp, alp=alp))
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function new_z_damping_api
+
+
+!> Load Z damping parameters from internal storage
+function load_z_damping_api(verror, charptr, atm) &
+      & result(vparam) &
+      & bind(C, name=namespace//"load_z_damping")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   character(kind=c_char), intent(in) :: charptr(*)
+   logical(c_bool), value, intent(in) :: atm
+   character(len=:, kind=c_char), allocatable :: method
+   type(c_ptr) :: vparam
+   type(z_damping_param), allocatable :: tmp
+   type(vp_param), pointer :: param
+   type(d3_param) :: inp
+   real(wp), allocatable :: s9
+
+   vparam = c_null_ptr
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   call c_f_character(charptr, method)
+
+   if (atm) s9 = 1.0_wp
+   call get_z_damping(inp, method, error%ptr, s9)
+   if (allocated(error%ptr)) return
+
+   allocate(tmp)
+   call new_z_damping(tmp, inp)
+
+   allocate(param)
+   call move_alloc(tmp, param%ptr)
+   vparam = c_loc(param)
+
+end function load_z_damping_api
 
 
 !> Delete damping parameters

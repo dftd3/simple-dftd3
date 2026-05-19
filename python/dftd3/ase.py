@@ -114,6 +114,7 @@ from .interface import (
     ModifiedZeroDampingParam,
     OptimizedPowerDampingParam,
     CSODampingParam,
+    ZDampingParam,
 )
 from ase.calculators.calculator import (
     Calculator,
@@ -135,6 +136,7 @@ _damping_param = {
     "d3mzero": ModifiedZeroDampingParam,
     "d3op": OptimizedPowerDampingParam,
     "d3cso": CSODampingParam,
+    "d3z": ZDampingParam,
 }
 
 _inv_bohr = 1.0 / Bohr
