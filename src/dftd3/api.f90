@@ -373,6 +373,38 @@ subroutine set_model_realspace_cutoff_smooth(verror, vdisp, disp2, disp3, cn, wi
 end subroutine set_model_realspace_cutoff_smooth
 
 
+subroutine set_model_ghost_index(verror, vdisp, ghost, nidx) &
+      & bind(C, name=namespace//"set_model_ghost_index")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   integer(c_int), intent(in) :: ghost(*)
+   integer(c_int), value, intent(in) :: nidx
+
+   integer :: idx
+   integer :: iat
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "D3 dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   do idx = 1, nidx
+      iat = ghost(idx) + 1
+      if (iat > 0 .and. iat <= size(disp%ptr%ghost)) then
+         disp%ptr%ghost(iat) = .true.
+      else
+         call fatal_error(error%ptr, "Index out of bounds")
+      end if
+   end do
+end subroutine set_model_ghost_index
+
+
 !> Delete dispersion model
 subroutine delete_model_api(vdisp) &
       & bind(C, name=namespace//"delete_model")
@@ -918,7 +950,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       gradient = c_gradient(:3, :mol%ptr%nat)
    endif
 
-   if (present(c_gradient)) then
+   if (present(c_sigma)) then
       sigma = c_sigma(:3, :3)
    endif
 
@@ -933,7 +965,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       c_gradient(:3, :mol%ptr%nat) = gradient
    endif
 
-   if (present(c_gradient)) then
+   if (present(c_sigma)) then
       c_sigma(:3, :3) = sigma
    endif
 

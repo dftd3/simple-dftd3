@@ -166,6 +166,18 @@ def set_model_realspace_cutoff(
     )
 
 
+def set_model_ghost_index(disp: ModelHandle, ghost: np.ndarray) -> None:
+    """Disable dispersion contributions from selected atoms."""
+    if ghost is None:
+        return
+    indices = np.ascontiguousarray(ghost, dtype="i4")
+    return error_check(lib.dftd3_set_model_ghost_index)(
+        disp.handle,
+        _cast("int*", indices),
+        indices.size,
+    )
+
+
 def new_zero_damping(
     s6: float, s8: float, s9: float, rs6: float, rs8: float, alp: float
 ) -> ParamHandle:

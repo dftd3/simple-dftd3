@@ -66,6 +66,9 @@ Use ATM three-body dispersion
 *--atm-scale* _s9_::
 Use scaled ATM three-body dispersion
 
+*--ghost* _list_::
+Disable dispersion contributions from the given 1-based atom indices
+
 *--db* _file_::
 Load parameters from external data file
 

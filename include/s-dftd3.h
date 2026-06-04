@@ -31,6 +31,7 @@
 #define SDFTD3_API_SUFFIX__V_0_5
 #define SDFTD3_API_SUFFIX__V_1_3
 #define SDFTD3_API_SUFFIX__V_1_4
+#define SDFTD3_API_SUFFIX__V_1_5
 
 /// Error handle class
 typedef struct _dftd3_error* dftd3_error;
@@ -131,6 +132,13 @@ dftd3_set_model_realspace_cutoff(dftd3_error /* error */,
                                  double /* disp2 */,
                                  double /* disp3 */,
                                  double /* cn */) SDFTD3_API_SUFFIX__V_0_5;
+
+/// Disable dispersion contributions from selected atoms.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_model_ghost_index(dftd3_error /* error */,
+                            dftd3_model /* model */,
+                            const int* /* ghost [nidx] */,
+                            int /* nidx */) SDFTD3_API_SUFFIX__V_1_5;
 
 /// Set realspace cutoffs with smoothing widths (quantities in Bohr)
 SDFTD3_API_ENTRY void SDFTD3_API_CALL

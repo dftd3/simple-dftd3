@@ -139,6 +139,20 @@ def test_ase_tpssd3_atm():
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")
+def test_ase_ghost_atoms():
+    atoms = molecule("H2O")
+    atoms.calc = DFTD3(
+        method="PBE",
+        damping="d3bj",
+        ghost_atoms=[0, 1, 2],
+        cache_api=True,
+    )
+
+    assert atoms.get_potential_energy() == approx(0.0, abs=1.0e-12)
+    assert np.allclose(atoms.get_forces(), 0.0, atol=1.0e-12)
+
+
+@pytest.mark.skipif(ase is None, reason="requires ase")
 def test_ase_realspace_cutoff():
     """Test that realspace_cutoff parameter works and can be updated with cache_api=True"""
     from ase.units import Bohr

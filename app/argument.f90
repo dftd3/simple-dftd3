@@ -352,6 +352,7 @@ pure subroutine get(self, idx, arg)
    character(len=:), allocatable, intent(out) :: arg
    integer, intent(in) :: idx
 
+   if (allocated(arg)) deallocate(arg)
    if (idx > 0 .and. idx <= self%nargs) arg = self%argv(idx)%raw
 end subroutine get
 

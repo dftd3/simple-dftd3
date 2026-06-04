@@ -49,6 +49,7 @@ module dftd3_app_help
       "                         expected order is s6, a1 (requires two arguments)"//nl//&
       "   --atm                 Use ATM three-body dispersion"//nl//&
       "   --atm-scale <s9>      Use scaled ATM three-body dispersion"//nl//&
+      "   --ghost <list>        Disable dispersion contributions from given 1-based atom indices"//nl//&
       "   --gcp <basis>         Include geometric counter-poise correction for given basis set"//nl//&
       "   --db <file>           Load parameters from external data file"//nl//&
       "   --noedisp             Disable writing of dispersion energy to .EDISP file"//nl//&

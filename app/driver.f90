@@ -226,7 +226,7 @@ subroutine run_driver(config, error)
       end if
    end if
 
-   call new_d3_model(d3, mol)
+   call new_d3_model(d3, mol, ghost=config%ghost)
 
    if (config%properties) then
       call property_calc(output_unit, mol, d3, config%verbosity)

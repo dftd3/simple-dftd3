@@ -235,6 +235,34 @@ unexpected:
 }
 
 int
+test_ghost_atoms(void) {
+   double energy = 0.0;
+   double gradient[21] = {0.0};
+   dftd3_error error = dftd3_new_error();
+   dftd3_structure mol = get_test_structure(error);
+   dftd3_model disp = dftd3_new_d3_model(error, mol);
+   dftd3_param param = dftd3_new_rational_damping(error, 1.0, 0.7875, 0.0, 0.4289, 4.4407, 14.0);
+   int const ghost[7] = {0, 1, 2, 3, 4, 5, 6};
+
+   if (dftd3_check_error(error)) return 1;
+   dftd3_set_model_ghost_index(error, disp, ghost, 7);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, NULL);
+   if (dftd3_check_error(error)) return 1;
+
+   if (fabs(energy) > 1.0e-12) return 1;
+   for (int i = 0; i < 21; ++i) {
+      if (fabs(gradient[i]) > 1.0e-12) return 1;
+   }
+
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 0;
+}
+
+int
 test_d3 (void) {
    double energy;
    double pair_disp2[49];
@@ -422,6 +450,7 @@ main (void)
    stat += test_uninitialized_param();
    stat += test_uninitialized_gcp();
    stat += test_invalid_structure();
+   stat += test_ghost_atoms();
    stat += test_d3();
    stat += test_gcp();
    return stat;

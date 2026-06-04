@@ -24,6 +24,7 @@ module test_model
    use mstore, only : get_structure
    use dftd3_cutoff, only : get_lattice_points
    use dftd3_data, only : get_vdw_rad, get_r4r2_val
+   use dftd3, only : rational_damping_param, get_dispersion, realspace_cutoff
    use dftd3_model
    implicit none
    private
@@ -50,6 +51,7 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-mb02", test_gw_mb02), &
       & new_unittest("gw-mb03", test_gw_mb03), &
       & new_unittest("gw-amf3", test_gw_amf3), &
+      & new_unittest("ghost-atoms", test_ghost_atoms), &
       & new_unittest("dgw-mb04", test_dgw_mb04), &
       & new_unittest("dgw-mb05", test_dgw_mb05) &
       & ]
@@ -332,6 +334,33 @@ subroutine test_dgw_mb05(error)
    call test_dgw_gen(error, mol)
 
 end subroutine test_dgw_mb05
+
+
+subroutine test_ghost_atoms(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3
+   type(rational_damping_param) :: param
+   real(wp) :: energy, sigma(3, 3)
+   real(wp), allocatable :: gradient(:, :)
+   integer :: iat
+
+   call get_structure(mol, "MB16-43", "01")
+   allocate(gradient(3, mol%nat))
+   call new_d3_model(d3, mol, ghost=[(iat, iat=1, mol%nat)])
+   param = rational_damping_param(s6=1.0_wp, s8=2.34_wp, a1=0.4289_wp, a2=4.4407_wp, s9=0.0_wp, alp=14.0_wp)
+   call get_dispersion(mol, d3, param, realspace_cutoff(), energy, gradient, sigma)
+
+   call check(error, energy, 0.0_wp, thr=thr)
+   if (allocated(error)) return
+   call check(error, norm2(gradient), 0.0_wp, thr=thr)
+   if (allocated(error)) return
+   call check(error, norm2(sigma), 0.0_wp, thr=thr)
+
+end subroutine test_ghost_atoms
 
 
 subroutine test_r4r2_val(error)

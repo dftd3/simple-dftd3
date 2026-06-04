@@ -91,3 +91,42 @@ You can run the example code with
          ❯ python energy.py
          Dispersion energy for PBE0-D3(BJ) is -0.0009219059 Hartree
 
+
+Disable selected atoms with ghost indices
+-----------------------------------------
+
+The same idea works for all public interfaces. Use the atom indices of the
+fragment that should be excluded from the dispersion contribution, then pass
+them to the model or CLI entry point:
+
+.. tab-set::
+   :sync-group: code
+
+   .. tab-item:: Fortran
+      :sync: fortran
+
+      .. literalinclude:: minimal-example/ghost.f90
+         :language: fortran
+         :caption: ghost.f90
+
+   .. tab-item:: C
+      :sync: c
+
+      .. literalinclude:: minimal-example/ghost.c
+         :language: c
+         :caption: ghost.c
+
+   .. tab-item:: Python
+      :sync: python
+
+      .. literalinclude:: minimal-example/ghost.py
+         :language: python
+         :caption: ghost.py
+
+The Fortran constructor uses 1-based atom indices, while the C and Python
+interfaces use 0-based indices.
+For the CLI, the same selection is available as
+
+.. code-block:: shell
+
+   ❯ s-dftd3 run --ghost 4,5,6 structure.xyz

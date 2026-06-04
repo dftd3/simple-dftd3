@@ -61,6 +61,7 @@ module dftd3_app_cli
       logical :: citation = .false.
       logical :: gcp = .false.
       character(len=:), allocatable :: citation_output
+      integer, allocatable :: ghost(:)
       !> Parameter data base
       character(len=:), allocatable :: db
    end type run_config
@@ -118,6 +119,74 @@ subroutine get_argument_as_real(arg, val, error)
    end if
 
 end subroutine get_argument_as_real
+
+
+subroutine get_argument_as_integer_list(arg, vals, error)
+   character(len=:), intent(in), allocatable :: arg
+   integer, allocatable, intent(out) :: vals(:)
+   type(error_type), allocatable :: error
+
+   integer :: pos, stat
+   integer, allocatable :: tmp(:)
+   character(len=:), allocatable :: token
+   integer :: start
+   logical :: has_token
+
+   if (.not.allocated(arg)) then
+      call fatal_error(error, "Cannot read integer list, argument missing")
+      return
+   end if
+
+   allocate(tmp(0))
+   start = 1
+   has_token = .false.
+   do
+      pos = index(arg(start:), ",")
+      if (pos == 0) then
+         token = trim(arg(start:))
+         if (len_trim(token) > 0) then
+            has_token = .true.
+            call append_integer_list(tmp, token, error)
+            if (allocated(error)) return
+         end if
+         exit
+      end if
+      token = trim(arg(start:start+pos-2))
+      if (len_trim(token) > 0) then
+         has_token = .true.
+         call append_integer_list(tmp, token, error)
+         if (allocated(error)) return
+      end if
+      start = start + pos
+   end do
+
+   if (.not.has_token) then
+      call fatal_error(error, "Cannot read integer list from '"//arg//"'")
+      return
+   end if
+
+   vals = tmp
+end subroutine get_argument_as_integer_list
+
+
+subroutine append_integer_list(vals, token, error)
+   integer, allocatable, intent(inout) :: vals(:)
+   character(len=*), intent(in) :: token
+   type(error_type), allocatable, intent(out) :: error
+
+   integer, allocatable :: tmp(:)
+   integer :: stat, n
+
+   n = size(vals) + 1
+   allocate(tmp(n))
+   if (n > 1) tmp(1:n-1) = vals
+   read(token, *, iostat=stat) tmp(n)
+   if (stat /= 0) then
+      call fatal_error(error, "Cannot read integer value from '"//token//"'")
+      return
+   end if
+   call move_alloc(tmp, vals)
+end subroutine append_integer_list
 
 
 subroutine get_arguments(config, error)
@@ -196,6 +265,7 @@ subroutine get_run_arguments(config, list, start, error)
    integer :: iarg, narg
    logical :: read_args
    character(len=:), allocatable :: arg
+   integer, allocatable :: values(:)
 
    read_args = .true.
    iarg = start
@@ -295,6 +365,25 @@ subroutine get_run_arguments(config, list, start, error)
          call get_argument_as_real(arg, config%inp%s9, error)
          if (allocated(error)) exit
          config%atm = .true.
+      case("--ghost")
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (.not.allocated(arg)) then
+            call fatal_error(error, "Missing argument for ghost-atom indices")
+            exit
+         end if
+         if (arg(1:1) == "-") then
+            iarg = iarg - 1
+            call fatal_error(error, "Missing argument for ghost-atom indices")
+            exit
+         end if
+         call get_argument_as_integer_list(arg, values, error)
+         if (allocated(error)) exit
+         if (size(values) == 0) then
+            call fatal_error(error, "No ghost-atom indices provided")
+            exit
+         end if
+         call move_alloc(values, config%ghost)
       case("--gcp")
          config%gcp = .true.
          iarg = iarg + 1
@@ -487,6 +576,24 @@ subroutine get_run_arguments(config, list, start, error)
    end if
 
 end subroutine get_run_arguments
+
+
+subroutine append_integer_array(dst, src)
+   integer, allocatable, intent(inout) :: dst(:)
+   integer, intent(in) :: src(:)
+
+   integer, allocatable :: tmp(:)
+   integer :: n
+
+   if (.not.allocated(dst)) then
+      allocate(dst(0))
+   end if
+   n = size(dst) + size(src)
+   allocate(tmp(n))
+   if (size(dst) > 0) tmp(1:size(dst)) = dst
+   if (size(src) > 0) tmp(size(dst)+1:n) = src
+   call move_alloc(tmp, dst)
+end subroutine append_integer_array
 
 subroutine get_param_arguments(config, list, start, error)
 

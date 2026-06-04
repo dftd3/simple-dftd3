@@ -41,6 +41,7 @@ Supported keywords are
  damping                  None         Damping function to use
  params_tweaks            {}           Optional dict with the damping parameters
  realspace_cutoff         {}           Optional dict to override cutoff values
+ ghost_atoms              None         Disable dispersion contributions from these atoms
  cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
 
@@ -169,6 +170,7 @@ class DFTD3(Calculator):
         "damping": None,
         "params_tweaks": {},
         "realspace_cutoff": {},
+        "ghost_atoms": None,
         "cache_api": True,
     }
 
@@ -263,6 +265,15 @@ class DFTD3(Calculator):
 
         return disp
 
+    def _apply_ghost_atoms(self, disp: DispersionModel) -> None:
+        """Disable dispersion contributions from selected atoms."""
+
+        try:
+            if self.parameters.ghost_atoms is not None:
+                disp.set_ghost_atoms(self.parameters.ghost_atoms)
+        except RuntimeError as e:
+            raise InputError("Cannot update ghost atoms for dftd3") from e
+
     def _apply_realspace_cutoff(self, disp: DispersionModel) -> None:
         """Apply realspace cutoff parameters to dispersion model"""
 
@@ -321,7 +332,8 @@ class DFTD3(Calculator):
         if self._disp is None:
             self._disp = self._create_api_calculator()
 
-        # Apply realspace cutoff before evaluation (works with cached calculator)
+        # Apply atom masking and realspace cutoff before evaluation
+        self._apply_ghost_atoms(self._disp)
         self._apply_realspace_cutoff(self._disp)
 
         if self._dpar is None:

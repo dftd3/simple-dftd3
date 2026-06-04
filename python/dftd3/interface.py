@@ -537,6 +537,11 @@ class DispersionModel(Structure):
 
         library.set_model_realspace_cutoff(self._disp, disp2, disp3, cn, width2, width3)
 
+    def set_ghost_atoms(self, ghost_atoms) -> None:
+        """Disable dispersion contributions from selected atoms."""
+
+        library.set_model_ghost_index(self._disp, np.asarray(ghost_atoms, dtype="i4"))
+
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """Perform actual evaluation of the dispersion correction"""
 

@@ -51,6 +51,9 @@ module dftd3_model
       !> Reference C6 coefficients
       real(wp), allocatable :: c6(:, :, :, :)
 
+      !> Masked
+      logical, allocatable :: ghost(:)
+
    contains
 
       !> Generate weights for all reference systems
@@ -70,7 +73,7 @@ contains
 
 
 !> Create new dispersion model from molecular structure input
-subroutine new_d3_model(self, mol, wf)
+subroutine new_d3_model(self, mol, wf, ghost)
 
    !> Instance of the dispersion model
    type(d3_model), intent(out) :: self
@@ -80,6 +83,9 @@ subroutine new_d3_model(self, mol, wf)
 
    !> Weighting factor for coordination number interpolation
    real(wp), intent(in), optional :: wf
+
+   !> Atom indices to ignore for dispersion calculation
+   integer, intent(in), optional :: ghost(:)
 
    integer :: isp, izp, iref, jsp, jzp, jref
    integer :: mref
@@ -139,6 +145,16 @@ subroutine new_d3_model(self, mol, wf)
          end do
       end do
    end do
+
+   allocate(self%ghost(mol%nat))
+   self%ghost(:) = .false.
+   if (present(ghost)) then
+      do iref = 1, size(ghost)
+         if (ghost(iref) > 0 .and. ghost(iref) <= mol%nat) then
+            self%ghost(ghost(iref)) = .true.
+         end if
+      end do
+   end if
 
 end subroutine new_d3_model
 
@@ -294,8 +310,10 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
       !$omp shared(c6, dc6dcn, mol, self, gwvec, gwdcn) &
       !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6, dc6dcni, dc6dcnj)
       do iat = 1, mol%nat
+         if (self%ghost(iat)) cycle
          izp = mol%id(iat)
          do jat = 1, iat
+            if (self%ghost(jat)) cycle
             jzp = mol%id(jat)
             dc6 = 0.0_wp
             dc6dcni = 0.0_wp
@@ -323,8 +341,10 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
       !$omp shared(c6, mol, self, gwvec) &
       !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6)
       do iat = 1, mol%nat
+         if (self%ghost(iat)) cycle
          izp = mol%id(iat)
          do jat = 1, iat
+            if (self%ghost(jat)) cycle
             jzp = mol%id(jat)
             dc6 = 0.0_wp
             do iref = 1, self%ref(izp)
