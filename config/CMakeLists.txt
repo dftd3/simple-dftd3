@@ -16,10 +16,19 @@
 
 option(BUILD_SHARED_LIBS "Whether the libraries built should be shared" FALSE)
 
-option(WITH_API "Enable support for C API via iso_c_binding module" TRUE)
-option(WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" TRUE)
-option(WITH_BLAS "Use external BLAS library" TRUE)
-option(WITH_TESTS "Enable compilation of unit tests" TRUE)
+if(NOT DEFINED WITH_API)
+  set(WITH_API TRUE)
+endif()
+if(NOT DEFINED WITH_OpenMP)
+  set(WITH_OpenMP TRUE)
+endif()
+if(NOT DEFINED WITH_TESTS)
+  set(WITH_TESTS TRUE)
+endif()
+option(SDFTD3_WITH_API "Enable support for C API via iso_c_binding module" ${WITH_API})
+option(SDFTD3_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
+option(SDFTD3_WITH_TESTS "Enable compilation of unit tests" ${WITH_TESTS})
+set(SDFTD3_USE_MCTCLIB TRUE)
 if(NOT DEFINED "${PROJECT_NAME}-dependeny-method")
   set(
     "${PROJECT_NAME}-dependency-method"
@@ -56,7 +65,7 @@ install(
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/template.cmake"
+  "${CMAKE_CURRENT_SOURCE_DIR}/template-config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake"
   INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )

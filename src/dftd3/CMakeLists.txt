@@ -36,7 +36,7 @@ list(
   "${dir}/utils.f90"
   "${dir}/version.f90"
 )
-if(WITH_API)
+if(SDFTD3_WITH_API)
   list(APPEND srcs "${dir}/api.f90")
 endif()
 

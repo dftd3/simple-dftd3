@@ -29,19 +29,19 @@ include(GNUInstallDirs)
 # General configuration information
 add_subdirectory("config")
 
-if(NOT TARGET "OpenMP::OpenMP_Fortran" AND WITH_OpenMP)
+if(NOT TARGET "OpenMP::OpenMP_Fortran" AND SDFTD3_WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
 
 # Collect subprojects
+if(NOT TARGET "toml-f::toml-f")
+  find_package("toml-f" REQUIRED)
+endif()
 if(NOT TARGET "mctc-lib::mctc-lib")
   find_package("mctc-lib" REQUIRED)
 endif()
-if(NOT TARGET "mstore::mstore" AND WITH_TESTS)
+if(NOT TARGET "mstore::mstore" AND SDFTD3_WITH_TESTS)
   find_package("mstore" REQUIRED)
-endif()
-if(NOT TARGET "toml-f::toml-f")
-  find_package("toml-f" REQUIRED)
 endif()
 set(
   lib-deps
@@ -61,6 +61,11 @@ add_library(
   "${PROJECT_NAME}-lib"
   "${srcs}"
 )
+add_library(
+  "${PROJECT_NAME}::${PROJECT_NAME}-lib"
+  ALIAS
+  "${PROJECT_NAME}-lib"
+)
 set_target_properties(
   "${PROJECT_NAME}-lib"
   PROPERTIES
@@ -75,7 +80,7 @@ target_link_libraries(
   PUBLIC
   "${lib-deps}"
 )
-if(WITH_OpenMP)
+if(SDFTD3_WITH_OpenMP)
   target_link_libraries(
     "${PROJECT_NAME}-lib"
     PUBLIC
@@ -96,6 +101,11 @@ add_subdirectory("app")
 
 # Export targets for other projects
 add_library("${PROJECT_NAME}" INTERFACE)
+add_library(
+  "${PROJECT_NAME}::${PROJECT_NAME}"
+  ALIAS
+  "${PROJECT_NAME}"
+)
 target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
 install(
   TARGETS
@@ -123,7 +133,7 @@ install(
   "${CMAKE_CURRENT_BINARY_DIR}/include/"
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
 )
-if(WITH_API)
+if(SDFTD3_WITH_API)
   install(
     DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/include/"
@@ -139,7 +149,7 @@ install(
 )
 
 # add the testsuite
-if(WITH_TESTS)
+if(SDFTD3_WITH_TESTS)
   enable_testing()
   add_subdirectory("test")
 endif()
