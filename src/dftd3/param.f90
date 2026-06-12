@@ -25,6 +25,7 @@ module dftd3_param
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
       & doi_wb97x_d3, doi_hse06_d3, doi_cf22d, doi_skala
    implicit none
+   private
 
    public :: d3_param
    public :: get_rational_damping, get_zero_damping
