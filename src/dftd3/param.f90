@@ -280,7 +280,7 @@ function get_method_id(method) result(id)
    case("rscan"); id = p_rscan_df
    case("scan"); id = p_scan_df
    case("scsdrpa75"); id = p_scs_drpa75_df
-   case("skala1.0"); id = p_skala_df
+   case("skala1.0", "skala1.1"); id = p_skala_df
    case("slaterdiracexchange"); id = p_slaterdiracexchange_df
    case("sogga11x"); id = p_sogga11x_df
    case("ssb"); id = p_ssb_df
