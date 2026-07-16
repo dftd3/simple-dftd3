@@ -27,7 +27,7 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
  `NVIDIA/nvalchemi-toolkit-ops`_   Apache-2.0  Python               Python with Nvidia Wrap
 ================================= =========== ==================== ==========================
 
-.. _dftd3: http://mctc.uni-bonn.de/software/dft-d3
+.. _dftd3: https://www.chemie.uni-bonn.de/grimme/de/software/dft-d3/get_dft-d3
 .. _dftd3/simple-dftd3: https://github.com/dftd3/simple-dftd3
 .. _dftd3/tad-dftd3: https://github.com/dftd3/tad-dftd3
 .. _dftbplus/dftd3-lib: https://github.com/dftbplus/dftd3-lib
