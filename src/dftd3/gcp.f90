@@ -15,10 +15,10 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_gcp
+   use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
+   use dftd3_gcp_param, only : gcp_param, get_gcp_param
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use dftd3_gcp_param, only : gcp_param, get_gcp_param
-   use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    implicit none
    private
 
@@ -208,7 +208,7 @@ subroutine gcp_energy(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, al
                dampval = (1.0_wp-1.0_wp/(1.0_wp+rscalexp))
             else
                dampval = 1.0_wp
-            endif
+            end if
             dE = bsse*dampval
             energies(iat) = energies(iat) + emi*dE
             if (iat /= jat) then
@@ -305,7 +305,7 @@ subroutine gcp_deriv(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alp
                dampval = (1.0_wp-1.0_wp/(1.0_wp+rscalexp))
             else
                dampval = 1.0_wp
-            endif
+            end if
 
             call gsovl(r1, izp, jzp, iz, slater(izp), slater(jzp), gij)
 
@@ -318,13 +318,13 @@ subroutine gcp_deriv(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alp
                rscalexpm1 = rscal**(dmp_exp-1)
                grd_dmp = dmp_scal*dmp_exp*rscalexpm1/r0
                grd_dmp = grd_dmp/(rscalexp+1.0_wp)**2
-            endif
+            end if
 
             dE = bsse*dampval
             dG = expd*(argd*vec + gs)/ovlpd*emij
             if(damp) then
                dG = dG*dampval+bsse*grd_dmp*(vec/r1)*emij
-            endif
+            end if
             dS = spread(dG, 1, 3) * spread(vec, 2, 3) * 0.5_wp
 
             energies(iat) = energies(iat) + emi*dE
@@ -369,7 +369,7 @@ subroutine srb_energy(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, en
 
    real(wp) :: fi, fj, ff, r1, expt
    real(wp) :: r0, vec(3), dE
-   integer iat, jat, jtr, izp, jzp
+   integer :: iat, jat, jtr, izp, jzp
 
    !$omp parallel do default(none) &
    !$omp reduction(+:energies) &
@@ -431,7 +431,7 @@ subroutine srb_deriv(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, ene
 
    real(wp) :: fi, fj, ff, rf, r1, expt
    real(wp) :: r0, vec(3), dE, dG(3), dS(3, 3)
-   integer iat, jat, jtr, izp, jzp
+   integer :: iat, jat, jtr, izp, jzp
 
    !$omp parallel do default(none) &
    !$omp reduction(+:energies, gradient, sigma) &
@@ -485,11 +485,11 @@ end subroutine srb_deriv
 !* Inspired by mopac7.0
 !******************************************************************************
 subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
-   integer ii, shell(72)
-   logical debug
-   real(wp) za, zb, R, ovl, ax, bx, norm, R05
-   integer na, nb
-   real(wp) xx
+   integer :: ii, shell(72)
+   logical :: debug
+   real(wp) :: za, zb, R, ovl, ax, bx, norm, R05
+   integer :: na, nb
+   real(wp) :: xx
    data shell/                 &
    !          h, he
             1, 1               &
@@ -501,8 +501,8 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
    !         k-rn , no f-elements
             54*3/
    ! ...
-   real(wp) xza, xzb
-   integer iat, jat, iz(*)
+   real(wp) :: xza, xzb
+   integer :: iat, jat, iz(*)
 
    za = xza
    zb = xzb
@@ -516,7 +516,7 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
 ! case:      1        2        4       3        6         9
 !
    ii = shell(na)*shell(nb)
-   if(debug) write(*, *) 'shell', ii
+   if(debug) write(*, *) "shell", ii
 
    R05 = R*0.5
    ax = (za+zb)*R05
@@ -528,7 +528,7 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
       case (1)
          ovl = 0.25d0*sqrt((za*zb*R*R)**3)*(A2(ax)*Bint(bx, 0)-Bint(bx, 2)*A0(ax))
       case (2)
-         ovl = SQRT(1._wp/3._wp)
+         ovl = SQRT(1.0_wp/3.0_wp)
          if(shell(na) < shell(nb)) then
          ! <1s|2s>
             norm = SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
@@ -542,14 +542,14 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
             bx = (zb-za)*R05
             norm = SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
             ovl = ovl*norm*(A3(ax)*Bint(bx, 0)-Bint(bx, 3)*A0(ax)+A2(ax)*Bint(bx, 1)-Bint(bx, 2)*A1(ax))
-         endif
+         end if
       case (4)
          norm = SQRT((ZA*ZB)**5)*(R**5)*0.0625d0
          ovl = norm* (A4(ax)*Bint(bx, 0)+Bint(bx, 4)*A0(ax)-2.0d0*A2(ax)*Bint(bx, 2))*(1d0/3d0)
       case(3)
          if(shell(na) < shell(nb)) then
             norm = SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-            ovl = norm*(A4(ax)*Bint(bx, 0)-Bint(bx, 4)*A0(ax)+2.d0*(A3(ax)*Bint(bx, 1)-Bint(bx, 3)*A1(ax)))/sqrt(3.d0)
+            ovl = norm*(A4(ax)*Bint(bx, 0)-Bint(bx, 4)*A0(ax)+2.0d0*(A3(ax)*Bint(bx, 1)-Bint(bx, 3)*A1(ax)))/sqrt(3.0d0)
          else
             xx = za
             za = zb
@@ -557,14 +557,14 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
             ax = (za+zb)*R05
             bx = (zb-za)*R05
             norm = SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-            ovl = norm*(A4(ax)*Bint(bx, 0)-Bint(bx, 4)*A0(ax)+2.d0*(A3(ax)*Bint(bx, 1)-Bint(bx, 3)*A1(ax)))/sqrt(3.d0)
-         endif
+            ovl = norm*(A4(ax)*Bint(bx, 0)-Bint(bx, 4)*A0(ax)+2.0d0*(A3(ax)*Bint(bx, 1)-Bint(bx, 3)*A1(ax)))/sqrt(3.0d0)
+         end if
       case(6)
          if(shell(na) < shell(nb)) then
             norm = SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
             ovl = norm*(A5(ax)*Bint(bx, 0)+A4(ax)*Bint(bx, 1) &
                & -2d0*(A3(ax)*Bint(bx, 2)+A2(ax)*Bint(bx, 3)) &
-               & +A1(ax)*Bint(bx, 4)+A0(ax)*Bint(bx, 5))/3.d0
+               & +A1(ax)*Bint(bx, 4)+A0(ax)*Bint(bx, 5))/3.0d0
          else
             xx = za
             za = zb
@@ -574,12 +574,12 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
             norm = SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
             ovl = norm*(A5(ax)*Bint(bx, 0)+A4(ax)*Bint(bx, 1) &
                & -2d0*(A3(ax)*Bint(bx, 2)+A2(ax)*Bint(bx, 3)) &
-               & +A1(ax)*Bint(bx, 4)+A0(ax)*Bint(bx, 5))/3.d0
-         endif
+               & +A1(ax)*Bint(bx, 4)+A0(ax)*Bint(bx, 5))/3.0d0
+         end if
       case(9)
-         norm = sqrt((ZA*ZB*R*R)**7)/480.d0
-         ovl = norm*(A6(ax)*Bint(bx, 0)-3.d0*(A4(ax)*Bint(bx, 2) &
-            & -A2(ax)*Bint(bx, 4))-A0(ax)*Bint(bx, 6))/3._wp
+         norm = sqrt((ZA*ZB*R*R)**7)/480.0d0
+         ovl = norm*(A6(ax)*Bint(bx, 0)-3.0d0*(A4(ax)*Bint(bx, 2) &
+            & -A2(ax)*Bint(bx, 4))-A0(ax)*Bint(bx, 6))/3.0_wp
       end select
    else ! different elements
       select case (ii)
@@ -587,7 +587,7 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
          norm = 0.25d0*sqrt((za*zb*R*R)**3)
          ovl = (A2(ax)*B0(bx)-B2(bx)*A0(ax))*norm
       case (2)
-         ovl = SQRT(1._wp/3._wp)
+         ovl = SQRT(1.0_wp/3.0_wp)
          if(shell(na) < shell(nb)) then
          ! <1s|2s>
             norm = SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
@@ -601,14 +601,14 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
             bx = (zb-za)*R05
             norm = SQRT((ZA**3)*(ZB**5))*(R**4)*0.125_wp
             ovl = ovl*norm*(A3(ax)*B0(bx)-B3(bx)*A0(ax)+A2(ax)*B1(bx)-B2(bx)*A1(ax))
-         endif
+         end if
       case (4) ! <2s|2s>
          norm = SQRT((ZA*ZB)**5)*(R**5)*0.0625_wp
          ovl = norm* (A4(ax)*B0(bx)+B4(bx)*A0(ax)-2.0_wp*A2(ax)*B2(bx))*(1d0/3d0)
       case(3)  ! <1s|3s> + <3s|1s>
          if(shell(na) < shell(nb)) then
             norm = SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-            ovl = norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.d0)
+            ovl = norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.0d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.0d0)
          else
             xx = za
             za = zb
@@ -616,12 +616,12 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
             ax = (za+zb)*R05
             bx = (zb-za)*R05
             norm = SQRT((ZA**3)*(ZB**7)/7.5_wp)*(R**5)*0.0625_wp
-            ovl = norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.d0)
-         endif
+            ovl = norm*(A4(ax)*B0(bx)-B4(bx)*A0(ax)+2.0d0*(A3(ax)*B1(bx)-B3(bx)*A1(ax)))/sqrt(3.0d0)
+         end if
       case(6)  ! <2s|3s> + <3s|2s>
          if(shell(na) < shell(nb)) then
             norm = SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
-            ovl = norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2d0*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.d0
+            ovl = norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2d0*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.0d0
          else
             xx = za
             za = zb
@@ -629,13 +629,13 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
             ax = (za+zb)*R05
             bx = (zb-za)*R05
             norm = SQRT((za**5)*(zb**7)/7.5_wp)*(R**6)*0.03125_wp
-            ovl = norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2.0_wp*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.d0
-         endif
+            ovl = norm*(A5(ax)*B0(bx)+A4(ax)*B1(bx)-2.0_wp*(A3(ax)*B2(bx)+A2(ax)*B3(bx))+A1(ax)*B4(bx)+A0(ax)*B5(bx))/3.0d0
+         end if
       case(9) ! <3s|3>
-         norm = sqrt((ZA*ZB*R*R)**7)/1440.d0
-         ovl = norm*(A6(ax)*B0(bx)-3.d0*(A4(ax)*B2(bx)-A2(ax)*B4(bx))-A0(ax)*B6(bx))
+         norm = sqrt((ZA*ZB*R*R)**7)/1440.0d0
+         ovl = norm*(A6(ax)*B0(bx)-3.0d0*(A4(ax)*B2(bx)-A2(ax)*B4(bx))-A0(ax)*B6(bx))
       end select
-   endif
+   end if
 end subroutine ssovl
 
 
@@ -651,7 +651,7 @@ implicit none
 real(wp), intent(in) :: x
 A0 = exp(-x)/x
 return
-end function
+end function A0
 
 real(wp) pure function A1(x)
 ! Hilfsintegral A_1
@@ -659,7 +659,7 @@ implicit none
 real(wp), intent(in) :: x
 A1 = ((1+x)*exp(-x))/(x**2)
 return
-end function
+end function A1
 
 
 real(wp) pure function A2(x)
@@ -668,30 +668,30 @@ implicit none
 real(wp), intent(in) :: x
 A2 = ((2d0+2d0*x+x**2)*exp(-x))/x**3
 return
-end function
+end function A2
 
 
 real(wp) pure function A3(x)
 ! Hilfsintegral A_3
 implicit none
 real(wp), intent(in) :: x
-real(wp) xx
-real(wp) x2, x3, x4
+real(wp) :: xx
+real(wp) :: x2, x3, x4
 x2 = x*x
 x3 = x2*x
 x4 = x3*x
 xx = (6d0+6d0*x+3d0*x2+x3)
 A3 = (xx*exp(-x))/x4
 return
-end function
+end function A3
 
 
 real(wp) pure function A4(x)
 ! Hilfsintegral A_4
 implicit none
 real(wp), intent(in) :: x
-real(wp) xx
-real(wp) x2, x3, x4, x5
+real(wp) :: xx
+real(wp) :: x2, x3, x4, x5
 x2 = x*x
 x3 = x2*x
 x4 = x3*x
@@ -699,14 +699,14 @@ x5 = x4*x
 xx = (24d0+24d0*x+12d0*x2+4d0*x3+x4)
 A4 = (xx*exp(-x))/x5
 return
-end function
+end function A4
 
 real(wp) pure function A5(x)
 ! Hilfsintegral A_5
 implicit none
 real(wp), intent(in) :: x
-real(wp) xx
-real(wp) x2, x3, x4, x5, x6
+real(wp) :: xx
+real(wp) :: x2, x3, x4, x5, x6
 x2 = x*x
 x3 = x2*x
 x4 = x3*x
@@ -715,14 +715,14 @@ x6 = x5*x
 xx = (120d0+120d0*x+60d0*x2+20d0*x3+5d0*x4+x5)
 A5 = (xx*exp(-x))/x6
 return
-end function
+end function A5
 
 real(wp) pure function A6(x)
 ! Hilfsintegral A_6
 implicit none
 real(wp), intent(in) :: x
-real(wp) xx
-real(wp) x2, x3, x4, x5, x6, x7
+real(wp) :: xx
+real(wp) :: x2, x3, x4, x5, x6, x7
 x2 = x*x
 x3 = x2*x
 x4 = x3*x
@@ -732,7 +732,7 @@ x7 = x6*x
 xx = (720d0+720d0*x+360d0*x2+120d0*x3+30d0*x4+6d0*x5+x6)
 A6 = (xx*exp(-x))/x7
 return
-end function
+end function A6
 
 
 
@@ -746,41 +746,41 @@ end function
 real(wp) pure function B0(x)
    real(wp), intent(in) :: x
    B0 = (exp(x)-exp(-x))/x
-end function
+end function B0
 
 real(wp) pure function B1(x)
    real(wp), intent(in) :: x
-   real(wp) x2, x3
+   real(wp) :: x2, x3
    x2 = x*x
    x3 = x2*x
    B1 = ((1.0_wp-x)*exp(x)-(1.0_wp+x)*exp(-x))/x2
-end function
+end function B1
 
 real(wp) pure function B2(x)
    real(wp), intent(in) :: x
-   real(wp) x2, x3
+   real(wp) :: x2, x3
    x2 = x*x
    x3 = x2*x
    B2 = (((2.0_wp-2*x+x2)*exp(x)) - ((2.0_wp+2.0_wp*x+x2)*exp(-x)))/x3
-end function
+end function B2
 
 real(wp) pure function B3(x)
    real(wp), intent(in) :: x
-   real(wp) xx, yy
-   real(wp) x2, x3, x4
+   real(wp) :: xx, yy
+   real(wp) :: x2, x3, x4
    x2 = x*x
    x3 = x2*x
    x4 = x3*x
    xx = (6.0_wp-6.0_wp*x+3.0_wp*x2-x3)*exp(x)/x4
    yy = (6.0_wp+6.0_wp*x+3.0_wp*x2+x3)*exp(-x)/x4
    B3 = xx-yy
-end function
+end function B3
 
 
 real(wp) pure function B4(x)
    real(wp), intent(in) :: x
-   real(wp) xx, yy
-   real(wp) x2, x3, x4, x5
+   real(wp) :: xx, yy
+   real(wp) :: x2, x3, x4, x5
    x2 = x*x
    x3 = x2*x
    x4 = x3*x
@@ -788,12 +788,12 @@ real(wp) pure function B4(x)
    xx = (24.0_wp-24.0_wp*x+12.0_wp*x2-4.0_wp*x3+x4)*exp(x)/x5
    yy = (24.0_wp+24.0_wp*x+12.0_wp*x2+4.0_wp*x3+x4)*exp(-x)/x5
    B4 = xx-yy
-end function
+end function B4
 
 real(wp) pure function B5(x)
    real(wp), intent(in) :: x
-   real(wp) xx, yy
-   real(wp) x2, x3, x4, x5, x6
+   real(wp) :: xx, yy
+   real(wp) :: x2, x3, x4, x5, x6
    x2 = x*x
    x3 = x2*x
    x4 = x3*x
@@ -802,11 +802,11 @@ real(wp) pure function B5(x)
    xx = (120.0_wp-120*x+60*x2-20*x3+5*x4-x5)*exp(x)/x6
    yy = (120.0_wp+120*x+60*x2+20*x3+5*x4+x5)*exp(-x)/x6
    B5 = xx-yy
-end function
+end function B5
 
 real(wp) function B6(x)
    real(wp), intent(in) :: x
-   real(wp) x2, x3, x4, x5, x6, x7, yy, xx
+   real(wp) :: x2, x3, x4, x5, x6, x7, yy, xx
    x2 = x*x
    x3 = x2*x
    x4 = x3*x
@@ -816,7 +816,7 @@ real(wp) function B6(x)
    xx = (720.0_wp - 720.0_wp*x+ 360.0_wp*x2 - 120.0_wp*x3 + 30.0_wp*x4 - 6.0_wp*x5 + x6)*exp(x)/x7
    yy = (720.0_wp + 720.0_wp*x + 360.0_wp*x2 + 120.0_wp*x3 + 30.0_wp*x4 + 6.0_wp*x5 + x6)*exp(-x)/x7
    B6 = xx-yy
-end function
+end function B6
 
 
 real(wp) function bint(x, k)
@@ -826,23 +826,23 @@ real(wp) function bint(x, k)
 ! accurate enough
 implicit none
 real(wp), intent(in) :: x
-real(wp) xx, yy
+real(wp) :: xx, yy
 integer, intent(in) :: k
-integer i
+integer :: i
 bint = 0
 
-if(abs(x).lt.1e-6) then
+if(abs(x)<1e-6) then
 do i = 0, k
-   bint = (1.d0+(-1d0)**i)/(dble(i)+1.d0)
+   bint = (1.0d0+(-1d0)**i)/(dble(i)+1.0d0)
 end do
 return
-endif
+end if
 
 do i = 0, 12
 xx = 1d0-((-1d0)**(k+i+1))
 yy = dble(fact(i))*dble((k+i+1))
 bint = bint+xx/yy*(-x)**i
-enddo
+end do
 
 
 end function bint
@@ -851,14 +851,14 @@ end function bint
 ! faculty function
 integer(wp) function fact(N)
 implicit none
-integer j, n
+integer :: j, n
 fact = 1
 do j = 2, n
   fact = fact*j
-enddo
+end do
 return
 
-end
+end function fact
 
 
 
@@ -870,10 +870,10 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    ! za  = slater exponent atom A
    ! zb  = slater exponent atom B
    ! R   = distance between atom A and B
-   integer ii, shell(72)
-   logical debug
-   real(wp) ax, bx, R05, za, zb, R
-   integer na, nb
+   integer :: ii, shell(72)
+   logical :: debug
+   real(wp) :: ax, bx, R05, za, zb, R
+   integer :: na, nb
    data shell/                 &
    !          h, he
             1, 1               &
@@ -885,12 +885,12 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    !         k-rn , no f-elements
             54*3/
    ! ...
-   real(wp) g, Fa, Fb
+   real(wp) :: g, Fa, Fb
    !--------------------- set exponents ---------------------------------------
-   real(wp) xza, xzb
-   real(wp) xx
-   integer iat, jat, iz(*)
-   logical lsame
+   real(wp) :: xza, xzb
+   real(wp) :: xx
+   integer :: iat, jat, iz(*)
+   logical :: lsame
 
    za = xza
    zb = xzb
@@ -906,7 +906,7 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    ! case:      1        2        4       3        6         9
    !
    ii = shell(na)*shell(nb)
-   if(debug) write(*, *) 'gshell', ii
+   if(debug) write(*, *) "gshell", ii
    R05 = R*0.5_wp
    ax = (za+zb)*R05
    Fa = (za+zb)
@@ -1005,9 +1005,9 @@ subroutine g1s1s(za, zb, Fa, Fb, R, g, sameElement)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) za, zb, Fa, Fb
-   real(wp) g, R
-   logical sameElement
+   real(wp) :: za, zb, Fa, Fb
+   real(wp) :: g, R
+   logical :: sameElement
 
    if(sameElement) then
       t1 = za ** 2
@@ -1059,15 +1059,15 @@ subroutine g2s1s(za, zb, Fa, Fb, R, g, switch, lsame)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) za, zb, Fa, Fb
-   real(wp) g, R, norm
-   logical switch
-   logical lsame
+   real(wp) :: za, zb, Fa, Fb
+   real(wp) :: g, R, norm
+   logical :: switch
+   logical :: lsame
    norm = (1d0/24d0)*sqrt(za**3*zb**5*3d0)
 
    if(switch) then
       Fb = -Fb
-   endif
+   end if
 
    if(lsame) then
 
@@ -1123,9 +1123,9 @@ subroutine g2s2s(za, zb, Fa, Fb, R, g, SameElement)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) za, zb, Fa, Fb
-   real(wp) g, R, norm
-   logical SameElement
+   real(wp) :: za, zb, Fa, Fb
+   real(wp) :: g, R, norm
+   logical :: SameElement
 
    norm = 1d0/(16d0*3d0)*SQRT((ZA*ZB)**5)
 
@@ -1181,7 +1181,7 @@ subroutine g2s2s(za, zb, Fa, Fb, R, g, SameElement)
 
 
       g = g*norm
-   endif
+   end if
 
 end subroutine g2s2s
 
@@ -1191,10 +1191,10 @@ subroutine g1s3s(za, zb, Fa, Fb, R, g, switch, lsame)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) za, zb, Fa, Fb
-   real(wp) g, R, norm
-   logical switch
-   logical lsame
+   real(wp) :: za, zb, Fa, Fb
+   real(wp) :: g, R, norm
+   logical :: switch
+   logical :: lsame
 
    if(switch) Fb = -Fb
 
@@ -1253,7 +1253,7 @@ subroutine g1s3s(za, zb, Fa, Fb, R, g, switch, lsame)
       g = -0.32D2 * t3 * (t73 + t111) / t8 / t6 / t32
 
       g = g*norm
-   endif
+   end if
 
 end subroutine g1s3s
 
@@ -1263,11 +1263,11 @@ subroutine g2s3s(za, zb, Fa, Fb, R, g, switch, lsame)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) za, zb, Fa, Fb
-   real(wp) g, R, norm
-   logical switch
-   logical lsame
-   norm = sqrt((za**5)*(zb**7)/7.5_wp)/96.d0
+   real(wp) :: za, zb, Fa, Fb
+   real(wp) :: g, R, norm
+   logical :: switch
+   logical :: lsame
+   norm = sqrt((za**5)*(zb**7)/7.5_wp)/96.0d0
 
    if(switch) Fb = -Fb
 
@@ -1341,7 +1341,7 @@ subroutine g2s3s(za, zb, Fa, Fb, R, g, switch, lsame)
       g = 0.128D3 * t3 * (t52 + t87 + t118 + t145) / t9 / t36 / t45
 
    g = g*norm
-   endif
+   end if
 
 end subroutine g2s3s
 
@@ -1351,11 +1351,11 @@ subroutine g3s3s(za, zb, Fa, Fb, R, g, SameElement)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) za, zb, Fa, Fb
-   real(wp) g, R, norm
-   logical SameElement
+   real(wp) :: za, zb, Fa, Fb
+   real(wp) :: g, R, norm
+   logical :: SameElement
 
-   norm = sqrt((ZA*ZB)**7)/1440.d0
+   norm = sqrt((ZA*ZB)**7)/1440.0d0
 
    if(SameElement) then
 
@@ -1444,7 +1444,7 @@ subroutine g3s3s(za, zb, Fa, Fb, R, g, SameElement)
       g = -0.768D3 * t3 * (t65 + t104 + t139 + t170) / t17 / t47 / t16
 
       g = g*norm
-   endif
+   end if
 
 end subroutine g3s3s
 

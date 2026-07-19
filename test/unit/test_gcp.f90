@@ -15,14 +15,14 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_gcp
+   use dftd3_cutoff, only : realspace_cutoff
+   use dftd3_gcp
+   use dftd3_output, only : ascii_gcp_param
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type
    use mstore, only : get_structure
-   use dftd3_gcp
-   use dftd3_cutoff, only : realspace_cutoff
-   use dftd3_output, only : ascii_gcp_param
    implicit none
    private
 
@@ -1072,7 +1072,7 @@ subroutine test_numgrad(error, mol, method, basis)
    if (any(abs(gradient(:, :mat)-numgrad(:, :mat)) > thrg)) then
       call test_failed(error, "Numerical and analytical gradient do not match")
       do iat = 1, mat
-         print'(3es14.5,3x,a)', gradient(:, iat)-numgrad(:, iat), mol%sym(mol%id(iat))
+         print"(3es14.5,3x,a)", gradient(:, iat)-numgrad(:, iat), mol%sym(mol%id(iat))
       end do
    end if
 

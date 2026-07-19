@@ -15,9 +15,9 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_model
-   use ieee_arithmetic, only : ieee_is_nan
    use dftd3_data, only : get_r4r2_val, get_vdw_rad
    use dftd3_reference
+   use ieee_arithmetic, only : ieee_is_nan
    use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type

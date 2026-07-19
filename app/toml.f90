@@ -16,11 +16,11 @@
 
 !> Implementation of a parameter database for damping parameters
 module dftd3_app_toml
-   use mctc_env, only : error_type, fatal_error
    use dftd3, only : d3_param, damping_param, rational_damping_param, new_rational_damping, &
       & zero_damping_param, new_zero_damping, mzero_damping_param, new_mzero_damping, &
       & optimizedpower_damping_param, new_optimizedpower_damping, &
       & cso_damping_param, new_cso_damping
+   use mctc_env, only : error_type, fatal_error
    use tomlf, only : toml_table, toml_array, toml_key, toml_error, toml_parse, &
       & get_value, len
    implicit none

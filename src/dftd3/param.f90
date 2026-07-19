@@ -15,7 +15,6 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_param
-   use mctc_env, only : wp, error_type, fatal_error
    use dftd3_citation, only : citation_type, author_name, new_citation, &
       & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
       & doi_dftd3_cso, doi_z_damping, &
@@ -24,6 +23,7 @@ module dftd3_param
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
       & doi_wb97x_d3, doi_hse06_d3, doi_cf22d, doi_skala
+   use mctc_env, only : wp, error_type, fatal_error
    implicit none
    private
 
@@ -103,7 +103,7 @@ function get_method_id(method) result(id)
    integer :: id
    integer :: i, j
 
-   lc_method = ' '
+   lc_method = " "
    j = 0
    do i = 1, len(method)
       if (method(i:i) /= "-") then
@@ -1333,7 +1333,7 @@ pure function lowercase(str) result(lcstr)
    integer :: ilen, ioffset, iquote, i, iav, iqc
 
    ilen=len_trim(str)
-   ioffset=iachar('A')-iachar('a')
+   ioffset=iachar("A")-iachar("a")
    iquote=0
    lcstr=str
    do i=1, ilen
@@ -1342,18 +1342,18 @@ pure function lowercase(str) result(lcstr)
          iquote=1
          iqc=iav
         cycle
-      endif
+      end if
       if(iquote==1 .and. iav==iqc) then
          iquote=0
          cycle
-      endif
+      end if
       if (iquote==1) cycle
-      if(iav >= iachar('A') .and. iav <= iachar('Z')) then
+      if(iav >= iachar("A") .and. iav <= iachar("Z")) then
          lcstr(i:i)=achar(iav-ioffset)
       else
          lcstr(i:i)=str(i:i)
-      endif
-   enddo
+      end if
+   end do
 
 end function lowercase
 

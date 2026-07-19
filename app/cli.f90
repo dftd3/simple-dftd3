@@ -16,12 +16,12 @@
 
 module dftd3_app_cli
    use, intrinsic :: iso_fortran_env, only : output_unit
-   use mctc_env, only : wp, error_type, fatal_error
-   use mctc_io, only : structure_type, read_structure, filetype, get_filetype
    use dftd3, only : d3_param
    use dftd3_app_argument, only : argument_list, len
    use dftd3_app_help, only : prog_name, header, help_text, run_help_text, param_help_text, &
       & gcp_help_text, version
+   use mctc_env, only : wp, error_type, fatal_error
+   use mctc_io, only : structure_type, read_structure, filetype, get_filetype
    implicit none
    private
 
@@ -232,7 +232,7 @@ subroutine get_arguments(config, error)
    if (allocated(error)) return
 
    if (.not.allocated(config)) then
-      write(output_unit, '(a)') help_text
+      write(output_unit, "(a)") help_text
       call fatal_error(error, "Insufficient arguments provided")
       return
    end if
@@ -570,7 +570,7 @@ subroutine get_run_arguments(config, list, start, error)
 
    if (.not.allocated(config%input)) then
       if (.not.allocated(error)) then
-         write(output_unit, '(a)') run_help_text
+         write(output_unit, "(a)") run_help_text
          call fatal_error(error, "Insufficient arguments provided")
       end if
    end if
@@ -649,7 +649,7 @@ subroutine get_param_arguments(config, list, start, error)
 
    if (.not.allocated(config%input)) then
       if (.not.allocated(error)) then
-         write(output_unit, '(a)') param_help_text
+         write(output_unit, "(a)") param_help_text
          call fatal_error(error, "Insufficient arguments provided")
       end if
    end if
@@ -758,7 +758,7 @@ subroutine get_gcp_arguments(config, list, start, error)
 
    if (.not.allocated(config%input)) then
       if (.not.allocated(error)) then
-         write(output_unit, '(a)') gcp_help_text
+         write(output_unit, "(a)") gcp_help_text
          call fatal_error(error, "Insufficient arguments provided")
       end if
    end if

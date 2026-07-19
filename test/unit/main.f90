@@ -22,8 +22,8 @@ program tester
    use test_dftd3, only : collect_dftd3
    use test_gcp, only : collect_gcp
    use test_model, only : collect_model
-   use test_param, only : collect_param
    use test_pairwise, only : collect_pairwise
+   use test_param, only : collect_param
    use test_periodic_1d, only : collect_periodic_1d
    use test_periodic_2d, only : collect_periodic_2d
    use test_periodic_3d, only : collect_periodic_3d
@@ -81,7 +81,7 @@ program tester
    end if
 
    if (stat > 0) then
-      write(error_unit, '(i0, 1x, a)') stat, "test(s) failed!"
+      write(error_unit, "(i0, 1x, a)") stat, "test(s) failed!"
       error stop 1
    end if
 
@@ -103,12 +103,12 @@ subroutine get_argument(idx, arg)
    call get_command_argument(idx, length=length, status=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    allocate(character(len=length) :: arg, stat=stat)
    if (stat /= 0) then
       return
-   endif
+   end if
 
    if (length > 0) then
       call get_command_argument(idx, arg, status=stat)

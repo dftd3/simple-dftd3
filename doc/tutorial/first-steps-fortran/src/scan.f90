@@ -35,8 +35,8 @@ subroutine get_dispersion_for_reaction(reaction, param, energy)
 end subroutine get_dispersion_for_reaction
 
 subroutine scan_param_for_reaction(error, reaction, method, dft_energy)
-   use mctc_env, only : error_type, fatal_error
    use dftd3, only : d3_param
+   use mctc_env, only : error_type, fatal_error
    type(error_type), allocatable :: error
    type(reaction_type), intent(in) :: reaction
    character(*), intent(in) :: method
@@ -144,9 +144,9 @@ subroutine scan_param_for_reaction(error, reaction, method, dft_energy)
       use mctc_io_convert, only : autokj
       integer :: ipar
 
-      print '(a)', "Energies in kJ/mol"
+      print "(a)", "Energies in kJ/mol"
       print '(66("-"))'
-      print '(1x, a, t20, 2a15, a16)', "method", "E(2)", "E(2+3)", "%E(3)"
+      print "(1x, a, t20, 2a15, a16)", "method", "E(2)", "E(2+3)", "%E(3)"
       print '(66("-"))'
       do ipar = 1, 5
          if (.not.has_param(ipar)) cycle

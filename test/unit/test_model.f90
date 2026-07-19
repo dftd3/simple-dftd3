@@ -15,17 +15,17 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_model
+   use dftd3, only : rational_damping_param, get_dispersion, realspace_cutoff
+   use dftd3_cutoff, only : get_lattice_points
+   use dftd3_data, only : get_vdw_rad, get_r4r2_val
+   use dftd3_model
+   use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io_structure, only : structure_type
    use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
-   use mctc_data, only : get_covalent_rad
    use mstore, only : get_structure
-   use dftd3_cutoff, only : get_lattice_points
-   use dftd3_data, only : get_vdw_rad, get_r4r2_val
-   use dftd3, only : rational_damping_param, get_dispersion, realspace_cutoff
-   use dftd3_model
    implicit none
    private
 
@@ -90,7 +90,7 @@ subroutine test_gw_gen(error, mol, ref)
 
    if (any(abs(gwvec - ref) > thr)) then
       call test_failed(error, "Gaussian weights do not match")
-      print'(3es21.14)', gwvec
+      print"(3es21.14)", gwvec
    end if
 
 end subroutine test_gw_gen
@@ -144,11 +144,11 @@ subroutine test_dgw_gen(error, mol)
 
    if (any(abs(gwdcn - numdcn) > thr2)) then
       call test_failed(error, "Gaussian weights derivatives do not match")
-      print'(3es21.14)', gwdcn
+      print"(3es21.14)", gwdcn
       print'("---")'
-      print'(3es21.14)', numdcn
+      print"(3es21.14)", numdcn
       print'("---")'
-      print'(3es21.14)', gwdcn - numdcn
+      print"(3es21.14)", gwdcn - numdcn
    end if
 
 end subroutine test_dgw_gen
@@ -284,7 +284,7 @@ subroutine test_gw_amf3(error)
    type(structure_type) :: mol
    real(wp), parameter :: ref(6, 4) = reshape([&
       & 3.01777419522501E-16_wp, 3.48560287705282E-08_wp, 6.05573875449400E-03_wp, &
-      & 9.93942098041223E-01_wp, 2.12834822159420E-06_wp, 3.22312554200316E-14_wp, & 
+      & 9.93942098041223E-01_wp, 2.12834822159420E-06_wp, 3.22312554200316E-14_wp, &
       & 1.83164825589304E-02_wp, 9.81683517441070E-01_wp, 0.00000000000000E+00_wp, &
       & 0.00000000000000E+00_wp, 0.0000000000000E+00_wp, 0.00000000000000E+00_wp, &
       & 1.83168129150391E-02_wp, 9.81683187084961E-01_wp, 0.00000000000000E+00_wp, &
@@ -292,7 +292,7 @@ subroutine test_gw_amf3(error)
       & 1.83165559699980E-02_wp, 9.81683444030002E-01_wp, 0.00000000000000E+00_wp, &
       & 0.00000000000000E+00_wp, 0.00000000000000E+00_wp, 0.00000000000000E+00_wp], shape(ref))
 
-   !> Molecular structure data 
+   !> Molecular structure data
    mol%nat = 4
    mol%nid = 2
    mol%id = [1, 2, 2, 2]

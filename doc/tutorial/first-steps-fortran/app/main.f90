@@ -1,7 +1,7 @@
 program param_scanner
+   use d3_param_scan, only : reaction_type, scan_param_for_reaction
    use mctc_env, only : wp, error_type, get_argument, fatal_error
    use mctc_io, only : structure_type, read_structure
-   use d3_param_scan, only : reaction_type, scan_param_for_reaction
    implicit none
 
    type(reaction_type) :: reaction
@@ -13,7 +13,7 @@ program param_scanner
    n_args = command_argument_count()
 
    if (n_args < 3) then
-      print '(a)', "Usage: param-scanner <method> <coeff1> <mol1> ... [dft energy]"
+      print "(a)", "Usage: param-scanner <method> <coeff1> <mol1> ... [dft energy]"
       stop 1
    end if
 
@@ -36,13 +36,13 @@ program param_scanner
       call read_real(n_args, dft_energy, error)
    end if
    if (allocated(error)) then
-      print '(a)', error%message
+      print "(a)", error%message
       stop 1
    end if
 
    call scan_param_for_reaction(error, reaction, method, dft_energy)
    if (allocated(error)) then
-      print '(a)', error%message
+      print "(a)", error%message
       stop 1
    end if
 

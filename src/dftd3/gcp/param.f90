@@ -15,9 +15,9 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_gcp_param
+   use dftd3_data, only : get_vdw_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type
-   use dftd3_data, only : get_vdw_rad
    implicit none
    private
 
@@ -57,7 +57,7 @@ module dftd3_gcp_param
       real(wp) :: qscal = 0.0_wp
       !> Short-range bond correction for HF-3c
       logical :: base = .false.
-    end type
+    end type gcp_param
 
    enum, bind(c)
       enumerator :: &
@@ -163,7 +163,7 @@ module dftd3_gcp_param
       & 0.097241,0.099167,&
       & 0.219194,0.189098,0.164378,0.147238,0.137298,0.12751,0.118589,0.0318653,0.120985,0.0568313, &
       & 0.090996,0.071820,0.063562,0.064241,0.061848,0.061021]
-   
+
    real(wp), parameter :: emiss_hf_def2mtzvp(*) = [&  ! m def2-TZVP, no f for B-Ne
       & 0.007930,0.003310,&
       & 0.086760,0.009960,0.013960,0.006000,0.003760,0.004430,0.005380,0.006750,&
@@ -171,7 +171,7 @@ module dftd3_gcp_param
       & 0.097240,0.099170,&
       & 0.219190,0.189100,0.164380,0.147240,0.137300,0.127510,0.118590,0.031870,0.120990,0.056830,&
       & 0.091000,0.071820,0.063560,0.064240,0.061850,0.061020]
-   
+
    real(wp), parameter :: emiss_hf_vmb(*) = [ &
       & 0.042400_wp, 0.028324_wp, &
       & 0.252661_wp, 0.197201_wp, 0.156009_wp, 0.164586_wp, 0.169273_wp, 0.214704_wp, 0.729138_wp, 0.336072_wp, &
@@ -179,7 +179,7 @@ module dftd3_gcp_param
       & 0.0_wp, 0.0_wp,&
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, &
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp]
-   
+
    real(wp), parameter :: emiss_hf_minisd(*) = [& !Al-Ar MINIS + Ahlrichs "P" funktions
       & 0.0_wp, 0.0_wp, &
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, &
@@ -191,13 +191,13 @@ module dftd3_gcp_param
    real(wp), parameter :: emiss_hf_minix(*) = [ &
       & emiss_hf_minis(1:2), 0.177871_wp, 0.171596_wp, emiss_hf_minis(5:10), 1.114110_wp, 1.271150_wp, &
       & emiss_hf_minisd(13:18), emiss_hf_sv(19:30), emiss_hf_svp(31:36)]
-   
+
    real(wp), parameter :: emiss_hf_lanl2(*) = [ & !  LANL2TZ+ vs LANL2DZ (ORCA), only Sc-Zn
       & emiss_hf_631gd(1:20), &
       & 0.102545_wp, 0.0719529_wp, 0.0491798_wp, 0.0362976_wp, 0.0266369_wp, &
       & 0.0235484_wp, 0.0171578_wp, 0.0438906_wp, 0.0100259_wp, 0.016208_wp, &
       & emiss_hf_631gd(31:)]
-   
+
    real(wp), parameter :: emiss_hf_pobtz(*) = [ & ! H-Kr, no RG
       & 0.010077_wp, 0.000000_wp, &
       & 0.173239_wp, 0.101973_wp, 0.131181_wp, 0.032234_wp, 0.011630_wp, 0.008475_wp, 0.011673_wp, 0.000000_wp, &
@@ -214,7 +214,7 @@ module dftd3_gcp_param
       & 0.0_wp, 0.0_wp, &
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, &
       & 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 0.0_wp]
-   
+
    real(wp), parameter :: emiss_hf_2gcore(*) = [real(wp)::  & ! only HCNOF yet
       & 0.000539,0.000000,&
       & 0.000000,0.000000,0.000000,0.173663,0.269952,0.364341,0.384923,0.000000,&
@@ -222,7 +222,7 @@ module dftd3_gcp_param
       & 0.000000,0.000000,&
       & 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,&
       & 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000]
-   
+
    real(wp), parameter :: emiss_hf_def1tzvp(*) = [real(wp):: &  !  org
       & 0.007577,0.003312,&
       & 0.136371,0.011163,0.017129,0.008140,0.005826,0.006777,0.007108,0.008132,&
@@ -230,7 +230,7 @@ module dftd3_gcp_param
       & 0.141595,0.207980,&
       & 0.223252,0.193038,0.167892,0.148726,0.140473,0.130220,0.121166,0.113839,0.121855,0.107138,&
       & 0.105637,0.086639,0.075084,0.075089,0.070868,0.068706]
-   
+
    real(wp), parameter :: emiss_hf_def2mtzvpp(*) = [real(wp):: &    !SG
       & 0.027000,0.000000,&
       & 0.000000,0.000000,0.200000,0.020000,0.180000,0.080000,0.070000,0.065000,&
@@ -238,7 +238,7 @@ module dftd3_gcp_param
       & 0.000000,0.000000,&
       & 0.300000,0.300000,0.300000,0.300000,0.300000,0.300000,0.300000,0.300000,0.300000,0.300000,&
       & 0.300000,0.300000,0.300000,0.300000,0.300000,0.000000]
-   
+
    real(wp), parameter :: emiss_hf_2g(*) = [real(wp):: & !no ne, ar ecp
       & 0.0539181,0.161846,&
       & 0.1581960,0.214318,0.808955,0.470398,0.724457,1.260960,2.014430,0.000000,&
@@ -246,7 +246,7 @@ module dftd3_gcp_param
       & 0.000000,0.000000,&
       & 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,&
       & 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000]
-   
+
    real(wp), parameter :: emiss_hf_ccdz(*) = [real(wp):: &
       & 0.007907,0.008287,&
       & 0.047380,0.014240,0.022133,0.014999,0.018148,0.028240,0.042261,0.061485,&
@@ -254,7 +254,7 @@ module dftd3_gcp_param
       & 0.000000,0.078016,& !no k cc-pVDZ Basis
       & 0.036885,0.038540,0.036474,0.036061,0.030289,0.027959,0.025177,0.022709,0.027386,0.015816,&
       & 0.135176,0.115515,0.102761,0.102967,0.097891,0.097331]
-   
+
    real(wp), parameter :: emiss_hf_accdz(*) = [real(wp):: & !for li,be,na,mg,k-zn energy below def2-QZVPD reference
       & 0.001183,0.005948,&
       & 0.000000,0.000000,0.005269,0.006380,0.011700,0.021199,0.034160,0.051481,&
@@ -262,7 +262,7 @@ module dftd3_gcp_param
       & 0.000000,0.000000,&
       & 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,&
       & 0.069963,0.065687,0.072944,0.077585,0.078777,0.080746]
-   
+
    real(wp), parameter :: emiss_hf_dzp(*) = [real(wp):: &
       & 0.008107,0.008045,&
       & 0.136751,0.016929,0.026729,0.021682,0.027391,0.040841,0.058747,0.082680,&
@@ -270,7 +270,7 @@ module dftd3_gcp_param
       & 0.145642,0.212865,&
       & 0.232821,0.204796,0.182933,0.169554,0.164701,0.160112,0.157723,0.158037,0.179104,0.169782,&
       & 0.159396,0.140611,0.129645,0.132664,0.132121,0.134081]
-   
+
    real(wp), parameter :: emiss_hf_hsv(*) = [real(wp):: &
       & 0.030224,0.028324,&
       & 0.125379,0.064094,0.059751,0.079387,0.108929,0.167264,0.245786,0.347818,&
@@ -278,7 +278,7 @@ module dftd3_gcp_param
       & 0.000000,0.000000,&
       & 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,0.000000,&
       & 0.000000,0.000000,0.000000,0.000000,0.000000,0.000000]
-   
+
    real(wp), parameter :: emiss_hf_dz(*) = [real(wp):: &
       & 0.009037,0.008843,&
       & 0.198254,0.000000,0.026921,0.021817,0.027458,0.041391,0.059495,0.083286,&
@@ -286,7 +286,7 @@ module dftd3_gcp_param
       & 0.296046,0.370399,&
       & 0.349482,0.302284,0.267639,0.244306,0.232237,0.221488,0.214153,0.032694,0.226865,0.213902,&
       & 0.172296,0.155496,0.143646,0.149642,0.149871,0.151705]
-   
+
    real(wp), parameter :: emiss_hf_msvp(*) = [real(wp):: &     !H-Kr modified Ahlrichs DZ, supplemented by def2-SV(P)
       & 0.000000_wp,0.000000_wp,& !RG,H set to zero,  F adjusted empirically, Be corrected due to ROHF problems
       & 0.107750_wp,0.020000_wp,0.026850_wp,0.021740_wp,0.027250_wp,0.039930_wp,0.030000_wp,0.000000_wp,&
@@ -297,7 +297,7 @@ module dftd3_gcp_param
 
    real(wp), parameter :: emiss_hf_pbeh3c(*) = [ &
       & emiss_hf_msvp(1:18), emiss_hf_dzp(19:35), 0.0_wp]
-   
+
    ! *********************
    ! * nr. of basis fkt  *
    ! *********************
@@ -396,7 +396,7 @@ module dftd3_gcp_param
       & 23, 23, &
       & 40, 40, 40, 40, 40, 40, 40, 40, 40, 40, &
       & 41, 41, 41, 41, 41, 0 ]
-   
+
    integer, parameter :: nbas_pobdzvp(*) = [ & ! H-KR, no RG
       & 5, 0, &
       & 6, 6, 14, 14, 14, 14, 14, 0, &
@@ -404,7 +404,7 @@ module dftd3_gcp_param
       & 19, 19, &
       & 31, 31, 31, 31, 31, 31, 31, 31, 31, 31,&
       & 32, 32, 32, 32, 32, 0]
-   
+
    integer, parameter :: nbas_2gcore(*) = [ & ! Only HCNOF yet
       & 1, 0, &
       & 5, 5, 5, 5, 5, 5, 5, 5, &
@@ -412,7 +412,7 @@ module dftd3_gcp_param
       & 0, 0,&
       & 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
       & 0, 0, 0, 0, 0, 0]
-   
+
    integer, parameter :: nbas_2g(*) = [ &
       & 1, 1, &
       & 5, 5, 5, 5, 5, 5, 5, 5, &
@@ -420,7 +420,7 @@ module dftd3_gcp_param
       & 0, 0, &
       & 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, &
       & 0, 0, 0, 0, 0, 0]
-   
+
    integer, parameter :: nbas_def1tzvp(*) = [ &  ! FIXME: https://github.com/grimme-lab/gcp/issues/24
       & 6, 6, &
       & 8, 11, 19, 19, 19, 19, 19, 19, &
@@ -428,7 +428,7 @@ module dftd3_gcp_param
       & 33, 33, 33, 33, 33, 33, 33, 33, 33, 33, &
       & 18, 28,&
       & 36, 36, 36, 36, 36, 36]
-   
+
    integer, parameter :: nbas_ccdz(*) = [ &
       & 5, 5, &
       & 14, 14, 14, 14, 14, 14, 14, 14, &
@@ -436,7 +436,7 @@ module dftd3_gcp_param
       & 0,27,&
       & 43, 43, 43, 43, 43, 43, 43, 43, 43, 43, &
       & 27, 27, 27, 27, 27, 27]
-   
+
    integer, parameter :: nbas_accdz(*) = [ &
       & 9, 9,&
       & 23, 23, 23, 23, 23, 23, 23, 23,&
@@ -444,7 +444,7 @@ module dftd3_gcp_param
       & 0, 0,&
       & 59, 59, 59, 59, 59, 59, 59, 59, 59, 59,&
       & 36, 36, 36, 36, 36, 36]
-   
+
    integer, parameter :: nbas_dzp(*) = [ &
       & 5, 5,&
       & 7, 10, 15, 15, 15, 15, 15, 15,&
@@ -452,7 +452,7 @@ module dftd3_gcp_param
       & 26, 36,&
       & 41, 41, 41, 41, 41, 41, 41, 41, 41, 41,&
       & 41, 41, 41, 41, 41, 41]
-   
+
    integer, parameter :: nbas_dz(*) = [ &
       & 2, 2, &
       & 4, 0, 10, 10, 10, 10, 10, 10, &
@@ -460,7 +460,7 @@ module dftd3_gcp_param
       & 23, 23, &
       & 38, 38, 38, 38, 38, 38, 38, 38, 38, 38, &
       & 36, 36, 36, 36, 36, 36]
-   
+
    integer, parameter :: nbas_msvp(*) = [ &  ! modified Ahlrichs DZ, supplemented by def2-SV(P)
       & 2, 2,&
       & 10, 10, 15, 15, 15, 15, 15, 15,&
@@ -581,7 +581,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.4271_wp
          param%alpha = 0.8141_wp
          param%beta = 1.2760_wp
-      elseif (is_dft_method(method_id)) then ! RMS= 0.57 ! def2-SV(P)
+      else if (is_dft_method(method_id)) then ! RMS= 0.57 ! def2-SV(P)
          param%sigma = 0.2424_wp
          eta_ = 1.2371_wp
          param%alpha = 0.6076_wp
@@ -608,22 +608,22 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.3157_wp
          param%alpha = 0.8136_wp
          param%beta = 1.2572_wp
-      elseif (method_id == p_tpss_method) then ! RMS=  0.618
+      else if (method_id == p_tpss_method) then ! RMS=  0.618
          param%sigma = 0.6647_wp
          eta_ = 1.3306_wp
          param%alpha = 1.0792_wp
          param%beta = 1.1651_wp
-      elseif (method_id == p_pw6b95_method) then  ! RMS = 0.58312
+      else if (method_id == p_pw6b95_method) then  ! RMS = 0.58312
          param%sigma = 0.3098_wp
          eta_ = 1.2373_wp
          param%alpha = 0.6896_wp
          param%beta = 1.3347_wp
-      elseif (is_hyb_method(method_id)) then ! RMS=0.6498
+      else if (is_hyb_method(method_id)) then ! RMS=0.6498
          param%sigma = 0.2990_wp
          eta_ = 1.2605_wp
          param%alpha = 0.6438_wp
          param%beta = 1.3694_wp
-      elseif (is_gga_method(method_id)) then ! RMS=
+      else if (is_gga_method(method_id)) then ! RMS=
          param%sigma = 0.6823_wp
          eta_ = 1.2491_wp
          param%alpha = 0.8225_wp
@@ -639,7 +639,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.3157_wp
          param%alpha = 0.8136_wp
          param%beta = 1.2572_wp
-      elseif (is_dft_method(method_id)) then ! RMS=0.6498
+      else if (is_dft_method(method_id)) then ! RMS=0.6498
          param%sigma = 0.2990_wp
          eta_ = 1.2605_wp
          param%alpha = 0.6438_wp
@@ -655,22 +655,22 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.1526_wp
          param%alpha = 1.1549_wp
          param%beta = 1.1763_wp
-      elseif (method_id == p_tpss_method) then ! RMS=
+      else if (method_id == p_tpss_method) then ! RMS=
          param%sigma = 0.22982_wp
          eta_ = 1.35401_wp
          param%alpha = 1.47633_wp
          param%beta = 1.11300_wp
-      elseif (method_id == p_pw6b95_method) then  ! RMS = 0.3279929
+      else if (method_id == p_pw6b95_method) then  ! RMS = 0.3279929
          param%sigma = 0.21054_wp
          eta_ = 1.25458_wp
          param%alpha = 1.35003_wp
          param%beta = 1.14061_wp
-      elseif (is_gga_method(method_id)) then ! RMS= 0.3462
+      else if (is_gga_method(method_id)) then ! RMS= 0.3462
          param%sigma = 0.1566_wp
          eta_ = 1.0271_wp
          param%alpha = 1.0732_wp
          param%beta = 1.1968_wp
-      elseif (is_hyb_method(method_id)) then ! RMS= 0.3400
+      else if (is_hyb_method(method_id)) then ! RMS= 0.3400
          param%sigma = 0.2059_wp
          eta_ = 0.9722_wp
          param%alpha = 1.1961_wp
@@ -686,7 +686,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.5652_wp
          param%alpha = 0.9447_wp
          param%beta = 1.2100_wp
-      elseif (is_dft_method(method_id)) then ! RMS=  0.47856
+      else if (is_dft_method(method_id)) then ! RMS=  0.47856
          param%sigma = 0.3405_wp
          eta_ = 1.6127_wp
          param%alpha = 0.8589_wp
@@ -702,12 +702,12 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.9914_wp
          param%alpha = 1.0216_wp
          param%beta = 1.2833_wp
-      elseif (is_hyb_method(method_id)) then ! RMS=0.19648
+      else if (is_hyb_method(method_id)) then ! RMS=0.19648
          param%sigma = 0.2905_wp
          eta_ = 2.2495_wp
          param%alpha = 0.8120_wp
          param%beta = 1.4412_wp
-      elseif (is_gga_method(method_id)) then !RMS = 0.21408
+      else if (is_gga_method(method_id)) then !RMS = 0.21408
          param%sigma = 0.1182_wp
          eta_ = 1.0631_wp
          param%alpha = 1.0510_wp
@@ -723,7 +723,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 2.2448_wp
          param%alpha = 0.7998_wp
          param%beta = 1.4381_wp
-      elseif (is_dft_method(method_id)) then ! RMS=0.1817
+      else if (is_dft_method(method_id)) then ! RMS=0.1817
          param%sigma = 0.2393_wp
          eta_ = 2.2247_wp
          param%alpha = 0.8185_wp
@@ -739,7 +739,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.5185_wp
          param%alpha = 0.6902_wp
          param%beta = 1.3713_wp
-      elseif (is_dft_method(method_id)) then ! RMS=0.7610
+      else if (is_dft_method(method_id)) then ! RMS=0.7610
          param%sigma = 0.5383_wp
          eta_ = 1.6482_wp
          param%alpha = 0.6230_wp
@@ -755,7 +755,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 0.0663_wp
          param%alpha = 0.3811_wp
          param%beta = 1.0155_wp
-      elseif (is_dft_method(method_id)) then ! RMS=0.1840
+      else if (is_dft_method(method_id)) then ! RMS=0.1840
          param%sigma = 0.1465_wp
          eta_ = 0.0500_wp
          param%alpha = 0.6003_wp
@@ -791,7 +791,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
             param%rscal = 0.7_wp
             param%qscal = 0.03_wp
          end if
-      elseif (is_dft_method(method_id)) then
+      else if (is_dft_method(method_id)) then
          param%sigma = 0.2059_wp
          eta_ = 0.9722_wp
          param%alpha = 1.1961_wp
@@ -822,7 +822,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.4547_wp
          param%alpha = 0.3711_wp
          param%beta = 1.6300_wp
-      elseif (is_dft_method(method_id)) then !RMS=0.7184
+      else if (is_dft_method(method_id)) then !RMS=0.7184
          param%sigma = 0.2687_wp
          eta_ = 1.4634_wp
          param%alpha = 0.3513_wp
@@ -842,7 +842,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.4554_wp
          param%alpha = 0.3711_wp
          param%beta = 1.6342_wp
-      elseif (is_dft_method(method_id)) then
+      else if (is_dft_method(method_id)) then
          param%sigma = 0.2687_wp
          eta_ = 1.4634_wp
          param%alpha = 0.3513_wp
@@ -874,7 +874,7 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          param%alpha = 0.27649_wp
          param%beta = 1.95600_wp
          param%damp = .true.
-      elseif (method_id == p_hse3c_method) then
+      else if (method_id == p_hse3c_method) then
          param%sigma = 1.00000_wp
          eta_ = 1.32378_wp
          param%alpha = 0.28314_wp
@@ -937,33 +937,33 @@ pure function get_method_id(method) result(id)
    select case(method)
    case default
       id = p_unknown_method
-   case('hf')
+   case("hf")
       id = p_hf_method
-   case('dft')
+   case("dft")
       id = p_dft_method
-   case('b3lyp')
+   case("b3lyp")
       id = p_b3lyp_method
-   case('blyp')
+   case("blyp")
       id = p_blyp_method
-   case('gga')
+   case("gga")
       id = p_gga_method
-   case('tpss')
+   case("tpss")
       id = p_tpss_method
-   case('pw6b95')
+   case("pw6b95")
       id = p_pw6b95_method
-   case('b973c')
+   case("b973c")
       id = p_b973c_method
-   case('r2scan3c')
+   case("r2scan3c")
       id = p_r2scan3c_method
-   case('pbe')
+   case("pbe")
       id = p_pbe_method
-   case('pbeh3c')
+   case("pbeh3c")
       id = p_pbeh3c_method
-   case('hse3c')
+   case("hse3c")
       id = p_hse3c_method
-   case('hf3c')
+   case("hf3c")
       id = p_hf3c_method
-   case('b3pbe3c')
+   case("b3pbe3c")
       id = p_b3pbe3c_method
    end select
 end function get_method_id
@@ -995,51 +995,51 @@ pure function get_basis_id(basis) result(id)
    select case(basis)
    case default
       id = p_unknown_bas
-   case('sv')
+   case("sv")
       id = p_sv_bas
-   case('sv(p)','def2sv(p)', 'sv_p', 'def2sv_p')
+   case("sv(p)","def2sv(p)", "sv_p", "def2sv_p")
       id = p_sv_p_bas
-   case ('svx') ! RMS=  ! def2-SV(P/h,c)  = SV at h,c
+   case ("svx") ! RMS=  ! def2-SV(P/h,c)  = SV at h,c
       id = p_svx_bas
-   case('svp')
+   case("svp")
       id = p_svp_bas
-   case('minis')
+   case("minis")
       id = p_minis_bas
-   case('631gd', '631gs')
+   case("631gd", "631gs")
       id = p_631gd_bas
-   case('tz', 'def2tzvp')
+   case("tz", "def2tzvp")
       id = p_tz_bas
-   case('deftzvp', 'def1tzvp')
+   case("deftzvp", "def1tzvp")
       id = p_deftzvp_bas
-   case('ccdz', 'ccpvdz')
+   case("ccdz", "ccpvdz")
       id = p_ccdz_bas
-   case('accdz', 'augccpvdz', 'accpvdz')
+   case("accdz", "augccpvdz", "accpvdz")
       id = p_accdz_bas
-   case('pobtz', 'pobtzvp')
+   case("pobtz", "pobtzvp")
       id = p_pobtz_bas
    ! case('pobdzvp')
    !    id = p_pobdzvp_bas
-   case ('minix', 'hf3c')
+   case ("minix", "hf3c")
       id = p_minix_bas
-   case('gcore')
+   case("gcore")
       id = p_gcore_bas
-   case('2g', 'twog', 'fitg')
+   case("2g", "twog", "fitg")
       id = p_2g_bas
-   case('dzp')
+   case("dzp")
       id = p_dzp_bas
    ! case('hsv')
    !    id = p_hsv_bas
-   case('lanl')
+   case("lanl")
       id = p_lanl2_bas
-   case('dz')
+   case("dz")
       id = p_dz_bas
-   case('msvp', 'def2msvp')
+   case("msvp", "def2msvp")
       id = p_msvp_bas
-   case('pbeh3c', 'hse3c')
+   case("pbeh3c", "hse3c")
       id = p_pbeh3c_bas
-   case('mtzvp', 'def2mtzvp')
+   case("mtzvp", "def2mtzvp")
       id = p_def2mtzvp_bas
-   case('mtzvpp', 'def2mtzvpp', 'r2scan3c')
+   case("mtzvpp", "def2mtzvpp", "r2scan3c")
       id = p_def2mtzvpp_bas
    end select
 end function get_basis_id
@@ -1081,4 +1081,4 @@ pure function number_of_electrons(number, valence_minimal_basis) result(nel)
    end if
 end function number_of_electrons
 
-endmodule dftd3_gcp_param
+end module dftd3_gcp_param

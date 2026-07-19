@@ -20,18 +20,15 @@
 !>{!./include/s-dftd3.h!}
 !>```
 module dftd3_api
-   use iso_c_binding
-   use mctc_env, only : wp, error_type, fatal_error
-   use mctc_io_structure, only : structure_type, new
    use dftd3_cutoff, only : realspace_cutoff
+   use dftd3_damping, only : damping_param
    use dftd3_damping_cso, only : cso_damping_param, new_cso_damping
    use dftd3_damping_mzero, only : mzero_damping_param, new_mzero_damping
    use dftd3_damping_optimizedpower, only : optimizedpower_damping_param, &
       & new_optimizedpower_damping
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
-   use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_damping_z, only : z_damping_param, new_z_damping
-   use dftd3_damping, only : damping_param
+   use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_model, only : d3_model, new_d3_model
@@ -40,6 +37,9 @@ module dftd3_api
       & get_cso_damping, get_z_damping
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_version, only : get_dftd3_version
+   use iso_c_binding
+   use mctc_env, only : wp, error_type, fatal_error
+   use mctc_io_structure, only : structure_type, new
    implicit none
    private
 
@@ -948,11 +948,11 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
 
    if (present(c_gradient)) then
       gradient = c_gradient(:3, :mol%ptr%nat)
-   endif
+   end if
 
    if (present(c_sigma)) then
       sigma = c_sigma(:3, :3)
-   endif
+   end if
 
    cutoff = realspace_cutoff()
    if (allocated(disp%cutoff)) then
@@ -963,11 +963,11 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
 
    if (present(c_gradient)) then
       c_gradient(:3, :mol%ptr%nat) = gradient
-   endif
+   end if
 
    if (present(c_sigma)) then
       c_sigma(:3, :3) = sigma
-   endif
+   end if
 
 end subroutine get_dispersion_api
 
@@ -1137,11 +1137,11 @@ subroutine get_counterpoise_api(verror, vmol, vgcp, &
 
    if (present(c_gradient)) then
       gradient = c_gradient(:3, :mol%ptr%nat)
-   endif
+   end if
 
    if (present(c_gradient)) then
       sigma = c_sigma(:3, :3)
-   endif
+   end if
 
    cutoff = realspace_cutoff()
    if (allocated(gcp%cutoff)) then
@@ -1152,11 +1152,11 @@ subroutine get_counterpoise_api(verror, vmol, vgcp, &
 
    if (present(c_gradient)) then
       c_gradient(:3, :mol%ptr%nat) = gradient
-   endif
+   end if
 
    if (present(c_gradient)) then
       c_sigma(:3, :3) = sigma
-   endif
+   end if
 
 end subroutine get_counterpoise_api
 

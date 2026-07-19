@@ -30,7 +30,7 @@ module dftd3_ncoord
 contains
 
 
-!> Wrapper for geometric fractional coordination number 
+!> Wrapper for geometric fractional coordination number
 !> with standard exponential counting function.
 subroutine get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
 
