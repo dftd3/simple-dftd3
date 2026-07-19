@@ -119,18 +119,18 @@ subroutine get_lattice_points(periodic, lat, rthr, trans)
       vec = sqrt(sum(lat**2, 1))
       where(periodic)
          rep = ceiling(rthr / vec)
-      elsewhere
+      else where
          rep = 0
-      endwhere
+      end where
    else if (count(periodic) == 2) then
       call get_normals(lat, norms)
       where(spread(periodic, 2, 3))
          norms = lat
-      endwhere
+      end where
       call get_translations(norms, rthr, rep)
       where(.not.periodic)
          rep = 0
-      endwhere
+      end where
    end if
 
    allocate(trans(3, product(2*rep+1)))

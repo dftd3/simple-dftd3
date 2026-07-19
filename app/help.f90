@@ -25,7 +25,7 @@ module dftd3_app_help
 
    character(len=*), parameter :: prog_name = "s-dftd3"
 
-   character(len=*), parameter :: nl = new_line('a')
+   character(len=*), parameter :: nl = new_line("a")
 
    character(len=*), parameter :: run_options_text = &
       "-i,--input <format>      Hint for the format of the input file"//nl//&
@@ -161,7 +161,7 @@ subroutine header(unit)
    character(len=:), allocatable :: version_string
 
    call get_dftd3_version(string=version_string)
-   write(unit, '(a)') &
+   write(unit, "(a)") &
       "-----------------------------------", &
       " s i m p l e   D F T - D 3  v"// version_string, &
       "-----------------------------------", ""
@@ -174,7 +174,7 @@ subroutine version(unit)
    character(len=:), allocatable :: version_string
 
    call get_dftd3_version(string=version_string)
-   write(unit, '(a, *(1x, a))') &
+   write(unit, "(a, *(1x, a))") &
       & prog_name, "version", version_string
 
 end subroutine version

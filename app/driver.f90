@@ -16,8 +16,6 @@
 
 module dftd3_app_driver
    use, intrinsic :: iso_fortran_env, only : output_unit, input_unit
-   use mctc_env, only : wp, error_type, fatal_error
-   use mctc_io, only : structure_type, read_structure, filetype, get_filetype
    use dftd3, only : damping_param, d3_param, d3_model, &
       & get_dispersion, get_zero_damping, zero_damping_param, new_zero_damping, &
       & get_rational_damping, rational_damping_param, new_rational_damping, &
@@ -27,18 +25,20 @@ module dftd3_app_driver
       & get_cso_damping, cso_damping_param, new_cso_damping, &
       & new_d3_model, get_pairwise_dispersion, &
       & realspace_cutoff, get_lattice_points, get_coordination_number
+   use dftd3_app_cli, only : app_config, run_config, param_config, gcp_config, get_arguments
+   use dftd3_app_help, only : header
+   use dftd3_app_toml, only : param_database
+   use dftd3_citation, only : format_bibtex, is_citation_present, citation_type, &
+      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
+      & doi_dftd3_cso, doi_joss, same_citation
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_output, only : ascii_damping_param, ascii_atomic_radii, &
       & ascii_atomic_references, ascii_system_properties, ascii_energy_atom, &
       & ascii_results, ascii_pairwise, tagged_result, json_results, &
       & turbomole_gradient, turbomole_gradlatt, ascii_gcp_param
    use dftd3_utils, only : wrap_to_central_cell
-   use dftd3_citation, only : format_bibtex, is_citation_present, citation_type, &
-      & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
-      & doi_dftd3_cso, doi_joss, same_citation
-   use dftd3_app_help, only : header
-   use dftd3_app_cli, only : app_config, run_config, param_config, gcp_config, get_arguments
-   use dftd3_app_toml, only : param_database
+   use mctc_env, only : wp, error_type, fatal_error
+   use mctc_io, only : structure_type, read_structure, filetype, get_filetype
    implicit none
    private
 
@@ -213,10 +213,12 @@ subroutine run_driver(config, error)
    end if
 
    if (config%verbosity > 0) then
-      if (allocated(param)) &
-         call ascii_damping_param(output_unit, param, config%method)
-      if (config%gcp) &
-         call ascii_gcp_param(output_unit, mol, gcp)
+      if (allocated(param)) then
+        call ascii_damping_param(output_unit, param, config%method)
+      end if
+      if (config%gcp) then
+        call ascii_gcp_param(output_unit, mol, gcp)
+      end if
    end if
 
    if (allocated(param)) then
@@ -272,7 +274,7 @@ subroutine run_driver(config, error)
             & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3, param=param)
          close(unit)
          if (config%verbosity > 0) then
-            write(output_unit, '(a)') &
+            write(output_unit, "(a)") &
                & "[Info] JSON dump of results written to '"//config%json_output//"'"
          end if
       end if
@@ -282,16 +284,16 @@ subroutine run_driver(config, error)
    if (config%citation) then
       open(file=config%citation_output, newunit=unit)
       call format_bibtex(output, get_citation(doi_joss))
-      if (allocated(output)) write(unit, '(a)') output
+      if (allocated(output)) write(unit, "(a)") output
       if (.not.same_citation(citation, param_citation)) then
          call format_bibtex(output, citation)
-         if (allocated(output)) write(unit, '(a)') output
+         if (allocated(output)) write(unit, "(a)") output
       end if
       call format_bibtex(output, param_citation)
-      if (allocated(output)) write(unit, '(a)') output
+      if (allocated(output)) write(unit, "(a)") output
       close(unit)
       if (config%verbosity > 0) then
-         write(output_unit, '(a)') &
+         write(output_unit, "(a)") &
             & "[Info] Citation information written to '"//config%citation_output//"'"
       end if
    end if
@@ -317,9 +319,9 @@ subroutine property_calc(unit, mol, disp, verbosity)
 
    if (verbosity > 1) then
       call ascii_atomic_radii(unit, mol, disp)
-      write(unit, '(a)')
+      write(unit, "(a)")
       call ascii_atomic_references(unit, mol, disp)
-      write(unit, '(a)')
+      write(unit, "(a)")
    end if
 
    mref = maxval(disp%ref)
@@ -331,7 +333,7 @@ subroutine property_calc(unit, mol, disp, verbosity)
 
    if (verbosity > 0) then
       call ascii_system_properties(unit, mol, disp, cn, c6)
-      write(unit, '(a)')
+      write(unit, "(a)")
    end if
 
 end subroutine property_calc
@@ -354,7 +356,7 @@ subroutine param_driver(config, error)
       end if
       call ascii_damping_param(output_unit, param, config%method)
    else
-      write(output_unit, '(a, *(1x, g0))') "[Info] Found", size(db%records), &
+      write(output_unit, "(a, *(1x, g0))") "[Info] Found", size(db%records), &
          "damping parameters in '"//config%input//"'"
    end if
 
@@ -446,7 +448,7 @@ subroutine gcp_driver(config, error)
       call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma)
       close(unit)
       if (config%verbosity > 0) then
-         write(output_unit, '(a)') &
+         write(output_unit, "(a)") &
             & "[Info] JSON dump of results written to '"//config%json_output//"'"
       end if
    end if
@@ -470,10 +472,10 @@ subroutine tmer_writer(filename, energy, label, verbosity)
 
    if (verbosity > 0) then
       if (verbosity > 1) then
-         write(output_unit, '(a)') "[Info] Writing "//label//" energy to '"//filename//"'"
+         write(output_unit, "(a)") "[Info] Writing "//label//" energy to '"//filename//"'"
       end if
       open(file=filename, newunit=unit)
-      write(unit, '(f24.14)') energy
+      write(unit, "(f24.14)") energy
       close(unit)
    end if
 end subroutine tmer_writer
@@ -504,7 +506,7 @@ subroutine results_writer(filename, energy, gradient, sigma, label, verbosity)
    call tagged_result(unit, energy, gradient, sigma)
    close(unit)
    if (verbosity > 0) then
-      write(output_unit, '(a)') "[Info] "//label//" results written to '"//filename//"'"
+      write(output_unit, "(a)") "[Info] "//label//" results written to '"//filename//"'"
    end if
 end subroutine results_writer
 
@@ -537,10 +539,10 @@ subroutine turbomole_writer(mol, energy, gradient, sigma, verbosity, label)
       call turbomole_gradient(mol, "gradient", energy, gradient, stat)
       if (verbosity > 0) then
          if (stat == 0) then
-            write(output_unit, '(a)') &
+            write(output_unit, "(a)") &
                & "[Info] "//label//" gradient added to Turbomole gradient file"
          else
-            write(output_unit, '(a)') &
+            write(output_unit, "(a)") &
                & "[Warn] Could not add to Turbomole gradient file"
          end if
       end if
@@ -550,10 +552,10 @@ subroutine turbomole_writer(mol, energy, gradient, sigma, verbosity, label)
       call turbomole_gradlatt(mol, "gradlatt", energy, sigma, stat)
       if (verbosity > 0) then
          if (stat == 0) then
-            write(output_unit, '(a)') &
+            write(output_unit, "(a)") &
                & "[Info] "//label//" virial added to Turbomole gradlatt file"
          else
-            write(output_unit, '(a)') &
+            write(output_unit, "(a)") &
                & "[Warn] Could not add to Turbomole gradlatt file"
          end if
       end if

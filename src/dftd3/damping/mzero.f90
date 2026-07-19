@@ -67,12 +67,12 @@ subroutine new_mzero_damping(self, param)
    !> Parameters
    type(d3_param), intent(in) :: param
 
-   self%s6 = param%s6   
-   self%s8 = param%s8   
-   self%s9 = param%s9   
-   self%rs6 = param%rs6  
-   self%rs8 = param%rs8  
-   self%alp = param%alp  
+   self%s6 = param%s6
+   self%s8 = param%s8
+   self%s9 = param%s9
+   self%rs6 = param%rs6
+   self%rs8 = param%rs8
+   self%alp = param%alp
    self%bet = param%bet
 
 end subroutine new_mzero_damping

@@ -55,7 +55,7 @@ module dftd3_citation
       character(len=:), allocatable :: doi
    end type citation_type
 
-   character(len=*), parameter :: nl = new_line('a')
+   character(len=*), parameter :: nl = new_line("a")
 
    character(len=*), parameter :: &
       & doi_dftd3_0 = "10.1063/1.3382344", &
@@ -218,7 +218,7 @@ pure function get_citation(doi) result(citation)
          pages="154104", &
          year="2010" &
       )
-      
+
    case(doi_dftd3_bj)
       citation = new_citation( &
          doi=doi, &
@@ -233,7 +233,7 @@ pure function get_citation(doi) result(citation)
          pages="1456-1465", &
          year="2011" &
       )
-      
+
    case(doi_dftd3_m)
       citation = new_citation( &
          doi=doi, &
@@ -249,7 +249,7 @@ pure function get_citation(doi) result(citation)
          pages="2197-2203", &
          year="2016" &
       )
-      
+
    case(doi_dftd3_op)
       citation = new_citation( &
          doi=doi, &
@@ -292,7 +292,7 @@ pure function get_citation(doi) result(citation)
          pages="204118", &
          year="2024" &
       )
-      
+
    case(doi_gmtkn30_0)
       citation = new_citation( &
          doi=doi, &
@@ -308,7 +308,7 @@ pure function get_citation(doi) result(citation)
          pages="291-309", &
          year="2011" &
       )
-      
+
    case(doi_gmtkn30_bj)
       citation = new_citation( &
          doi=doi, &
@@ -323,7 +323,7 @@ pure function get_citation(doi) result(citation)
          pages="6670-6688", &
          year="2011" &
       )
-      
+
    case(doi_gmtkn55)
       citation = new_citation( &
          doi=doi, &
@@ -342,7 +342,7 @@ pure function get_citation(doi) result(citation)
          pages="32184-32215", &
          year="2017" &
       )
-      
+
    case(doi_dsd)
       citation = new_citation( &
          doi=doi, &
@@ -357,7 +357,7 @@ pure function get_citation(doi) result(citation)
          pages="2327-2344", &
          year="2013" &
       )
-      
+
    case(doi_dsdpbep86)
       citation = new_citation( &
          doi=doi, &
@@ -372,7 +372,7 @@ pure function get_citation(doi) result(citation)
          pages="20104-20107", &
          year="2011" &
       )
-      
+
    case(doi_drpa)
       citation = new_citation( &
          doi=doi, &
@@ -387,7 +387,7 @@ pure function get_citation(doi) result(citation)
          pages="4628-4638", &
          year="2021" &
       )
-      
+
    case(doi_revdsd)
       citation = new_citation( &
          doi=doi, &
@@ -403,7 +403,7 @@ pure function get_citation(doi) result(citation)
          pages="5129-5143", &
          year="2019" &
       )
-      
+
    case(doi_pw91_d3)
       citation = new_citation( &
          doi=doi, &
@@ -420,7 +420,7 @@ pure function get_citation(doi) result(citation)
          pages="E6101-E6110", &
          year="2015" &
       )
-      
+
    case(doi_r2scan_d4)
       citation = new_citation( &
          doi=doi, &
@@ -440,7 +440,7 @@ pure function get_citation(doi) result(citation)
          pages="061101", &
          year="2021" &
       )
-      
+
    case(doi_scan_d3)
       citation = new_citation( &
          doi=doi, &
@@ -456,7 +456,7 @@ pure function get_citation(doi) result(citation)
          pages="115144", &
          year="2016" &
       )
-      
+
    case(doi_pbeh3c)
       citation = new_citation( &
          doi=doi, &
@@ -472,7 +472,7 @@ pure function get_citation(doi) result(citation)
          pages="054107", &
          year="2015" &
       )
-      
+
    case(doi_hse3c)
       citation = new_citation( &
          doi=doi, &
@@ -488,7 +488,7 @@ pure function get_citation(doi) result(citation)
          pages="15519-15523", &
          year="2016" &
       )
-      
+
    case(doi_b973c)
       citation = new_citation( &
          doi=doi, &
@@ -503,7 +503,7 @@ pure function get_citation(doi) result(citation)
          pages="064104", &
          year="2018" &
       )
-      
+
    case(doi_hf3c)
       citation = new_citation( &
          doi=doi, &
@@ -517,7 +517,7 @@ pure function get_citation(doi) result(citation)
          pages="1672-1685", &
          year="2013" &
       )
-      
+
    case(doi_gcp)
       citation = new_citation( &
          doi=doi, &
@@ -531,7 +531,7 @@ pure function get_citation(doi) result(citation)
          pages="154101", &
          year="2012" &
       )
-      
+
    case(doi_d3pbc)
       citation = new_citation( &
          doi=doi, &
@@ -549,7 +549,7 @@ pure function get_citation(doi) result(citation)
          pages="3414", &
          year="2011" &
       )
-      
+
    case(doi_r2scan_hyb)
       citation = new_citation( &
          doi=doi, &
@@ -564,7 +564,7 @@ pure function get_citation(doi) result(citation)
          pages="134105", &
          year="2022" &
       )
-      
+
    case(doi_r2scan_dhdf)
       citation = new_citation( &
          doi=doi, &
@@ -579,7 +579,7 @@ pure function get_citation(doi) result(citation)
          pages="224103", &
          year="2023" &
       )
-      
+
    case(doi_minnesota_d3)
       citation = new_citation( &
          doi=doi, &
@@ -593,7 +593,7 @@ pure function get_citation(doi) result(citation)
          pages="3891-3896", &
          year="2015" &
       )
-      
+
    case(doi_b97m_d3)
       citation = new_citation( &
          doi=doi, &
@@ -608,7 +608,7 @@ pure function get_citation(doi) result(citation)
          pages="5725-5738", &
          year="2018" &
       )
-      
+
    case(doi_wb97x_d3)
       citation = new_citation( &
          doi=doi, &
@@ -624,7 +624,7 @@ pure function get_citation(doi) result(citation)
          pages="263-272", &
          year="2013" &
       )
-      
+
    case(doi_hse06_d3)
       citation = new_citation( &
          doi=doi, &
@@ -638,7 +638,7 @@ pure function get_citation(doi) result(citation)
          pages="7615-7621", &
          year="2014" &
       )
-      
+
    case(doi_joss)
       citation = new_citation( &
          doi=doi, &

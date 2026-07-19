@@ -16,17 +16,17 @@
 
 module dftd3
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
-   use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
-   use dftd3_ncoord, only : get_coordination_number
    use dftd3_damping, only : damping_param
    use dftd3_damping_cso, only : cso_damping_param, new_cso_damping
    use dftd3_damping_mzero, only : mzero_damping_param, new_mzero_damping
    use dftd3_damping_optimizedpower, only : optimizedpower_damping_param, &
       & new_optimizedpower_damping
    use dftd3_damping_rational, only : rational_damping_param, new_rational_damping
-   use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_damping_z, only : z_damping_param, new_z_damping
+   use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
+   use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
    use dftd3_model, only : d3_model, new_d3_model
+   use dftd3_ncoord, only : get_coordination_number
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
       & get_cso_damping, get_z_damping

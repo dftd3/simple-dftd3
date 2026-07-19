@@ -15,12 +15,12 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_dftd3
+   use dftd3
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type
    use mstore, only : get_structure
-   use dftd3
    implicit none
    private
 
@@ -158,7 +158,7 @@ subroutine test_numgrad(error, mol, param, cutoff)
 
    if (any(abs(gradient - numgrad) > thr2)) then
       call test_failed(error, "Gradient of dispersion energy does not match")
-      print'(3es21.14)', gradient-numgrad
+      print"(3es21.14)", gradient-numgrad
    end if
 
 end subroutine test_numgrad
@@ -226,7 +226,7 @@ subroutine test_numsigma(error, mol, param)
 
    if (any(abs(sigma - numsigma) > thr2)) then
       call test_failed(error, "Strain derivatives do not match")
-      print'(3es21.14)', sigma-numsigma
+      print"(3es21.14)", sigma-numsigma
    end if
 
 end subroutine test_numsigma
@@ -1009,7 +1009,7 @@ subroutine test_pbed3bj_actinides(error)
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 
-   ! Molecular structure data 
+   ! Molecular structure data
    mol%nat = 17
    mol%nid = 17
    mol%id = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, &

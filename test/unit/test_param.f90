@@ -15,12 +15,12 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_param
+   use dftd3
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type
    use mstore, only : get_structure
-   use dftd3
    implicit none
    private
 
@@ -87,7 +87,7 @@ subroutine test_dftd3_gen(error, mol, param, ref)
 
    call check(error, energy, ref, thr=thr)
    if (allocated(error)) then
-      print '(ES23.16)', energy
+      print "(ES23.16)", energy
    end if
 
 end subroutine test_dftd3_gen

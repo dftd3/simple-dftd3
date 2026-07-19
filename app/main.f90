@@ -16,9 +16,9 @@
 
 program dftd3_main
    use, intrinsic :: iso_fortran_env, only : output_unit, error_unit
-   use mctc_env, only : error_type
    use dftd3_app_cli, only : app_config, get_arguments
    use dftd3_app_driver, only : app_driver
+   use mctc_env, only : error_type
    implicit none
    class(app_config), allocatable :: config
    type(error_type), allocatable :: error
@@ -43,7 +43,7 @@ subroutine handle_error(error)
 
    if (allocated(error)) then
       if (error%stat == 0) then
-         write(output_unit, '(a)') error%message
+         write(output_unit, "(a)") error%message
          call sys_exit(0)
       else
          write(error_unit, '("[Error]", 1x, a)') error%message
