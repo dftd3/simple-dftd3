@@ -99,12 +99,20 @@ array([[-0.        , -0.        ,  0.00009572],
        [-0.        ,  0.00004060, -0.00004786]])
 """
 
-try:
-    import ase
-except ModuleNotFoundError:
-    raise ModuleNotFoundError("This submodule requires ASE installed")
-
 from typing import List, Optional
+
+try:
+    from ase.calculators.calculator import (
+        Calculator,
+        InputError,
+        CalculationFailed,
+        all_changes,
+    )
+    from ase.calculators.mixing import SumCalculator
+    from ase.atoms import Atoms
+    from ase.units import Hartree, Bohr
+except ModuleNotFoundError as e:
+    raise ModuleNotFoundError("This submodule requires ASE installed") from e
 
 from .interface import (
     DispersionModel,
@@ -117,15 +125,6 @@ from .interface import (
     CSODampingParam,
     ZDampingParam,
 )
-from ase.calculators.calculator import (
-    Calculator,
-    InputError,
-    CalculationFailed,
-    all_changes,
-)
-from ase.calculators.mixing import SumCalculator
-from ase.atoms import Atoms
-from ase.units import Hartree, Bohr
 
 
 _damping_param = {

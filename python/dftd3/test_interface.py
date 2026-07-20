@@ -281,7 +281,9 @@ def test_b97d_d3_op(atm: bool, model: DispersionModel) -> None:
 
 def test_pbe_d3_z(atm: bool, model: DispersionModel) -> None:
     ref = -0.005741490224533363 if atm else -0.005841389688523762
-    res = model.get_dispersion(ZDampingParam(a1=200770.0, s9=1.0 if atm else 0.0), grad=False)
+    res = model.get_dispersion(
+        ZDampingParam(a1=200770.0, s9=1.0 if atm else 0.0), grad=False
+    )
     assert approx(res.get("energy")) == ref
 
 

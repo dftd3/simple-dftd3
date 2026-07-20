@@ -16,6 +16,6 @@
 """Python API for the DFT-D3 dispersion model"""
 
 # make sure we have a CFFI available
-import cffi
+import cffi  # noqa
 
 __version__ = "1.4.0"

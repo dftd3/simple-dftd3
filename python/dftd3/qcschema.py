@@ -368,9 +368,7 @@ def run_qcschema(input_data):
 
     if schema_version == 1:
         return qcel_v1.AtomicResult(**ret_data)
-    
+
     if "error" in ret_data:
-        return qcel_v2.FailedOperation(
-            input_data=atomic_input, error=ret_data["error"]
-        )
+        return qcel_v2.FailedOperation(input_data=atomic_input, error=ret_data["error"])
     return qcel_v2.AtomicResult(**ret_data)
