@@ -684,6 +684,9 @@ pure function get_citation(doi) result(citation)
          & author_name("Klaas J. H. Giesbertz"), &
          & author_name("Amir Karton"), &
          & author_name("Deniz Gunceler"), &
+         & author_name("Stefano Battaglia"), &
+         & author_name("Gregor N. C. Simm"), &
+         & author_name("P. Bern{\'a}t Szab{\'o}"), &
          & author_name("Megan Stanley"), &
          & author_name("Wessel P. Bruinsma"), &
          & author_name("Lin Huang"), &
