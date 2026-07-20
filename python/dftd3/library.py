@@ -285,7 +285,9 @@ def new_z_damping(
 
 def load_z_damping(method: str, atm: bool) -> ParamHandle:
     """Load Z damping parameters from internal storage"""
-    return ParamHandle.with_gc(error_check(lib.dftd3_load_z_damping)(_char(method), atm))
+    return ParamHandle.with_gc(
+        error_check(lib.dftd3_load_z_damping)(_char(method), atm)
+    )
 
 
 def update_structure(
