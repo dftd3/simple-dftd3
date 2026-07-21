@@ -22,6 +22,7 @@ module dftd3_damping_rational
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
+   private
 
    public :: rational_damping_param, new_rational_damping
 

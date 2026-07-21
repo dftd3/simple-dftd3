@@ -22,6 +22,7 @@ program tester
    use test_dftd3, only : collect_dftd3
    use test_gcp, only : collect_gcp
    use test_model, only : collect_model
+   use test_output, only : collect_output
    use test_pairwise, only : collect_pairwise
    use test_param, only : collect_param
    use test_periodic_1d, only : collect_periodic_1d
@@ -47,6 +48,7 @@ program tester
       & new_testsuite("periodic_3d", collect_periodic_3d), &
       & new_testsuite("periodic_atm", collect_periodic_atm), &
       & new_testsuite("gcp", collect_gcp), &
+      & new_testsuite("output", collect_output), &
       & new_testsuite("regression", collect_regression) &
       & ]
 

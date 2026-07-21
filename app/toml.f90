@@ -302,6 +302,8 @@ subroutine get(self, param, method, damping)
             call new_cso_damping(tmp, record%param)
             call move_alloc(tmp, param)
          end block
+      case default
+         continue
       end select
    end associate
 end subroutine get

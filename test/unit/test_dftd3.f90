@@ -15,7 +15,11 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_dftd3
-   use dftd3
+   use dftd3, only : get_dispersion, realspace_cutoff, damping_param, d3_param, &
+      & cso_damping_param, new_cso_damping, mzero_damping_param, new_mzero_damping, &
+      & optimizedpower_damping_param, new_optimizedpower_damping, &
+      & rational_damping_param, new_rational_damping, zero_damping_param, &
+      & new_zero_damping, z_damping_param, new_z_damping, d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -171,10 +175,10 @@ subroutine test_pbed3bjatm_smooth_cutoff_grad(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
-   type(realspace_cutoff) :: cutoff = realspace_cutoff(&
+   type(realspace_cutoff), parameter :: cutoff = realspace_cutoff(&
       & cn=40.0_wp, disp2=8.0_wp, disp3=8.0_wp, width2=4.0_wp, width3=4.0_wp)
 
    call get_structure(mol, "MB16-43", "01")
@@ -240,7 +244,7 @@ subroutine test_pbed3bj_mb01(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 
@@ -258,7 +262,7 @@ subroutine test_b97d3bj_mb02(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.5545_wp, s8 = 2.2609_wp, a2 = 3.2297_wp)
 
@@ -276,7 +280,7 @@ subroutine test_tpssd3bj_mb03(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4535_wp, s8 = 1.9435_wp, a2 = 4.4752_wp)
 
@@ -294,7 +298,7 @@ subroutine test_pwpb95d3bj_mb04(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 0.82_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.0000_wp, s8 = 0.2904_wp, a2 = 7.3141_wp)
 
@@ -312,7 +316,7 @@ subroutine test_b2plypd3bj_mb05(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 0.64_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.3065_wp, s8 = 0.9147_wp, a2 = 5.0570_wp)
 
@@ -330,7 +334,7 @@ subroutine test_pw6b95d3bj_mb06(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.2076_wp, s8 = 0.7257_wp, a2 = 6.3750_wp)
 
@@ -348,7 +352,7 @@ subroutine test_olypd3bj_mb07(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.5299_wp, s8 = 2.6205_wp, a2 = 2.8065_wp)
 
@@ -366,7 +370,7 @@ subroutine test_pbe0d3bj_mb08(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4145_wp, s8 = 1.2177_wp, a2 = 4.8593_wp)
 
@@ -384,7 +388,7 @@ subroutine test_rpbed3zero_mb09(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 0.872_wp, s8 = 0.514_wp)
 
@@ -402,7 +406,7 @@ subroutine test_b2gpplypd3zero_mb10(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 0.56_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.586_wp, s8 = 0.760_wp)
 
@@ -420,7 +424,7 @@ subroutine test_ssbd3zero_mb11(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.215_wp, s8 = 0.663_wp)
 
@@ -438,7 +442,7 @@ subroutine test_b1b95d3zero_mb12(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.613_wp, s8 = 1.868_wp)
 
@@ -456,7 +460,7 @@ subroutine test_m06ld3zero_mb13(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.581_wp, s8 = 0.000_wp)
 
@@ -474,7 +478,7 @@ subroutine test_tpsshd3zero_mb14(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.223_wp, s8 = 1.219_wp)
 
@@ -492,7 +496,7 @@ subroutine test_hfd3zero_mb15(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.158_wp, s8 = 1.746_wp)
 
@@ -510,7 +514,7 @@ subroutine test_camb3lypd3zero_mb16(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.378_wp, s8 = 1.217_wp)
 
@@ -528,7 +532,7 @@ subroutine test_dsdblypd3bjatm_mb17(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 0.5_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.0_wp, s8 = 0.2130_wp, a2 = 6.0519_wp)
 
@@ -546,7 +550,7 @@ subroutine test_mpwlypd3bjatm_mb18(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.4831_wp, s8 = 2.0077_wp, a2 = 3.5043_wp)
 
@@ -564,7 +568,7 @@ subroutine test_tpss0d3bjatm_mb19(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.3768_wp, s8 = 1.2576_wp, a2 = 4.5865_wp)
 
@@ -582,7 +586,7 @@ subroutine test_bpbed3bjatm_mb20(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.4567_wp, s8 = 4.0728_wp, a2 = 4.3908_wp)
 
@@ -600,7 +604,7 @@ subroutine test_pwb6kd3bjatm_mb21(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.1865_wp, s8 = 0.9383_wp, a2 = 7.7627_wp)
 
@@ -618,7 +622,7 @@ subroutine test_lcwpbed3bjatm_mb22(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.3919_wp, s8 = 1.8541_wp, a2 = 5.0897_wp)
 
@@ -636,7 +640,7 @@ subroutine test_pw1pwd3bjatm_mb23(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.3807_wp, s8 = 2.3363_wp, a2 = 5.8844_wp)
 
@@ -654,7 +658,7 @@ subroutine test_mpw1b95d3bjatm_mb24(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.1955_wp, s8 = 1.0508_wp, a2 = 6.4177_wp)
 
@@ -672,7 +676,7 @@ subroutine test_blypd3zeroatm_mb25(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.094_wp, s8 = 1.682_wp)
 
@@ -690,7 +694,7 @@ subroutine test_revpbed3zeroatm_mb26(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 0.923_wp, s8 = 1.010_wp)
 
@@ -708,7 +712,7 @@ subroutine test_hse06d3zeroatm_mb27(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.129_wp, s8 = 0.109_wp)
 
@@ -726,7 +730,7 @@ subroutine test_bmkd3zeroatm_mb28(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.931_wp, s8 = 2.168_wp)
 
@@ -744,7 +748,7 @@ subroutine test_m06d3zeroatm_mb29(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.325_wp, s8 = 0.000_wp)
 
@@ -762,7 +766,7 @@ subroutine test_b3lypd3zeroatm_mb30(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.261_wp, s8 = 1.105_wp)
 
@@ -780,7 +784,7 @@ subroutine test_bpd3zeroatm_mb31(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.139_wp, s8 = 1.683_wp)
 
@@ -798,7 +802,7 @@ subroutine test_m05d3zeroatm_mb32(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.355_wp, s8 = 1.279_wp)
 
@@ -816,7 +820,7 @@ subroutine test_pbed3zerom_mb33(error)
 
    type(structure_type) :: mol
    type(mzero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 2.340218_wp, s8 = 0.0_wp, bet = 0.129434_wp)
 
@@ -834,7 +838,7 @@ subroutine test_blypd3zerom_mb34(error)
 
    type(structure_type) :: mol
    type(mzero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.279637_wp, s8 = 1.841686_wp, bet = 0.014370_wp)
 
@@ -852,7 +856,7 @@ subroutine test_b97dd3zerom_mb35(error)
 
    type(structure_type) :: mol
    type(mzero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.338153_wp, s8 = 1.532981_wp, bet = 0.013988_wp)
 
@@ -870,7 +874,7 @@ subroutine test_lcwpbed3zerom_mb36(error)
 
    type(structure_type) :: mol
    type(mzero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.366361_wp, s8 = 1.280619_wp, bet = 0.003160_wp)
 
@@ -888,7 +892,7 @@ subroutine test_b97hd3op_mb37(error)
 
    type(structure_type) :: mol
    type(optimizedpower_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 0.97388_wp, s9 = 1.0_wp, alp = 14.0_wp, bet = 6.0_wp, &
       & a1 = 0.150_wp, s8 = 0.0_wp, a2 = 4.25_wp)
 
@@ -908,7 +912,7 @@ subroutine test_tpsshd3op_mb38(error)
 
    type(structure_type) :: mol
    type(optimizedpower_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, bet = 8.0_wp, &
       & a1 = 0.575_wp, s8 = 0.43185_wp, a2 = 3.00_wp)
 
@@ -928,7 +932,7 @@ subroutine test_b3lypd3cso_mb01(error)
 
    type(structure_type) :: mol
    type(cso_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.86_wp, a2 = 2.5_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
 
@@ -948,7 +952,7 @@ subroutine test_pbed3cso_mb02(error)
 
    type(structure_type) :: mol
    type(cso_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.24_wp, a2 = 2.5_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
 
@@ -967,7 +971,7 @@ subroutine test_pbed3z_mb39(error)
 
    type(structure_type) :: mol
    type(z_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 200770.0_wp, a2 = 0.0_wp, rs6 = 0.0_wp, rs8 = 6.25_wp)
 
@@ -987,7 +991,7 @@ subroutine test_pbed3z_sensitive_grad(error)
 
    type(structure_type) :: mol
    type(z_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s8 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 1.0_wp, a2 = 0.0_wp)
 
@@ -1005,7 +1009,7 @@ subroutine test_pbed3bj_actinides(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 

@@ -18,6 +18,7 @@ module dftd3_utils
    use mctc_env, only : wp
    use mctc_io_math, only : matinv_3x3
    implicit none
+   private
 
    public :: wrap_to_central_cell
 

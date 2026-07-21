@@ -18,7 +18,7 @@ module test_model
    use dftd3, only : rational_damping_param, get_dispersion, realspace_cutoff
    use dftd3_cutoff, only : get_lattice_points
    use dftd3_data, only : get_vdw_rad, get_r4r2_val
-   use dftd3_model
+   use dftd3_model, only : d3_model, new_d3_model
    use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
@@ -65,7 +65,7 @@ subroutine test_gw_gen(error, mol, ref)
    type(error_type), allocatable, intent(out) :: error
 
    !> Molecular structure data
-   type(structure_type) :: mol
+   type(structure_type), intent(in) :: mol
 
    !> Reference Gaussian weights
    real(wp), intent(in) :: ref(:, :)
@@ -102,7 +102,7 @@ subroutine test_dgw_gen(error, mol)
    type(error_type), allocatable, intent(out) :: error
 
    !> Molecular structure data
-   type(structure_type) :: mol
+   type(structure_type), intent(in) :: mol
 
    integer :: iat, mref
    type(d3_model) :: d3

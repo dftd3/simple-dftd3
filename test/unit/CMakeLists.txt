@@ -26,6 +26,7 @@ set(
   "periodic_3d"
   "periodic_atm"
   "gcp"
+  "output"
   "regression"
 )
 set(

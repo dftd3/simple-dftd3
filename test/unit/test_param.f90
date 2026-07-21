@@ -15,7 +15,13 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_param
-   use dftd3
+   use dftd3, only : get_dispersion, realspace_cutoff, damping_param, d3_param, &
+      & get_rational_damping, get_zero_damping, get_mrational_damping, &
+      & get_mzero_damping, get_optimizedpower_damping, get_cso_damping, get_z_damping, &
+      & cso_damping_param, new_cso_damping, mzero_damping_param, new_mzero_damping, &
+      & optimizedpower_damping_param, new_optimizedpower_damping, &
+      & rational_damping_param, new_rational_damping, zero_damping_param, &
+      & new_zero_damping, z_damping_param, new_z_damping, d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed

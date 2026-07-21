@@ -485,9 +485,15 @@ end subroutine srb_deriv
 !* Inspired by mopac7.0
 !******************************************************************************
 subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
+   real(wp), intent(in) :: r
+   integer, intent(in) :: iat, jat
+   integer, intent(in) :: iz(:)
+   real(wp), intent(in) :: xza, xzb
+   real(wp), intent(out) :: ovl
+
    integer :: ii, shell(72)
    logical :: debug
-   real(wp) :: za, zb, R, ovl, ax, bx, norm, R05
+   real(wp) :: za, zb, ax, bx, norm, R05
    integer :: na, nb
    real(wp) :: xx
    data shell/                 &
@@ -501,8 +507,6 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
    !         k-rn , no f-elements
             54*3/
    ! ...
-   real(wp) :: xza, xzb
-   integer :: iat, jat, iz(*)
 
    za = xza
    zb = xzb
@@ -580,6 +584,8 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
          norm = sqrt((ZA*ZB*R*R)**7)/480.0d0
          ovl = norm*(A6(ax)*Bint(bx, 0)-3.0d0*(A4(ax)*Bint(bx, 2) &
             & -A2(ax)*Bint(bx, 4))-A0(ax)*Bint(bx, 6))/3.0_wp
+      case default
+         error stop "invalid shell combination in ssovl"
       end select
    else ! different elements
       select case (ii)
@@ -634,6 +640,8 @@ subroutine ssovl(r, iat, jat, iz, xza, xzb, ovl)
       case(9) ! <3s|3>
          norm = sqrt((ZA*ZB*R*R)**7)/1440.0d0
          ovl = norm*(A6(ax)*B0(bx)-3.0d0*(A4(ax)*B2(bx)-A2(ax)*B4(bx))-A0(ax)*B6(bx))
+      case default
+         error stop "invalid shell combination in ssovl"
       end select
    end if
 end subroutine ssovl
@@ -851,7 +859,8 @@ end function bint
 ! faculty function
 integer(wp) function fact(N)
 implicit none
-integer :: j, n
+integer, intent(in) :: n
+integer :: j
 fact = 1
 do j = 2, n
   fact = fact*j
@@ -870,9 +879,15 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    ! za  = slater exponent atom A
    ! zb  = slater exponent atom B
    ! R   = distance between atom A and B
+   real(wp), intent(in) :: r
+   integer, intent(in) :: iat, jat
+   integer, intent(in) :: iz(:)
+   real(wp), intent(in) :: xza, xzb
+   real(wp), intent(out) :: g
+
    integer :: ii, shell(72)
    logical :: debug
-   real(wp) :: ax, bx, R05, za, zb, R
+   real(wp) :: ax, bx, R05, za, zb
    integer :: na, nb
    data shell/                 &
    !          h, he
@@ -885,11 +900,9 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    !         k-rn , no f-elements
             54*3/
    ! ...
-   real(wp) :: g, Fa, Fb
+   real(wp) :: Fa, Fb
    !--------------------- set exponents ---------------------------------------
-   real(wp) :: xza, xzb
    real(wp) :: xx
-   integer :: iat, jat, iz(*)
    logical :: lsame
 
    za = xza
@@ -952,6 +965,8 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
          end if
       case(9)
          call g3s3s(za, zb, Fa, Fb, R, g, lsame)
+      case default
+         error stop "invalid shell combination in gsovl"
       end select
    else ! different elements
       lsame = .false.
@@ -989,6 +1004,8 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
          end if
       case(9) ! <3s|3>
          call g3s3s(za, zb, Fa, Fb, R, g, lsame)
+      case default
+         error stop "invalid shell combination in gsovl"
       end select
    end if
 
@@ -1005,9 +1022,10 @@ subroutine g1s1s(za, zb, Fa, Fb, R, g, sameElement)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) :: za, zb, Fa, Fb
-   real(wp) :: g, R
-   logical :: sameElement
+   real(wp), intent(in) :: za, zb, Fa, Fb
+   real(wp), intent(in) :: R
+   real(wp), intent(out) :: g
+   logical, intent(in) :: sameElement
 
    if(sameElement) then
       t1 = za ** 2
@@ -1059,10 +1077,13 @@ subroutine g2s1s(za, zb, Fa, Fb, R, g, switch, lsame)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) :: za, zb, Fa, Fb
-   real(wp) :: g, R, norm
-   logical :: switch
-   logical :: lsame
+   real(wp), intent(in) :: za, zb, Fa
+   real(wp), intent(inout) :: Fb
+   real(wp), intent(in) :: R
+   real(wp), intent(out) :: g
+   real(wp) :: norm
+   logical, intent(in) :: switch
+   logical, intent(in) :: lsame
    norm = (1d0/24d0)*sqrt(za**3*zb**5*3d0)
 
    if(switch) then
@@ -1123,9 +1144,11 @@ subroutine g2s2s(za, zb, Fa, Fb, R, g, SameElement)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) :: za, zb, Fa, Fb
-   real(wp) :: g, R, norm
-   logical :: SameElement
+   real(wp), intent(in) :: za, zb, Fa, Fb
+   real(wp), intent(in) :: R
+   real(wp), intent(out) :: g
+   real(wp) :: norm
+   logical, intent(in) :: SameElement
 
    norm = 1d0/(16d0*3d0)*SQRT((ZA*ZB)**5)
 
@@ -1191,10 +1214,13 @@ subroutine g1s3s(za, zb, Fa, Fb, R, g, switch, lsame)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) :: za, zb, Fa, Fb
-   real(wp) :: g, R, norm
-   logical :: switch
-   logical :: lsame
+   real(wp), intent(in) :: za, zb, Fa
+   real(wp), intent(inout) :: Fb
+   real(wp), intent(in) :: R
+   real(wp), intent(out) :: g
+   real(wp) :: norm
+   logical, intent(in) :: switch
+   logical, intent(in) :: lsame
 
    if(switch) Fb = -Fb
 
@@ -1263,10 +1289,13 @@ subroutine g2s3s(za, zb, Fa, Fb, R, g, switch, lsame)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) :: za, zb, Fa, Fb
-   real(wp) :: g, R, norm
-   logical :: switch
-   logical :: lsame
+   real(wp), intent(in) :: za, zb, Fa
+   real(wp), intent(inout) :: Fb
+   real(wp), intent(in) :: R
+   real(wp), intent(out) :: g
+   real(wp) :: norm
+   logical, intent(in) :: switch
+   logical, intent(in) :: lsame
    norm = sqrt((za**5)*(zb**7)/7.5_wp)/96.0d0
 
    if(switch) Fb = -Fb
@@ -1351,9 +1380,11 @@ subroutine g3s3s(za, zb, Fa, Fb, R, g, SameElement)
    ! derivative of explicit integral expression
    ! using maple
    implicit real(wp) (t)
-   real(wp) :: za, zb, Fa, Fb
-   real(wp) :: g, R, norm
-   logical :: SameElement
+   real(wp), intent(in) :: za, zb, Fa, Fb
+   real(wp), intent(in) :: R
+   real(wp), intent(out) :: g
+   real(wp) :: norm
+   logical, intent(in) :: SameElement
 
    norm = sqrt((ZA*ZB)**7)/1440.0d0
 

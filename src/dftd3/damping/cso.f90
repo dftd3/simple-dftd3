@@ -22,6 +22,7 @@ module dftd3_damping_cso
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
+   private
 
    public :: cso_damping_param, new_cso_damping
 

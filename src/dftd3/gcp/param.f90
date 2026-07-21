@@ -570,6 +570,8 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          eta_ = 1.4022_wp
          param%alpha = 0.8055_wp
          param%beta = 1.3000_wp
+      case default
+         continue
       end select
 
    case(p_sv_p_bas)
@@ -906,6 +908,8 @@ subroutine get_gcp_param(param, mol, method, basis, eta)
          param%damp = .true.
       end if
 
+   case default
+      continue
    end select
    if (allocated(nbas)) then
       param%xv = nbas - 0.5_wp * nel
