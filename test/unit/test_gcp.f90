@@ -16,7 +16,7 @@
 
 module test_gcp
    use dftd3_cutoff, only : realspace_cutoff
-   use dftd3_gcp
+   use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
    use dftd3_output, only : ascii_gcp_param
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &

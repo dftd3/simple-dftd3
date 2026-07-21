@@ -22,6 +22,7 @@ module dftd3_damping_optimizedpower
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
+   private
 
    public :: optimizedpower_damping_param, new_optimizedpower_damping
 

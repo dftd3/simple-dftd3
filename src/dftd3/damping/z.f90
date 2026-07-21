@@ -22,6 +22,7 @@ module dftd3_damping_z
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
+   private
 
    public :: z_damping_param, new_z_damping
 

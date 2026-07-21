@@ -15,7 +15,9 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_periodic_atm
-   use dftd3
+   use dftd3, only : get_dispersion, realspace_cutoff, damping_param, d3_param, &
+      & rational_damping_param, new_rational_damping, zero_damping_param, &
+      & new_zero_damping, d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -342,7 +344,7 @@ subroutine test_hsesold3bjatm_oxacb(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.4650_wp, s8 = 2.9215_wp, a2 = 6.2003_wp)
 
@@ -360,7 +362,7 @@ subroutine test_pwggad3bjatm_pyrazine(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.2211_wp, s8 = 2.6910_wp, a2 = 6.7278_wp)
 
@@ -378,7 +380,7 @@ subroutine test_b3pw91d3zeroatm_urea(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.176_wp, s8 = 1.775_wp)
 
@@ -396,7 +398,7 @@ subroutine test_rpbed3zeroatm_hexamine(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 0.872_wp, s8 = 0.514_wp)
 

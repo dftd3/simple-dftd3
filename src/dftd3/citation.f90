@@ -708,6 +708,8 @@ pure function get_citation(doi) result(citation)
          pages="2506.14665", &
          year="2025" &
       )
+   case default
+      continue
    end select
 end function get_citation
 

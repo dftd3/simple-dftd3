@@ -20,6 +20,8 @@
 !>{!./include/s-dftd3.h!}
 !>```
 module dftd3_api
+   use, intrinsic :: iso_c_binding, only : c_associated, c_bool, c_char, c_double, &
+      & c_f_pointer, c_int, c_loc, c_null_char, c_null_ptr, c_ptr
    use dftd3_cutoff, only : realspace_cutoff
    use dftd3_damping, only : damping_param
    use dftd3_damping_cso, only : cso_damping_param, new_cso_damping
@@ -37,7 +39,6 @@ module dftd3_api
       & get_cso_damping, get_z_damping
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_version, only : get_dftd3_version
-   use iso_c_binding
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io_structure, only : structure_type, new
    implicit none

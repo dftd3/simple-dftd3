@@ -15,7 +15,8 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_periodic_1d
-   use dftd3
+   use dftd3, only : get_dispersion, realspace_cutoff, damping_param, d3_param, &
+      & rational_damping_param, new_rational_damping, d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -126,7 +127,7 @@ subroutine test_revpbed3bj_1d(error)
       & shape(lattice))
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.5238_wp, s8 = 2.3550_wp, a2 = 3.5016_wp)
 

@@ -17,6 +17,7 @@
 module dftd3_cutoff
    use mctc_env, only : wp
    implicit none
+   private
 
    public :: realspace_cutoff, get_lattice_points, smooth_cutoff
 

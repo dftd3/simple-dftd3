@@ -37,7 +37,7 @@ end subroutine get_dispersion_for_reaction
 subroutine scan_param_for_reaction(error, reaction, method, dft_energy)
    use dftd3, only : d3_param
    use mctc_env, only : error_type, fatal_error
-   type(error_type), allocatable :: error
+   type(error_type), allocatable, intent(out) :: error
    type(reaction_type), intent(in) :: reaction
    character(*), intent(in) :: method
    real(wp), intent(in), optional :: dft_energy

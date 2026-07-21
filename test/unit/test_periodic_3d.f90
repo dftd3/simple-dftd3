@@ -15,7 +15,9 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_periodic_3d
-   use dftd3
+   use dftd3, only : get_dispersion, realspace_cutoff, damping_param, d3_param, &
+      & rational_damping_param, new_rational_damping, zero_damping_param, &
+      & new_zero_damping, d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -346,7 +348,7 @@ subroutine test_pbed3bj_acetic(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 
@@ -364,7 +366,7 @@ subroutine test_pbesold3bj_adaman(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4466_wp, s8 = 2.9491_wp, a2 = 6.1742_wp)
 
@@ -382,7 +384,7 @@ subroutine test_tpssd3bj_ammonia(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4535_wp, s8 = 1.9435_wp, a2 = 4.4752_wp)
 
@@ -400,7 +402,7 @@ subroutine test_hse06d3bj_anthracene(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.383_wp, s8 = 2.310_wp, a2 = 5.685_wp)
 
@@ -418,7 +420,7 @@ subroutine test_blypd3zero_benzene(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.094_wp, s8 = 1.682_wp)
 
@@ -436,7 +438,7 @@ subroutine test_m06ld3zero_cyanamide(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.581_wp, s8 = 0.000_wp)
 
@@ -454,7 +456,7 @@ subroutine test_rpw86pbed3zero_co2(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.224_wp, s8 = 0.901_wp)
 
@@ -472,7 +474,7 @@ subroutine test_revssbd3zero_cytosine(error)
 
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, rs8 = 1.0_wp, &
       & rs6 = 1.221_wp, s8 = 0.560_wp)
 

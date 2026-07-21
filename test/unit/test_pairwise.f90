@@ -15,7 +15,9 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_pairwise
-   use dftd3
+   use dftd3, only : get_dispersion, get_pairwise_dispersion, realspace_cutoff, &
+      & damping_param, mzero_damping_param, optimizedpower_damping_param, &
+      & rational_damping_param, zero_damping_param, d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -100,7 +102,7 @@ subroutine test_pbed3_bj_mb01(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
 
@@ -116,7 +118,7 @@ subroutine test_b97d3_bj_atm_mb02(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.5545_wp, s8 = 2.2609_wp, a2 = 3.2297_wp)
 
@@ -132,10 +134,10 @@ subroutine test_pbed3_bj_atm_smooth(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.4289_wp, s8 = 0.7875_wp, a2 = 4.4407_wp)
-   type(realspace_cutoff) :: smooth_cutoff = &
+   type(realspace_cutoff), parameter :: smooth_cutoff = &
       & realspace_cutoff(cn=30_wp, disp2=8.0_wp, disp3=8.0_wp, width2=4.0_wp, width3=4.0_wp)
 
    call get_structure(mol, "MB16-43", "01")
@@ -150,7 +152,7 @@ subroutine test_tpssd3_bj_atm_ammonia(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(rational_damping_param) :: param = rational_damping_param(&
+   type(rational_damping_param), parameter :: param = rational_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & a1 = 0.4535_wp, s8 = 1.9435_wp, a2 = 4.4752_wp)
 
@@ -166,7 +168,7 @@ subroutine test_hfd3_zero_mb03(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(zero_damping_param) :: param = zero_damping_param(&
+   type(zero_damping_param), parameter :: param = zero_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, rs8 = 1.0_wp, alp = 14.0_wp, &
       & rs6 = 1.158_wp, s8 = 1.746_wp)
 
@@ -182,7 +184,7 @@ subroutine test_hse06d3_zero_atm_mb04(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(zero_damping_param) :: param = zero_damping_param(&
+   type(zero_damping_param), parameter :: param = zero_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, rs8 = 1.0_wp, alp = 14.0_wp, &
       & rs6 = 1.129_wp, s8 = 0.109_wp)
 
@@ -198,7 +200,7 @@ subroutine test_blypd3_zero_atm_urea(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(zero_damping_param) :: param = zero_damping_param(&
+   type(zero_damping_param), parameter :: param = zero_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, rs8 = 1.0_wp, alp = 14.0_wp, &
       & rs6 = 1.094_wp, s8 = 1.682_wp)
 
@@ -214,7 +216,7 @@ subroutine test_b3lypd3_mzero_mb05(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(mzero_damping_param) :: param = mzero_damping_param(&
+   type(mzero_damping_param), parameter :: param = mzero_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, rs8 = 1.0_wp, alp = 14.0_wp, &
       & rs6 = 1.338153_wp, s8 = 1.532981_wp, bet = 0.013988_wp)
 
@@ -230,7 +232,7 @@ subroutine test_pbe0d3_mzero_atm_mb06(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(mzero_damping_param) :: param = mzero_damping_param(&
+   type(mzero_damping_param), parameter :: param = mzero_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, rs8 = 1.0_wp, alp = 14.0_wp, &
       & rs6 = 2.077949_wp, s8 = 0.000081_wp, bet = 0.116755_wp)
 
@@ -246,7 +248,7 @@ subroutine test_bpd3_mzero_atm_co2(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(mzero_damping_param) :: param = mzero_damping_param(&
+   type(mzero_damping_param), parameter :: param = mzero_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, rs8 = 1.0_wp, alp = 14.0_wp, &
       & rs6 = 1.233460_wp, s8 = 1.945174_wp, bet = 0.000000_wp)
 
@@ -262,7 +264,7 @@ subroutine test_revtpssd3_op_mb07(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(optimizedpower_damping_param) :: param = optimizedpower_damping_param(&
+   type(optimizedpower_damping_param), parameter :: param = optimizedpower_damping_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & s8 = 0.27632_wp, a1 = 0.700_wp, a2 = 2.500_wp, bet = 8.0_wp)
 
@@ -278,7 +280,7 @@ subroutine test_revpbed3_op_atm_mb08(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(optimizedpower_damping_param) :: param = optimizedpower_damping_param(&
+   type(optimizedpower_damping_param), parameter :: param = optimizedpower_damping_param(&
       & s6 = 1.0_wp, s9 = 1.0_wp, alp = 14.0_wp, &
       & s8 = 1.44765_wp, a1 = 0.600_wp, a2 = 2.50_wp, bet = 0.0_wp)
 

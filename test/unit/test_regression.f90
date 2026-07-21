@@ -15,7 +15,8 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_regression
-   use dftd3
+   use dftd3, only : get_dispersion, realspace_cutoff, rational_damping_param, &
+      & d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -51,7 +52,7 @@ subroutine test_dftbplus_871(error)
    type(error_type), allocatable, intent(out) :: error
 
    type(structure_type) :: mol
-   type(rational_damping_param) :: param = rational_damping_param( &
+   type(rational_damping_param), parameter :: param = rational_damping_param( &
       & s6=1.00_wp, s8=2.34_wp, a1=6.30_wp, a2=5.00_wp, s9=0.00_wp, alp=14.0_wp)
    type(d3_model) :: d3
    real(wp) :: energy, sigma(3, 3)
@@ -76,7 +77,7 @@ end subroutine test_dftbplus_871
 
 !> Check whether we are dealing with an exceptional value, NaN or Inf
 elemental function is_exceptional(val)
-   use ieee_arithmetic, only : ieee_is_nan
+   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
    real(wp), intent(in) :: val
    logical :: is_exceptional
    is_exceptional = ieee_is_nan(val) .or. abs(val) > huge(val)

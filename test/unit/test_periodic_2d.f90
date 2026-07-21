@@ -15,7 +15,9 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module test_periodic_2d
-   use dftd3
+   use dftd3, only : get_dispersion, realspace_cutoff, damping_param, d3_param, &
+      & rational_damping_param, new_rational_damping, zero_damping_param, &
+      & new_zero_damping, d3_model, new_d3_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -103,7 +105,7 @@ subroutine test_bp86d3zero_2d(error)
       & shape(lattice))
    type(structure_type) :: mol
    type(zero_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s9 = 0.0_wp, alp = 14.0_wp, &
       & rs6 = 1.139_wp, s8 = 1.683_wp)
 
@@ -192,7 +194,7 @@ subroutine test_gh185(error)
 
    type(structure_type) :: mol
    type(rational_damping_param) :: param
-   type(d3_param) :: inp = d3_param(&
+   type(d3_param), parameter :: inp = d3_param(&
       & s6 = 1.0_wp, s8 = 0.7875_wp, a1 = 0.4289_wp, a2 = 4.4407_wp, s9 = 0.0_wp)
 
    call new(mol, sym, xyz, periodic=[.true.], lattice=lattice_vac)
