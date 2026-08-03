@@ -52,6 +52,8 @@ module dftd3_api
    public :: vp_structure
    public :: new_structure_api, delete_structure_api, update_structure_api
 
+   public :: set_model_realspace_cutoff, set_model_realspace_cutoff_smooth
+   public :: get_dispersion_api, get_pairwise_dispersion_api
    public :: vp_model
    public :: new_d3_model_api, delete_model_api
 
