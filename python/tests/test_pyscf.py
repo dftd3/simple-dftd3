@@ -254,3 +254,31 @@ def test_issue_gh73():
     e_pbc_disp = disp.DFTD3Dispersion(pmol, xc=xc, version="d3bj").kernel()[0]
 
     assert e_mol_disp != e_pbc_disp
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_pbc_interface():
+
+    cell = pbc.gto.M(
+        atom="Ne 0. 0. 0.",
+        basis="def2-tzvp",
+        a=4.5
+        * np.asarray([[0.0 if i == j else 0.5 for j in range(3)] for i in range(3)]),
+        verbose=0,
+    )
+    cell.build()
+
+    energy, grad, stress = disp.DFTD3Dispersion(cell, xc="pbe", version="d3bj").kernel()
+
+    assert np.allclose(-0.00067729, energy, atol=1e-6)
+    assert np.allclose(grad, np.zeros((1, 3)), atol=1e-6)
+    assert np.allclose(
+        [
+            [8.60843350e-04, -1.07189036e-19, 4.98104900e-20],
+            [-1.07642383e-19, 8.60843350e-04, -5.51638996e-20],
+            [4.97012764e-20, -5.52101958e-20, 8.60843350e-04],
+        ],
+        stress,
+        atol=1e-6,
+    )
+    assert np.allclose(stress.T, stress, atol=1e-6)
