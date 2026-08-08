@@ -21,7 +21,7 @@ Compatibility layer for supporting DFT-D3 in `pyscf <https://pyscf.org/>`_.
 """
 
 try:
-    from pyscf import gto, lib, mcscf, scf
+    from pyscf import gto, lib, pbc, mcscf, scf
     from pyscf.grad import rhf as rhf_grad
 except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
@@ -180,7 +180,7 @@ class DFTD3Dispersion(lib.StreamObject):
 
     def __init__(
         self,
-        mol: gto.Mole,
+        mol: gto.Mole | pbc.gto.Cell,
         xc: str = "hf",
         version: str = "d3bj",
         atm: bool = False,
@@ -265,9 +265,9 @@ class DFTD3Dispersion(lib.StreamObject):
 
         res = disp.get_dispersion(param=param, grad=True)
 
-        return res.get("energy"), res.get("gradient")
+        return res.get("energy"), res.get("gradient"), res.get("virial")
 
-    def reset(self, mol: gto.Mole):
+    def reset(self, mol: gto.Mole | pbc.gto.Cell):
         """Reset mol and clean up relevant attributes for scanner mode"""
         self.mol = mol
         return self
@@ -424,7 +424,7 @@ def d3_grad(scf_grad: GradientsBase, **kwargs):
     """
 
     if not isinstance(scf_grad, GradientsBase):
-        raise TypeError("scf_grad must be an instance of Gradients")
+        raise TypeError(f"scf_grad must be an instance of {GradientsBase.__name__}")
 
     # Ensure that the zeroth order results include DFTD3 corrections
     if not getattr(scf_grad.base, "with_dftd3", None):
@@ -440,6 +440,16 @@ def d3_grad(scf_grad: GradientsBase, **kwargs):
                     disp_g = disp_g[atmlst]
                 nuc_g += disp_g
             return nuc_g
+
+        def get_stress(self) -> np.ndarray:
+            stress = scf_grad.__class__.get_stress(self)
+            with_dftd3 = getattr(self.base, "with_dftd3", None)
+            if with_dftd3:
+                disp_stress = with_dftd3.kernel()[2] / abs(
+                    np.linalg.det(self.cell.lattice_vectors())
+                )
+                stress += disp_stress
+            return stress
 
     mfgrad = DFTD3Grad.__new__(DFTD3Grad)
     mfgrad.__dict__.update(scf_grad.__dict__)
