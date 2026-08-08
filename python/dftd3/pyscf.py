@@ -17,7 +17,7 @@
 PySCF Support
 =============
 
-Compatibility layer for supporting DFT-D3 in `pyscf <https://pyscf.org/>`_.
+Compatibility layer for supporting DFT-D3 and GCP in `pyscf <https://pyscf.org/>`_.
 """
 
 try:
@@ -27,7 +27,7 @@ except ModuleNotFoundError:
     raise ModuleNotFoundError("This submodule requires pyscf installed")
 
 import numpy as np
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 
 from .interface import (
     DispersionModel,
@@ -38,6 +38,7 @@ from .interface import (
     OptimizedPowerDampingParam,
     CSODampingParam,
     ZDampingParam,
+    GeometricCounterpoise,
 )
 
 GradientsBase = getattr(rhf_grad, "GradientsBase", rhf_grad.Gradients)
@@ -180,7 +181,7 @@ class DFTD3Dispersion(lib.StreamObject):
 
     def __init__(
         self,
-        mol: gto.Mole | pbc.gto.Cell,
+        mol: Union[gto.Mole, pbc.gto.Cell],
         xc: str = "hf",
         version: str = "d3bj",
         atm: bool = False,
@@ -193,7 +194,7 @@ class DFTD3Dispersion(lib.StreamObject):
         self.atm = atm
         self.version = version
 
-    def dump_flags(self, verbose: Optional[bool] = None):
+    def dump_flags(self, verbose: Optional[bool] = None) -> "DFTD3Dispersion":
         """
         Show options used for the DFT-D3 dispersion correction.
         """
@@ -204,7 +205,7 @@ class DFTD3Dispersion(lib.StreamObject):
         )
         return self
 
-    def kernel(self) -> Tuple[float, np.ndarray]:
+    def kernel(self) -> Tuple[float, np.ndarray, np.ndarray]:
         """
         Compute the DFT-D3 dispersion correction.
 
@@ -267,7 +268,7 @@ class DFTD3Dispersion(lib.StreamObject):
 
         return res.get("energy"), res.get("gradient"), res.get("virial")
 
-    def reset(self, mol: gto.Mole | pbc.gto.Cell):
+    def reset(self, mol: Union[gto.Mole, pbc.gto.Cell]) -> "DFTD3Dispersion":
         """Reset mol and clean up relevant attributes for scanner mode"""
         self.mol = mol
         return self
@@ -289,7 +290,7 @@ class _DFTD3Grad:
     pass
 
 
-def d3_energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
+def d3_energy(mf: scf.hf.SCF, method: Optional[str] = None, **kwargs) -> scf.hf.SCF:
     """
     Apply DFT-D3 corrections to SCF or MCSCF methods by returning an
     instance of a new class built from the original instances class.
@@ -300,6 +301,8 @@ def d3_energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     ----------
     mf: scf.hf.SCF
         The method to which DFT-D3 corrections will be applied.
+    method: str, optional
+        The exchange-correlation functional to use for the DFT-D3 correction.
     **kwargs
         Keyword arguments passed to the `DFTD3Dispersion` class.
 
@@ -332,11 +335,16 @@ def d3_energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
     if not isinstance(mf, (scf.hf.SCF, mcscf.casci.CASCI)):
         raise TypeError("mf must be an instance of SCF or CASCI")
 
+    if method is None:
+        method = (
+            "hf"
+            if isinstance(mf, mcscf.casci.CASCI)
+            else getattr(mf, "xc", "hf").lower().replace(" ", "")
+        )
+
     with_dftd3 = DFTD3Dispersion(
         mf.mol,
-        xc="hf"
-        if isinstance(mf, mcscf.casci.CASCI)
-        else getattr(mf, "xc", "HF").upper().replace(" ", ""),
+        xc=method,
         **kwargs,
     )
 
@@ -345,18 +353,18 @@ def d3_energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
         return mf
 
     class DFTD3(_DFTD3, mf.__class__):
-        def __init__(self, method, with_dftd3):
+        def __init__(self, method: scf.hf.SCF, with_dftd3: DFTD3Dispersion):
             self.__dict__.update(method.__dict__)
             self.with_dftd3 = with_dftd3
             self._keys.update(["with_dftd3"])
 
-        def dump_flags(self, verbose=None):
+        def dump_flags(self, verbose: Optional[bool] = None) -> "DFTD3":
             mf.__class__.dump_flags(self, verbose)
             if self.with_dftd3:
                 self.with_dftd3.dump_flags(verbose)
             return self
 
-        def energy_nuc(self):
+        def energy_nuc(self) -> float:
             enuc = mf.__class__.energy_nuc(self)
             if self.with_dftd3:
                 edisp = self.with_dftd3.kernel()[0]
@@ -364,20 +372,20 @@ def d3_energy(mf: scf.hf.SCF, **kwargs) -> scf.hf.SCF:
                 enuc += edisp
             return enuc
 
-        def reset(self, mol=None):
+        def reset(self, mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None) -> "DFTD3":
             self.with_dftd3.reset(mol)
             return mf.__class__.reset(self, mol)
 
-        def nuc_grad_method(self):
+        def nuc_grad_method(self) -> GradientsBase:
             scf_grad = mf.__class__.nuc_grad_method(self)
-            return grad(scf_grad)
+            return d3_grad(scf_grad, method=method, **kwargs)
 
         Gradients = lib.alias(nuc_grad_method, alias_name="Gradients")
 
     return DFTD3(mf, with_dftd3)
 
 
-def d3_grad(scf_grad: GradientsBase, **kwargs):
+def d3_grad(scf_grad: GradientsBase, **kwargs) -> GradientsBase:
     """
     Apply DFT-D3 corrections to SCF or MCSCF nuclear gradients methods
     by returning an instance of a new class built from the original class.
@@ -428,10 +436,14 @@ def d3_grad(scf_grad: GradientsBase, **kwargs):
 
     # Ensure that the zeroth order results include DFTD3 corrections
     if not getattr(scf_grad.base, "with_dftd3", None):
-        scf_grad.base = energy(scf_grad.base, **kwargs)
+        scf_grad.base = d3_energy(scf_grad.base, **kwargs)
 
     class DFTD3Grad(_DFTD3Grad, scf_grad.__class__):
-        def grad_nuc(self, mol=None, atmlst=None):
+        def grad_nuc(
+            self,
+            mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None,
+            atmlst: Optional[np.ndarray] = None,
+        ) -> np.ndarray:
             nuc_g = scf_grad.__class__.grad_nuc(self, mol, atmlst)
             with_dftd3 = getattr(self.base, "with_dftd3", None)
             if with_dftd3:
@@ -457,4 +469,210 @@ def d3_grad(scf_grad: GradientsBase, **kwargs):
 
 
 energy = d3_energy
+"""Alias for the `d3_energy` function, which applies DFT-D3 corrections to SCF or MCSCF methods."""
 grad = d3_grad
+"""Alias for the `d3_grad` function, which applies DFT-D3 corrections to SCF or MCSCF nuclear gradients methods."""
+
+
+class GeometricCounterpoiseCorrection(lib.StreamObject):
+    """
+    Implementation of the interface for using GCP in pyscf.
+
+    Parameters
+    ----------
+    mol: gto.Mole or pbc.gto.Cell
+        The molecule or periodic cell for which the GCP correction is computed.
+    method: str
+        The exchange-correlation functional to use for the GCP correction.
+    basis: str
+        The basis set to use for the GCP correction.
+    """
+
+    def __init__(
+        self,
+        mol: Union[gto.Mole, pbc.gto.Cell],
+        method: str,
+        basis: str,
+    ):
+        self.mol = mol
+        self.verbose = mol.verbose
+        self.method = method
+        self.basis = basis
+
+    def dump_flags(
+        self, verbose: Optional[bool] = None
+    ) -> "GeometricCounterpoiseCorrection":
+        """
+        Show options used for the GCP correction.
+        """
+        lib.logger.info(self, "** GCP parameter **")
+        lib.logger.info(self, "method %s", self.method)
+        lib.logger.info(self, "basis %s", self.basis)
+        return self
+
+    def kernel(self) -> Tuple[float, np.ndarray, np.ndarray]:
+        mol = self.mol
+
+        lattice = None
+        periodic = None
+        if hasattr(mol, "lattice_vectors"):
+            lattice = mol.lattice_vectors()
+            periodic = np.array([True, True, True], dtype=bool)
+
+        gcp = GeometricCounterpoise(
+            np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
+            mol.atom_coords(),
+            lattice=lattice,
+            periodic=periodic,
+            method=self.method,
+            basis=self.basis,
+        )
+
+        res = gcp.get_counterpoise(grad=True)
+
+        return res.get("energy"), res.get("gradient"), res.get("virial")
+
+    def reset(
+        self, mol: Union[gto.Mole, pbc.gto.Cell]
+    ) -> "GeometricCounterpoiseCorrection":
+        """Reset mol and clean up relevant attributes for scanner mode"""
+        self.mol = mol
+        return self
+
+
+class _GCP:
+    pass
+
+
+class _GCPGrad:
+    pass
+
+
+def gcp_energy(
+    mf: scf.hf.SCF, method: Optional[str] = None, basis: Optional[str] = None
+) -> scf.hf.SCF:
+    """
+    Apply GCP corrections to SCF or MCSCF methods by returning an
+    instance of a new class built from the original instances class.
+    The GCP correction is stored in the `with_gcp` attribute of
+    the class.
+
+    Parameters
+    ----------
+    mf: scf.hf.SCF
+        The method to which GCP corrections will be applied.
+    method: str, optional
+        The exchange-correlation functional to use for the GCP correction.
+    basis: str, optional
+        The basis set to use for the GCP correction.
+
+    Returns
+    -------
+    The method with GCP corrections applied.
+    """
+
+    if method is None:
+        method = (
+            "hf"
+            if isinstance(mf, mcscf.casci.CASCI)
+            else getattr(mf, "xc", "hf").lower().replace(" ", "")
+        )
+
+    if basis is None:
+        basis = mf.mol.basis
+
+    with_gcp = GeometricCounterpoiseCorrection(
+        mf.mol,
+        method=method,
+        basis=basis,
+    )
+
+    if isinstance(mf, _GCP):
+        mf.with_gcp = with_gcp
+        return mf
+
+    class GCP(_GCP, mf.__class__):
+        def __init__(
+            self, method: scf.hf.SCF, with_gcp: GeometricCounterpoiseCorrection
+        ):
+            self.__dict__.update(method.__dict__)
+            self.with_gcp = with_gcp
+            self._keys.update(["with_gcp"])
+
+        def dump_flags(self, verbose: Optional[bool] = None) -> "GCP":
+            mf.__class__.dump_flags(self, verbose)
+            if self.with_gcp:
+                self.with_gcp.dump_flags(verbose)
+            return self
+
+        def energy_nuc(self) -> float:
+            enuc = mf.__class__.energy_nuc(self)
+            if self.with_gcp:
+                edisp = self.with_gcp.kernel()[0]
+                mf.scf_summary["dispersion"] = edisp
+                enuc += edisp
+            return enuc
+
+        def reset(self, mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None) -> "GCP":
+            self.with_gcp.reset(mol)
+            return mf.__class__.reset(self, mol)
+
+        def nuc_grad_method(self) -> GradientsBase:
+            scf_grad = mf.__class__.nuc_grad_method(self)
+            return gcp_grad(scf_grad, method=method, basis=basis)
+
+        Gradients = lib.alias(nuc_grad_method, alias_name="Gradients")
+
+    return GCP(mf, with_gcp)
+
+
+def gcp_grad(scf_grad: GradientsBase, **kwargs) -> GradientsBase:
+    """
+    Apply GCP corrections to SCF or MCSCF nuclear gradients methods
+    by returning an instance of a new class built from the original class.
+    The GCP correction is stored in the `with_gcp` attribute of
+    the class.
+
+    Parameters
+    ----------
+    scf_grad: rhf_grad.Gradients
+        The method to which GCP corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `GeometricCounterpoiseCorrection` class.
+
+    Returns
+    -------
+    The method with GCP corrections applied.
+    """
+    # Ensure that the zeroth order results include GCP corrections
+    if not getattr(scf_grad.base, "with_gcp", None):
+        scf_grad.base = gcp_energy(scf_grad.base, **kwargs)
+
+    class GCPGrad(_GCPGrad, scf_grad.__class__):
+        def grad_nuc(
+            self,
+            mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None,
+            atmlst: Optional[np.ndarray] = None,
+        ) -> np.ndarray:
+            nuc_g = scf_grad.__class__.grad_nuc(self, mol, atmlst)
+            with_gcp = getattr(self.base, "with_gcp", None)
+            if with_gcp:
+                gcp_g = with_gcp.kernel()[1]
+                if atmlst is not None:
+                    gcp_g = gcp_g[atmlst]
+                nuc_g += gcp_g
+            return nuc_g
+
+        def get_stress(self) -> np.ndarray:
+            stress = scf_grad.__class__.get_stress(self)
+            with_gcp = getattr(self.base, "with_gcp", None)
+            if with_gcp:
+                disp_stress = with_gcp.kernel()[2] / abs(
+                    np.linalg.det(self.cell.lattice_vectors())
+                )
+                stress += disp_stress
+            return stress
+
+    mfgrad = GCPGrad.__new__(GCPGrad)
+    mfgrad.__dict__.update(scf_grad.__dict__)
+    return mfgrad

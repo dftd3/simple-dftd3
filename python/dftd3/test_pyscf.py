@@ -14,6 +14,8 @@
 # You should have received a copy of the Lesser GNU General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
+from typing import Optional
+
 import numpy as np
 import pytest
 from pytest import approx
@@ -27,7 +29,7 @@ except ModuleNotFoundError:
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_energy_r2scan_d3():
+def test_energy_r2scan_d3() -> None:
 
     mol = gto.M(
         atom="""
@@ -58,7 +60,7 @@ def test_energy_r2scan_d3():
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 @pytest.mark.parametrize("atm", [True, False])
-def test_energy_bp_d3zero(atm):
+def test_energy_bp_d3zero(atm: bool) -> None:
     thr = 1e-9
 
     mol = gto.M(
@@ -104,7 +106,7 @@ def test_energy_bp_d3zero(atm):
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 @pytest.mark.parametrize("xc", ["b3lyp", "b3lypg", "b3lyp5", "b3lyp3"])
-def test_energy_b3lyp_d3(xc: str):
+def test_energy_b3lyp_d3(xc: str) -> None:
 
     mol = gto.M(
         atom="""
@@ -134,7 +136,7 @@ def test_energy_b3lyp_d3(xc: str):
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_gradient_b97m_d3():
+def test_gradient_b97m_d3() -> None:
     mol = gto.M(
         atom="""
              H    0.002144194   0.361043475   0.029799709
@@ -183,7 +185,8 @@ def test_gradient_b97m_d3():
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_energy_hf():
+@pytest.mark.parametrize("method", ["hf", None])
+def test_energy_hf(method: Optional[str]) -> None:
     mol = gto.M(
         atom="""
              N  -1.57871857  -0.04661102   0.00000000
@@ -196,7 +199,7 @@ def test_energy_hf():
              H   2.15862174  -0.13639605   0.80956529
              """
     )
-    mf = disp.energy(scf.RHF(mol))
+    mf = disp.d3_energy(scf.RHF(mol), method=method)
     assert mf.kernel() == approx(-110.93260361702605, abs=1.0e-8)
     assert "dispersion" in mf.scf_summary
 
@@ -223,12 +226,12 @@ def test_gradient_hf():
             [-1.54527822e-02, +2.29409425e-02, -2.15141991e-02],
         ]
     )
-    grad = disp.energy(scf.RHF(mol)).run().nuc_grad_method()
+    grad = disp.d3_energy(scf.RHF(mol)).run().nuc_grad_method()
     assert grad.kernel() == approx(ref, abs=1.0e-7)
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_issue_gh73():
+def test_issue_gh73() -> None:
     mol = gto.M(
         atom="""
              O  -1.6256  -0.0413   0.3705
@@ -257,7 +260,7 @@ def test_issue_gh73():
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
-def test_pbc_interface():
+def test_pbc_interface() -> None:
 
     cell = pbc.gto.M(
         atom="Ne 0. 0. 0.",
