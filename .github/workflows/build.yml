@@ -109,7 +109,7 @@ jobs:
 
     - name: Install dependencies
       if: ${{ ! contains(matrix.os, 'windows') }}
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@v3
       with:
         environment-file: assets/ci/build-env.yaml
 
@@ -282,7 +282,7 @@ jobs:
     - run: pip3 install coverage
 
     - name: Install dependencies
-      uses: mamba-org/setup-micromamba@v1
+      uses: mamba-org/setup-micromamba@v3
       with:
         environment-file: assets/ci/python-env.yaml
         create-args: >-
