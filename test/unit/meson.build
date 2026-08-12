@@ -37,6 +37,7 @@ tests = [
   'periodic_3d',
   'periodic_atm',
   'gcp',
+  'gcp_hessian',
   'output',
   'regression',
 ]
