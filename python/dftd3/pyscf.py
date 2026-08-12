@@ -668,6 +668,56 @@ class GeometricCounterpoiseCorrection(lib.StreamObject):
 
         return res.get("energy"), res.get("gradient"), res.get("virial")
 
+    def hessian(self) -> np.ndarray:
+        """
+        Compute the analytical second derivatives of the GCP correction with
+        respect to the nuclear coordinates.
+
+        Returns
+        -------
+        ndarray
+            The counter-poise hessian in the pyscf layout ``(natm, natm, 3, 3)``
+            in Hartree per Bohr squared.
+
+        Examples
+        --------
+        >>> from pyscf import gto
+        >>> import dftd3.pyscf as disp
+        >>> mol = gto.M(
+        ...     atom='''
+        ...          O  0.00000000  0.00000000 -0.73578586
+        ...          H  1.44183152  0.00000000  0.36789293
+        ...          H -1.44183152  0.00000000  0.36789293
+        ...          '''
+        ... )
+        >>> gcp = disp.GeometricCounterpoiseCorrection(mol, "hf3c", "minix")
+        >>> gcp.hessian().shape
+        (3, 3, 3, 3)
+        """
+        mol = self.mol
+
+        lattice = None
+        periodic = None
+        if hasattr(mol, "lattice_vectors"):
+            lattice = mol.lattice_vectors()
+            periodic = np.array([True, True, True], dtype=bool)
+
+        gcp = GeometricCounterpoise(
+            np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
+            mol.atom_coords(),
+            lattice=lattice,
+            periodic=periodic,
+            method=self.method,
+            basis=self.basis,
+        )
+
+        res = gcp.get_hessian()
+
+        # (3*natm, 3*natm) with index 3*i+c -> (natm, natm, 3, 3)
+        return (
+            res.get("hessian").reshape(mol.natm, 3, mol.natm, 3).transpose(0, 2, 1, 3)
+        )
+
     def reset(
         self, mol: Union[gto.Mole, pbc.gto.Cell]
     ) -> "GeometricCounterpoiseCorrection":
@@ -681,6 +731,10 @@ class _GCP:
 
 
 class _GCPGrad:
+    pass
+
+
+class _GCPHess:
     pass
 
 
@@ -759,6 +813,16 @@ def gcp_energy(
 
         Gradients = lib.alias(nuc_grad_method, alias_name="Gradients")
 
+    # only SCF and DFT classes provide a hessian method
+    if hasattr(mf.__class__, "Hessian"):
+
+        def _gcp_hessian_method(self):
+            scf_hess = mf.__class__.Hessian(self)
+            return gcp_hess(scf_hess, method=method, basis=basis)
+
+        _gcp_hessian_method.__name__ = "Hessian"
+        GCP.Hessian = _gcp_hessian_method
+
     return GCP(mf, with_gcp)
 
 
@@ -812,3 +876,63 @@ def gcp_grad(scf_grad: GradientsBase, **kwargs) -> GradientsBase:
     mfgrad = GCPGrad.__new__(GCPGrad)
     mfgrad.__dict__.update(scf_grad.__dict__)
     return mfgrad
+
+
+def gcp_hess(scf_hess, **kwargs):
+    """
+    Apply GCP corrections to SCF nuclear hessian methods by returning an
+    instance of a new class built from the original class.
+    The GCP correction is stored in the `with_gcp` attribute of
+    the class.
+
+    Parameters
+    ----------
+    scf_hess: hessian.rhf.Hessian
+        The method to which GCP corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `GeometricCounterpoiseCorrection` class.
+
+    Returns
+    -------
+    The hessian method with GCP corrections applied.
+
+    Examples
+    --------
+    >>> from pyscf import gto, scf
+    >>> import dftd3.pyscf as disp
+    >>> mol = gto.M(
+    ...     atom='''
+    ...          O  0.00000000  0.00000000 -0.73578586
+    ...          H  1.44183152  0.00000000  0.36789293
+    ...          H -1.44183152  0.00000000  0.36789293
+    ...          '''
+    ... )
+    >>> mf = disp.gcp_energy(scf.RHF(mol)).run()
+    >>> hess = mf.Hessian().kernel()
+    """
+
+    if not hasattr(scf_hess, "base") or not hasattr(scf_hess, "hess_nuc"):
+        raise TypeError("scf_hess must be a pyscf nuclear hessian method")
+
+    # Ensure that the zeroth order results include GCP corrections
+    if not getattr(scf_hess.base, "with_gcp", None):
+        scf_hess.base = gcp_energy(scf_hess.base, **kwargs)
+
+    class GCPHess(_GCPHess, scf_hess.__class__):
+        def hess_nuc(
+            self,
+            mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None,
+            atmlst: Optional[np.ndarray] = None,
+        ) -> np.ndarray:
+            nuc_h = scf_hess.__class__.hess_nuc(self, mol, atmlst)
+            with_gcp = getattr(self.base, "with_gcp", None)
+            if with_gcp:
+                gcp_h = with_gcp.hessian()
+                if atmlst is not None:
+                    gcp_h = gcp_h[np.ix_(atmlst, atmlst)]
+                nuc_h += gcp_h
+            return nuc_h
+
+    mfhess = GCPHess.__new__(GCPHess)
+    mfhess.__dict__.update(scf_hess.__dict__)
+    return mfhess
