@@ -83,6 +83,13 @@ Request gradient evaluation,
 write results to _file_ (default: dftd3.txt),
 attempts to add to Turbomole gradient and gradlatt files
 
+*--hessian* [_file_]::
+Request analytical hessian evaluation,
+write results to _file_ (default: `dftd3_hessian.txt`).
+The hessian is written as a 3N by 3N matrix in atomic units (Eh/a0^2^),
+using the index convention 3*(i-1)+c for the Cartesian component _c_ of atom _i_.
+Not available in combination with *--gcp*.
+
 *--property*::
 Evaluate dispersion related properties
 

@@ -178,7 +178,7 @@ subroutine ascii_energy_atom(unit, mol, energies, label)
 end subroutine ascii_energy_atom
 
 
-subroutine ascii_results(unit, mol, energy, gradient, sigma, label)
+subroutine ascii_results(unit, mol, energy, gradient, sigma, label, hessian)
 
    !> Unit for output
    integer, intent(in) :: unit
@@ -192,6 +192,9 @@ subroutine ascii_results(unit, mol, energy, gradient, sigma, label)
 
    !> Label for the output
    character(len=*), intent(in), optional :: label
+
+   !> Second derivatives w.r.t. the Cartesian coordinates
+   real(wp), intent(in), optional :: hessian(:, :)
 
    integer :: iat, isp
    logical :: grad
@@ -230,6 +233,14 @@ subroutine ascii_results(unit, mol, energy, gradient, sigma, label)
             & comp(iat), sigma(:, iat)
       end do
       write(unit, '(50("-"))')
+      write(unit, "(a)")
+   end if
+
+   if (present(hessian)) then
+      write(unit, '(a,":", t25, es20.13, 1x, a)') &
+         & "Hessian norm", norm2(hessian), "Eh/a0^2"
+      write(unit, '(a,":", t25, i20)') &
+         & "Hessian dimension", size(hessian, 1)
       write(unit, "(a)")
    end if
 
@@ -667,7 +678,7 @@ end subroutine getline
 
 
 subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6, &
-      & pairwise_energy2, pairwise_energy3, param)
+      & pairwise_energy2, pairwise_energy3, param, hessian)
    integer, intent(in) :: unit
    character(len=*), intent(in), optional :: indentation
    real(wp), intent(in), optional :: energy
@@ -678,6 +689,7 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6, &
    real(wp), intent(in), optional :: pairwise_energy2(:, :)
    real(wp), intent(in), optional :: pairwise_energy3(:, :)
    class(damping_param), intent(in), optional :: param
+   real(wp), intent(in), optional :: hessian(:, :)
    character(len=:), allocatable :: indent, version_string
    character(len=*), parameter :: jsonkey = "('""',a,'"":',1x)"
    real(wp), allocatable :: array(:)
@@ -710,6 +722,13 @@ subroutine json_results(unit, indentation, energy, gradient, sigma, cn, c6, &
       if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
       write(unit, jsonkey, advance="no") "gradient"
       array = reshape(gradient, [product(shape(gradient))])
+      call write_json_array(unit, array, indent)
+   end if
+   if (present(hessian)) then
+      write(unit, '(",")', advance="no")
+      if (allocated(indent)) write(unit, "(/,a)", advance="no") repeat(indent, 1)
+      write(unit, jsonkey, advance="no") "hessian"
+      array = reshape(hessian, [size(hessian)])
       call write_json_array(unit, array, indent)
    end if
    if (present(cn)) then
@@ -847,11 +866,12 @@ subroutine write_json_array(unit, array, indent)
 end subroutine write_json_array
 
 
-subroutine tagged_result(unit, energy, gradient, sigma)
+subroutine tagged_result(unit, energy, gradient, sigma, hessian)
    integer, intent(in) :: unit
    real(wp), intent(in), optional :: energy
    real(wp), intent(in), optional :: gradient(:, :)
    real(wp), intent(in), optional :: sigma(:, :)
+   real(wp), intent(in), optional :: hessian(:, :)
    character(len=*), parameter :: tag_header = &
       & '(a,t20,":",a,":",i0,":",*(i0:,","))'
 
@@ -866,6 +886,10 @@ subroutine tagged_result(unit, energy, gradient, sigma)
    if (present(sigma)) then
       write(unit, tag_header) "virial", "real", 2, 3, 3
       write(unit, "(3es24.16)") sigma
+   end if
+   if (present(hessian)) then
+      write(unit, tag_header) "hessian", "real", 2, size(hessian, 1), size(hessian, 2)
+      write(unit, "(3es24.16)") hessian
    end if
 
 end subroutine tagged_result

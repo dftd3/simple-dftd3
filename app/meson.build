@@ -34,6 +34,12 @@ if os != 'windows'
   test('noargs', sdftd3_exe, should_fail: true, suite: 'app')
   test('example', sdftd3_exe, args: files('example.xyz'), suite: 'app')
   test('run-example', sdftd3_exe, args: ['run', '--', files('example.xyz')], suite: 'app')
+  test('hessian', sdftd3_exe,
+    args: ['--bj', 'pbe0', '--atm', '--hessian', '--noedisp', files('example.xyz')],
+    suite: 'app')
+  test('hessian-gcp', sdftd3_exe,
+    args: ['--bj', 'pbe0', '--hessian', '--gcp', 'def2-svp', '--noedisp', files('example.xyz')],
+    should_fail: true, suite: 'app')
   test('param-all', sdftd3_exe, args: ['param', sdftd3_parameters], suite: 'app')
   test('param-select', sdftd3_exe, args: ['param', sdftd3_parameters, 'b2plyp'], suite: 'app')
 endif

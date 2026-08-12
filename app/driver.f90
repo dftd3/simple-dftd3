@@ -70,6 +70,7 @@ subroutine run_driver(config, error)
    type(d3_model) :: d3
    type(gcp_param) :: gcp
    real(wp), allocatable :: energies(:), gradient(:, :), sigma(:, :)
+   real(wp), allocatable :: hessian(:, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: s9
    real(wp) :: energy
@@ -226,6 +227,9 @@ subroutine run_driver(config, error)
       if (config%grad) then
          allocate(gradient(3, mol%nat), sigma(3, 3))
       end if
+      if (config%hessian) then
+         allocate(hessian(3*mol%nat, 3*mol%nat))
+      end if
    end if
 
    call new_d3_model(d3, mol, ghost=config%ghost)
@@ -236,7 +240,7 @@ subroutine run_driver(config, error)
 
    if (allocated(param)) then
       call get_dispersion(mol, d3, param, realspace_cutoff(), energies, &
-         & gradient, sigma)
+         & gradient, sigma, hessian)
       if (config%gcp) then
          call get_geometric_counterpoise(mol, gcp, realspace_cutoff(), energies, gradient, sigma)
       end if
@@ -251,7 +255,7 @@ subroutine run_driver(config, error)
          if (config%verbosity > 2) then
             call ascii_energy_atom(output_unit, mol, energies)
          end if
-         call ascii_results(output_unit, mol, energy, gradient, sigma)
+         call ascii_results(output_unit, mol, energy, gradient, sigma, hessian=hessian)
          if (config%pair_resolved) then
             call ascii_pairwise(output_unit, mol, pair_disp2, pair_disp3)
          end if
@@ -268,10 +272,23 @@ subroutine run_driver(config, error)
          call turbomole_writer(mol, energy, gradient, sigma, config%verbosity, "Dispersion")
       end if
 
+      if (config%hessian) then
+         if (allocated(config%hessian_output)) then
+            open(file=config%hessian_output, newunit=unit)
+            call tagged_result(unit, hessian=hessian)
+            close(unit)
+            if (config%verbosity > 0) then
+               write(output_unit, "(a)") &
+                  & "[Info] Dispersion hessian written to '"//config%hessian_output//"'"
+            end if
+         end if
+      end if
+
       if (config%json) then
          open(file=config%json_output, newunit=unit)
          call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma, &
-            & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3, param=param)
+            & pairwise_energy2=pair_disp2, pairwise_energy3=pair_disp3, param=param, &
+            & hessian=hessian)
          close(unit)
          if (config%verbosity > 0) then
             write(output_unit, "(a)") &
