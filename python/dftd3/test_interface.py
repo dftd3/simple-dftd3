@@ -394,6 +394,46 @@ def test_gcp_3c(numbers: np.ndarray, positions: np.ndarray, method: str) -> None
     assert approx(res.get("energy")) == ref, res.get("energy")
 
 
+@pytest.mark.parametrize("method", ["hf3c", "b973c", "pbeh3c"])
+def test_gcp_hessian(method: str) -> None:
+    """Compare the analytical hessian against finite differences of the gradient"""
+    step = 1.0e-6
+    thr = 1.0e-7
+
+    numbers = np.array([8, 1, 1, 8, 1, 1])
+    positions = np.array(
+        [  # Coordinates in Bohr
+            [-2.85, -0.05, +0.00],
+            [-1.05, +0.00, +0.00],
+            [-3.40, +1.65, +0.00],
+            [+2.65, +0.00, +0.00],
+            [+3.30, +1.00, +1.45],
+            [+3.30, +1.00, -1.45],
+        ]
+    )
+
+    gcp = GeometricCounterpoise(numbers, positions, method=method)
+
+    hessian = gcp.get_hessian().get("hessian")
+    assert hessian.shape == (3 * len(numbers), 3 * len(numbers))
+    assert hessian == approx(hessian.transpose(), abs=1.0e-12)
+
+    numhess = np.zeros_like(hessian)
+    for iat in range(len(numbers)):
+        for ic in range(3):
+            coord = positions.copy()
+            coord[iat, ic] += step
+            gcp.update(coord)
+            gr = gcp.get_counterpoise(grad=True).get("gradient")
+            coord[iat, ic] -= 2 * step
+            gcp.update(coord)
+            gl = gcp.get_counterpoise(grad=True).get("gradient")
+            numhess[3 * iat + ic, :] = 0.5 * (gr - gl).flatten() / step
+    gcp.update(positions)
+
+    assert hessian == approx(numhess, abs=thr)
+
+
 def test_pair_resolved() -> None:
     """Calculate pairwise resolved dispersion energy for a molecule"""
     thr = 1.0e-8

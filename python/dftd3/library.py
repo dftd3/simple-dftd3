@@ -381,6 +381,21 @@ def get_counterpoise(
     )
 
 
+def get_counterpoise_hessian(
+    mol: StructureHandle,
+    gcp: GCPHandle,
+    energy: np.ndarray,
+    hessian: np.ndarray,
+) -> None:
+    """Get the second derivatives of the counterpoise energy"""
+    return error_check(lib.dftd3_get_counterpoise_hessian)(
+        mol.handle,
+        gcp.handle,
+        _cast("double*", energy),
+        _cast("double*", hessian),
+    )
+
+
 def _char(value: Optional[str]):
     """Convert a string to a C char array"""
     return ffi.new("char[]", value.encode()) if value is not None else ffi.NULL

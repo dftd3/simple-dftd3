@@ -662,6 +662,23 @@ class GeometricCounterpoise(Structure):
             results.update(virial=_sigma)
         return results
 
+    def get_hessian(self) -> dict:
+        """
+        Evaluate the analytical second derivatives of the counterpoise energy
+        with respect to the nuclear coordinates.
+
+        The hessian is returned as a symmetric ``3*n`` by ``3*n`` matrix in
+        Hartree per Bohr squared, using the index convention ``3*i + c`` for
+        the Cartesian component ``c`` of atom ``i``.
+        """
+
+        _energy = np.array(0.0)
+        _hessian = np.zeros((3 * len(self), 3 * len(self)))
+
+        library.get_counterpoise_hessian(self._mol, self._gcp, _energy, _hessian)
+
+        return {"energy": _energy, "hessian": _hessian}
+
 
 def _rename_kwargs(kwargs, old_name, new_name):
     if old_name in kwargs and new_name not in kwargs:
