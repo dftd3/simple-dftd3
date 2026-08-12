@@ -54,6 +54,7 @@ module dftd3_api
 
    public :: set_model_realspace_cutoff, set_model_realspace_cutoff_smooth
    public :: get_dispersion_api, get_pairwise_dispersion_api
+   public :: get_dispersion_hessian_api
    public :: vp_model
    public :: new_d3_model_api, delete_model_api
 
@@ -973,6 +974,65 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    end if
 
 end subroutine get_dispersion_api
+
+
+!> Calculate the analytical hessian of the dispersion energy
+subroutine get_dispersion_hessian_api(verror, vmol, vdisp, vparam, &
+      & energy, c_hessian) &
+      & bind(C, name=namespace//"get_dispersion_hessian")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   type(c_ptr), value :: vparam
+   type(vp_param), pointer :: param
+   real(c_double), intent(out) :: energy
+   real(c_double), intent(out) :: c_hessian(*)
+   real(wp), allocatable :: hessian(:, :)
+   type(realspace_cutoff) :: cutoff
+   integer :: ndim
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "Dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   if (.not.c_associated(vparam)) then
+      call fatal_error(error%ptr, "Damping parameters are missing")
+      return
+   end if
+   call c_f_pointer(vparam, param)
+
+   if (.not.allocated(param%ptr)) then
+      call fatal_error(error%ptr, "Damping parameters are not initialized")
+      return
+   end if
+
+   ndim = 3*mol%ptr%nat
+   allocate(hessian(ndim, ndim))
+
+   cutoff = realspace_cutoff()
+   if (allocated(disp%cutoff)) then
+      cutoff = disp%cutoff
+   end if
+   call get_dispersion(mol%ptr, disp%ptr, param%ptr, cutoff, &
+      & energy, hessian=hessian)
+
+   c_hessian(:ndim*ndim) = reshape(hessian, [ndim*ndim])
+
+end subroutine get_dispersion_hessian_api
 
 
 !> Calculate pairwise representation of dispersion energy

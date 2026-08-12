@@ -198,4 +198,5 @@ of the dispersion coefficients on the coordination number.
 
 .. note::
 
-   The Hessian is currently only available from the Fortran API.
+   The Hessian is also available from the C API via
+   :c:func:`dftd3_get_dispersion_hessian`.

@@ -32,6 +32,7 @@
 #define SDFTD3_API_SUFFIX__V_1_3
 #define SDFTD3_API_SUFFIX__V_1_4
 #define SDFTD3_API_SUFFIX__V_1_5
+#define SDFTD3_API_SUFFIX__V_1_6
 
 /// Error handle class
 typedef struct _dftd3_error* dftd3_error;
@@ -320,6 +321,16 @@ dftd3_get_pairwise_dispersion(dftd3_error /* error */,
                               dftd3_param /* param */,
                               double* /* pair_energy2[n][n] */,
                               double* /* pair_energy3[n][n] */) SDFTD3_API_SUFFIX__V_0_5;
+
+/// Evaluate the analytical second derivatives of the dispersion energy.
+/// The hessian is symmetric, hence row- and column-major layout are equivalent.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_get_dispersion_hessian(dftd3_error /* error */,
+                             dftd3_structure /* mol */,
+                             dftd3_model /* disp */,
+                             dftd3_param /* param */,
+                             double* /* energy */,
+                             double* /* hessian[3*n][3*n] */) SDFTD3_API_SUFFIX__V_1_6;
 
 /*
  * Perform geometric counterpoise calculations
