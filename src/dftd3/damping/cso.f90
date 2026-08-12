@@ -17,7 +17,8 @@
 module dftd3_damping_cso
    use dftd3_cutoff, only : smooth_cutoff
    use dftd3_damping, only : damping_param
-   use dftd3_damping_atm, only : get_atm_dispersion, get_atm_pairwise_dispersion
+   use dftd3_damping_atm, only : get_atm_dispersion, get_atm_pairwise_dispersion, &
+      & get_atm_dispersion_hessian
    use dftd3_param, only : d3_param
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -50,6 +51,12 @@ module dftd3_damping_cso
       !> Evaluate pairwise representation of non-additive dispersion energy
       procedure :: get_pairwise_dispersion3_impl => get_pairwise_dispersion3
 
+      !> Evaluate pair kernel and its derivatives
+      procedure :: get_damping_kernel
+
+      !> Evaluate ATM three-body contribution to the hessian
+      procedure :: get_dispersion3_hessian
+
    end type cso_damping_param
 
 
@@ -77,6 +84,75 @@ subroutine new_cso_damping(self, param)
    self%alp = param%alp
 
 end subroutine new_cso_damping
+
+
+!> Pair dispersion kernel and its derivatives w.r.t. squared distance and C6
+pure subroutine get_damping_kernel(self, izp, jzp, rvdw, r4r2, r2, c6, &
+      & e, er, ec, err, erc, ecc)
+
+   !> Damping parameters
+   class(cso_damping_param), intent(in) :: self
+
+   !> Species indices of the pair
+   integer, intent(in) :: izp, jzp
+
+   !> Van-der-Waals radii for damping function
+   real(wp), intent(in) :: rvdw(:, :)
+
+   !> Expectation values for C8 extrapolation
+   real(wp), intent(in) :: r4r2(:)
+
+   !> Squared distance of the pair
+   real(wp), intent(in) :: r2
+
+   !> C6 coefficient of the pair
+   real(wp), intent(in) :: c6
+
+   !> Pair energy and its derivatives
+   real(wp), intent(out) :: e, er, ec, err, erc, ecc
+
+   real(wp) :: rrij, r0ij, u, r1, dd6, dd6_6, a2r0ij
+   real(wp) :: ef, sf, sfd, sfdd, sig, sigd, sigdd, sigu, siguu
+   real(wp) :: t6, t6d, t6dd, p, pd, pdd
+
+   e = 0.0_wp; er = 0.0_wp; ec = 0.0_wp
+   err = 0.0_wp; erc = 0.0_wp; ecc = 0.0_wp
+
+   u = r2
+   r1 = sqrt(u)
+   rrij = 3*r4r2(izp)*r4r2(jzp)
+   r0ij = sqrt(rrij)
+   dd6 = self%a3*r0ij + self%a4
+   dd6_6 = dd6**6
+   a2r0ij = self%a2*r0ij
+
+   ef = exp(r1 - a2r0ij)
+   sf = 1.0_wp/(1.0_wp + ef)
+   ! derivatives of the sigmoid w.r.t. the distance
+   sfd = -sf*(1.0_wp - sf)
+   sfdd = sf*(1.0_wp - sf)*(1.0_wp - 2.0_wp*sf)
+   sig = self%s6 + self%a1*sf
+   sigd = self%a1*sfd
+   sigdd = self%a1*sfdd
+   ! convert to derivatives w.r.t. the squared distance
+   sigu = 0.5_wp*sigd/r1
+   siguu = 0.25_wp*sigdd/u - 0.25_wp*sigd/(u*r1)
+
+   t6 = 1.0_wp/(u*u*u + dd6_6)
+   t6d = -3.0_wp*u*u*t6*t6
+   t6dd = -6.0_wp*u*t6*t6 + 18.0_wp*u**4*t6**3
+
+   p = sig*t6
+   pd = sigu*t6 + sig*t6d
+   pdd = siguu*t6 + 2.0_wp*sigu*t6d + sig*t6dd
+
+   e = -c6*p
+   er = -c6*pd
+   ec = -p
+   err = -c6*pdd
+   erc = -pd
+
+end subroutine get_damping_kernel
 
 
 !> Evaluation of the dispersion energy expression
@@ -416,6 +492,55 @@ subroutine get_dispersion3(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6d
       & rvdw, c6, dc6dcn, energy, dEdcn, gradient, sigma)
 
 end subroutine get_dispersion3
+
+
+!> Evaluation of the three-body contribution to the hessian
+subroutine get_dispersion3_hessian(self, mol, trans, cutoff, width, rvdw, &
+      & r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
+
+   !> Damping parameters
+   class(cso_damping_param), intent(in) :: self
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Van-der-Waals radii for damping function
+   real(wp), intent(in) :: rvdw(:, :)
+
+   !> Expectation values for C8 extrapolation
+   real(wp), intent(in) :: r4r2(:)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Derivatives of the C6 w.r.t. the coordination number
+   real(wp), intent(in) :: dc6dcn(:, :), d2c6dcn2(:, :), d2c6dcnij(:, :)
+
+   !> Second derivative of the energy w.r.t. the Cartesian coordinates
+   real(wp), intent(inout) :: hessian(:, :)
+
+   !> Derivative of the energy w.r.t. the coordination number
+   real(wp), intent(inout) :: dEdcn(:)
+
+   !> Mixed derivative w.r.t. coordination number and Cartesian coordinates
+   real(wp), intent(inout) :: dEdcndr(:, :)
+
+   !> Second derivative w.r.t. the coordination numbers
+   real(wp), intent(inout) :: dEdcndcn(:, :)
+
+   call get_atm_dispersion_hessian(mol, trans, cutoff, width, self%s9, rs9, self%alp+2, &
+      & rvdw, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
+
+end subroutine get_dispersion3_hessian
 
 
 !> Evaluation of the dispersion energy expression projected on atomic pairs

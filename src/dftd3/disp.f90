@@ -16,9 +16,10 @@
 
 module dftd3_disp
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
-   use dftd3_damping, only : damping_param
+   use dftd3_damping, only : damping_param, get_dispersion2_hessian
    use dftd3_model, only : d3_model
-   use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs
+   use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs, &
+      & add_coordination_number_hessian
    use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -39,7 +40,7 @@ contains
 
 
 !> Calculate atom-resolved dispersion energies.
-subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma)
+subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma, hessian)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -62,16 +63,21 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
    !> Dispersion virial
    real(wp), intent(out), contiguous, optional :: sigma(:, :)
 
-   logical :: grad
+   !> Dispersion hessian
+   real(wp), intent(out), contiguous, optional :: hessian(:, :)
+
+   logical :: grad, hess
    integer :: mref
    real(wp), allocatable :: cn(:)
    real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
    real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
    real(wp), allocatable :: dEdcn(:)
    real(wp), allocatable :: lattr(:, :)
+   real(wp), allocatable :: gradient_local(:, :), sigma_local(:, :)
 
    mref = maxval(disp%ref)
-   grad = present(gradient).and.present(sigma)
+   grad = present(gradient) .or. present(sigma)
+   hess = present(hessian)
 
    allocate(cn(mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
@@ -89,26 +95,110 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
    if (grad) then
       allocate(dEdcn(mol%nat))
       dEdcn(:) = 0.0_wp
-      gradient(:, :) = 0.0_wp
-      sigma(:, :) = 0.0_wp
+      if (present(gradient)) gradient(:, :) = 0.0_wp
+      if (present(sigma)) sigma(:, :) = 0.0_wp
+      allocate(gradient_local(3, mol%nat), source=0.0_wp)
+      allocate(sigma_local(3, 3), source=0.0_wp)
    end if
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
     call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, disp%rvdw, &
-       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient, sigma)
+       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
     call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, disp%rvdw, &
-       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient, sigma)
+       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
    if (grad) then
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
-         & gradient, sigma)
+         & gradient_local, sigma_local)
+      if (present(gradient)) gradient(:, :) = gradient_local(:, :)
+      if (present(sigma)) sigma(:, :) = sigma_local(:, :)
+   end if
+   if (hess) then
+      call get_dispersion_hessian(mol, disp, param, cutoff, hessian)
    end if
 
 end subroutine get_dispersion_atomic
 
 
+!> Analytical second derivatives of the dispersion energy w.r.t. the coordinates.
+!>
+!> The energy depends on the coordinates directly and through the coordination
+!> number. Both contributions are accumulated separately and the coordination
+!> number part is contracted with dCN/dR afterwards.
+subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d3_model), intent(in) :: disp
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Dispersion hessian
+   real(wp), intent(out) :: hessian(:, :)
+
+   integer :: mref, nat, ndim, iat, ic, kat
+   real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
+   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :), gwd2cn(:, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :), d2c6dcn2(:, :), d2c6dcnij(:, :)
+   real(wp), allocatable :: lattr(:, :)
+   real(wp), allocatable :: dEdcn(:), dEdcndr(:, :), dEdcndcn(:, :), dr(:, :)
+
+   nat = mol%nat
+   ndim = 3*nat
+   mref = maxval(disp%ref)
+
+   allocate(cn(nat), dcndr(3, nat, nat), dcndL(3, 3, nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn, dcndr, dcndL)
+
+   allocate(gwvec(mref, nat), gwdcn(mref, nat), gwd2cn(mref, nat))
+   call disp%weight_references(mol, cn, gwvec, gwdcn, gwd2cn)
+
+   allocate(c6(nat, nat), dc6dcn(nat, nat), d2c6dcn2(nat, nat), d2c6dcnij(nat, nat))
+   call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, d2c6dcnij)
+
+   hessian(:, :) = 0.0_wp
+   allocate(dEdcn(nat), source=0.0_wp)
+   allocate(dEdcndr(ndim, nat), source=0.0_wp)
+   allocate(dEdcndcn(nat, nat), source=0.0_wp)
+
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
+   call get_dispersion2_hessian(param, mol, lattr, cutoff%disp2, cutoff%width2, &
+      & disp%rvdw, disp%r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, &
+      & dEdcndr, dEdcndcn)
+
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
+   call param%get_dispersion3_hessian(mol, lattr, cutoff%disp3, cutoff%width3, &
+      & disp%rvdw, disp%r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, &
+      & dEdcndr, dEdcndcn)
+
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call add_coordination_number_hessian(mol, lattr, cutoff%cn, disp%rcov, dEdcn, hessian)
+
+   allocate(dr(ndim, nat))
+   do kat = 1, nat
+      do iat = 1, nat
+         do ic = 1, 3
+            dr(3*(iat - 1) + ic, kat) = dcndr(ic, iat, kat)
+         end do
+      end do
+   end do
+
+   hessian(:, :) = hessian + matmul(dEdcndr, transpose(dr)) &
+      & + matmul(dr, transpose(dEdcndr)) &
+      & + matmul(dr, matmul(dEdcndcn, transpose(dr)))
+
+end subroutine get_dispersion_hessian
+
+
 !> Calculate scalar dispersion energy.
-subroutine get_dispersion_scalar(mol, disp, param, cutoff, energy, gradient, sigma)
+subroutine get_dispersion_scalar(mol, disp, param, cutoff, energy, gradient, sigma, hessian)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -131,11 +221,14 @@ subroutine get_dispersion_scalar(mol, disp, param, cutoff, energy, gradient, sig
    !> Dispersion virial
    real(wp), intent(out), contiguous, optional :: sigma(:, :)
 
+   !> Dispersion hessian
+   real(wp), intent(out), contiguous, optional :: hessian(:, :)
+
    real(wp), allocatable :: energies(:)
 
    allocate(energies(mol%nat))
 
-   call get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma)
+   call get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma, hessian)
 
    energy = sum(energies)
 
