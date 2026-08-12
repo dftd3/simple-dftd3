@@ -413,6 +413,18 @@ To evaluate dispersion energies or related properties the :c:func:`dftd3_get_dis
 
    Evaluate the counter-poise energy and its derivatives.
 
+.. c:function:: void dftd3_get_counterpoise_hessian(dftd3_error error, dftd3_structure mol, dftd3_gcp gcp, double* energy, double* hessian);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :param gcp: Counter-poise parameter handle
+   :param energy: Counter-poise energy
+   :param hessian: Counter-poise hessian [3*natoms, 3*natoms]
+
+   Evaluate the analytical second derivatives of the counter-poise energy with
+   respect to the nuclear coordinates in Hartree per Bohr squared.
+   The layout matches :c:func:`dftd3_get_dispersion_hessian`.
+
 
 Memory management
 -----------------
