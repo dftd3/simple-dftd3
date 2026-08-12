@@ -71,6 +71,48 @@ def test_ase_scand3_atm():
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")
+def test_ase_hessian():
+    """Analytical hessian must match finite differences of the forces"""
+    from ase.units import Bohr, Hartree
+
+    step = 1.0e-4
+    atoms = molecule("H2O")
+    calc = DFTD3(
+        method="PBE0", damping="d3bj", params_tweaks={"method": "PBE0", "atm": True}
+    )
+    atoms.calc = calc
+
+    hessian = calc.get_hessian(atoms)
+    nat = len(atoms)
+    assert hessian.shape == (3 * nat, 3 * nat)
+    assert hessian == approx(hessian.transpose(), abs=1.0e-10)
+
+    positions = atoms.get_positions()
+    numhess = np.zeros((3 * nat, 3 * nat))
+    for iat in range(nat):
+        for ic in range(3):
+            coord = positions.copy()
+            coord[iat, ic] += step
+            atoms.set_positions(coord)
+            fr = atoms.get_forces()
+            coord[iat, ic] -= 2 * step
+            atoms.set_positions(coord)
+            fl = atoms.get_forces()
+            # forces are the negative gradient
+            numhess[3 * iat + ic, :] = -0.5 * (fr - fl).flatten() / step
+    atoms.set_positions(positions)
+
+    assert hessian == approx(numhess, abs=1.0e-6)
+
+    # cross-check the unit conversion against the raw atomic units interface
+    from dftd3.interface import DispersionModel, RationalDampingParam
+
+    model = DispersionModel(atoms.get_atomic_numbers(), positions / Bohr)
+    au = model.get_hessian(RationalDampingParam(method="pbe0", atm=True))["hessian"]
+    assert hessian == approx(au * Hartree / Bohr**2, abs=1.0e-12)
+
+
+@pytest.mark.skipif(ase is None, reason="requires ase")
 def test_ase_scand3():
     thr = 1.0e-6
 

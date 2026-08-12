@@ -261,6 +261,8 @@ contains
       real(wp) :: sw, swr, swrr, fr, frr, fc, frc, fcc
       real(wp) :: block(3, 3), cnd(2), cnd2(2, 2), dr2(3, 2)
 
+      ! Kept serial on purpose: the loop is O(N^2) but bound by the scattered
+      ! writes into the O(N^2) hessian, so thread-private copies only add traffic
       cutoff2 = cutoff*cutoff
 
       do iat = 1, mol%nat
@@ -341,8 +343,10 @@ contains
                      do ic = 1, 3
                         ii = 3*(iat-1) + ic
                         jj = 3*(jat-1) + ic
-                        dEdcndr(ii, cnat(ia)) = dEdcndr(ii, cnat(ia)) + frc*dr2(ic, 1)*cnd(ia)
-                        dEdcndr(jj, cnat(ia)) = dEdcndr(jj, cnat(ia)) + frc*dr2(ic, 2)*cnd(ia)
+                        dEdcndr(ii, cnat(ia)) = dEdcndr(ii, cnat(ia)) &
+                           & + frc*dr2(ic, 1)*cnd(ia)
+                        dEdcndr(jj, cnat(ia)) = dEdcndr(jj, cnat(ia)) &
+                           & + frc*dr2(ic, 2)*cnd(ia)
                      end do
                   end do
                end if

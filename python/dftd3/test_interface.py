@@ -287,6 +287,87 @@ def test_pbe_d3_z(atm: bool, model: DispersionModel) -> None:
     assert approx(res.get("energy")) == ref
 
 
+def test_hessian() -> None:
+    """Compare the analytical hessian against finite differences of the gradient"""
+    step = 1.0e-6
+    thr = 1.0e-7
+
+    numbers = np.array([8, 1, 1, 8, 1, 1])
+    positions = np.array(
+        [  # Coordinates in Bohr
+            [-2.85, -0.05, +0.00],
+            [-1.05, +0.00, +0.00],
+            [-3.40, +1.65, +0.00],
+            [+2.65, +0.00, +0.00],
+            [+3.30, +1.00, +1.45],
+            [+3.30, +1.00, -1.45],
+        ]
+    )
+
+    model = DispersionModel(numbers, positions)
+    param = RationalDampingParam(method="pbe0", atm=True)
+
+    hessian = model.get_hessian(param).get("hessian")
+    assert hessian.shape == (3 * len(numbers), 3 * len(numbers))
+    assert hessian == approx(hessian.transpose(), abs=1.0e-12)
+
+    numhess = np.zeros_like(hessian)
+    for iat in range(len(numbers)):
+        for ic in range(3):
+            coord = positions.copy()
+            coord[iat, ic] += step
+            model.update(coord)
+            gr = model.get_dispersion(param, grad=True).get("gradient")
+            coord[iat, ic] -= 2 * step
+            model.update(coord)
+            gl = model.get_dispersion(param, grad=True).get("gradient")
+            numhess[3 * iat + ic, :] = 0.5 * (gr - gl).flatten() / step
+    model.update(positions)
+
+    assert hessian == approx(numhess, abs=thr)
+
+
+def test_hessian_ghost_atoms() -> None:
+    """Ghost atoms zero out C6 coefficients and must not produce NaN"""
+    thr = 1.0e-7
+
+    numbers = np.array([8, 1, 1, 8, 1, 1])
+    positions = np.array(
+        [  # Coordinates in Bohr
+            [-2.85, -0.05, +0.00],
+            [-1.05, +0.00, +0.00],
+            [-3.40, +1.65, +0.00],
+            [+2.65, +0.00, +0.00],
+            [+3.30, +1.00, +1.45],
+            [+3.30, +1.00, -1.45],
+        ]
+    )
+
+    model = DispersionModel(numbers, positions)
+    model.set_ghost_atoms([2, 3])
+    param = RationalDampingParam(method="pbe0", atm=True)
+
+    hessian = model.get_hessian(param).get("hessian")
+    assert not np.isnan(hessian).any()
+
+    numhess = np.zeros_like(hessian)
+    step = 1.0e-6
+    for iat in range(len(numbers)):
+        for ic in range(3):
+            coord = positions.copy()
+            coord[iat, ic] += step
+            model.update(coord)
+            gr = model.get_dispersion(param, grad=True).get("gradient")
+            coord[iat, ic] -= 2 * step
+            model.update(coord)
+            gl = model.get_dispersion(param, grad=True).get("gradient")
+            numhess[3 * iat + ic, :] = 0.5 * (gr - gl).flatten() / step
+    model.update(positions)
+
+    assert not np.isnan(numhess).any()
+    assert hessian == approx(numhess, abs=thr)
+
+
 def test_gcp_empty(numbers: np.ndarray, positions: np.ndarray) -> None:
     gcp = GeometricCounterpoise(
         numbers,

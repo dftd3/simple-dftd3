@@ -588,6 +588,29 @@ class DispersionModel(Structure):
             "non-additive pairwise energy": _pair_disp3,
         }
 
+    def get_hessian(self, param: DampingParam) -> dict:
+        """
+        Evaluate the analytical second derivatives of the dispersion energy
+        with respect to the nuclear coordinates.
+
+        The hessian is returned as a symmetric ``3*n`` by ``3*n`` matrix in
+        Hartree per Bohr squared, using the index convention ``3*i + c`` for
+        the Cartesian component ``c`` of atom ``i``.
+        """
+
+        _energy = np.array(0.0)
+        _hessian = np.zeros((3 * len(self), 3 * len(self)))
+
+        library.get_dispersion_hessian(
+            self._mol,
+            self._disp,
+            param._param,
+            _energy,
+            _hessian,
+        )
+
+        return {"energy": _energy, "hessian": _hessian}
+
 
 class GeometricCounterpoise(Structure):
     """

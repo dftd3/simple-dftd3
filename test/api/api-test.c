@@ -532,6 +532,62 @@ cleanup:
 }
 
 int
+test_ghost_atoms_atm(void) {
+   printf("Start test: ghost atoms with ATM\n");
+   double energy = 0.0;
+   double gradient[21] = {0.0};
+   double hessian[441] = {0.0};
+   // ghosting a subset while the three-body term is active zeroes single C6
+   // coefficients, which must not produce NaN in the derivatives
+   int const ghost[2] = {0, 3};
+   int stat = 0;
+
+   dftd3_error error = dftd3_new_error();
+   dftd3_structure mol = get_test_structure(error);
+   dftd3_model disp = dftd3_new_d3_model(error, mol);
+   // PBE-D3(BJ)-ATM
+   dftd3_param param =
+      dftd3_new_rational_damping(error, 1.0, 0.7875, 1.0, 0.4289, 4.4407, 14.0);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   dftd3_set_model_ghost_index(error, disp, ghost, 2);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, NULL);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   if (isnan(energy)) {
+      printf("[Fatal] Energy is NaN for ghost atoms with ATM\n");
+      stat = 1;
+      goto cleanup;
+   }
+   for (int i = 0; i < 21; ++i) {
+      if (isnan(gradient[i])) {
+         printf("[Fatal] Gradient is NaN for ghost atoms with ATM\n");
+         stat = 1;
+         goto cleanup;
+      }
+   }
+
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &energy, hessian);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+   for (int i = 0; i < 441; ++i) {
+      if (isnan(hessian[i])) {
+         printf("[Fatal] Hessian is NaN for ghost atoms with ATM\n");
+         stat = 1;
+         goto cleanup;
+      }
+   }
+
+cleanup:
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return stat;
+}
+
+int
 main (void)
 {
    int stat = 0;
@@ -543,6 +599,7 @@ main (void)
    stat += test_uninitialized_gcp();
    stat += test_invalid_structure();
    stat += test_ghost_atoms();
+   stat += test_ghost_atoms_atm();
    stat += test_d3();
    stat += test_hessian();
    stat += test_gcp();

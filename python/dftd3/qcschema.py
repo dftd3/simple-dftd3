@@ -29,6 +29,10 @@ This module provides a way to translate QCSchema or QCElemental Atomic Input
 into a format understandable by the ``dftd3`` API which in turn provides the
 calculation results in a QCSchema compatible format.
 
+The ``energy``, ``gradient`` and ``hessian`` drivers are supported, the latter
+returning the analytical second derivatives as a ``3*nat`` by ``3*nat`` matrix
+in Hartree per Bohr squared.
+
 Supported keywords are
 
 ======================== =========== ============================================
@@ -172,6 +176,7 @@ if qcel_v1 is None and qcel_v2 is None:
 _supported_drivers = [
     "energy",
     "gradient",
+    "hessian",
 ]
 
 _available_levels = [
@@ -207,6 +212,9 @@ def error_return_result(driver, molecule):
     if driver == "gradient":
         natoms = len(molecule.symbols)
         return np.zeros((natoms, 3))
+    if driver == "hessian":
+        natoms = len(molecule.symbols)
+        return np.zeros((3 * natoms, 3 * natoms))
     return None
 
 
@@ -331,6 +339,18 @@ def run_qcschema(input_data):
                 fullgrad = np.zeros_like(atomic_input.molecule.geometry)
                 fullgrad[ireal, :] = res.get("gradient")
 
+        if driver == "hessian":
+            res_hessian = disp.get_hessian(param=param)
+            extras["dftd3"].update(hessian=res_hessian.get("hessian"))
+            natoms = len(atomic_input.molecule.atomic_numbers)
+            if all(atomic_input.molecule.real):
+                fullhess = res_hessian.get("hessian")
+            else:
+                ireal = np.argwhere(atomic_input.molecule.real).reshape((-1))
+                icart = (3 * ireal[:, None] + np.arange(3)).reshape((-1))
+                fullhess = np.zeros((3 * natoms, 3 * natoms))
+                fullhess[np.ix_(icart, icart)] = res_hessian.get("hessian")
+
         properties.update(return_energy=res.get("energy"))
 
         if input_keywords.get("pair_resolved", False):
@@ -342,6 +362,8 @@ def run_qcschema(input_data):
             return_result = properties["return_energy"]
         elif driver == "gradient":
             return_result = fullgrad
+        elif driver == "hessian":
+            return_result = fullhess
         else:
             ret_data.update(
                 error=dict(

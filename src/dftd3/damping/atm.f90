@@ -90,17 +90,41 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
    real(wp) :: av, ap(3), apq(3, 3), kv, kp(3), kpq(3, 3)
    real(wp) :: c6t(3), qv, qm(3), qmn(3, 3), pref, ec(3), ecc(3, 3), euc(3, 3)
    real(wp) :: ent_coef(6), grad(3, 3, 3), tmp
+   real(wp) :: gk(3, 3, 3), egr(3, 3, 3), dg(3, 3), pq
    integer, parameter :: sigp(3, 3) = reshape(&
       & [-1, 1, 0, -1, 0, 1, 0, -1, 1], [3, 3])
    real(wp), parameter :: cl(3, 3) = reshape(&
       & [1.0_wp, 1.0_wp, -1.0_wp, -1.0_wp, 1.0_wp, 1.0_wp, 1.0_wp, -1.0_wp, 1.0_wp], &
       & [3, 3])
 
+   ! Thread-private arrays for reduction, these are O(N^2) unlike the gradient
+   real(wp), allocatable :: hessian_local(:, :), dEdcn_local(:)
+   real(wp), allocatable :: dEdcndr_local(:, :), dEdcndcn_local(:, :)
+
    if (abs(s9) < epsilon(1.0_wp)) return
    cutoff2 = cutoff*cutoff
    alp3 = alp / 3.0_wp
    aexp = 0.5_wp * alp3
 
+   !$omp parallel default(none) &
+   !$omp shared(mol, trans, cutoff, width, s9, rs9, rvdw, c6, dc6dcn, &
+   !$omp& d2c6dcn2, d2c6dcnij, cutoff2, alp3, aexp) &
+   !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, ip, iq, il, im, &
+   !$omp& ia, ib, ic, jc, ie, if_, nent, at, pat, ent_atom, ent_pair, &
+   !$omp& vec, u, triple, r0, cval, swp, dswp, d2swp, sval, sp, spq, &
+   !$omp& ww, wp_, wpq, lval, nval, np, npq, gv, gd, gdd, hv, hd, hdd, &
+   !$omp& ang, angp, angpq, tval, tp, tpq, fd, fdp, fdpq, av, ap, apq, &
+   !$omp& kv, kp, kpq, c6t, qv, qm, qmn, pref, ec, ecc, euc, ent_coef, &
+   !$omp& grad, tmp, gk, egr, dg, pq) &
+   !$omp shared(hessian, dEdcn, dEdcndr, dEdcndcn) &
+   !$omp private(hessian_local, dEdcn_local, dEdcndr_local, dEdcndcn_local)
+   allocate(hessian_local(size(hessian, 1), size(hessian, 2)), source=0.0_wp)
+   allocate(dEdcn_local(size(dEdcn, 1)), source=0.0_wp)
+   allocate(dEdcndr_local(size(dEdcndr, 1), size(dEdcndr, 2)), source=0.0_wp)
+   allocate(dEdcndcn_local(size(dEdcndcn, 1), size(dEdcndcn, 2)), source=0.0_wp)
+   ! the triple loop is strongly triangular, static scheduling would leave the
+   ! last threads with most of the work
+   !$omp do schedule(dynamic)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
@@ -266,25 +290,40 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
                   end do
 
                   ! Cartesian second derivatives at fixed coordination number
+                  pq = pref*qv
+                  ! contract with the pair gradients once instead of per component pair
+                  do ia = 1, 3
+                     do ic = 1, 3
+                        do iq = 1, 3
+                           tmp = 0.0_wp
+                           do ip = 1, 3
+                              tmp = tmp + kpq(ip, iq)*grad(ic, ia, ip)
+                           end do
+                           gk(ic, ia, iq) = pq*tmp
+                        end do
+                     end do
+                  end do
+                  do ia = 1, 3
+                     do ib = 1, 3
+                        tmp = 0.0_wp
+                        do ip = 1, 3
+                           tmp = tmp + kp(ip)*sigp(ia, ip)*sigp(ib, ip)
+                        end do
+                        dg(ia, ib) = 2.0_wp*pq*tmp
+                     end do
+                  end do
+
                   do ia = 1, 3
                      do ib = 1, 3
                         do ic = 1, 3
                            do jc = 1, 3
                               tmp = 0.0_wp
-                              do ip = 1, 3
-                                 do iq = 1, 3
-                                    tmp = tmp + pref*qv*kpq(ip, iq) &
-                                       & * grad(ic, ia, ip) * grad(jc, ib, iq)
-                                 end do
+                              do iq = 1, 3
+                                 tmp = tmp + gk(ic, ia, iq)*grad(jc, ib, iq)
                               end do
-                              if (ic == jc) then
-                                 do ip = 1, 3
-                                    tmp = tmp + pref*qv*kp(ip) &
-                                       & * 2.0_wp*sigp(ia, ip)*sigp(ib, ip)
-                                 end do
-                              end if
-                              hessian(3*(at(ia)-1)+ic, 3*(at(ib)-1)+jc) = &
-                                 & hessian(3*(at(ia)-1)+ic, 3*(at(ib)-1)+jc) + tmp
+                              if (ic == jc) tmp = tmp + dg(ia, ib)
+                              hessian_local(3*(at(ia)-1)+ic, 3*(at(ib)-1)+jc) = &
+                                 & hessian_local(3*(at(ia)-1)+ic, 3*(at(ib)-1)+jc) + tmp
                            end do
                         end do
                      end do
@@ -296,6 +335,19 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
                      do iq = 1, 3
                         ecc(ip, iq) = pref*qmn(ip, iq)*kv
                         euc(iq, ip) = pref*qm(ip)*kp(iq)
+                     end do
+                  end do
+
+                  ! contract the mixed CN/Cartesian derivatives once per pair
+                  do ia = 1, 3
+                     do ic = 1, 3
+                        do im = 1, 3
+                           tmp = 0.0_wp
+                           do ip = 1, 3
+                              tmp = tmp + euc(ip, im)*grad(ic, ia, ip)
+                           end do
+                           egr(ic, ia, im) = tmp
+                        end do
                      end do
                   end do
 
@@ -323,21 +375,18 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
                   end do
 
                   do ie = 1, nent
-                     dEdcn(ent_atom(ie)) = dEdcn(ent_atom(ie)) &
+                     dEdcn_local(ent_atom(ie)) = dEdcn_local(ent_atom(ie)) &
                         & + ec(ent_pair(ie))*ent_coef(ie)
                      do if_ = 1, nent
-                        dEdcndcn(ent_atom(ie), ent_atom(if_)) = &
-                           & dEdcndcn(ent_atom(ie), ent_atom(if_)) &
+                        dEdcndcn_local(ent_atom(ie), ent_atom(if_)) = &
+                           & dEdcndcn_local(ent_atom(ie), ent_atom(if_)) &
                            & + ecc(ent_pair(ie), ent_pair(if_))*ent_coef(ie)*ent_coef(if_)
                      end do
                      do ia = 1, 3
                         do ic = 1, 3
-                           tmp = 0.0_wp
-                           do ip = 1, 3
-                              tmp = tmp + euc(ip, ent_pair(ie))*grad(ic, ia, ip)
-                           end do
-                           dEdcndr(3*(at(ia)-1)+ic, ent_atom(ie)) = &
-                              & dEdcndr(3*(at(ia)-1)+ic, ent_atom(ie)) + tmp*ent_coef(ie)
+                           dEdcndr_local(3*(at(ia)-1)+ic, ent_atom(ie)) = &
+                              & dEdcndr_local(3*(at(ia)-1)+ic, ent_atom(ie)) &
+                              & + egr(ic, ia, ent_pair(ie))*ent_coef(ie)
                         end do
                      end do
                   end do
@@ -347,12 +396,12 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
                      ia = pat(1, ip)
                      ib = pat(2, ip)
                      if (ia /= ib) then
-                        dEdcndcn(ia, ia) = dEdcndcn(ia, ia) + ec(ip)*d2c6dcn2(ia, ib)
-                        dEdcndcn(ib, ib) = dEdcndcn(ib, ib) + ec(ip)*d2c6dcn2(ib, ia)
-                        dEdcndcn(ia, ib) = dEdcndcn(ia, ib) + ec(ip)*d2c6dcnij(ia, ib)
-                        dEdcndcn(ib, ia) = dEdcndcn(ib, ia) + ec(ip)*d2c6dcnij(ia, ib)
+                        dEdcndcn_local(ia, ia) = dEdcndcn_local(ia, ia) + ec(ip)*d2c6dcn2(ia, ib)
+                        dEdcndcn_local(ib, ib) = dEdcndcn_local(ib, ib) + ec(ip)*d2c6dcn2(ib, ia)
+                        dEdcndcn_local(ia, ib) = dEdcndcn_local(ia, ib) + ec(ip)*d2c6dcnij(ia, ib)
+                        dEdcndcn_local(ib, ia) = dEdcndcn_local(ib, ia) + ec(ip)*d2c6dcnij(ia, ib)
                      else
-                        dEdcndcn(ia, ia) = dEdcndcn(ia, ia) + ec(ip) &
+                        dEdcndcn_local(ia, ia) = dEdcndcn_local(ia, ia) + ec(ip) &
                            & * (2.0_wp*d2c6dcn2(ia, ia) + 2.0_wp*d2c6dcnij(ia, ia))
                      end if
                   end do
@@ -361,6 +410,15 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
          end do
       end do
    end do
+   !$omp end do
+   !$omp critical (get_atm_dispersion_hessian_)
+   hessian(:, :) = hessian(:, :) + hessian_local(:, :)
+   dEdcn(:) = dEdcn(:) + dEdcn_local(:)
+   dEdcndr(:, :) = dEdcndr(:, :) + dEdcndr_local(:, :)
+   dEdcndcn(:, :) = dEdcndcn(:, :) + dEdcndcn_local(:, :)
+   !$omp end critical (get_atm_dispersion_hessian_)
+   deallocate(hessian_local, dEdcn_local, dEdcndr_local, dEdcndcn_local)
+   !$omp end parallel
 
 end subroutine get_atm_dispersion_hessian
 
@@ -641,6 +699,10 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rv
                kzp = mol%id(kat)
                c6ik = c6(kat, iat)
                c6jk = c6(kat, jat)
+               ! ghost atoms zero the C6 coefficients, which would make the
+               ! coordination number derivatives below divide by zero
+               if (abs(c6ij) < epsilon(1.0_wp) .or. abs(c6ik) < epsilon(1.0_wp) &
+                  & .or. abs(c6jk) < epsilon(1.0_wp)) cycle
                c9 = -s9 * sqrt(abs(c6ij*c6ik*c6jk))
                r0ik = rs9 * rvdw(kzp, izp)
                r0jk = rs9 * rvdw(kzp, jzp)

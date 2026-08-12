@@ -31,6 +31,11 @@ Supported properties by this calculator are:
 - energy (free_energy)
 - forces
 - stress
+- hessian
+
+The hessian is not a standard ASE property, it is provided as a ``3*nat`` by
+``3*nat`` matrix in eV per Angstrom squared and can be requested with
+``atoms.calc.get_hessian(atoms)``.
 
 Supported keywords are
 
@@ -101,6 +106,8 @@ array([[-0.        , -0.        ,  0.00009572],
 
 from typing import List, Optional
 
+import numpy as np
+
 try:
     from ase.calculators.calculator import (
         Calculator,
@@ -141,6 +148,7 @@ _damping_param = {
 
 _inv_bohr = 1.0 / Bohr
 _hartree_per_bohr = Hartree / Bohr
+_hartree_per_bohr2 = Hartree / Bohr**2
 
 
 class DFTD3(Calculator):
@@ -162,6 +170,7 @@ class DFTD3(Calculator):
         "energy",
         "forces",
         "stress",
+        "hessian",
     ]
 
     default_parameters = {
@@ -357,3 +366,21 @@ class DFTD3(Calculator):
                 _virial = _res.get("virial")
                 _virial *= Hartree / self.atoms.get_volume()
                 self.results["stress"] = _virial.flat[[0, 4, 8, 5, 2, 1]]
+
+        if "hessian" in properties:
+            try:
+                _hess = self._disp.get_hessian(param=self._dpar)
+            except RuntimeError:
+                raise CalculationFailed("dftd3 could not evaluate input")
+            self.results["hessian"] = _hess.get("hessian") * _hartree_per_bohr2
+
+    def get_hessian(self, atoms: Optional[Atoms] = None) -> np.ndarray:
+        """
+        Evaluate the analytical second derivatives of the dispersion energy.
+
+        Returns a ``3*nat`` by ``3*nat`` matrix in eV per Angstrom squared using
+        the index convention ``3*i + c`` for the Cartesian component ``c`` of
+        atom ``i``.
+        """
+
+        return self.get_property("hessian", atoms)
