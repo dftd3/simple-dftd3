@@ -335,6 +335,22 @@ def get_pairwise_dispersion(
     )
 
 
+def get_dispersion_hessian(
+    mol: StructureHandle,
+    disp: ModelHandle,
+    param: ParamHandle,
+    energy: np.ndarray,
+    hessian: np.ndarray,
+) -> None:
+    return error_check(lib.dftd3_get_dispersion_hessian)(
+        mol.handle,
+        disp.handle,
+        param.handle,
+        _cast("double*", energy),
+        _cast("double*", hessian),
+    )
+
+
 def load_gcp_param(
     mol: StructureHandle, method: Optional[str], basis: Optional[str]
 ) -> GCPHandle:

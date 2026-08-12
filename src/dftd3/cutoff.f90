@@ -19,7 +19,7 @@ module dftd3_cutoff
    implicit none
    private
 
-   public :: realspace_cutoff, get_lattice_points, smooth_cutoff
+   public :: realspace_cutoff, get_lattice_points, smooth_cutoff, smooth_cutoff_r2
 
 
    !> Coordination number cutoff
@@ -97,6 +97,44 @@ pure subroutine smooth_cutoff(r, cutoff, width, sw, dswdr)
       end if
    end if
 end subroutine smooth_cutoff
+
+
+!> Smooth switching function and its first two derivatives with respect to the
+!> squared distance, as required for the Hessian
+pure subroutine smooth_cutoff_r2(r2, cutoff, width, sw, dswdr2, d2swdr22)
+   real(wp), intent(in) :: r2
+   real(wp), intent(in) :: cutoff
+   real(wp), intent(in) :: width
+   real(wp), intent(out) :: sw
+   real(wp), intent(out) :: dswdr2
+   real(wp), intent(out) :: d2swdr22
+
+   real(wp) :: inner, x, r1, dswdr, d2swdr2
+
+   r1 = sqrt(r2)
+   dswdr = 0.0_wp
+   d2swdr2 = 0.0_wp
+
+   if (width <= 0.0_wp .or. width >= cutoff) then
+      sw = 1.0_wp
+   else
+      inner = cutoff - width
+      if (r1 <= inner) then
+         sw = 1.0_wp
+      else if (r1 >= cutoff) then
+         sw = 0.0_wp
+      else
+         x = (cutoff - r1) / width
+         sw = x**3 * (10.0_wp + x*(-15.0_wp + 6.0_wp*x))
+         dswdr = -30.0_wp * x**2 * (1.0_wp - x)**2 / width
+         d2swdr2 = 60.0_wp * x * (1.0_wp - x) * (1.0_wp - 2.0_wp*x) / (width*width)
+      end if
+   end if
+
+   dswdr2 = 0.5_wp * dswdr / r1
+   d2swdr22 = 0.25_wp * (d2swdr2 - dswdr / r1) / r2
+
+end subroutine smooth_cutoff_r2
 
 
 subroutine get_lattice_points(periodic, lat, rthr, trans)

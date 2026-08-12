@@ -15,16 +15,412 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_damping_atm
-   use dftd3_cutoff, only : smooth_cutoff
+   use dftd3_cutoff, only : smooth_cutoff, smooth_cutoff_r2
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
    private
 
    public :: get_atm_dispersion, get_atm_pairwise_dispersion
+   public :: get_atm_dispersion_hessian
 
 
 contains
+
+
+!> Analytical second derivatives of the three-body dispersion energy.
+!>
+!> The triple energy is a function of the three squared distances and the three
+!> pairwise C6 coefficients. Contributions are accumulated as Cartesian second
+!> derivatives at fixed coordination number plus the derivatives with respect to
+!> the coordination numbers, which the caller contracts with dCN/dR.
+subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, rvdw, &
+      & c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Width of smooth cutoff
+   real(wp), intent(in) :: width
+
+   !> Scaling for dispersion coefficients
+   real(wp), intent(in) :: s9
+
+   !> Scaling for van-der-Waals radii in damping function
+   real(wp), intent(in) :: rs9
+
+   !> Exponent of zero damping function
+   real(wp), intent(in) :: alp
+
+   !> Van-der-Waals radii for all element pairs
+   real(wp), intent(in) :: rvdw(:, :)
+
+   !> C6 coefficients for all atom pairs.
+   real(wp), intent(in) :: c6(:, :)
+
+   !> Derivatives of the C6 w.r.t. the coordination number
+   real(wp), intent(in) :: dc6dcn(:, :), d2c6dcn2(:, :), d2c6dcnij(:, :)
+
+   !> Second derivative of the energy w.r.t. the Cartesian coordinates
+   real(wp), intent(inout) :: hessian(:, :)
+
+   !> Derivative of the energy w.r.t. the coordination number
+   real(wp), intent(inout) :: dEdcn(:)
+
+   !> Mixed derivative w.r.t. coordination number and Cartesian coordinates
+   real(wp), intent(inout) :: dEdcndr(:, :)
+
+   !> Second derivative w.r.t. the coordination numbers
+   real(wp), intent(inout) :: dEdcndcn(:, :)
+
+   integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
+   integer :: ip, iq, il, im, ia, ib, ic, jc, ie, if_, nent
+   integer :: at(3), pat(2, 3), ent_atom(6), ent_pair(6)
+   real(wp) :: vec(3, 3), u(3), cutoff2, triple, r0, alp3, aexp, cval
+   real(wp) :: swp(3), dswp(3), d2swp(3), sval, sp(3), spq(3, 3)
+   real(wp) :: ww, wp_(3), wpq(3, 3), lval(3), nval, np(3), npq(3, 3)
+   real(wp) :: gv, gd, gdd, hv, hd, hdd, ang, angp(3), angpq(3, 3)
+   real(wp) :: tval, tp(3), tpq(3, 3), fd, fdp(3), fdpq(3, 3)
+   real(wp) :: av, ap(3), apq(3, 3), kv, kp(3), kpq(3, 3)
+   real(wp) :: c6t(3), qv, qm(3), qmn(3, 3), pref, ec(3), ecc(3, 3), euc(3, 3)
+   real(wp) :: ent_coef(6), grad(3, 3, 3), tmp
+   real(wp) :: gk(3, 3, 3), egr(3, 3, 3), dg(3, 3), pq
+   integer, parameter :: sigp(3, 3) = reshape(&
+      & [-1, 1, 0, -1, 0, 1, 0, -1, 1], [3, 3])
+   real(wp), parameter :: cl(3, 3) = reshape(&
+      & [1.0_wp, 1.0_wp, -1.0_wp, -1.0_wp, 1.0_wp, 1.0_wp, 1.0_wp, -1.0_wp, 1.0_wp], &
+      & [3, 3])
+
+   ! Thread-private arrays for reduction, these are O(N^2) unlike the gradient
+   real(wp), allocatable :: hessian_local(:, :), dEdcn_local(:)
+   real(wp), allocatable :: dEdcndr_local(:, :), dEdcndcn_local(:, :)
+
+   if (abs(s9) < epsilon(1.0_wp)) return
+   cutoff2 = cutoff*cutoff
+   alp3 = alp / 3.0_wp
+   aexp = 0.5_wp * alp3
+
+   !$omp parallel default(none) &
+   !$omp shared(mol, trans, cutoff, width, s9, rs9, rvdw, c6, dc6dcn, &
+   !$omp& d2c6dcn2, d2c6dcnij, cutoff2, alp3, aexp) &
+   !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, ip, iq, il, im, &
+   !$omp& ia, ib, ic, jc, ie, if_, nent, at, pat, ent_atom, ent_pair, &
+   !$omp& vec, u, triple, r0, cval, swp, dswp, d2swp, sval, sp, spq, &
+   !$omp& ww, wp_, wpq, lval, nval, np, npq, gv, gd, gdd, hv, hd, hdd, &
+   !$omp& ang, angp, angpq, tval, tp, tpq, fd, fdp, fdpq, av, ap, apq, &
+   !$omp& kv, kp, kpq, c6t, qv, qm, qmn, pref, ec, ecc, euc, ent_coef, &
+   !$omp& grad, tmp, gk, egr, dg, pq) &
+   !$omp shared(hessian, dEdcn, dEdcndr, dEdcndcn) &
+   !$omp private(hessian_local, dEdcn_local, dEdcndr_local, dEdcndcn_local)
+   allocate(hessian_local(size(hessian, 1), size(hessian, 2)), source=0.0_wp)
+   allocate(dEdcn_local(size(dEdcn, 1)), source=0.0_wp)
+   allocate(dEdcndr_local(size(dEdcndr, 1), size(dEdcndr, 2)), source=0.0_wp)
+   allocate(dEdcndcn_local(size(dEdcndcn, 1), size(dEdcndcn, 2)), source=0.0_wp)
+   ! the triple loop is strongly triangular, static scheduling would leave the
+   ! last threads with most of the work
+   !$omp do schedule(dynamic)
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      do jat = 1, iat
+         jzp = mol%id(jat)
+         do jtr = 1, size(trans, 2)
+            vec(:, 1) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
+            u(1) = sum(vec(:, 1)**2)
+            if (u(1) > cutoff2 .or. u(1) < epsilon(1.0_wp)) cycle
+            do kat = 1, jat
+               kzp = mol%id(kat)
+               triple = triple_scale(iat, jat, kat)
+               r0 = rs9*rvdw(jzp, izp) * rs9*rvdw(kzp, izp) * rs9*rvdw(kzp, jzp)
+               do ktr = 1, size(trans, 2)
+                  vec(:, 2) = mol%xyz(:, kat) + trans(:, ktr) - mol%xyz(:, iat)
+                  u(2) = sum(vec(:, 2)**2)
+                  if (u(2) > cutoff2 .or. u(2) < epsilon(1.0_wp)) cycle
+                  vec(:, 3) = vec(:, 2) - vec(:, 1)
+                  u(3) = sum(vec(:, 3)**2)
+                  if (u(3) > cutoff2 .or. u(3) < epsilon(1.0_wp)) cycle
+
+                  c6t(1) = c6(jat, iat)
+                  c6t(2) = c6(kat, iat)
+                  c6t(3) = c6(kat, jat)
+                  if (any(abs(c6t) < epsilon(1.0_wp))) cycle
+
+                  ! switching function and its derivatives w.r.t. the squared distances
+                  do ip = 1, 3
+                     call smooth_cutoff_r2(u(ip), cutoff, width, swp(ip), dswp(ip), d2swp(ip))
+                  end do
+                  sval = swp(1)*swp(2)*swp(3)
+                  sp(1) = dswp(1)*swp(2)*swp(3)
+                  sp(2) = swp(1)*dswp(2)*swp(3)
+                  sp(3) = swp(1)*swp(2)*dswp(3)
+                  spq(1, 1) = d2swp(1)*swp(2)*swp(3)
+                  spq(2, 2) = swp(1)*d2swp(2)*swp(3)
+                  spq(3, 3) = swp(1)*swp(2)*d2swp(3)
+                  spq(1, 2) = dswp(1)*dswp(2)*swp(3)
+                  spq(2, 1) = spq(1, 2)
+                  spq(1, 3) = dswp(1)*swp(2)*dswp(3)
+                  spq(3, 1) = spq(1, 3)
+                  spq(2, 3) = swp(1)*dswp(2)*dswp(3)
+                  spq(3, 2) = spq(2, 3)
+
+                  ! product of the squared distances
+                  ww = u(1)*u(2)*u(3)
+                  wp_(1) = u(2)*u(3)
+                  wp_(2) = u(1)*u(3)
+                  wp_(3) = u(1)*u(2)
+                  wpq(:, :) = 0.0_wp
+                  wpq(1, 2) = u(3); wpq(2, 1) = u(3)
+                  wpq(1, 3) = u(2); wpq(3, 1) = u(2)
+                  wpq(2, 3) = u(1); wpq(3, 2) = u(1)
+
+                  ! triple product entering the angular term
+                  lval(1) = u(1) + u(3) - u(2)
+                  lval(2) = u(1) - u(3) + u(2)
+                  lval(3) = -u(1) + u(3) + u(2)
+                  nval = lval(1)*lval(2)*lval(3)
+                  do ip = 1, 3
+                     np(ip) = cl(1, ip)*lval(2)*lval(3) + cl(2, ip)*lval(1)*lval(3) &
+                        & + cl(3, ip)*lval(1)*lval(2)
+                  end do
+                  do ip = 1, 3
+                     do iq = 1, 3
+                        tmp = 0.0_wp
+                        do il = 1, 3
+                           do im = 1, 3
+                              if (il == im) cycle
+                              ! remaining index of the product
+                              tmp = tmp + cl(il, ip)*cl(im, iq)*lval(6 - il - im)
+                           end do
+                        end do
+                        npq(ip, iq) = tmp
+                     end do
+                  end do
+
+                  gv = ww**(-2.5_wp)
+                  gd = -2.5_wp * ww**(-3.5_wp)
+                  gdd = 8.75_wp * ww**(-4.5_wp)
+                  hv = ww**(-1.5_wp)
+                  hd = -1.5_wp * ww**(-2.5_wp)
+                  hdd = 3.75_wp * ww**(-3.5_wp)
+
+                  ang = 0.375_wp*nval*gv + hv
+                  do ip = 1, 3
+                     angp(ip) = 0.375_wp*(np(ip)*gv + nval*gd*wp_(ip)) + hd*wp_(ip)
+                  end do
+                  do ip = 1, 3
+                     do iq = 1, 3
+                        angpq(ip, iq) = 0.375_wp*(npq(ip, iq)*gv &
+                           & + np(ip)*gd*wp_(iq) + np(iq)*gd*wp_(ip) &
+                           & + nval*(gdd*wp_(ip)*wp_(iq) + gd*wpq(ip, iq))) &
+                           & + hdd*wp_(ip)*wp_(iq) + hd*wpq(ip, iq)
+                     end do
+                  end do
+
+                  ! zero damping function
+                  cval = 6.0_wp * r0**alp3
+                  tval = cval * ww**(-aexp)
+                  do ip = 1, 3
+                     tp(ip) = -aexp*tval*wp_(ip)/ww
+                  end do
+                  do ip = 1, 3
+                     do iq = 1, 3
+                        tpq(ip, iq) = aexp*(aexp + 1.0_wp)*tval*wp_(ip)*wp_(iq)/(ww*ww) &
+                           & - aexp*tval*wpq(ip, iq)/ww
+                     end do
+                  end do
+                  fd = 1.0_wp/(1.0_wp + tval)
+                  do ip = 1, 3
+                     fdp(ip) = -tp(ip)*fd*fd
+                  end do
+                  do ip = 1, 3
+                     do iq = 1, 3
+                        fdpq(ip, iq) = -tpq(ip, iq)*fd*fd + 2.0_wp*tp(ip)*tp(iq)*fd**3
+                     end do
+                  end do
+
+                  av = ang*fd
+                  do ip = 1, 3
+                     ap(ip) = angp(ip)*fd + ang*fdp(ip)
+                  end do
+                  do ip = 1, 3
+                     do iq = 1, 3
+                        apq(ip, iq) = angpq(ip, iq)*fd + angp(ip)*fdp(iq) &
+                           & + angp(iq)*fdp(ip) + ang*fdpq(ip, iq)
+                     end do
+                  end do
+
+                  kv = sval*av
+                  do ip = 1, 3
+                     kp(ip) = sp(ip)*av + sval*ap(ip)
+                  end do
+                  do ip = 1, 3
+                     do iq = 1, 3
+                        kpq(ip, iq) = spq(ip, iq)*av + sp(ip)*ap(iq) &
+                           & + sp(iq)*ap(ip) + sval*apq(ip, iq)
+                     end do
+                  end do
+
+                  ! geometric mean of the C6 coefficients
+                  qv = sqrt(abs(c6t(1)*c6t(2)*c6t(3)))
+                  do ip = 1, 3
+                     qm(ip) = 0.5_wp*qv/c6t(ip)
+                  end do
+                  do ip = 1, 3
+                     do iq = 1, 3
+                        if (ip == iq) then
+                           qmn(ip, iq) = -0.25_wp*qv/(c6t(ip)*c6t(ip))
+                        else
+                           qmn(ip, iq) = 0.25_wp*qv/(c6t(ip)*c6t(iq))
+                        end if
+                     end do
+                  end do
+
+                  pref = s9*triple
+
+                  at(1) = iat; at(2) = jat; at(3) = kat
+                  do ia = 1, 3
+                     do ip = 1, 3
+                        grad(:, ia, ip) = 2.0_wp*sigp(ia, ip)*vec(:, ip)
+                     end do
+                  end do
+
+                  ! Cartesian second derivatives at fixed coordination number
+                  pq = pref*qv
+                  ! contract with the pair gradients once instead of per component pair
+                  do ia = 1, 3
+                     do ic = 1, 3
+                        do iq = 1, 3
+                           tmp = 0.0_wp
+                           do ip = 1, 3
+                              tmp = tmp + kpq(ip, iq)*grad(ic, ia, ip)
+                           end do
+                           gk(ic, ia, iq) = pq*tmp
+                        end do
+                     end do
+                  end do
+                  do ia = 1, 3
+                     do ib = 1, 3
+                        tmp = 0.0_wp
+                        do ip = 1, 3
+                           tmp = tmp + kp(ip)*sigp(ia, ip)*sigp(ib, ip)
+                        end do
+                        dg(ia, ib) = 2.0_wp*pq*tmp
+                     end do
+                  end do
+
+                  do ia = 1, 3
+                     do ib = 1, 3
+                        do ic = 1, 3
+                           do jc = 1, 3
+                              tmp = 0.0_wp
+                              do iq = 1, 3
+                                 tmp = tmp + gk(ic, ia, iq)*grad(jc, ib, iq)
+                              end do
+                              if (ic == jc) tmp = tmp + dg(ia, ib)
+                              hessian_local(3*(at(ia)-1)+ic, 3*(at(ib)-1)+jc) = &
+                                 & hessian_local(3*(at(ia)-1)+ic, 3*(at(ib)-1)+jc) + tmp
+                           end do
+                        end do
+                     end do
+                  end do
+
+                  ! derivatives with respect to the C6 coefficients
+                  do ip = 1, 3
+                     ec(ip) = pref*qm(ip)*kv
+                     do iq = 1, 3
+                        ecc(ip, iq) = pref*qmn(ip, iq)*kv
+                        euc(iq, ip) = pref*qm(ip)*kp(iq)
+                     end do
+                  end do
+
+                  ! contract the mixed CN/Cartesian derivatives once per pair
+                  do ia = 1, 3
+                     do ic = 1, 3
+                        do im = 1, 3
+                           tmp = 0.0_wp
+                           do ip = 1, 3
+                              tmp = tmp + euc(ip, im)*grad(ic, ia, ip)
+                           end do
+                           egr(ic, ia, im) = tmp
+                        end do
+                     end do
+                  end do
+
+                  pat(1, 1) = iat; pat(2, 1) = jat
+                  pat(1, 2) = iat; pat(2, 2) = kat
+                  pat(1, 3) = jat; pat(2, 3) = kat
+
+                  nent = 0
+                  do ip = 1, 3
+                     if (pat(1, ip) /= pat(2, ip)) then
+                        nent = nent + 1
+                        ent_atom(nent) = pat(1, ip)
+                        ent_pair(nent) = ip
+                        ent_coef(nent) = dc6dcn(pat(1, ip), pat(2, ip))
+                        nent = nent + 1
+                        ent_atom(nent) = pat(2, ip)
+                        ent_pair(nent) = ip
+                        ent_coef(nent) = dc6dcn(pat(2, ip), pat(1, ip))
+                     else
+                        nent = nent + 1
+                        ent_atom(nent) = pat(1, ip)
+                        ent_pair(nent) = ip
+                        ent_coef(nent) = 2.0_wp*dc6dcn(pat(1, ip), pat(1, ip))
+                     end if
+                  end do
+
+                  do ie = 1, nent
+                     dEdcn_local(ent_atom(ie)) = dEdcn_local(ent_atom(ie)) &
+                        & + ec(ent_pair(ie))*ent_coef(ie)
+                     do if_ = 1, nent
+                        dEdcndcn_local(ent_atom(ie), ent_atom(if_)) = &
+                           & dEdcndcn_local(ent_atom(ie), ent_atom(if_)) &
+                           & + ecc(ent_pair(ie), ent_pair(if_))*ent_coef(ie)*ent_coef(if_)
+                     end do
+                     do ia = 1, 3
+                        do ic = 1, 3
+                           dEdcndr_local(3*(at(ia)-1)+ic, ent_atom(ie)) = &
+                              & dEdcndr_local(3*(at(ia)-1)+ic, ent_atom(ie)) &
+                              & + egr(ic, ia, ent_pair(ie))*ent_coef(ie)
+                        end do
+                     end do
+                  end do
+
+                  ! second derivative of the C6 coefficients w.r.t. the coordination numbers
+                  do ip = 1, 3
+                     ia = pat(1, ip)
+                     ib = pat(2, ip)
+                     if (ia /= ib) then
+                        dEdcndcn_local(ia, ia) = dEdcndcn_local(ia, ia) + ec(ip)*d2c6dcn2(ia, ib)
+                        dEdcndcn_local(ib, ib) = dEdcndcn_local(ib, ib) + ec(ip)*d2c6dcn2(ib, ia)
+                        dEdcndcn_local(ia, ib) = dEdcndcn_local(ia, ib) + ec(ip)*d2c6dcnij(ia, ib)
+                        dEdcndcn_local(ib, ia) = dEdcndcn_local(ib, ia) + ec(ip)*d2c6dcnij(ia, ib)
+                     else
+                        dEdcndcn_local(ia, ia) = dEdcndcn_local(ia, ia) + ec(ip) &
+                           & * (2.0_wp*d2c6dcn2(ia, ia) + 2.0_wp*d2c6dcnij(ia, ia))
+                     end if
+                  end do
+               end do
+            end do
+         end do
+      end do
+   end do
+   !$omp end do
+   !$omp critical (get_atm_dispersion_hessian_)
+   hessian(:, :) = hessian(:, :) + hessian_local(:, :)
+   dEdcn(:) = dEdcn(:) + dEdcn_local(:)
+   dEdcndr(:, :) = dEdcndr(:, :) + dEdcndr_local(:, :)
+   dEdcndcn(:, :) = dEdcndcn(:, :) + dEdcndcn_local(:, :)
+   !$omp end critical (get_atm_dispersion_hessian_)
+   deallocate(hessian_local, dEdcn_local, dEdcndr_local, dEdcndcn_local)
+   !$omp end parallel
+
+end subroutine get_atm_dispersion_hessian
 
 
 !> Evaluation of the dispersion energy expression
@@ -303,6 +699,10 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rv
                kzp = mol%id(kat)
                c6ik = c6(kat, iat)
                c6jk = c6(kat, jat)
+               ! ghost atoms zero the C6 coefficients, which would make the
+               ! coordination number derivatives below divide by zero
+               if (abs(c6ij) < epsilon(1.0_wp) .or. abs(c6ik) < epsilon(1.0_wp) &
+                  & .or. abs(c6jk) < epsilon(1.0_wp)) cycle
                c9 = -s9 * sqrt(abs(c6ij*c6ik*c6jk))
                r0ik = rs9 * rvdw(kzp, izp)
                r0jk = rs9 * rvdw(kzp, jzp)

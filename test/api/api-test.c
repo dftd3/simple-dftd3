@@ -128,6 +128,11 @@ test_uninitialized_param (void)
 
    show_error(error);
 
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &energy, NULL);
+   if (!dftd3_check_error(error)) goto unexpected;
+
+   show_error(error);
+
    dftd3_delete(error);
    dftd3_delete(disp);
    dftd3_delete(mol);
@@ -269,6 +274,7 @@ test_d3 (void) {
    double pair_disp3[49];
    double gradient[21];
    double sigma[9];
+   double hessian[441];
 
    dftd3_error error;
    dftd3_structure mol;
@@ -305,6 +311,8 @@ test_d3 (void) {
    dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
    if (dftd3_check_error(error)) {return 1;}
    dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
+   if (dftd3_check_error(error)) {return 1;}
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &energy, hessian);
    if (dftd3_check_error(error)) {return 1;}
    dftd3_delete(param);
 
@@ -440,6 +448,146 @@ test_gcp (void) {
 }
 
 int
+test_hessian (void)
+{
+   printf("Start test: hessian\n");
+   int const natoms = 7;
+   int const ndim = 21;
+   int const attyp[7] = {6,6,6,1,1,1,1};
+   double coord[21] =
+      {0.00000000000000, 0.00000000000000,-1.79755622305860,
+       0.00000000000000, 0.00000000000000, 0.95338756106749,
+       0.00000000000000, 0.00000000000000, 3.22281255790261,
+      -0.96412815539807,-1.66991895015711,-2.53624948351102,
+      -0.96412815539807, 1.66991895015711,-2.53624948351102,
+       1.92825631079613, 0.00000000000000,-2.53624948351102,
+       0.00000000000000, 0.00000000000000, 5.23010455462158};
+   double ref[21];
+   double hessian[441];
+   double numhess[441];
+   double gradr[21], gradl[21], sigma[9];
+   double energy;
+   double const step = 1.0e-6;
+   int stat = 0;
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_model disp = NULL;
+   dftd3_param param = NULL;
+
+   error = dftd3_new_error();
+   mol = dftd3_new_structure(error, natoms, attyp, coord, NULL, NULL);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   // DSD-BLYP-D3(BJ)-ATM
+   param = dftd3_load_rational_damping(error, "dsdblyp", true);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &energy, hessian);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   for (int i = 0; i < ndim; i++) ref[i] = coord[i];
+
+   for (int i = 0; i < ndim; i++) {
+      coord[i] = ref[i] + step;
+      dftd3_update_structure(error, mol, coord, NULL);
+      dftd3_get_dispersion(error, mol, disp, param, &energy, gradr, sigma);
+      if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+      coord[i] = ref[i] - step;
+      dftd3_update_structure(error, mol, coord, NULL);
+      dftd3_get_dispersion(error, mol, disp, param, &energy, gradl, sigma);
+      if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+      coord[i] = ref[i];
+      for (int j = 0; j < ndim; j++) {
+         numhess[i*ndim + j] = 0.5 * (gradr[j] - gradl[j]) / step;
+      }
+   }
+
+   for (int i = 0; i < ndim; i++) {
+      for (int j = 0; j < ndim; j++) {
+         if (fabs(hessian[i*ndim + j] - hessian[j*ndim + i]) > 1.0e-12) {
+            printf("[Fatal] Hessian is not symmetric\n");
+            stat = 1;
+            goto cleanup;
+         }
+         if (fabs(hessian[i*ndim + j] - numhess[i*ndim + j]) > 1.0e-7) {
+            printf("[Fatal] Hessian does not match finite differences\n");
+            stat = 1;
+            goto cleanup;
+         }
+      }
+   }
+
+cleanup:
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return stat;
+}
+
+int
+test_ghost_atoms_atm(void) {
+   printf("Start test: ghost atoms with ATM\n");
+   double energy = 0.0;
+   double gradient[21] = {0.0};
+   double hessian[441] = {0.0};
+   // ghosting a subset while the three-body term is active zeroes single C6
+   // coefficients, which must not produce NaN in the derivatives
+   int const ghost[2] = {0, 3};
+   int stat = 0;
+
+   dftd3_error error = dftd3_new_error();
+   dftd3_structure mol = get_test_structure(error);
+   dftd3_model disp = dftd3_new_d3_model(error, mol);
+   // PBE-D3(BJ)-ATM
+   dftd3_param param =
+      dftd3_new_rational_damping(error, 1.0, 0.7875, 1.0, 0.4289, 4.4407, 14.0);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   dftd3_set_model_ghost_index(error, disp, ghost, 2);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, NULL);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   if (isnan(energy)) {
+      printf("[Fatal] Energy is NaN for ghost atoms with ATM\n");
+      stat = 1;
+      goto cleanup;
+   }
+   for (int i = 0; i < 21; ++i) {
+      if (isnan(gradient[i])) {
+         printf("[Fatal] Gradient is NaN for ghost atoms with ATM\n");
+         stat = 1;
+         goto cleanup;
+      }
+   }
+
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &energy, hessian);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+   for (int i = 0; i < 441; ++i) {
+      if (isnan(hessian[i])) {
+         printf("[Fatal] Hessian is NaN for ghost atoms with ATM\n");
+         stat = 1;
+         goto cleanup;
+      }
+   }
+
+cleanup:
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return stat;
+}
+
+int
 main (void)
 {
    int stat = 0;
@@ -451,7 +599,9 @@ main (void)
    stat += test_uninitialized_gcp();
    stat += test_invalid_structure();
    stat += test_ghost_atoms();
+   stat += test_ghost_atoms_atm();
    stat += test_d3();
+   stat += test_hessian();
    stat += test_gcp();
    return stat;
 }

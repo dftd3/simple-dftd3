@@ -19,6 +19,7 @@ set(
   tests
   "model"
   "dftd3"
+  "hessian"
   "param"
   "pairwise"
   "periodic_1d"

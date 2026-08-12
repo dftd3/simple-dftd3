@@ -268,6 +268,62 @@ class DFTD3Dispersion(lib.StreamObject):
 
         return res.get("energy"), res.get("gradient"), res.get("virial")
 
+    def hessian(self) -> np.ndarray:
+        """
+        Compute the analytical second derivatives of the DFT-D3 dispersion
+        correction with respect to the nuclear coordinates.
+
+        Returns
+        -------
+        ndarray
+            The dispersion hessian in the pyscf layout ``(natm, natm, 3, 3)``
+            in Hartree per Bohr squared.
+
+        Examples
+        --------
+        >>> from pyscf import gto
+        >>> import dftd3.pyscf as disp
+        >>> mol = gto.M(
+        ...     atom='''
+        ...          O  0.00000000  0.00000000 -0.73578586
+        ...          H  1.44183152  0.00000000  0.36789293
+        ...          H -1.44183152  0.00000000  0.36789293
+        ...          '''
+        ... )
+        >>> d3 = disp.DFTD3Dispersion(mol, xc="PBE0")
+        >>> d3.hessian().shape
+        (3, 3, 3, 3)
+        """
+        mol = self.mol
+
+        lattice = None
+        periodic = None
+        if hasattr(mol, "lattice_vectors"):
+            lattice = mol.lattice_vectors()
+            periodic = np.array([True, True, True], dtype=bool)
+
+        disp = DispersionModel(
+            np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
+            mol.atom_coords(),
+            lattice=lattice,
+            periodic=periodic,
+        )
+
+        if self.param is not None:
+            param = _damping_param[self.version](**self.param)
+        else:
+            param = _damping_param[self.version](
+                method=self.xc,
+                atm=self.atm,
+            )
+
+        res = disp.get_hessian(param=param)
+
+        # (3*natm, 3*natm) with index 3*i+c -> (natm, natm, 3, 3)
+        return (
+            res.get("hessian").reshape(mol.natm, 3, mol.natm, 3).transpose(0, 2, 1, 3)
+        )
+
     def reset(self, mol: Union[gto.Mole, pbc.gto.Cell]) -> "DFTD3Dispersion":
         """Reset mol and clean up relevant attributes for scanner mode"""
         self.mol = mol
@@ -285,6 +341,14 @@ class _DFTD3:
 class _DFTD3Grad:
     """
     Stub class used to identify instances of the `DFTD3Grad` class
+    """
+
+    pass
+
+
+class _DFTD3Hess:
+    """
+    Stub class used to identify instances of the `DFTD3Hess` class
     """
 
     pass
@@ -382,6 +446,16 @@ def d3_energy(mf: scf.hf.SCF, method: Optional[str] = None, **kwargs) -> scf.hf.
 
         Gradients = lib.alias(nuc_grad_method, alias_name="Gradients")
 
+    # only SCF and DFT classes provide a hessian method
+    if hasattr(mf.__class__, "Hessian"):
+
+        def _dftd3_hessian_method(self):
+            scf_hess = mf.__class__.Hessian(self)
+            return d3_hess(scf_hess, method=method, **kwargs)
+
+        _dftd3_hessian_method.__name__ = "Hessian"
+        DFTD3.Hessian = _dftd3_hessian_method
+
     return DFTD3(mf, with_dftd3)
 
 
@@ -468,10 +542,72 @@ def d3_grad(scf_grad: GradientsBase, **kwargs) -> GradientsBase:
     return mfgrad
 
 
+def d3_hess(scf_hess, **kwargs):
+    """
+    Apply DFT-D3 corrections to SCF nuclear hessian methods by returning an
+    instance of a new class built from the original class.
+    The dispersion correction is stored in the `with_dftd3` attribute of
+    the class.
+
+    Parameters
+    ----------
+    scf_hess: hessian.rhf.Hessian
+        The method to which DFT-D3 corrections will be applied.
+    **kwargs
+        Keyword arguments passed to the `DFTD3Dispersion` class.
+
+    Returns
+    -------
+    The hessian method with DFT-D3 corrections applied.
+
+    Examples
+    --------
+    >>> from pyscf import gto, scf
+    >>> import dftd3.pyscf as disp
+    >>> mol = gto.M(
+    ...     atom='''
+    ...          O  0.00000000  0.00000000 -0.73578586
+    ...          H  1.44183152  0.00000000  0.36789293
+    ...          H -1.44183152  0.00000000  0.36789293
+    ...          '''
+    ... )
+    >>> mf = disp.d3_energy(scf.RHF(mol)).run()
+    >>> hess = mf.Hessian().kernel()
+    """
+
+    # Ensure that the zeroth order results include DFTD3 corrections
+    if not hasattr(scf_hess, "base") or not hasattr(scf_hess, "hess_nuc"):
+        raise TypeError("scf_hess must be a pyscf nuclear hessian method")
+
+    if not getattr(scf_hess.base, "with_dftd3", None):
+        scf_hess.base = d3_energy(scf_hess.base, **kwargs)
+
+    class DFTD3Hess(_DFTD3Hess, scf_hess.__class__):
+        def hess_nuc(
+            self,
+            mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None,
+            atmlst: Optional[np.ndarray] = None,
+        ) -> np.ndarray:
+            nuc_h = scf_hess.__class__.hess_nuc(self, mol, atmlst)
+            with_dftd3 = getattr(self.base, "with_dftd3", None)
+            if with_dftd3:
+                disp_h = with_dftd3.hessian()
+                if atmlst is not None:
+                    disp_h = disp_h[np.ix_(atmlst, atmlst)]
+                nuc_h += disp_h
+            return nuc_h
+
+    mfhess = DFTD3Hess.__new__(DFTD3Hess)
+    mfhess.__dict__.update(scf_hess.__dict__)
+    return mfhess
+
+
 energy = d3_energy
 """Alias for the `d3_energy` function, which applies DFT-D3 corrections to SCF or MCSCF methods."""
 grad = d3_grad
 """Alias for the `d3_grad` function, which applies DFT-D3 corrections to SCF or MCSCF nuclear gradients methods."""
+hess = d3_hess
+"""Alias for the `d3_hess` function, which applies DFT-D3 corrections to SCF nuclear hessian methods."""
 
 
 class GeometricCounterpoiseCorrection(lib.StreamObject):

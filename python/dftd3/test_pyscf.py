@@ -29,6 +29,97 @@ except ModuleNotFoundError:
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_hessian_layout() -> None:
+    """The dispersion hessian must use the pyscf (natm, natm, 3, 3) layout"""
+    from dftd3.interface import DispersionModel, RationalDampingParam
+
+    mol = gto.M(
+        atom="""
+             O  0.00000000  0.00000000 -0.73578586
+             H  1.44183152  0.00000000  0.36789293
+             H -1.44183152  0.00000000  0.36789293
+             """,
+        unit="Bohr",
+    )
+
+    d3 = disp.DFTD3Dispersion(mol, xc="PBE0", atm=True)
+    hess = d3.hessian()
+
+    assert hess.shape == (mol.natm, mol.natm, 3, 3)
+    assert not np.isnan(hess).any()
+    # hessian is symmetric under exchange of (atom, component) pairs
+    assert hess == approx(hess.transpose(1, 0, 3, 2), abs=1.0e-12)
+
+    model = DispersionModel(
+        np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
+        mol.atom_coords(),
+    )
+    ref = model.get_hessian(RationalDampingParam(method="pbe0", atm=True))["hessian"]
+    assert hess == approx(
+        ref.reshape(mol.natm, 3, mol.natm, 3).transpose(0, 2, 1, 3), abs=1.0e-14
+    )
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_hessian_vs_findiff() -> None:
+    """The dispersion hessian must match finite differences of the gradient"""
+    step = 1.0e-5
+
+    coords = np.array(
+        [
+            [+0.00000000, +0.00000000, -0.73578586],
+            [+1.44183152, +0.00000000, +0.36789293],
+            [-1.44183152, +0.00000000, +0.36789293],
+        ]
+    )
+    symbols = ["O", "H", "H"]
+
+    def make(xyz):
+        return gto.M(
+            atom=[(s, tuple(c)) for s, c in zip(symbols, xyz)],
+            unit="Bohr",
+        )
+
+    hess = disp.DFTD3Dispersion(make(coords), xc="PBE0", atm=True).hessian()
+
+    nat = len(symbols)
+    numhess = np.zeros((nat, nat, 3, 3))
+    for iat in range(nat):
+        for ic in range(3):
+            xyz = coords.copy()
+            xyz[iat, ic] += step
+            gr = disp.DFTD3Dispersion(make(xyz), xc="PBE0", atm=True).kernel()[1]
+            xyz[iat, ic] -= 2 * step
+            gl = disp.DFTD3Dispersion(make(xyz), xc="PBE0", atm=True).kernel()[1]
+            numhess[iat, :, ic, :] = 0.5 * (gr - gl) / step
+
+    assert hess == approx(numhess, abs=1.0e-6)
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_hessian_method_wiring() -> None:
+    """The dispersion contribution must reach the SCF hessian via hess_nuc"""
+    mol = gto.M(
+        atom="""
+             O  0.00000000  0.00000000 -0.73578586
+             H  1.44183152  0.00000000  0.36789293
+             H -1.44183152  0.00000000  0.36789293
+             """,
+        unit="Bohr",
+        basis="sto-3g",
+    )
+
+    mf = disp.d3_energy(scf.RHF(mol), method="pbe0").run()
+    hobj = mf.Hessian()
+
+    plain = scf.RHF(mol).run().Hessian()
+    delta = hobj.hess_nuc(mol) - plain.hess_nuc(mol)
+    expected = hobj.base.with_dftd3.hessian()
+
+    assert delta == approx(expected, abs=1.0e-12)
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_energy_r2scan_d3() -> None:
 
     mol = gto.M(

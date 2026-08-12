@@ -387,6 +387,21 @@ To evaluate dispersion energies or related properties the :c:func:`dftd3_get_dis
 
    Evaluate the pairwise representation of the dispersion energy
 
+.. c:function:: void dftd3_get_dispersion_hessian(dftd3_error error, dftd3_structure mol, dftd3_model disp, dftd3_param param, double* energy, double* hessian);
+
+   :param error: Error handle
+   :param mol: Molecular structure data handle
+   :param disp: Dispersion model handle
+   :param param: Damping function parameter handle
+   :param energy: Dispersion energy
+   :param hessian: Dispersion hessian [3*natoms, 3*natoms]
+
+   Evaluate the analytical second derivatives of the dispersion energy with
+   respect to the nuclear coordinates in Hartree per Bohr squared.
+   The index convention is ``3*i + c`` for the Cartesian component *c* of the
+   zero-based atom index *i*.
+   Since the hessian is symmetric, row- and column-major layouts are equivalent.
+
 .. c:function:: void dftd3_get_counterpoise(dftd3_error error, dftd3_structure mol, dftd3_gcp gcp, double* energy, double* gradient, double* sigma);
 
    :param error: Error handle

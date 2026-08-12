@@ -152,3 +152,51 @@ The ``realspace_cutoff`` constructor also accepts optional ``width2`` and
          & gradient, sigma)
 
    end subroutine calc_dftd3
+
+
+Second derivatives
+------------------
+
+The ``get_dispersion`` interface accepts an optional ``hessian`` argument to
+evaluate the analytical second derivatives of the dispersion energy with
+respect to the nuclear coordinates.
+The Hessian is returned as a symmetric ``3*nat`` by ``3*nat`` matrix using the
+index convention ``3*(iat - 1) + ic`` for the Cartesian component ``ic`` of
+atom ``iat``, in Hartree per Bohr squared.
+
+The analytical Hessian is available for all damping functions, including the
+Axilrod-Teller-Muto three-body term, and accounts for the implicit dependence
+of the dispersion coefficients on the coordination number.
+
+.. code-block:: fortran
+
+   subroutine hess_dftd3(mol, method, energy, hessian, error)
+      use mctc_env, only : wp, error_type
+      use mctc_io, only : structure_type
+      use dftd3, only : d3_model, d3_param, rational_damping_param, &
+         & get_rational_damping, new_rational_damping, new_d3_model, &
+         & get_dispersion, realspace_cutoff
+      type(structure_type), intent(in) :: mol
+      character(len=*), intent(in) :: method
+      real(wp), intent(out) :: energy
+      real(wp), intent(out) :: hessian(:, :)
+      type(error_type), allocatable, intent(out) :: error
+      type(d3_model) :: disp
+      type(d3_param) :: inp
+      type(rational_damping_param) :: param
+
+      call get_rational_damping(inp, method, error, s9=1.0_wp)
+      if (allocated(error)) return
+      call new_rational_damping(param, inp)
+
+      call new_d3_model(disp, mol)
+
+      call get_dispersion(mol, disp, param, realspace_cutoff(), energy, &
+         & hessian=hessian)
+
+   end subroutine hess_dftd3
+
+.. note::
+
+   The Hessian is also available from the C API via
+   :c:func:`dftd3_get_dispersion_hessian`.

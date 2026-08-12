@@ -21,6 +21,7 @@ program tester
       & select_suite, run_selected
    use test_dftd3, only : collect_dftd3
    use test_gcp, only : collect_gcp
+   use test_hessian, only : collect_hessian
    use test_model, only : collect_model
    use test_output, only : collect_output
    use test_pairwise, only : collect_pairwise
@@ -41,6 +42,7 @@ program tester
    testsuites = [ &
       & new_testsuite("model", collect_model), &
       & new_testsuite("dftd3", collect_dftd3), &
+      & new_testsuite("hessian", collect_hessian), &
       & new_testsuite("param", collect_param), &
       & new_testsuite("pairwise", collect_pairwise), &
       & new_testsuite("periodic_1d", collect_periodic_1d), &

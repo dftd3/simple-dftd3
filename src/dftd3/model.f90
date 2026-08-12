@@ -161,7 +161,7 @@ end subroutine new_d3_model
 
 !> Calculate the weights of the reference system and the derivatives w.r.t.
 !> coordination number for later use.
-subroutine weight_references(self, mol, cn, gwvec, gwdcn)
+subroutine weight_references(self, mol, cn, gwvec, gwdcn, gwd2cn)
 
    !> Instance of the dispersion model
    class(d3_model), intent(in) :: self
@@ -178,8 +178,11 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
    !> derivative of the weighting function w.r.t. the coordination number
    real(wp), intent(out), optional :: gwdcn(:, :)
 
+   !> second derivative of the weighting function w.r.t. the coordination number
+   real(wp), intent(out), optional :: gwd2cn(:, :)
+
    integer :: iat, izp, iref, mref
-   real(wp) :: norm, dnorm, gw, expw, expd, gwk, dgwk
+   real(wp) :: norm, dnorm, d2norm, gw, expw, expd, expdd, gwk, dgwk, d2gwk
    real(wp) :: wf2, dcn
    real(wp), allocatable :: gwt(:)
 
@@ -188,28 +191,34 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
    if (present(gwdcn)) then
       gwvec(:, :) = 0.0_wp
       gwdcn(:, :) = 0.0_wp
+      if (present(gwd2cn)) gwd2cn(:, :) = 0.0_wp
       wf2 = 2 * self%wf
 
       !$omp parallel default(none) &
-      !$omp shared(gwvec, gwdcn, mol, self, cn, wf2, mref) &
-      !$omp private(iat, izp, iref, norm, dnorm, gw, expw, expd, gwk, dgwk, dcn, gwt)
+      !$omp shared(gwvec, gwdcn, gwd2cn, mol, self, cn, wf2, mref) &
+      !$omp private(iat, izp, iref, norm, dnorm, d2norm, gw, expw, expd, expdd, &
+      !$omp& gwk, dgwk, d2gwk, dcn, gwt)
       allocate(gwt(mref))
       !$omp do schedule(runtime)
       do iat = 1, mol%nat
          izp = mol%id(iat)
          norm = 0.0_wp
          dnorm = 0.0_wp
+         d2norm = 0.0_wp
          do iref = 1, self%ref(izp)
             gw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
             gwt(iref) = gw
+            dcn = self%cn(iref, izp) - cn(iat)
             norm = norm + gw
-            dnorm = dnorm + wf2 * (self%cn(iref, izp) - cn(iat)) * gw
+            dnorm = dnorm + wf2 * dcn * gw
+            d2norm = d2norm + (wf2*wf2*dcn*dcn - wf2) * gw
          end do
          norm = 1.0_wp / norm
          do iref = 1, self%ref(izp)
             expw = gwt(iref)
             dcn = self%cn(iref, izp) - cn(iat)
             expd = wf2 * dcn * expw
+            expdd = (wf2*wf2*dcn*dcn - wf2) * expw
             gwk = expw * norm
             if (is_exceptional(gwk)) then
                if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
@@ -225,6 +234,15 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn)
                dgwk = 0.0_wp
             end if
             gwdcn(iref, iat) = dgwk
+
+            if (present(gwd2cn)) then
+               d2gwk = expdd * norm - 2.0_wp * expd * dnorm * norm**2 &
+                  & - expw * d2norm * norm**2 + 2.0_wp * expw * dnorm**2 * norm**3
+               if (is_exceptional(d2gwk)) then
+                  d2gwk = 0.0_wp
+               end if
+               gwd2cn(iref, iat) = d2gwk
+            end if
          end do
       end do
       !$omp end do
@@ -279,7 +297,7 @@ end function is_exceptional
 
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
 !> the coordination number.
-subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
+subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, d2c6dcnij)
 
    !> Instance of the dispersion model
    class(d3_model), intent(in) :: self
@@ -299,10 +317,67 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn)
    !> Derivative of the C6 w.r.t. the coordination number
    real(wp), intent(out), optional :: dc6dcn(:, :)
 
+   !> Second derivative of the weighting function w.r.t. the coordination number
+   real(wp), intent(in), optional :: gwd2cn(:, :)
+
+   !> Second derivative of the C6 w.r.t. the coordination number of one atom
+   real(wp), intent(out), optional :: d2c6dcn2(:, :)
+
+   !> Mixed second derivative of the C6 w.r.t. both coordination numbers
+   real(wp), intent(out), optional :: d2c6dcnij(:, :)
+
    integer :: iat, jat, izp, jzp, iref, jref
    real(wp) :: refc6, dc6, dc6dcni, dc6dcnj
+   real(wp) :: d2c6dcni, d2c6dcnj, d2c6mix
+   logical :: second
 
-   if (present(gwdcn).and.present(dc6dcn)) then
+   second = present(gwd2cn) .and. present(d2c6dcn2) .and. present(d2c6dcnij)
+
+   if (second) then
+      c6(:, :) = 0.0_wp
+      dc6dcn(:, :) = 0.0_wp
+      d2c6dcn2(:, :) = 0.0_wp
+      d2c6dcnij(:, :) = 0.0_wp
+
+      !$omp parallel do schedule(runtime) default(none) &
+      !$omp shared(c6, dc6dcn, d2c6dcn2, d2c6dcnij, mol, self, gwvec, gwdcn, gwd2cn) &
+      !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6, dc6dcni, dc6dcnj, &
+      !$omp& d2c6dcni, d2c6dcnj, d2c6mix)
+      do iat = 1, mol%nat
+         if (self%ghost(iat)) cycle
+         izp = mol%id(iat)
+         do jat = 1, iat
+            if (self%ghost(jat)) cycle
+            jzp = mol%id(jat)
+            dc6 = 0.0_wp
+            dc6dcni = 0.0_wp
+            dc6dcnj = 0.0_wp
+            d2c6dcni = 0.0_wp
+            d2c6dcnj = 0.0_wp
+            d2c6mix = 0.0_wp
+            do iref = 1, self%ref(izp)
+               do jref = 1, self%ref(jzp)
+                  refc6 = self%c6(iref, jref, izp, jzp)
+                  dc6 = dc6 + gwvec(iref, iat) * gwvec(jref, jat) * refc6
+                  dc6dcni = dc6dcni + gwdcn(iref, iat) * gwvec(jref, jat) * refc6
+                  dc6dcnj = dc6dcnj + gwvec(iref, iat) * gwdcn(jref, jat) * refc6
+                  d2c6dcni = d2c6dcni + gwd2cn(iref, iat) * gwvec(jref, jat) * refc6
+                  d2c6dcnj = d2c6dcnj + gwvec(iref, iat) * gwd2cn(jref, jat) * refc6
+                  d2c6mix = d2c6mix + gwdcn(iref, iat) * gwdcn(jref, jat) * refc6
+               end do
+            end do
+            c6(iat, jat) = dc6
+            c6(jat, iat) = dc6
+            dc6dcn(iat, jat) = dc6dcni
+            dc6dcn(jat, iat) = dc6dcnj
+            d2c6dcn2(iat, jat) = d2c6dcni
+            d2c6dcn2(jat, iat) = d2c6dcnj
+            d2c6dcnij(iat, jat) = d2c6mix
+            d2c6dcnij(jat, iat) = d2c6mix
+         end do
+      end do
+
+   else if (present(gwdcn).and.present(dc6dcn)) then
       c6(:, :) = 0.0_wp
       dc6dcn(:, :) = 0.0_wp
 

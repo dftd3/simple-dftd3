@@ -430,6 +430,73 @@ def test_gradient_b97d_d3bj(atm: bool, qcsk_version: int) -> None:
 @pytest.mark.skipif(
     qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
 )
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
+def test_hessian_b97d_d3bj(atm: bool, qcsk_version: int) -> None:
+    """The hessian driver must agree with the direct interface"""
+    from dftd3.interface import DispersionModel, RationalDampingParam
+
+    thr = 1e-9
+    molecule = get_molecule("molecule1")
+
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=molecule,
+        driver="hessian",
+        method="b97d-d3(bj)",
+        params_tweaks={"method": "b97d", "atm": atm},
+        qcel_object=True,
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+    assert atomic_result.success
+
+    natoms = len(molecule["symbols"])
+    hessian = np.asarray(atomic_result.return_result).reshape(3 * natoms, 3 * natoms)
+    assert hessian == approx(hessian.transpose(), abs=1.0e-10)
+
+    qcmol = atomic_input.molecule
+    model = DispersionModel(qcmol.atomic_numbers, qcmol.geometry)
+    ref = model.get_hessian(RationalDampingParam(method="b97d", atm=atm))["hessian"]
+
+    assert hessian == approx(ref, abs=thr)
+
+
+@pytest.mark.skipif(
+    qcel_v1 is None and qcel_v2 is None, reason="requires qcelemental models"
+)
+def test_hessian_ghost(qcsk_version: int) -> None:
+    """Ghost atoms must be padded with zeros in the returned hessian"""
+    molecule = get_molecule("counterpoise")
+
+    atomic_input = get_atomic_input(
+        version=qcsk_version,
+        molecule=molecule,
+        driver="hessian",
+        method="",
+        params_tweaks={"method": "pbe", "atm": True},
+        level_hint="d3bj",
+        qcel_object=True,
+    )
+
+    atomic_result = run_qcschema(atomic_input)
+    assert atomic_result.success
+
+    natoms = len(molecule["symbols"])
+    hessian = np.asarray(atomic_result.return_result).reshape(3 * natoms, 3 * natoms)
+
+    real = np.array(molecule["real"])
+    ighost = np.argwhere(~real).reshape((-1))
+    icart = (3 * ighost[:, None] + np.arange(3)).reshape((-1))
+
+    assert hessian.shape == (3 * natoms, 3 * natoms)
+    assert not np.isnan(hessian).any()
+    assert hessian[icart, :] == approx(0.0, abs=0.0)
+    assert hessian[:, icart] == approx(0.0, abs=0.0)
+    assert np.abs(hessian).max() > 0.0
+
+
 def test_gradient_tpss_d3zero(qcsk_version):
     thr = 1.0e-9
 
