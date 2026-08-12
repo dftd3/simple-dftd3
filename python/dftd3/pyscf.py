@@ -321,9 +321,7 @@ class DFTD3Dispersion(lib.StreamObject):
 
         # (3*natm, 3*natm) with index 3*i+c -> (natm, natm, 3, 3)
         return (
-            res.get("hessian")
-            .reshape(mol.natm, 3, mol.natm, 3)
-            .transpose(0, 2, 1, 3)
+            res.get("hessian").reshape(mol.natm, 3, mol.natm, 3).transpose(0, 2, 1, 3)
         )
 
     def reset(self, mol: Union[gto.Mole, pbc.gto.Cell]) -> "DFTD3Dispersion":
