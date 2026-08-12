@@ -200,3 +200,40 @@ of the dispersion coefficients on the coordination number.
 
    The Hessian is also available from the C API via
    :c:func:`dftd3_get_dispersion_hessian`.
+
+
+Counter-poise correction
+------------------------
+
+The geometric counter-poise correction is available from the ``dftd3_gcp``
+module.
+Next to the energy, gradient and virial provided by the
+``get_geometric_counterpoise`` interface, the analytical second derivatives
+with respect to the nuclear coordinates can be evaluated with
+``get_geometric_counterpoise_hessian``.
+The Hessian uses the same layout as the dispersion Hessian, *i.e.* a symmetric
+``3*nat`` by ``3*nat`` matrix indexed by ``3*(iat - 1) + ic``, in Hartree per
+Bohr squared.
+It covers the counter-poise term including its damping as well as the
+short-range bond and basis incompleteness corrections of the 3c methods.
+
+.. code-block:: fortran
+
+   subroutine hess_gcp(mol, method, basis, hessian, error)
+      use mctc_env, only : wp, error_type
+      use mctc_io, only : structure_type
+      use dftd3, only : realspace_cutoff
+      use dftd3_gcp, only : gcp_param, get_gcp_param, &
+         & get_geometric_counterpoise_hessian
+      type(structure_type), intent(in) :: mol
+      character(len=*), intent(in) :: method, basis
+      real(wp), intent(out) :: hessian(:, :)
+      type(error_type), allocatable, intent(out) :: error
+      type(gcp_param) :: param
+
+      call get_gcp_param(param, mol, method=method, basis=basis)
+
+      call get_geometric_counterpoise_hessian(mol, param, realspace_cutoff(), &
+         & hessian)
+
+   end subroutine hess_gcp

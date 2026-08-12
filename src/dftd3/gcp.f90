@@ -23,6 +23,7 @@ module dftd3_gcp
    private
 
    public :: gcp_param, get_gcp_param, get_geometric_counterpoise
+   public :: get_geometric_counterpoise_hessian
 
    !> Geometric counterpoise correction
    interface get_geometric_counterpoise
@@ -30,6 +31,9 @@ module dftd3_gcp
       module procedure get_geometric_counterpoise_atomic
    end interface get_geometric_counterpoise
 
+   !> Exponents of the short-range basis incompleteness correction
+   real(wp), parameter :: rexp_base = 0.75_wp, zexp_base = 1.5_wp
+   real(wp), parameter :: rexp_srb = -1.0_wp, zexp_srb = 0.5_wp
 
 
 contains
@@ -86,7 +90,6 @@ subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradi
    real(wp), intent(inout), optional :: sigma(:, :)
 
    real(wp), allocatable :: lattr(:, :)
-   real(wp), parameter :: rexp_base = 0.75_wp, zexp_base = 1.5_wp, rexp_srb = -1.0_wp, zexp_srb = 0.5_wp
    logical :: grad
 
    grad = present(gradient) .and. present(sigma)
@@ -128,6 +131,49 @@ subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradi
       end if
    end if
 end subroutine get_geometric_counterpoise_atomic
+
+
+!> Analytical second derivatives of the geometric counterpoise correction
+!> with respect to the Cartesian coordinates
+subroutine get_geometric_counterpoise_hessian(mol, param, cutoff, hessian)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Geometric counterpoise parameters
+   type(gcp_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Counter-poise hessian
+   real(wp), intent(out) :: hessian(:, :)
+
+   real(wp), allocatable :: lattr(:, :)
+
+   hessian(:, :) = 0.0_wp
+
+   if (allocated(param%emiss) .and. allocated(param%slater) .and. allocated(param%xv)) then
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%gcp, lattr)
+      call gcp_hessian(mol, lattr, cutoff%gcp, param%zeff, param%emiss, param%slater, &
+         & param%xv, param%rvdw, param%sigma, param%alpha, param%beta, param%damp, &
+         & param%dmp_scal, param%dmp_exp, hessian)
+   end if
+
+   if (param%srb .or. param%base) then
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%srb, lattr)
+   end if
+
+   if (param%srb) then
+      call srb_hessian(mol, lattr, cutoff%srb, mol%num, param%rvdw_srb, param%rscal, &
+         & param%qscal, rexp_srb, zexp_srb, hessian)
+   end if
+
+   if (param%base) then
+      call srb_hessian(mol, lattr, cutoff%srb, param%zeff, param%rvdw, param%rscal, &
+         & param%qscal, rexp_base, zexp_base, hessian)
+   end if
+end subroutine get_geometric_counterpoise_hessian
 
 
 !> Geometric counterpoise correction
@@ -473,6 +519,203 @@ subroutine srb_deriv(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, ene
    end do
 
 end subroutine srb_deriv
+
+
+!> Second derivatives of the geometric counterpoise correction
+subroutine gcp_hessian(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alpha, beta, &
+      & damp, dmp_scal, dmp_exp, hessian)
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+   !> Translation vectors
+   real(wp), intent(in) :: trans(:, :)
+   !> Distance cutoff
+   real(wp), intent(in) :: cutoff
+   !> Effective nuclear charges
+   integer, intent(in) :: iz(:)
+   !> Basis set superposition error per atom
+   real(wp), intent(in) :: emiss(:)
+   !> Slater exponents
+   real(wp), intent(in) :: slater(:)
+   !> Number of virtual orbitals
+   real(wp), intent(in) :: xv(:)
+   !> Van der Waals radii
+   real(wp), intent(in) :: rvdw(:, :)
+   !> Scaling factor
+   real(wp), intent(in) :: escal
+   !> Exponential factor
+   real(wp), intent(in) :: alpha
+   !> Power factor
+   real(wp), intent(in) :: beta
+   !> Damping flag
+   logical, intent(in) :: damp
+   !> Damping scaling factor
+   real(wp), intent(in) :: dmp_scal
+   !> Damping exponent
+   real(wp), intent(in) :: dmp_exp
+   !> Second derivative of the energy w.r.t. the Cartesian coordinates
+   real(wp), intent(inout) :: hessian(:, :)
+
+   integer :: iat, jat, jtr, izp, jzp
+   real(wp) :: xvi, xvj, emi, emj, emij
+   real(wp) :: r0, r1, vec(3), rscal, rscalexp, dmpq1, dmpq2
+   real(wp) :: sij, gij, hij, ovl1, ovl2
+   real(wp) :: expv, expv1, expv2, arg1, arg2
+   real(wp) :: bsse, bsse1, bsse2
+   real(wp) :: dampval, damp1, damp2
+   real(wp) :: dE1, dE2
+
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      xvi = merge(1.0_wp / sqrt(xv(izp)), 0.0_wp, xv(izp) >= 0.5_wp)
+
+      do jat = 1, iat - 1
+         jzp = mol%id(jat)
+         xvj = merge(1.0_wp / sqrt(xv(jzp)), 0.0_wp, xv(jzp) >= 0.5_wp)
+
+         emi = emiss(izp)*xvj*escal
+         emj = emiss(jzp)*xvi*escal
+         emij = emi + emj
+         r0 = rvdw(izp, jzp)
+         do jtr = 1, size(trans, 2)
+            vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
+            r1 = norm2(vec)
+
+            if(r1 > cutoff .or. r1 < epsilon(1.0_wp)) cycle
+
+            call ssovl(r1, izp, jzp, iz, slater(izp), slater(jzp), sij)
+            call gsovl(r1, izp, jzp, iz, slater(izp), slater(jzp), gij)
+            call hsovl(r1, izp, jzp, iz, slater(izp), slater(jzp), hij)
+
+            ! derivatives of the inverse square root of the overlap
+            ovl1 = -0.5_wp*gij/sij**1.5_wp
+            ovl2 = 0.75_wp*gij*gij/sij**2.5_wp - 0.5_wp*hij/sij**1.5_wp
+
+            ! derivatives of the exponential prefactor
+            arg1 = alpha*beta*r1**(beta-1.0_wp)
+            arg2 = alpha*beta*(beta-1.0_wp)*r1**(beta-2.0_wp)
+            expv = exp(-alpha*r1**beta)
+            expv1 = -arg1*expv
+            expv2 = (arg1*arg1 - arg2)*expv
+
+            bsse = expv/sqrt(sij)
+            bsse1 = expv1/sqrt(sij) + expv*ovl1
+            bsse2 = expv2/sqrt(sij) + 2.0_wp*expv1*ovl1 + expv*ovl2
+
+            if (damp) then
+               rscal = r1/r0
+               rscalexp = dmp_scal*rscal**dmp_exp
+               dmpq1 = dmp_scal*dmp_exp*rscal**(dmp_exp-1.0_wp)/r0
+               dmpq2 = dmp_scal*dmp_exp*(dmp_exp-1.0_wp)*rscal**(dmp_exp-2.0_wp)/(r0*r0)
+               dampval = rscalexp/(1.0_wp+rscalexp)
+               damp1 = dmpq1/(1.0_wp+rscalexp)**2
+               damp2 = dmpq2/(1.0_wp+rscalexp)**2 &
+                  & - 2.0_wp*dmpq1*dmpq1/(1.0_wp+rscalexp)**3
+            else
+               dampval = 1.0_wp
+               damp1 = 0.0_wp
+               damp2 = 0.0_wp
+            end if
+
+            dE1 = emij*(bsse1*dampval + bsse*damp1)
+            dE2 = emij*(bsse2*dampval + 2.0_wp*bsse1*damp1 + bsse*damp2)
+
+            call add_pair_hessian(hessian, iat, jat, vec, r1, dE1, dE2)
+         end do
+      end do
+   end do
+
+end subroutine gcp_hessian
+
+
+!> Second derivatives of the short-range bond length correction for HF-3c
+subroutine srb_hessian(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, hessian)
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+   !> Translation vectors
+   real(wp), intent(in) :: trans(:, :)
+   !> Distance cutoff
+   real(wp), intent(in) :: cutoff
+   !> Effective nuclear charges
+   integer, intent(in) :: iz(:)
+   !> Van der Waals radii
+   real(wp), intent(in) :: r0ab(:, :)
+   !> Radii scaling factor
+   real(wp), intent(in) :: rscal
+   !> Prefactor for the SRB potential
+   real(wp), intent(in) :: qscal
+   !> Exponent for radii
+   real(wp), intent(in) :: rexp
+   !> Exponent for charges
+   real(wp), intent(in) :: zexp
+   !> Second derivative of the energy w.r.t. the Cartesian coordinates
+   real(wp), intent(inout) :: hessian(:, :)
+
+   real(wp) :: fi, fj, ff, r1, expt
+   real(wp) :: r0, vec(3), dE1, dE2
+   integer :: iat, jat, jtr, izp, jzp
+
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      fi = real(iz(izp), wp)
+      do jat = 1, iat - 1
+         jzp = mol%id(jat)
+         r0 = rscal*r0ab(izp, jzp)**rexp
+         fj = real(iz(jzp), wp)
+         ff = -(fi*fj)**zexp
+
+         do jtr = 1, size(trans, 2)
+            vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, jtr))
+            r1 = norm2(vec)
+            if(r1 > cutoff .or. r1 < epsilon(1.0_wp)) cycle
+            expt = exp(-r0*r1)
+
+            dE1 = -qscal*ff*r0*expt
+            dE2 = qscal*ff*r0*r0*expt
+
+            call add_pair_hessian(hessian, iat, jat, vec, r1, dE1, dE2)
+         end do
+      end do
+   end do
+
+end subroutine srb_hessian
+
+
+!> Distribute the second derivatives of a radial pair potential to the hessian
+pure subroutine add_pair_hessian(hessian, iat, jat, vec, r1, dE1, dE2)
+   !> Second derivative of the energy w.r.t. the Cartesian coordinates
+   real(wp), intent(inout) :: hessian(:, :)
+   !> Atom indices of the interacting pair
+   integer, intent(in) :: iat, jat
+   !> Distance vector and its norm
+   real(wp), intent(in) :: vec(3), r1
+   !> First and second derivative of the pair potential w.r.t. the distance
+   real(wp), intent(in) :: dE1, dE2
+
+   integer :: ic, jc
+   real(wp) :: hblk(3, 3), fr
+
+   fr = dE1/r1
+   do ic = 1, 3
+      do jc = 1, 3
+         hblk(ic, jc) = (dE2 - fr)*vec(ic)*vec(jc)/(r1*r1)
+      end do
+      hblk(ic, ic) = hblk(ic, ic) + fr
+   end do
+
+   do ic = 1, 3
+      do jc = 1, 3
+         hessian(3*(iat-1)+ic, 3*(iat-1)+jc) = &
+            & hessian(3*(iat-1)+ic, 3*(iat-1)+jc) + hblk(ic, jc)
+         hessian(3*(jat-1)+ic, 3*(jat-1)+jc) = &
+            & hessian(3*(jat-1)+ic, 3*(jat-1)+jc) + hblk(ic, jc)
+         hessian(3*(iat-1)+ic, 3*(jat-1)+jc) = &
+            & hessian(3*(iat-1)+ic, 3*(jat-1)+jc) - hblk(ic, jc)
+         hessian(3*(jat-1)+ic, 3*(iat-1)+jc) = &
+            & hessian(3*(jat-1)+ic, 3*(iat-1)+jc) - hblk(ic, jc)
+      end do
+   end do
+
+end subroutine add_pair_hessian
 
 
 !******************************************************************************
@@ -903,6 +1146,7 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    real(wp) :: Fa, Fb
    !--------------------- set exponents ---------------------------------------
    real(wp) :: xx
+   real(wp) :: s0, s2
    logical :: lsame
 
    za = xza
@@ -927,49 +1171,11 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    Fb = (zb-za)
    lsame = .false.
    !
-   ! same elements
+   ! Nearly equal exponents: the closed-form expressions below are singular for
+   ! zb -> za, evaluate the auxiliary integrals with the stable series instead
    if(abs(za-zb) < 0.1) then
-      lsame = .true.
-      ! call arguments: gtype(exponents, argumentDeriv., distance, gradient, (Switch shell), sameElement)
-      select case (ii)
-      case (1)
-         call g1s1s(za, zb, Fa, Fb, R, g, lsame)
-      case (2)
-         if(shell(na) < shell(nb)) then
-            call g2s1s(za, zb, Fa, Fb, R, g, .false., lsame)
-         else
-            xx = za
-            za = zb
-            zb = xx
-            call g2s1s(za, zb, Fa, Fb, R, g, .true., lsame)
-         end if
-      case (4)
-         call g2s2s(za, zb, Fa, Fb, R, g, lsame)
-      case(3)
-         if(shell(na) < shell(nb)) then
-            call g1s3s(za, zb, Fa, Fb, R, g, .false., lsame)
-         else
-            xx = za
-            za = zb
-            zb = xx
-            call g1s3s(za, zb, Fa, Fb, R, g, .true., lsame)
-         end if
-      case(6)
-         if(shell(na) < shell(nb)) then
-            call g2s3s(za, zb, Fa, Fb, R, g, .false., lsame)
-         else
-            xx = za
-            za = zb
-            zb = xx
-            call g2s3s(za, zb, Fa, Fb, R, g, .true., lsame)
-         end if
-      case(9)
-         call g3s3s(za, zb, Fa, Fb, R, g, lsame)
-      case default
-         error stop "invalid shell combination in gsovl"
-      end select
+      call dsovl(r, iat, jat, iz, xza, xzb, s0, g, s2)
    else ! different elements
-      lsame = .false.
       select case (ii)
       case (1)
          call g1s1s(za, zb, Fa, Fb, R, g, lsame)
@@ -1010,6 +1216,193 @@ subroutine gsovl(r, iat, jat, iz, xza, xzb, g)
    end if
 
 end subroutine gsovl
+
+
+!> Second derivative of the s-type overlap integral with respect to the distance.
+subroutine hsovl(r, iat, jat, iz, xza, xzb, h)
+   real(wp), intent(in) :: r
+   integer, intent(in) :: iat, jat
+   integer, intent(in) :: iz(:)
+   real(wp), intent(in) :: xza, xzb
+   real(wp), intent(out) :: h
+
+   real(wp) :: s0, s1
+
+   call dsovl(r, iat, jat, iz, xza, xzb, s0, s1, h)
+
+end subroutine hsovl
+
+
+!> Value and first two derivatives of the s-type overlap integral.
+!>
+!> The overlap is written as norm * R**m * sum_t w_t * A_p(ax) * B_q(bx) with
+!> ax = (za+zb)*R/2 and bx = (zb-za)*R/2. Since dA_k/dx = -A_(k+1) and
+!> dB_k/dx = -B_(k+1) the derivatives follow from shifted auxiliary integrals.
+subroutine dsovl(r, iat, jat, iz, xza, xzb, s0, s1, s2)
+   real(wp), intent(in) :: r
+   integer, intent(in) :: iat, jat
+   integer, intent(in) :: iz(:)
+   real(wp), intent(in) :: xza, xzb
+   real(wp), intent(out) :: s0, s1, s2
+
+   integer :: ii, shell(72)
+   integer :: na, nb, nterm, m, it, ip, iq, k
+   integer :: pa(6), qb(6)
+   real(wp) :: wt(6)
+   real(wp) :: za, zb, xx, ax, bx, ha, hb, cnorm
+   real(wp) :: f0, f1, f2, av(0:8), bv(0:8)
+   logical :: lsame
+   data shell/                 &
+   !          h, he
+            1, 1               &
+   !         li-ne
+            , 2, 2, 2, 2, 2, 2, 2, 2, &
+   !         na-ar
+            3, 3, 3, 3, 3, 3, 3, 3,  &
+   ! 4s, 5s will be treated as 3s
+   !         k-rn , no f-elements
+            54*3/
+
+   za = xza
+   zb = xzb
+   na = iz(iat)
+   nb = iz(jat)
+   lsame = abs(za-zb) < 0.1_wp
+
+   ! ii selects kind of ovl by multiplying the shell
+   ! kind    <1s|1s>  <2s|1s>  <2s|2s>  <1s|3s>  <2s|3s>  <3s|3s>
+   ! case:      1        2        4       3        6         9
+   ii = shell(na)*shell(nb)
+   select case(ii)
+   case(1)
+      m = 3
+      nterm = 2
+      wt(:nterm) = [1.0_wp, -1.0_wp]
+      pa(:nterm) = [2, 0]
+      qb(:nterm) = [0, 2]
+      cnorm = 0.25_wp*sqrt((za*zb)**3)
+   case(2)
+      if (shell(na) >= shell(nb)) then
+         xx = za
+         za = zb
+         zb = xx
+      end if
+      m = 4
+      nterm = 4
+      wt(:nterm) = [1.0_wp, -1.0_wp, 1.0_wp, -1.0_wp]
+      pa(:nterm) = [3, 0, 2, 1]
+      qb(:nterm) = [0, 3, 1, 2]
+      cnorm = sqrt(1.0_wp/3.0_wp)*sqrt((za**3)*(zb**5))*0.125_wp
+   case(3)
+      if (shell(na) >= shell(nb)) then
+         xx = za
+         za = zb
+         zb = xx
+      end if
+      m = 5
+      nterm = 4
+      wt(:nterm) = [1.0_wp, -1.0_wp, 2.0_wp, -2.0_wp]
+      pa(:nterm) = [4, 0, 3, 1]
+      qb(:nterm) = [0, 4, 1, 3]
+      cnorm = sqrt((za**3)*(zb**7)/7.5_wp)*0.0625_wp/sqrt(3.0_wp)
+   case(4)
+      m = 5
+      nterm = 3
+      wt(:nterm) = [1.0_wp, 1.0_wp, -2.0_wp]
+      pa(:nterm) = [4, 0, 2]
+      qb(:nterm) = [0, 4, 2]
+      cnorm = sqrt((za*zb)**5)*0.0625_wp/3.0_wp
+   case(6)
+      if (shell(na) >= shell(nb)) then
+         xx = za
+         za = zb
+         zb = xx
+      end if
+      m = 6
+      nterm = 6
+      wt(:nterm) = [1.0_wp, 1.0_wp, -2.0_wp, -2.0_wp, 1.0_wp, 1.0_wp]
+      pa(:nterm) = [5, 4, 3, 2, 1, 0]
+      qb(:nterm) = [0, 1, 2, 3, 4, 5]
+      cnorm = sqrt((za**5)*(zb**7)/7.5_wp)*0.03125_wp/3.0_wp
+   case(9)
+      m = 7
+      nterm = 4
+      wt(:nterm) = [1.0_wp, -3.0_wp, 3.0_wp, -1.0_wp]
+      pa(:nterm) = [6, 4, 2, 0]
+      qb(:nterm) = [0, 2, 4, 6]
+      cnorm = sqrt((za*zb)**7)/1440.0_wp
+   case default
+      error stop "invalid shell combination in dsovl"
+   end select
+
+   ha = 0.5_wp*(za + zb)
+   hb = 0.5_wp*(zb - za)
+   ax = ha*r
+   bx = hb*r
+
+   do k = 0, 8
+      av(k) = Aaux(ax, k)
+      if (lsame) then
+         bv(k) = Bint(bx, k)
+      else
+         bv(k) = Baux(bx, k)
+      end if
+   end do
+
+   f0 = 0.0_wp
+   f1 = 0.0_wp
+   f2 = 0.0_wp
+   do it = 1, nterm
+      ip = pa(it)
+      iq = qb(it)
+      f0 = f0 + wt(it)*av(ip)*bv(iq)
+      f1 = f1 - wt(it)*(ha*av(ip+1)*bv(iq) + hb*av(ip)*bv(iq+1))
+      f2 = f2 + wt(it)*(ha*ha*av(ip+2)*bv(iq) &
+         & + 2.0_wp*ha*hb*av(ip+1)*bv(iq+1) + hb*hb*av(ip)*bv(iq+2))
+   end do
+
+   s0 = cnorm*r**m*f0
+   s1 = cnorm*(real(m, wp)*r**(m-1)*f0 + r**m*f1)
+   s2 = cnorm*(real(m*(m-1), wp)*r**(m-2)*f0 + 2.0_wp*real(m, wp)*r**(m-1)*f1 &
+      & + r**m*f2)
+
+end subroutine dsovl
+
+
+!> Auxiliary integral A_k(x) = int_1^inf t**k exp(-x*t) dt
+real(wp) pure function Aaux(x, k)
+   real(wp), intent(in) :: x
+   integer, intent(in) :: k
+   real(wp) :: term
+   integer :: j
+   term = 1.0_wp/x
+   Aaux = term
+   do j = 1, k
+      term = term*real(k-j+1, wp)/x
+      Aaux = Aaux + term
+   end do
+   Aaux = Aaux*exp(-x)
+end function Aaux
+
+
+!> Auxiliary integral B_k(x) = int_-1^1 t**k exp(-x*t) dt
+real(wp) pure function Baux(x, k)
+   real(wp), intent(in) :: x
+   integer, intent(in) :: k
+   real(wp) :: term, sp, sm, sgn
+   integer :: j
+   term = 1.0_wp/x
+   sgn = merge(1.0_wp, -1.0_wp, mod(k, 2) == 0)
+   sp = sgn*term
+   sm = term
+   do j = 1, k
+      term = term*real(k-j+1, wp)/x
+      sgn = -sgn
+      sp = sp + sgn*term
+      sm = sm + term
+   end do
+   Baux = exp(x)*sp - exp(-x)*sm
+end function Baux
 
 
 !-------------------------------------------------------------
