@@ -92,6 +92,8 @@ module dftd3_app_cli
       logical :: tmer = .true.
       logical :: grad = .false.
       character(len=:), allocatable :: grad_output
+      logical :: hessian = .false.
+      character(len=:), allocatable :: hessian_output
       integer :: verbosity = 2
       logical :: citation = .false.
       character(len=:), allocatable :: citation_output
@@ -585,12 +587,6 @@ subroutine get_run_arguments(config, list, start, error)
       config%hessian_output = "dftd3_hessian.txt"
    end if
 
-   if (config%hessian .and. config%gcp) then
-      call fatal_error(error, &
-         & "Hessian is not available for the geometric counter-poise correction")
-      return
-   end if
-
    if (.not.allocated(config%input)) then
       if (.not.allocated(error)) then
          write(output_unit, "(a)") run_help_text
@@ -771,12 +767,27 @@ subroutine get_gcp_arguments(config, list, start, error)
             end if
             call move_alloc(arg, config%grad_output)
          end if
+      case("--hessian")
+         config%hessian = .true.
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         if (allocated(arg)) then
+            if (arg(1:1) == "-") then
+               iarg = iarg - 1
+               cycle
+            end if
+            call move_alloc(arg, config%hessian_output)
+         end if
       end select
    end do
    if (allocated(error)) return
 
    if (config%grad.and. .not.config%json .and. .not.allocated(config%grad_output)) then
       config%grad_output = "dftd3.txt"
+   end if
+
+   if (config%hessian .and. .not.config%json .and. .not.allocated(config%hessian_output)) then
+      config%hessian_output = "gcp_hessian.txt"
    end if
 
    if (.not.allocated(config%input)) then

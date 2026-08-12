@@ -58,7 +58,8 @@ module dftd3_app_help
       "                         write results to file (default: dftd3.txt),"//nl//&
       "                         attempts to add to Turbomole gradient and gradlatt files"//nl//&
       "   --hessian [file]      Request analytical hessian evaluation,"//nl//&
-      "                         write results to file (default: dftd3_hessian.txt)"//nl//&
+      "                         write results to file (default: dftd3_hessian.txt),"//nl//&
+      "                         includes the counter-poise correction if --gcp is given"//nl//&
       "   --property            Evaluate dispersion related properties"//nl//&
       "   --pair-resolved       Calculate pairwise representation of dispersion energy"//nl//&
       "   --citation [file]     Print citation information to file (default: dftd3.bib)"//nl//&
@@ -132,6 +133,8 @@ module dftd3_app_help
       "   --grad [file]         Request gradient evaluation,"//nl//&
       "                         write results to file (default: gcp.txt),"//nl//&
       "                         attempts to add to Turbomole gradient and gradlatt files"//nl//&
+      "   --hessian [file]      Request analytical hessian evaluation,"//nl//&
+      "                         write results to file (default: gcp_hessian.txt)"//nl//&
       "-v,--verbose             Show more, can be used multiple times"//nl//&
       "-s,--silent              Show less, use twice to supress all output"//nl//&
       "   --version             Print program version and exit"//nl//&

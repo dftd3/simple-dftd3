@@ -31,7 +31,8 @@ module dftd3_app_driver
    use dftd3_citation, only : format_bibtex, is_citation_present, citation_type, &
       & get_citation, doi_dftd3_0, doi_dftd3_bj, doi_dftd3_m, doi_dftd3_op, &
       & doi_dftd3_cso, doi_joss, same_citation
-   use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
+   use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise, &
+      & get_geometric_counterpoise_hessian
    use dftd3_output, only : ascii_damping_param, ascii_atomic_radii, &
       & ascii_atomic_references, ascii_system_properties, ascii_energy_atom, &
       & ascii_results, ascii_pairwise, tagged_result, json_results, &
@@ -70,7 +71,7 @@ subroutine run_driver(config, error)
    type(d3_model) :: d3
    type(gcp_param) :: gcp
    real(wp), allocatable :: energies(:), gradient(:, :), sigma(:, :)
-   real(wp), allocatable :: hessian(:, :)
+   real(wp), allocatable :: hessian(:, :), gcp_hessian(:, :)
    real(wp), allocatable :: pair_disp2(:, :), pair_disp3(:, :)
    real(wp), allocatable :: s9
    real(wp) :: energy
@@ -243,6 +244,11 @@ subroutine run_driver(config, error)
          & gradient, sigma, hessian)
       if (config%gcp) then
          call get_geometric_counterpoise(mol, gcp, realspace_cutoff(), energies, gradient, sigma)
+         if (config%hessian) then
+            allocate(gcp_hessian(3*mol%nat, 3*mol%nat))
+            call get_geometric_counterpoise_hessian(mol, gcp, realspace_cutoff(), gcp_hessian)
+            hessian(:, :) = hessian + gcp_hessian
+         end if
       end if
       energy = sum(energies)
 
@@ -406,7 +412,7 @@ subroutine gcp_driver(config, error)
    type(gcp_param) :: param
    integer :: unit
    real(wp) :: energy
-   real(wp), allocatable :: energies(:), gradient(:, :), sigma(:, :)
+   real(wp), allocatable :: energies(:), gradient(:, :), sigma(:, :), hessian(:, :)
 
    if (config%verbosity > 1) then
       call header(output_unit)
@@ -436,15 +442,22 @@ subroutine gcp_driver(config, error)
       allocate(gradient(3, mol%nat), source=0.0_wp)
       allocate(sigma(3, 3), source=0.0_wp)
    end if
+   if (config%hessian) then
+      allocate(hessian(3*mol%nat, 3*mol%nat))
+   end if
 
    call get_geometric_counterpoise(mol, param, realspace_cutoff(), energies, gradient, sigma)
    energy = sum(energies)
+   if (config%hessian) then
+      call get_geometric_counterpoise_hessian(mol, param, realspace_cutoff(), hessian)
+   end if
 
    if (config%verbosity > 0) then
       if (config%verbosity > 2) then
          call ascii_energy_atom(output_unit, mol, energies, label="counter-poise")
       end if
-      call ascii_results(output_unit, mol, energy, gradient, sigma, label="Counter-poise")
+      call ascii_results(output_unit, mol, energy, gradient, sigma, label="Counter-poise", &
+         & hessian=hessian)
    end if
 
    if (config%tmer) then
@@ -460,9 +473,22 @@ subroutine gcp_driver(config, error)
       call turbomole_writer(mol, energy, gradient, sigma, config%verbosity, "Counter-poise")
    end if
 
+   if (config%hessian) then
+      if (allocated(config%hessian_output)) then
+         open(file=config%hessian_output, newunit=unit)
+         call tagged_result(unit, hessian=hessian)
+         close(unit)
+         if (config%verbosity > 0) then
+            write(output_unit, "(a)") &
+               & "[Info] Counter-poise hessian written to '"//config%hessian_output//"'"
+         end if
+      end if
+   end if
+
    if (config%json) then
       open(file=config%json_output, newunit=unit)
-      call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma)
+      call json_results(unit, "  ", energy=energy, gradient=gradient, sigma=sigma, &
+         & hessian=hessian)
       close(unit)
       if (config%verbosity > 0) then
          write(output_unit, "(a)") &
