@@ -15,9 +15,6 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 !> Translation of accuracy targets into summation parameters.
-!>
-!> Kept separate from the cutoff definitions themselves, which are used
-!> throughout the library and stay free of dependencies on the dispersion model.
 module dftd3_accuracy
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_model, only : d3_model
