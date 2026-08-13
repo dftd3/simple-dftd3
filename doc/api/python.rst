@@ -89,6 +89,13 @@ ZDampingParam
    :members:
 
 
+GeometricCounterpoise
+~~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: GeometricCounterpoise
+   :members:
+
+
 QCSchema support
 ----------------
 

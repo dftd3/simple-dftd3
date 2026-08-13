@@ -344,3 +344,12 @@ dftd3_get_counterpoise(dftd3_error /* error */,
                        double* /* energy */,
                        double* /* gradient[n][3] */,
                        double* /* sigma[3][3] */) SDFTD3_API_SUFFIX__V_1_3;
+
+/// Evaluate the analytical second derivatives of the counter-poise energy.
+/// The hessian is symmetric, hence row- and column-major layout are equivalent.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_get_counterpoise_hessian(dftd3_error /* error */,
+                               dftd3_structure /* mol */,
+                               dftd3_gcp /* gcp */,
+                               double* /* energy */,
+                               double* /* hessian[3*n][3*n] */) SDFTD3_API_SUFFIX__V_1_6;

@@ -32,7 +32,8 @@ module dftd3_api
    use dftd3_damping_z, only : z_damping_param, new_z_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
-   use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise
+   use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise, &
+      & get_geometric_counterpoise_hessian
    use dftd3_model, only : d3_model, new_d3_model
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
@@ -71,6 +72,7 @@ module dftd3_api
    public :: vp_gcp
    public :: load_gcp_param_api, delete_gcp_api, set_gcp_realspace_cutoff
    public :: get_counterpoise_api
+   public :: get_counterpoise_hessian_api
 
 
    !> Void pointer to error handle
@@ -1199,17 +1201,18 @@ subroutine get_counterpoise_api(verror, vmol, vgcp, &
    call c_f_pointer(vgcp, gcp)
 
    if (present(c_gradient)) then
-      gradient = c_gradient(:3, :mol%ptr%nat)
+      allocate(gradient(3, mol%ptr%nat), source=0.0_wp)
    end if
 
-   if (present(c_gradient)) then
-      sigma = c_sigma(:3, :3)
+   if (present(c_sigma)) then
+      allocate(sigma(3, 3), source=0.0_wp)
    end if
 
    cutoff = realspace_cutoff()
    if (allocated(gcp%cutoff)) then
       cutoff = gcp%cutoff
    end if
+   energy = 0.0_wp
    call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, &
       & energy, gradient, sigma)
 
@@ -1217,11 +1220,58 @@ subroutine get_counterpoise_api(verror, vmol, vgcp, &
       c_gradient(:3, :mol%ptr%nat) = gradient
    end if
 
-   if (present(c_gradient)) then
+   if (present(c_sigma)) then
       c_sigma(:3, :3) = sigma
    end if
 
 end subroutine get_counterpoise_api
+
+
+!> Calculate the analytical hessian of the counter-poise energy
+subroutine get_counterpoise_hessian_api(verror, vmol, vgcp, &
+      & energy, c_hessian) &
+      & bind(C, name=namespace//"get_counterpoise_hessian")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vmol
+   type(vp_structure), pointer :: mol
+   type(c_ptr), value :: vgcp
+   type(vp_gcp), pointer :: gcp
+   real(c_double), intent(out) :: energy
+   real(c_double), intent(out) :: c_hessian(*)
+   real(wp), allocatable :: hessian(:, :)
+   type(realspace_cutoff) :: cutoff
+   integer :: ndim
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vmol)) then
+      call fatal_error(error%ptr, "Molecular structure data is missing")
+      return
+   end if
+   call c_f_pointer(vmol, mol)
+
+   if (.not.c_associated(vgcp)) then
+      call fatal_error(error%ptr, "Counter-poise parameters are missing")
+      return
+   end if
+   call c_f_pointer(vgcp, gcp)
+
+   ndim = 3*mol%ptr%nat
+   allocate(hessian(ndim, ndim))
+
+   cutoff = realspace_cutoff()
+   if (allocated(gcp%cutoff)) then
+      cutoff = gcp%cutoff
+   end if
+   energy = 0.0_wp
+   call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, energy)
+   call get_geometric_counterpoise_hessian(mol%ptr, gcp%ptr, cutoff, hessian)
+
+   c_hessian(:ndim*ndim) = reshape(hessian, [ndim*ndim])
+
+end subroutine get_counterpoise_hessian_api
 
 
 subroutine f_c_character(rhs, lhs, len)

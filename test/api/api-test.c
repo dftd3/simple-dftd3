@@ -199,6 +199,11 @@ test_uninitialized_gcp (void)
 
    show_error(error);
 
+   dftd3_get_counterpoise_hessian(error, mol, gcp, &energy, NULL);
+   if (!dftd3_check_error(error)) goto unexpected;
+
+   show_error(error);
+
    dftd3_delete(error);
    dftd3_delete(mol);
    return 0;
@@ -532,6 +537,85 @@ cleanup:
 }
 
 int
+test_gcp_hessian (void)
+{
+   printf("Start test: counter-poise hessian\n");
+   int const natoms = 7;
+   int const ndim = 21;
+   int const attyp[7] = {6,6,6,1,1,1,1};
+   double coord[21] =
+      {0.00000000000000, 0.00000000000000,-1.79755622305860,
+       0.00000000000000, 0.00000000000000, 0.95338756106749,
+       0.00000000000000, 0.00000000000000, 3.22281255790261,
+      -0.96412815539807,-1.66991895015711,-2.53624948351102,
+      -0.96412815539807, 1.66991895015711,-2.53624948351102,
+       1.92825631079613, 0.00000000000000,-2.53624948351102,
+       0.00000000000000, 0.00000000000000, 5.23010455462158};
+   double ref[21];
+   double hessian[441];
+   double numhess[441];
+   double gradr[21], gradl[21], sigma[9];
+   double energy;
+   double const step = 1.0e-6;
+   int stat = 0;
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_gcp gcp = NULL;
+
+   error = dftd3_new_error();
+   mol = dftd3_new_structure(error, natoms, attyp, coord, NULL, NULL);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   // HF-3c includes the counter-poise, short-range bond and basis corrections
+   gcp = dftd3_load_gcp_param(error, mol, "hf3c", NULL);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   dftd3_get_counterpoise_hessian(error, mol, gcp, &energy, hessian);
+   if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+   for (int i = 0; i < ndim; i++) ref[i] = coord[i];
+
+   for (int i = 0; i < ndim; i++) {
+      coord[i] = ref[i] + step;
+      dftd3_update_structure(error, mol, coord, NULL);
+      dftd3_get_counterpoise(error, mol, gcp, &energy, gradr, sigma);
+      if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+      coord[i] = ref[i] - step;
+      dftd3_update_structure(error, mol, coord, NULL);
+      dftd3_get_counterpoise(error, mol, gcp, &energy, gradl, sigma);
+      if (dftd3_check_error(error)) {stat = 1; goto cleanup;}
+
+      coord[i] = ref[i];
+      for (int j = 0; j < ndim; j++) {
+         numhess[i*ndim + j] = 0.5 * (gradr[j] - gradl[j]) / step;
+      }
+   }
+
+   for (int i = 0; i < ndim; i++) {
+      for (int j = 0; j < ndim; j++) {
+         if (fabs(hessian[i*ndim + j] - hessian[j*ndim + i]) > 1.0e-12) {
+            printf("[Fatal] Counter-poise hessian is not symmetric\n");
+            stat = 1;
+            goto cleanup;
+         }
+         if (fabs(hessian[i*ndim + j] - numhess[i*ndim + j]) > 1.0e-7) {
+            printf("[Fatal] Counter-poise hessian does not match finite differences\n");
+            stat = 1;
+            goto cleanup;
+         }
+      }
+   }
+
+cleanup:
+   dftd3_delete(gcp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return stat;
+}
+
+int
 test_ghost_atoms_atm(void) {
    printf("Start test: ghost atoms with ATM\n");
    double energy = 0.0;
@@ -603,5 +687,6 @@ main (void)
    stat += test_d3();
    stat += test_hessian();
    stat += test_gcp();
+   stat += test_gcp_hessian();
    return stat;
 }

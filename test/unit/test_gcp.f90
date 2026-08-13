@@ -105,9 +105,9 @@ subroutine collect_gcp(testsuite)
       & new_unittest("b3pbe3c/def2mtzvp", test_b3pbe3c_def2mtzvp), &
       & new_unittest("dft/lanl2", test_dft_lanl2), &
       & new_unittest("grad:hf/dz", test_hf_dz_grad), &
-      ! new_unittest("grad:dft/sv", test_dft_sv_grad), &
+      & new_unittest("grad:dft/sv", test_dft_sv_grad), &
       & new_unittest("grad:hse3c", test_hse3c_grad), &
-      ! new_unittest("grad:hf3c", test_hf3c_grad), &
+      & new_unittest("grad:hf3c", test_hf3c_grad), &
       & new_unittest("grad:b973c", test_b973c_grad), &
       & new_unittest("without-args", test_without_args) &
       & ]

@@ -69,6 +69,9 @@ Use scaled ATM three-body dispersion
 *--ghost* _list_::
 Disable dispersion contributions from the given 1-based atom indices
 
+*--gcp* _basis_::
+Include the geometric counter-poise correction for the given basis set
+
 *--db* _file_::
 Load parameters from external data file
 
@@ -88,7 +91,7 @@ Request analytical hessian evaluation,
 write results to _file_ (default: `dftd3_hessian.txt`).
 The hessian is written as a 3N by 3N matrix in atomic units (Eh/a0^2^),
 using the index convention 3*(i-1)+c for the Cartesian component _c_ of atom _i_.
-Not available in combination with *--gcp*.
+The geometric counter-poise correction is included if *--gcp* is given.
 
 *--property*::
 Evaluate dispersion related properties
