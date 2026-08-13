@@ -25,7 +25,7 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
  `bobbypaton/pydftd3`_             MIT         Python               Gaussian
  `LipidL/LASP-D3`_                 N/A         C                    CUDA implementation
  `NVIDIA/nvalchemi-toolkit-ops`_   Apache-2.0  Python               Python with Nvidia Wrap
- `vicvaleeva/FourierD3`_           MIT         Python               torch, particle-mesh Ewald
+ `vicvaleeva/FourierD3`_           MIT         Python               torch, Ewald
 ================================= =========== ==================== ==========================
 
 .. _dftd3: https://www.chemie.uni-bonn.de/grimme/de/software/dft-d3/get_dft-d3
@@ -45,13 +45,6 @@ A non-comprehensive list of DFT-D3 implementations is provided here:
 
 Many more versions are probably around or redistributed in various quantum chemistry programs.
 
-The reciprocal space summation of the two-body dispersion energy available in this
-library follows the FourierD3 method,\ :footcite:`valeeva2026` which restores the
-atom-centered separability of the environment dependent C6 coefficients by a low-rank
-decomposition of the reference coefficients.
-The `vicvaleeva/FourierD3`_ repository provides the reference implementation of the
-method using smooth particle-mesh Ewald, while this library performs the summation
-directly over the reciprocal lattice.
 
 .. _users:
 
