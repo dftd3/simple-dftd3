@@ -333,6 +333,9 @@ end function is_exceptional
 
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
 !> the coordination number.
+!>
+!> The second derivatives require a model without a low-rank expansion, which
+!> only provides the coefficients and their first derivatives.
 subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, d2c6dcnij)
 
    !> Instance of the dispersion model
@@ -368,8 +371,7 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
    logical :: second
 
    if (allocated(self%lowrank)) then
-      call self%lowrank%get_atomic_c6(mol, self%ghost, gwvec, gwdcn, c6, dc6dcn, &
-         & gwd2cn, d2c6dcn2, d2c6dcnij)
+      call self%lowrank%get_atomic_c6(mol, self%ghost, gwvec, gwdcn, c6, dc6dcn)
       return
    end if
 

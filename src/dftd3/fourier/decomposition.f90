@@ -137,7 +137,6 @@ subroutine new_lowrank_c6(self, ref, c6ref, config)
 
    allocate(res(ndim, ndim), source=amat)
    nrank = ndim
-   self%error = max_relative_error(res, amat)
    do il = 1, ndim
       do ii = 1, ndim
          res(:, ii) = res(:, ii) - eval(il) * evec(:, il) * evec(ii, il)
@@ -191,7 +190,7 @@ end function max_relative_error
 
 !> Contract the eigenvectors with the Gaussian weights of the reference systems
 !> to obtain the atom centered factors of the separable expansion.
-subroutine get_weights(self, mol, ghost, gwvec, c6l, gwdcn, dc6ldcn, gwd2cn, d2c6ldcn2)
+subroutine get_weights(self, mol, ghost, gwvec, c6l, gwdcn, dc6ldcn)
 
    !> Instance of the separable representation
    class(d3_lowrank_c6), intent(in) :: self
@@ -214,21 +213,13 @@ subroutine get_weights(self, mol, ghost, gwvec, c6l, gwdcn, dc6ldcn, gwd2cn, d2c
    !> Derivative of the atomic factors w.r.t. the coordination number
    real(wp), intent(out), optional :: dc6ldcn(:, :)
 
-   !> Second derivative of the weighting function w.r.t. the coordination number
-   real(wp), intent(in), optional :: gwd2cn(:, :)
-
-   !> Second derivative of the atomic factors w.r.t. the coordination number
-   real(wp), intent(out), optional :: d2c6ldcn2(:, :)
-
    integer :: iat, izp, il
-   logical :: grad, second
+   logical :: grad
 
    grad = present(gwdcn) .and. present(dc6ldcn)
-   second = present(gwd2cn) .and. present(d2c6ldcn2)
 
    c6l(:, :) = 0.0_wp
    if (grad) dc6ldcn(:, :) = 0.0_wp
-   if (second) d2c6ldcn2(:, :) = 0.0_wp
 
    do iat = 1, mol%nat
       if (ghost(iat)) cycle
@@ -236,7 +227,6 @@ subroutine get_weights(self, mol, ghost, gwvec, c6l, gwdcn, dc6ldcn, gwd2cn, d2c
       do il = 1, self%rank
          c6l(il, iat) = sum(self%vec(:, izp, il) * gwvec(:, iat))
          if (grad) dc6ldcn(il, iat) = sum(self%vec(:, izp, il) * gwdcn(:, iat))
-         if (second) d2c6ldcn2(il, iat) = sum(self%vec(:, izp, il) * gwd2cn(:, iat))
       end do
    end do
 
@@ -245,8 +235,7 @@ end subroutine get_weights
 
 !> Assemble the pair C6 coefficients and their derivatives w.r.t. the
 !> coordination number from the separable factors.
-subroutine get_atomic_c6(self, mol, ghost, gwvec, gwdcn, c6, dc6dcn, gwd2cn, &
-      & d2c6dcn2, d2c6dcnij)
+subroutine get_atomic_c6(self, mol, ghost, gwvec, gwdcn, c6, dc6dcn)
 
    !> Instance of the separable representation
    class(d3_lowrank_c6), intent(in) :: self
@@ -269,37 +258,21 @@ subroutine get_atomic_c6(self, mol, ghost, gwvec, gwdcn, c6, dc6dcn, gwd2cn, &
    !> Derivative of the C6 w.r.t. the coordination number
    real(wp), intent(out), optional :: dc6dcn(:, :)
 
-   !> Second derivative of the weighting function w.r.t. the coordination number
-   real(wp), intent(in), optional :: gwd2cn(:, :)
-
-   !> Second derivative of the C6 w.r.t. the coordination number of one atom
-   real(wp), intent(out), optional :: d2c6dcn2(:, :)
-
-   !> Mixed second derivative of the C6 w.r.t. both coordination numbers
-   real(wp), intent(out), optional :: d2c6dcnij(:, :)
-
    integer :: iat, jat
-   logical :: grad, second
-   real(wp), allocatable :: c6l(:, :), dc6ldcn(:, :), d2c6ldcn2(:, :)
+   logical :: grad
+   real(wp), allocatable :: c6l(:, :), dc6ldcn(:, :)
 
    grad = present(gwdcn) .and. present(dc6dcn)
-   second = present(gwd2cn) .and. present(d2c6dcn2) .and. present(d2c6dcnij)
 
    allocate(c6l(self%rank, mol%nat))
    if (grad) allocate(dc6ldcn(self%rank, mol%nat))
-   if (second) allocate(d2c6ldcn2(self%rank, mol%nat))
-   call self%get_weights(mol, ghost, gwvec, c6l, gwdcn, dc6ldcn, gwd2cn, d2c6ldcn2)
+   call self%get_weights(mol, ghost, gwvec, c6l, gwdcn, dc6ldcn)
 
    c6(:, :) = 0.0_wp
    if (grad) dc6dcn(:, :) = 0.0_wp
-   if (second) then
-      d2c6dcn2(:, :) = 0.0_wp
-      d2c6dcnij(:, :) = 0.0_wp
-   end if
 
    !$omp parallel do schedule(runtime) default(none) &
-   !$omp shared(c6, dc6dcn, d2c6dcn2, d2c6dcnij, mol, self, c6l, dc6ldcn, &
-   !$omp& d2c6ldcn2, grad, second) private(iat, jat)
+   !$omp shared(c6, dc6dcn, mol, self, c6l, dc6ldcn, grad) private(iat, jat)
    do iat = 1, mol%nat
       do jat = 1, iat
          c6(iat, jat) = sum(self%lambda * c6l(:, iat) * c6l(:, jat))
@@ -307,12 +280,6 @@ subroutine get_atomic_c6(self, mol, ghost, gwvec, gwdcn, c6, dc6dcn, gwd2cn, &
          if (grad) then
             dc6dcn(iat, jat) = sum(self%lambda * dc6ldcn(:, iat) * c6l(:, jat))
             dc6dcn(jat, iat) = sum(self%lambda * c6l(:, iat) * dc6ldcn(:, jat))
-         end if
-         if (second) then
-            d2c6dcn2(iat, jat) = sum(self%lambda * d2c6ldcn2(:, iat) * c6l(:, jat))
-            d2c6dcn2(jat, iat) = sum(self%lambda * c6l(:, iat) * d2c6ldcn2(:, jat))
-            d2c6dcnij(iat, jat) = sum(self%lambda * dc6ldcn(:, iat) * dc6ldcn(:, jat))
-            d2c6dcnij(jat, iat) = d2c6dcnij(iat, jat)
          end if
       end do
    end do

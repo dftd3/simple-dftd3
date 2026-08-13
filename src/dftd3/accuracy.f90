@@ -25,6 +25,7 @@ module dftd3_accuracy
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
+   use mctc_io_math, only : matdet_3x3
    implicit none
    private
 
@@ -71,7 +72,7 @@ function get_realspace_cutoff(mol, disp, accuracy) result(cutoff)
    type(realspace_cutoff) :: cutoff
 
    integer :: mref, ndim, iat, izp, isp, jsp, iref, jref, jat
-   real(wp) :: measure, c6mean, amp, vec(3), r2
+   real(wp) :: measure, c6mean, amp, r2
    real(wp), allocatable :: cn(:), gwvec(:, :), wsum(:, :), lattr(:, :)
 
    cutoff = realspace_cutoff()
@@ -121,8 +122,7 @@ function get_realspace_cutoff(mol, disp, accuracy) result(cutoff)
       r2 = 0.0_wp
       do iat = 1, mol%nat
          do jat = 1, iat - 1
-            vec(:) = mol%xyz(:, iat) - mol%xyz(:, jat)
-            r2 = max(r2, vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3))
+            r2 = max(r2, sum((mol%xyz(:, iat) - mol%xyz(:, jat))**2))
          end do
       end do
       cutoff%disp2 = sqrt(r2)
@@ -146,39 +146,25 @@ pure function get_periodic_measure(mol, ndim) result(measure)
    !> Measure of the periodic cell
    real(wp) :: measure
 
-   integer :: ii, idx(3), nidx
+   integer :: ii, idx(3)
    real(wp) :: avec(3), bvec(3)
 
    measure = 1.0_wp
    if (ndim < 1) return
 
-   nidx = 0
-   do ii = 1, size(mol%periodic)
-      if (mol%periodic(ii)) then
-         nidx = nidx + 1
-         idx(nidx) = ii
-      end if
-   end do
+   idx(:ndim) = pack([(ii, ii = 1, 3)], mol%periodic)
 
    select case(ndim)
    case(3)
-      measure = abs(&
-         & mol%lattice(1, 1)*(mol%lattice(2, 2)*mol%lattice(3, 3) &
-         &                  - mol%lattice(3, 2)*mol%lattice(2, 3)) &
-         & - mol%lattice(2, 1)*(mol%lattice(1, 2)*mol%lattice(3, 3) &
-         &                  - mol%lattice(3, 2)*mol%lattice(1, 3)) &
-         & + mol%lattice(3, 1)*(mol%lattice(1, 2)*mol%lattice(2, 3) &
-         &                  - mol%lattice(2, 2)*mol%lattice(1, 3)))
+      measure = abs(matdet_3x3(mol%lattice))
    case(2)
       ! area from the Gram determinant of the two periodic lattice vectors
       avec(:) = mol%lattice(:, idx(1))
       bvec(:) = mol%lattice(:, idx(2))
       measure = sqrt(max(sum(avec**2)*sum(bvec**2) - dot_product(avec, bvec)**2, &
          & 0.0_wp))
-   case(1)
-      measure = norm2(mol%lattice(:, idx(1)))
    case default
-      continue
+      measure = norm2(mol%lattice(:, idx(1)))
    end select
 
 end function get_periodic_measure

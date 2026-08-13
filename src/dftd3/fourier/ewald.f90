@@ -32,10 +32,11 @@ module dftd3_fourier_ewald
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
+   use mctc_io_math, only : matdet_3x3, matinv_3x3
    implicit none
    private
 
-   public :: get_dispersion_ewald, get_reciprocal_lattice
+   public :: get_dispersion_ewald
 
 
 contains
@@ -100,7 +101,8 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    nid = mol%nid
    rank = lowrank%rank
 
-   call get_reciprocal_lattice(mol%lattice, rec, vol)
+   rec(:, :) = 2.0_wp * pi * transpose(matinv_3x3(mol%lattice))
+   vol = abs(matdet_3x3(mol%lattice))
    call get_lattice_points([.true., .true., .true.], rec, kcut, kpoints)
    nk = size(kpoints, 2)
 
@@ -130,11 +132,12 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
       end do
    end do
 
-   erecip = 0.0_wp
+   ! everything added to esum past this point is the reciprocal space energy
+   erecip = -sum(esum)
 
    !$omp parallel default(none) &
    !$omp shared(mol, lowrank, terms, nterm, kcut, kpoints, nk, nat, nid, rank, &
-   !$omp& c6l, dc6ldcn, vol, grad, esum, dsum, gsum, ssum, erecip) &
+   !$omp& c6l, dc6ldcn, vol, grad, esum, dsum, gsum, ssum) &
    !$omp private(ik, iat, izp, jzp, il, it, ic, kvec, knorm, kr, phi, dphi, &
    !$omp& pval, dpval, qq, zval, zre, zim, phihat, dphihat, phase, sf, fvec, &
    !$omp& energies_local, dEdcn_local, gradient_local, sigma_local)
@@ -145,7 +148,7 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    allocate(gradient_local(3, nat), source=0.0_wp)
    allocate(sigma_local(3, 3), source=0.0_wp)
 
-   !$omp do schedule(runtime) reduction(+:erecip)
+   !$omp do schedule(runtime)
    do ik = 1, nk
       kvec(:) = kpoints(:, ik)
       knorm = norm2(kvec)
@@ -190,7 +193,6 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
             zre = real(zval, wp)
             energies_local(iat) = energies_local(iat) &
                & - 0.5_wp * lowrank%lambda(il) * c6l(il, iat) * zre / vol
-            erecip = erecip - 0.5_wp * lowrank%lambda(il) * c6l(il, iat) * zre / vol
             if (grad) then
                zim = aimag(zval)
                dEdcn_local(iat) = dEdcn_local(iat) &
@@ -229,6 +231,7 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
 
    energies(:) = energies(:) + esum(:)
    if (grad) then
+      erecip = erecip + sum(esum)
       do ic = 1, 3
          ssum(ic, ic) = ssum(ic, ic) - erecip
       end do
@@ -238,44 +241,6 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    end if
 
 end subroutine get_dispersion_ewald
-
-
-!> Reciprocal lattice vectors and cell volume of a periodic structure
-pure subroutine get_reciprocal_lattice(lattice, rec, vol)
-
-   !> Direct lattice vectors
-   real(wp), intent(in) :: lattice(:, :)
-
-   !> Reciprocal lattice vectors
-   real(wp), intent(out) :: rec(3, 3)
-
-   !> Volume of the unit cell
-   real(wp), intent(out) :: vol
-
-   real(wp) :: cross(3, 3), det
-
-   call crossproduct(lattice(:, 2), lattice(:, 3), cross(:, 1))
-   call crossproduct(lattice(:, 3), lattice(:, 1), cross(:, 2))
-   call crossproduct(lattice(:, 1), lattice(:, 2), cross(:, 3))
-
-   det = lattice(1, 1)*cross(1, 1) + lattice(2, 1)*cross(2, 1) &
-      & + lattice(3, 1)*cross(3, 1)
-
-   vol = abs(det)
-   rec(:, :) = 2.0_wp * pi * cross / det
-
-end subroutine get_reciprocal_lattice
-
-
-pure subroutine crossproduct(a, b, c)
-   real(wp), intent(in) :: a(3), b(3)
-   real(wp), intent(out) :: c(3)
-
-   c(1) = a(2)*b(3) - b(2)*a(3)
-   c(2) = a(3)*b(1) - b(3)*a(1)
-   c(3) = a(1)*b(2) - b(1)*a(2)
-
-end subroutine crossproduct
 
 
 end module dftd3_fourier_ewald

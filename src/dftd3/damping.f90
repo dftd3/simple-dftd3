@@ -311,17 +311,6 @@ contains
       integer, allocatable :: nterm(:, :)
       type(fourier_term), allocatable :: terms(:, :, :)
 
-      if (.not.allocated(disp%lowrank)) then
-         call fatal_error(error, "Dispersion model provides no low-rank C6 coefficients")
-         return
-      end if
-
-      if (.not.all(mol%periodic)) then
-         call fatal_error(error, "Ewald summation requires three-dimensional "//&
-            & "periodic boundary conditions")
-         return
-      end if
-
       allocate(terms(max_fourier_terms, mol%nid, mol%nid))
       allocate(nterm(mol%nid, mol%nid))
       kcut = 0.0_wp

@@ -103,9 +103,9 @@ subroutine get_dispersion_error(error, mol, disp, param, cutoff, energies, &
       return
    end if
 
-   ! the second derivatives are only implemented for the real space summation,
-   ! returning them next to an Ewald energy would mix both summation techniques
-   if (ewald .and. hess) then
+   ! the low-rank expansion has no second derivatives, and for a periodic model
+   ! they would mix the reciprocal space energy with a real space curvature
+   if (allocated(disp%lowrank) .and. hess) then
       call fatal_error(error, "Hessian is only available for the real space summation")
       return
    end if

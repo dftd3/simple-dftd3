@@ -328,27 +328,24 @@ subroutine test_atomic_c6_gen(error, mol)
    type(d3_model) :: d3, d3lr
    integer :: mref
    real(wp), allocatable :: cn(:), lattr(:, :)
-   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :), gwd2cn(:, :)
-   real(wp), allocatable :: c6(:, :), dc6dcn(:, :), d2c6dcn2(:, :), d2c6dcnij(:, :)
-   real(wp), allocatable :: c6r(:, :), dc6dcnr(:, :), d2c6dcn2r(:, :), d2c6dcnijr(:, :)
+   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
+   real(wp), allocatable :: c6r(:, :), dc6dcnr(:, :)
 
    call new_d3_model(d3, mol)
    call new_d3_model(d3lr, mol, lowrank=exact)
 
    mref = maxval(d3%ref)
-   allocate(cn(mol%nat), gwvec(mref, mol%nat), gwdcn(mref, mol%nat), &
-      & gwd2cn(mref, mol%nat))
+   allocate(cn(mol%nat), gwvec(mref, mol%nat), gwdcn(mref, mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call get_coordination_number(mol, lattr, cutoff%cn, d3%rcov, cn)
-   call d3%weight_references(mol, cn, gwvec, gwdcn, gwd2cn)
+   call d3%weight_references(mol, cn, gwvec, gwdcn)
 
-   allocate(c6(mol%nat, mol%nat), dc6dcn(mol%nat, mol%nat), &
-      & d2c6dcn2(mol%nat, mol%nat), d2c6dcnij(mol%nat, mol%nat))
-   allocate(c6r(mol%nat, mol%nat), dc6dcnr(mol%nat, mol%nat), &
-      & d2c6dcn2r(mol%nat, mol%nat), d2c6dcnijr(mol%nat, mol%nat))
+   allocate(c6(mol%nat, mol%nat), dc6dcn(mol%nat, mol%nat))
+   allocate(c6r(mol%nat, mol%nat), dc6dcnr(mol%nat, mol%nat))
 
-   call d3%get_atomic_c6(mol, gwvec, gwdcn, c6r, dc6dcnr, gwd2cn, d2c6dcn2r, d2c6dcnijr)
-   call d3lr%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, d2c6dcnij)
+   call d3%get_atomic_c6(mol, gwvec, gwdcn, c6r, dc6dcnr)
+   call d3lr%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
 
    if (any(abs(c6 - c6r) > thr2*max(maxval(abs(c6r)), 1.0_wp))) then
       call test_failed(error, "Pair C6 coefficients do not match")
@@ -357,16 +354,6 @@ subroutine test_atomic_c6_gen(error, mol)
 
    if (any(abs(dc6dcn - dc6dcnr) > thr2*max(maxval(abs(dc6dcnr)), 1.0_wp))) then
       call test_failed(error, "Derivatives of the C6 coefficients do not match")
-      return
-   end if
-
-   if (any(abs(d2c6dcn2 - d2c6dcn2r) > thr2*max(maxval(abs(d2c6dcn2r)), 1.0_wp))) then
-      call test_failed(error, "Second derivatives of the C6 coefficients do not match")
-      return
-   end if
-
-   if (any(abs(d2c6dcnij - d2c6dcnijr) > thr2*max(maxval(abs(d2c6dcnijr)), 1.0_wp))) then
-      call test_failed(error, "Mixed derivatives of the C6 coefficients do not match")
       return
    end if
 
@@ -650,7 +637,7 @@ subroutine test_gradient_acetic(error)
 end subroutine test_gradient_acetic
 
 
-!> The second derivatives of the C6 coefficients reach the hessian unchanged
+!> A low-rank model has no second derivatives, also without periodicity
 subroutine test_hessian_mb01(error)
 
    !> Error handling
@@ -659,7 +646,8 @@ subroutine test_hessian_mb01(error)
    type(structure_type) :: mol
    type(d3_model) :: d3, d3lr
    type(rational_damping_param) :: param
-   real(wp), allocatable :: energies(:), hessian(:, :), hessian_ref(:, :)
+   type(error_type), allocatable :: setup_error
+   real(wp), allocatable :: energies(:), hessian(:, :)
 
    call get_structure(mol, "MB16-43", "01")
    call new_d3_model(d3, mol)
@@ -667,13 +655,18 @@ subroutine test_hessian_mb01(error)
    call new_rational_damping(param, pbe_bj)
 
    allocate(energies(mol%nat))
-   allocate(hessian(3*mol%nat, 3*mol%nat), hessian_ref(3*mol%nat, 3*mol%nat))
+   allocate(hessian(3*mol%nat, 3*mol%nat))
 
-   call get_dispersion(mol, d3, param, cutoff, energies, hessian=hessian_ref)
-   call get_dispersion(mol, d3lr, param, cutoff, energies, hessian=hessian)
+   call get_dispersion(setup_error, mol, d3lr, param, cutoff, energies, hessian=hessian)
+   if (.not.allocated(setup_error)) then
+      call test_failed(error, "Hessian of a low-rank model is not reported")
+      return
+   end if
 
-   if (any(abs(hessian - hessian_ref) > thr2)) then
-      call test_failed(error, "Hessians do not match")
+   ! without the low-rank expansion the same setup is evaluated in real space
+   call get_dispersion(setup_error, mol, d3, param, cutoff, energies, hessian=hessian)
+   if (allocated(setup_error)) then
+      call test_failed(error, "Real space hessian is rejected")
       return
    end if
 

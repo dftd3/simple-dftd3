@@ -48,9 +48,9 @@ subroutine symmetric_eigendecomposition(amat, eval, evec)
    !> Eigenvectors, stored column-wise in the same order as the eigenvalues
    real(wp), intent(out) :: evec(:, :)
 
-   integer :: ndim, isweep, ip, iq, jdim, kdim, imax
+   integer :: ndim, isweep, ip, iq, jdim, imax
    real(wp) :: anorm, off, theta, tval, cval, sval, skip
-   real(wp) :: ajp, ajq, apj, aqj, vjp, vjq, tmp
+   real(wp) :: ajp, ajq, apj, aqj, vjp, vjq
    real(wp), allocatable :: work(:, :)
 
    ndim = size(amat, 1)
@@ -113,19 +113,10 @@ subroutine symmetric_eigendecomposition(amat, eval, evec)
    end do
 
    do ip = 1, ndim - 1
-      imax = ip
-      do iq = ip + 1, ndim
-         if (abs(eval(iq)) > abs(eval(imax))) imax = iq
-      end do
+      imax = ip - 1 + maxloc(abs(eval(ip:)), 1)
       if (imax == ip) cycle
-      tmp = eval(ip)
-      eval(ip) = eval(imax)
-      eval(imax) = tmp
-      do kdim = 1, ndim
-         tmp = evec(kdim, ip)
-         evec(kdim, ip) = evec(kdim, imax)
-         evec(kdim, imax) = tmp
-      end do
+      eval([ip, imax]) = eval([imax, ip])
+      evec(:, [ip, imax]) = evec(:, [imax, ip])
    end do
 
 end subroutine symmetric_eigendecomposition
