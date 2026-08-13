@@ -537,6 +537,28 @@ class DispersionModel(Structure):
 
         library.set_model_realspace_cutoff(self._disp, disp2, disp3, cn, width2, width3)
 
+    def set_ewald_summation(
+        self,
+        rank: int = 0,
+        tolerance: float = 0.0,
+        kcut: float = 0.0,
+    ) -> None:
+        """
+        Evaluate the two-body dispersion energy by summation over the reciprocal
+        lattice, which removes the truncation error of the real space summation.
+
+        Requires three-dimensional periodic boundary conditions and a damping
+        function with a known reciprocal space representation, currently the
+        rational and the zero damping function. The two-body realspace cutoff is
+        ignored once this is enabled.
+
+        Non-positive arguments select the respective default, a vanishing rank
+        derives the rank of the expansion from the tolerance and a vanishing
+        reciprocal cutoff derives it from the damping radii.
+        """
+
+        library.set_model_ewald(self._disp, rank, tolerance, kcut)
+
     def set_ghost_atoms(self, ghost_atoms) -> None:
         """Disable dispersion contributions from selected atoms."""
 

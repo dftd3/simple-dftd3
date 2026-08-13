@@ -166,6 +166,16 @@ def set_model_realspace_cutoff(
     )
 
 
+def set_model_ewald(
+    disp: ModelHandle,
+    rank: int = 0,
+    tolerance: float = 0.0,
+    kcut: float = 0.0,
+) -> None:
+    """Evaluate the two-body dispersion energy by Ewald summation"""
+    error_check(lib.dftd3_set_model_ewald)(disp.handle, rank, tolerance, kcut)
+
+
 def set_model_ghost_index(disp: ModelHandle, ghost: np.ndarray) -> None:
     """Disable dispersion contributions from selected atoms."""
     if ghost is None:

@@ -142,6 +142,13 @@ class DFTD3Dispersion(lib.StreamObject):
     With the `atm` boolean the three-body dispersion energy can be enabled, which is
     generally recommended.
 
+    For a periodic cell the `ewald` dict enables the reciprocal space summation of the
+    two-body dispersion energy, which removes the truncation error of the real space
+    summation. An empty dict selects the default settings, the entries ``rank``,
+    ``tolerance`` and ``kcut`` allow to control the accuracy. This requires a cell with
+    three-dimensional periodic boundary conditions and either the rational or the zero
+    damping function.
+
     Examples
     --------
     >>> from pyscf import gto
@@ -186,6 +193,7 @@ class DFTD3Dispersion(lib.StreamObject):
         version: str = "d3bj",
         atm: bool = False,
         param: Optional[Dict[str, float]] = None,
+        ewald: Optional[Dict[str, float]] = None,
     ):
         self.mol = mol
         self.verbose = mol.verbose
@@ -193,6 +201,41 @@ class DFTD3Dispersion(lib.StreamObject):
         self.param = param
         self.atm = atm
         self.version = version
+        self.ewald = ewald
+
+    def _create_model(self) -> DispersionModel:
+        """Create the dispersion model for the current molecule or cell"""
+
+        mol = self.mol
+
+        lattice = None
+        periodic = None
+        if hasattr(mol, "lattice_vectors"):
+            lattice = mol.lattice_vectors()
+            periodic = np.array([True, True, True], dtype=bool)
+
+        disp = DispersionModel(
+            np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
+            mol.atom_coords(),
+            lattice=lattice,
+            periodic=periodic,
+        )
+
+        if self.ewald is not None:
+            # a finite system would silently fall back to real space, while
+            # still using the approximated C6 coefficients
+            if lattice is None:
+                raise ValueError(
+                    "Ewald summation requires three-dimensional periodic "
+                    "boundary conditions"
+                )
+            disp.set_ewald_summation(
+                rank=self.ewald.get("rank", 0),
+                tolerance=self.ewald.get("tolerance", 0.0),
+                kcut=self.ewald.get("kcut", 0.0),
+            )
+
+        return disp
 
     def dump_flags(self, verbose: Optional[bool] = None) -> "DFTD3Dispersion":
         """
@@ -241,20 +284,7 @@ class DFTD3Dispersion(lib.StreamObject):
                [ 0.00000000e+00,  0.00000000e+00, -1.84332770e-04],
                [ 0.00000000e+00,  0.00000000e+00, -3.15691249e-05]])
         """
-        mol = self.mol
-
-        lattice = None
-        periodic = None
-        if hasattr(mol, "lattice_vectors"):
-            lattice = mol.lattice_vectors()
-            periodic = np.array([True, True, True], dtype=bool)
-
-        disp = DispersionModel(
-            np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
-            mol.atom_coords(),
-            lattice=lattice,
-            periodic=periodic,
-        )
+        disp = self._create_model()
 
         if self.param is not None:
             param = _damping_param[self.version](**self.param)
@@ -265,7 +295,6 @@ class DFTD3Dispersion(lib.StreamObject):
             )
 
         res = disp.get_dispersion(param=param, grad=True)
-
         return res.get("energy"), res.get("gradient"), res.get("virial")
 
     def hessian(self) -> np.ndarray:
@@ -294,20 +323,7 @@ class DFTD3Dispersion(lib.StreamObject):
         >>> d3.hessian().shape
         (3, 3, 3, 3)
         """
-        mol = self.mol
-
-        lattice = None
-        periodic = None
-        if hasattr(mol, "lattice_vectors"):
-            lattice = mol.lattice_vectors()
-            periodic = np.array([True, True, True], dtype=bool)
-
-        disp = DispersionModel(
-            np.array([gto.charge(mol.atom_symbol(ia)) for ia in range(mol.natm)]),
-            mol.atom_coords(),
-            lattice=lattice,
-            periodic=periodic,
-        )
+        disp = self._create_model()
 
         if self.param is not None:
             param = _damping_param[self.version](**self.param)
@@ -320,9 +336,8 @@ class DFTD3Dispersion(lib.StreamObject):
         res = disp.get_hessian(param=param)
 
         # (3*natm, 3*natm) with index 3*i+c -> (natm, natm, 3, 3)
-        return (
-            res.get("hessian").reshape(mol.natm, 3, mol.natm, 3).transpose(0, 2, 1, 3)
-        )
+        natm = self.mol.natm
+        return res.get("hessian").reshape(natm, 3, natm, 3).transpose(0, 2, 1, 3)
 
     def reset(self, mol: Union[gto.Mole, pbc.gto.Cell]) -> "DFTD3Dispersion":
         """Reset mol and clean up relevant attributes for scanner mode"""
