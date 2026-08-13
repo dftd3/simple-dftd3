@@ -249,6 +249,68 @@ def test_smooth_realspace_cutoff(model: DispersionModel) -> None:
     assert res != approx(ref)
 
 
+def test_ewald_summation() -> None:
+    """The reciprocal space summation reproduces a converged real space sum."""
+
+    numbers = np.array([6, 8])
+    positions = np.array(
+        [
+            [0.40000000000000, 0.80000000000000, 1.20000000000000],
+            [4.40000000000000, 2.80000000000000, 3.60000000000000],
+        ]
+    )
+    lattice = np.array(
+        [
+            [8.00000000000000, 0.00000000000000, 0.00000000000000],
+            [0.00000000000000, 8.00000000000000, 0.00000000000000],
+            [0.00000000000000, 0.00000000000000, 8.00000000000000],
+        ]
+    )
+    param = RationalDampingParam(method="pbe", atm=False)
+
+    # the coordination number cutoff has to match the reciprocal space evaluation
+    disp = DispersionModel(
+        numbers, positions, lattice=lattice, periodic=np.full(3, True)
+    )
+    disp.set_realspace_cutoff(disp2=400.0, disp3=40.0, cn=40.0)
+    converged = disp.get_dispersion(param, grad=False).get("energy")
+
+    disp = DispersionModel(
+        numbers, positions, lattice=lattice, periodic=np.full(3, True)
+    )
+    truncated = disp.get_dispersion(param, grad=False).get("energy")
+
+    disp = DispersionModel(
+        numbers, positions, lattice=lattice, periodic=np.full(3, True)
+    )
+    disp.set_ewald_summation(kcut=10.0)
+    ewald = disp.get_dispersion(param, grad=False).get("energy")
+
+    assert ewald == approx(converged, abs=1.0e-7)
+    assert truncated != approx(converged, abs=1.0e-6)
+
+
+def test_ewald_summation_unsupported() -> None:
+    """Damping functions without a reciprocal space representation are rejected."""
+
+    numbers = np.array([6, 8])
+    positions = np.array(
+        [
+            [0.40000000000000, 0.80000000000000, 1.20000000000000],
+            [4.40000000000000, 2.80000000000000, 3.60000000000000],
+        ]
+    )
+    lattice = np.diag(np.full(3, 8.0))
+
+    disp = DispersionModel(
+        numbers, positions, lattice=lattice, periodic=np.full(3, True)
+    )
+    disp.set_ewald_summation()
+
+    with raises(RuntimeError, match="does not support Ewald summation"):
+        disp.get_dispersion(ModifiedZeroDampingParam(method="pbe"), grad=False)
+
+
 def test_b3lyp_d3_zero(atm: bool, model: DispersionModel) -> None:
     ref = -0.022714272555175656 if atm else -0.022814172019166058
     res = model.get_dispersion(ZeroDampingParam(method="b3lyp", atm=atm), grad=False)

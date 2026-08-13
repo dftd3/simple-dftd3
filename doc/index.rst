@@ -13,6 +13,8 @@ Supported features include:
 - Optimized power damping function, D3(op).\ :footcite:`witte2017`
 - CSO (C6-scaled only) damping function, D3(CSO).\ :footcite:`schroeder2015`
 - Axilrod-Teller-Muto three-center contribution.
+- Ewald summation of the two-body dispersion energy for three-dimensional periodic
+  systems, removing the real-space cutoff on the dispersion sum.\ :footcite:`valeeva2026`
 - Pairwise analysis of dispersion contributions.
 - Extensive parameter support for (almost) all published D3 parameters.
 - Geometric counter-poise correction and short-range bond correction.\ :footcite:`kruse2012`

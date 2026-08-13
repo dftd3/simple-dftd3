@@ -16,7 +16,9 @@
 
 module dftd3_model
    use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
+   use dftd3_citation, only : citation_type, get_citation, doi_fourier_d3
    use dftd3_data, only : get_r4r2_val, get_vdw_rad
+   use dftd3_fourier_decomposition, only : d3_lowrank_c6, d3_lowrank_config, new_lowrank_c6
    use dftd3_reference, only : number_of_references, reference_cn, get_c6, init_reference_c6
    use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
@@ -25,6 +27,7 @@ module dftd3_model
    private
 
    public :: d3_model, new_d3_model
+   public :: d3_lowrank_config
 
 
    !> Base D3 dispersion model to evaluate C6 coefficients
@@ -54,10 +57,17 @@ module dftd3_model
       !> Masked
       logical, allocatable :: ghost(:)
 
+      !> Separable representation of the reference C6 coefficients, only allocated
+      !> if the model was set up with a low-rank approximation
+      type(d3_lowrank_c6), allocatable :: lowrank
+
    contains
 
       !> Generate weights for all reference systems
       procedure :: weight_references
+
+      !> Set up a separable low-rank representation of the C6 coefficients
+      procedure :: set_lowrank
 
       !> Evaluate C6 coefficient
       procedure :: get_atomic_c6
@@ -73,7 +83,7 @@ contains
 
 
 !> Create new dispersion model from molecular structure input
-subroutine new_d3_model(self, mol, wf, ghost)
+subroutine new_d3_model(self, mol, wf, ghost, lowrank, citation)
 
    !> Instance of the dispersion model
    type(d3_model), intent(out) :: self
@@ -86,6 +96,12 @@ subroutine new_d3_model(self, mol, wf, ghost)
 
    !> Atom indices to ignore for dispersion calculation
    integer, intent(in), optional :: ghost(:)
+
+   !> Setup for a separable low-rank representation of the C6 coefficients
+   type(d3_lowrank_config), intent(in), optional :: lowrank
+
+   !> Reference for the separable low-rank representation
+   type(citation_type), intent(out), optional :: citation
 
    integer :: isp, izp, iref, jsp, jzp, jref
    integer :: mref
@@ -156,7 +172,27 @@ subroutine new_d3_model(self, mol, wf, ghost)
       end do
    end if
 
+   if (present(lowrank)) then
+      call self%set_lowrank(lowrank)
+      if (present(citation)) citation = get_citation(doi_fourier_d3)
+   end if
+
 end subroutine new_d3_model
+
+
+!> Set up a separable low-rank representation of the reference C6 coefficients
+subroutine set_lowrank(self, config)
+
+   !> Instance of the dispersion model
+   class(d3_model), intent(inout) :: self
+
+   !> Setup of the separable representation
+   type(d3_lowrank_config), intent(in) :: config
+
+   if (.not.allocated(self%lowrank)) allocate(self%lowrank)
+   call new_lowrank_c6(self%lowrank, self%ref, self%c6, config)
+
+end subroutine set_lowrank
 
 
 !> Calculate the weights of the reference system and the derivatives w.r.t.
@@ -297,6 +333,9 @@ end function is_exceptional
 
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
 !> the coordination number.
+!>
+!> The second derivatives require a model without a low-rank expansion, which
+!> only provides the coefficients and their first derivatives.
 subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, d2c6dcnij)
 
    !> Instance of the dispersion model
@@ -330,6 +369,11 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
    real(wp) :: refc6, dc6, dc6dcni, dc6dcnj
    real(wp) :: d2c6dcni, d2c6dcnj, d2c6mix
    logical :: second
+
+   if (allocated(self%lowrank)) then
+      call self%lowrank%get_atomic_c6(mol, self%ghost, gwvec, gwdcn, c6, dc6dcn)
+      return
+   end if
 
    second = present(gwd2cn) .and. present(d2c6dcn2) .and. present(d2c6dcnij)
 

@@ -49,6 +49,11 @@ module dftd3_app_help
       "                         expected order is s6, a1 (requires two arguments)"//nl//&
       "   --atm                 Use ATM three-body dispersion"//nl//&
       "   --atm-scale <s9>      Use scaled ATM three-body dispersion"//nl//&
+      "   --ewald               Evaluate the two-body dispersion energy by Ewald summation,"//nl//&
+      "                         requires three-dimensional periodic boundary conditions"//nl//&
+      "                         and rational or zero damping"//nl//&
+      "   --ewald-kcut <kcut>   Reciprocal space cutoff for the Ewald summation in 1/Bohr,"//nl//&
+      "                         implies --ewald (default: derived from the damping radii)"//nl//&
       "   --ghost <list>        Disable dispersion contributions from given 1-based atom indices"//nl//&
       "   --gcp <basis>         Include geometric counter-poise correction for given basis set"//nl//&
       "   --db <file>           Load parameters from external data file"//nl//&

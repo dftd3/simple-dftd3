@@ -66,6 +66,22 @@ Use ATM three-body dispersion
 *--atm-scale* _s9_::
 Use scaled ATM three-body dispersion
 
+*--ewald*::
+Evaluate the two-body dispersion energy by summation over the reciprocal lattice
+instead of a truncated real space sum.
+This removes the truncation error of the pair sum, which decays only with the
+third power of the cutoff radius.
+Requires three-dimensional periodic boundary conditions and a damping function
+with a known reciprocal space representation, currently rational (*--bj*, *--bjm*)
+and zero (*--zero*, *--zerom* is not supported) damping.
+The three-body contribution is still evaluated in real space.
+
+*--ewald-kcut* _kcut_::
+Reciprocal space cutoff for the Ewald summation in inverse Bohr.
+Implies *--ewald*.
+By default the cutoff is derived from the damping radii, a value of 8 is
+converged to below one picohartree per atom for rational damping.
+
 *--ghost* _list_::
 Disable dispersion contributions from the given 1-based atom indices
 

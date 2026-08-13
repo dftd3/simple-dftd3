@@ -18,12 +18,13 @@ from typing import Iterator
 
 import numpy as np
 import pytest
-from pytest import approx
+from pytest import approx, raises
 
 try:
     import ase
     from dftd3.ase import DFTD3
     from ase.build import molecule
+    from ase.calculators.calculator import InputError
     from ase.calculators.emt import EMT
 except ModuleNotFoundError:
     ase = None
@@ -244,6 +245,59 @@ def test_ase_realspace_cutoff():
 
     # Empty dict should behave like no cutoff override (same as default)
     assert energy_empty == approx(energy_default, abs=thr)
+
+
+@pytest.mark.skipif(ase is None, reason="requires ase")
+def test_ase_ewald():
+    """The reciprocal space summation reproduces a converged real space sum."""
+    from ase.atoms import Atoms
+    from ase.units import Bohr
+
+    atoms = Atoms(
+        symbols="CO",
+        positions=np.array(
+            [
+                [0.40000000000000, 0.80000000000000, 1.20000000000000],
+                [4.40000000000000, 2.80000000000000, 3.60000000000000],
+            ]
+        )
+        * Bohr,
+        cell=np.diag(np.full(3, 8.0 * Bohr)),
+        pbc=True,
+    )
+
+    # the coordination number cutoff has to match the reciprocal space evaluation
+    atoms.calc = DFTD3(
+        method="PBE",
+        damping="d3bj",
+        realspace_cutoff={
+            "disp2": 400.0 * Bohr,
+            "disp3": 40.0 * Bohr,
+            "cn": 40.0 * Bohr,
+        },
+    )
+    converged = atoms.get_potential_energy()
+
+    atoms.calc = DFTD3(method="PBE", damping="d3bj")
+    truncated = atoms.get_potential_energy()
+
+    atoms.calc = DFTD3(method="PBE", damping="d3bj", ewald={"kcut": 10.0})
+    ewald = atoms.get_potential_energy()
+
+    assert ewald == approx(converged, abs=1.0e-6)
+    assert truncated != approx(converged, abs=1.0e-5)
+
+    assert np.allclose(np.sum(atoms.get_forces(), axis=0), 0.0, atol=1.0e-8)
+
+
+@pytest.mark.skipif(ase is None, reason="requires ase")
+def test_ase_ewald_molecular():
+    """A finite system has no reciprocal lattice to sum over."""
+    atoms = molecule("H2O")
+    atoms.calc = DFTD3(method="PBE", damping="d3bj", ewald={})
+
+    with raises(InputError, match="Ewald summation"):
+        atoms.get_potential_energy()
 
 
 @pytest.mark.skipif(ase is None, reason="requires ase")

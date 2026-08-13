@@ -19,6 +19,7 @@ module dftd3_damping_rational
    use dftd3_damping, only : damping_param
    use dftd3_damping_atm, only : get_atm_dispersion, get_atm_pairwise_dispersion, &
       & get_atm_dispersion_hessian
+   use dftd3_fourier_kernel, only : fourier_term
    use dftd3_param, only : d3_param
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -53,6 +54,12 @@ module dftd3_damping_rational
       !> Evaluate pair kernel and its derivatives
       procedure :: get_damping_kernel
 
+      !> Rational damping has a closed form Fourier transform
+      procedure :: supports_ewald
+
+      !> Reciprocal space representation of the damped pair potential
+      procedure :: get_fourier_terms
+
       !> Evaluate ATM three-body contribution to the hessian
       procedure :: get_dispersion3_hessian
 
@@ -84,10 +91,58 @@ subroutine new_rational_damping(self, param)
 end subroutine new_rational_damping
 
 
+!> Rational damping has a closed form Fourier transform
+pure function supports_ewald(self) result(supported)
+
+   !> Damping parameters
+   class(rational_damping_param), intent(in) :: self
+
+   !> Whether the damping function can be evaluated in reciprocal space
+   logical :: supported
+
+   supported = .true.
+
+end function supports_ewald
+
+
+!> Reciprocal space representation of the damped pair potential
+pure subroutine get_fourier_terms(self, izp, jzp, rvdw, r4r2, terms, nterm)
+   !> Damping parameters
+   class(rational_damping_param), intent(in) :: self
+
+   !> Species indices of the pair
+   integer, intent(in) :: izp, jzp
+
+   !> Van-der-Waals radii for damping function
+   real(wp), intent(in) :: rvdw(:, :)
+
+   !> Expectation values for C8 extrapolation
+   real(wp), intent(in) :: r4r2(:)
+
+   !> Terms of the damped pair potential
+   type(fourier_term), intent(out) :: terms(:)
+
+   !> Number of terms of the damped pair potential
+   integer, intent(out) :: nterm
+
+   real(wp) :: rrij, r0ij
+
+   nterm = 0
+   if (abs(self%s6) < epsilon(1.0_wp) .and. abs(self%s8) < epsilon(1.0_wp)) return
+
+   rrij = 3*r4r2(izp)*r4r2(jzp)
+   r0ij = self%a1 * sqrt(rrij) + self%a2
+
+   nterm = 2
+   terms(1) = fourier_term(self%s6, 0, 6, r0ij)
+   terms(2) = fourier_term(self%s8*rrij, 0, 8, r0ij)
+
+end subroutine get_fourier_terms
+
+
 !> Pair dispersion kernel and its derivatives w.r.t. squared distance and C6
 pure subroutine get_damping_kernel(self, izp, jzp, rvdw, r4r2, r2, c6, &
       & e, er, ec, err, erc, ecc)
-
    !> Damping parameters
    class(rational_damping_param), intent(in) :: self
 

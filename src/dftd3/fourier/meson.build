@@ -14,44 +14,9 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-# Unit testing
-set(
-  tests
-  "model"
-  "dftd3"
-  "fourier"
-  "hessian"
-  "param"
-  "pairwise"
-  "periodic_1d"
-  "periodic_2d"
-  "periodic_3d"
-  "periodic_atm"
-  "gcp"
-  "gcp_hessian"
-  "output"
-  "regression"
+srcs += files(
+  'decomposition.f90',
+  'ewald.f90',
+  'jacobi.f90',
+  'kernel.f90',
 )
-set(
-  test-srcs
-  "main.f90"
-)
-foreach(t IN LISTS tests)
-  string(MAKE_C_IDENTIFIER ${t} t) 
-  list(APPEND test-srcs "test_${t}.f90")
-endforeach()
-
-add_executable(
-  "${PROJECT_NAME}-tester"
-  "${test-srcs}"
-)
-target_link_libraries(
-  "${PROJECT_NAME}-tester"
-  PRIVATE
-  "${PROJECT_NAME}-lib"
-  "mstore::mstore"
-)
-
-foreach(t IN LISTS tests)
-   add_test("${PROJECT_NAME}/${t}" "${PROJECT_NAME}-tester" "${t}")
-endforeach()

@@ -46,9 +46,17 @@ Supported keywords are
  damping                  None         Damping function to use
  params_tweaks            {}           Optional dict with the damping parameters
  realspace_cutoff         {}           Optional dict to override cutoff values
+ ewald                    None         Optional dict to enable the Ewald summation
  ghost_atoms              None         Disable dispersion contributions from these atoms
  cache_api                True         Reuse generate API objects (recommended)
 ======================== ============ ============================================
+
+The ewald dict enables the reciprocal space summation of the two-body dispersion
+energy, which removes the truncation error of the real space summation.
+An empty dict selects the default settings, the entries ``rank``, ``tolerance``
+and ``kcut`` allow to control the accuracy.
+Requires three-dimensional periodic boundary conditions and either the rational
+or the zero damping function.
 
 The params_tweaks dict contains the damping parameters, at least s8, a1 and a2
 must be provided
@@ -178,6 +186,7 @@ class DFTD3(Calculator):
         "damping": None,
         "params_tweaks": {},
         "realspace_cutoff": {},
+        "ewald": None,
         "ghost_atoms": None,
         "cache_api": True,
     }
@@ -282,6 +291,28 @@ class DFTD3(Calculator):
         except RuntimeError as e:
             raise InputError("Cannot update ghost atoms for dftd3") from e
 
+    def _apply_ewald(self, disp: DispersionModel) -> None:
+        """Enable the reciprocal space summation of the two-body dispersion"""
+
+        if self.parameters.ewald is None:
+            return
+
+        # a partially periodic system would silently fall back to real space,
+        # while still using the approximated C6 coefficients
+        if not all(self.atoms.pbc):
+            raise InputError(
+                "Ewald summation requires three-dimensional periodic boundary conditions"
+            )
+
+        try:
+            disp.set_ewald_summation(
+                rank=self.parameters.ewald.get("rank", 0),
+                tolerance=self.parameters.ewald.get("tolerance", 0.0),
+                kcut=self.parameters.ewald.get("kcut", 0.0),
+            )
+        except RuntimeError as e:
+            raise InputError("Cannot enable Ewald summation for dftd3") from e
+
     def _apply_realspace_cutoff(self, disp: DispersionModel) -> None:
         """Apply realspace cutoff parameters to dispersion model"""
 
@@ -343,6 +374,7 @@ class DFTD3(Calculator):
         # Apply atom masking and realspace cutoff before evaluation
         self._apply_ghost_atoms(self._disp)
         self._apply_realspace_cutoff(self._disp)
+        self._apply_ewald(self._disp)
 
         if self._dpar is None:
             self._dpar = self._create_damping_param()

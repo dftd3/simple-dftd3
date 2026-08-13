@@ -44,6 +44,22 @@ get_test_structure(dftd3_error error)
    return dftd3_new_structure(error, natoms, attyp, coord, NULL, NULL);
 }
 
+static inline dftd3_structure
+get_periodic_test_structure(dftd3_error error)
+{
+   int const natoms = 2;
+   int const attyp[2] = {6,8};
+   double const coord[6] =
+      {0.40000000000000, 0.80000000000000, 1.20000000000000,
+       4.40000000000000, 2.80000000000000, 3.60000000000000};
+   double const lattice[9] =
+      {8.00000000000000, 0.00000000000000, 0.00000000000000,
+       0.00000000000000, 8.00000000000000, 0.00000000000000,
+       0.00000000000000, 0.00000000000000, 8.00000000000000};
+   bool const periodic[3] = {true, true, true};
+   return dftd3_new_structure(error, natoms, attyp, coord, lattice, periodic);
+}
+
 int
 test_version (void)
 {
@@ -672,6 +688,173 @@ cleanup:
 }
 
 int
+test_ewald (void)
+{
+   printf("Start test: Ewald summation\n");
+   double converged, ewald, truncated;
+   double gradient[6], sigma[9];
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_model disp = NULL;
+   dftd3_param param = NULL;
+
+   error = dftd3_new_error();
+   mol = get_periodic_test_structure(error);
+   if (dftd3_check_error(error)) return 1;
+
+   param = dftd3_load_rational_damping(error, "pbe", false);
+   if (dftd3_check_error(error)) return 1;
+
+   /* converged real space reference, the coordination number cutoff has to
+      match the one used for the reciprocal space evaluation */
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_set_model_realspace_cutoff(error, disp, 400.0, 40.0, 40.0);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_dispersion(error, mol, disp, param, &converged, NULL, NULL);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_delete(disp);
+
+   /* truncated real space evaluation with the default cutoff */
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_dispersion(error, mol, disp, param, &truncated, NULL, NULL);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_delete(disp);
+
+   /* reciprocal space evaluation, the two-body cutoff is ignored */
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_dispersion(error, mol, disp, param, &ewald, gradient, sigma);
+   if (dftd3_check_error(error)) return 1;
+
+   printf("[Info] converged %.12f  ewald %.12f  truncated %.12f\n",
+          converged, ewald, truncated);
+
+   if (fabs(ewald - converged) > 1.0e-7) {
+      printf("[Fatal] Ewald summation does not match converged real space\n");
+      return 1;
+   }
+
+   if (fabs(truncated - converged) < 1.0e-6) {
+      printf("[Fatal] Real space truncation error is unexpectedly small\n");
+      return 1;
+   }
+
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 0;
+}
+
+int
+test_ewald_unsupported (void)
+{
+   printf("Start test: Ewald summation with unsupported damping\n");
+   double energy;
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_model disp = NULL;
+   dftd3_param param = NULL;
+
+   error = dftd3_new_error();
+
+   /* setting up the expansion without a model has to be reported */
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 0.0);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   mol = get_periodic_test_structure(error);
+   if (dftd3_check_error(error)) return 1;
+
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 0.0);
+   if (dftd3_check_error(error)) return 1;
+
+   /* the modified zero damping has no reciprocal space representation */
+   param = dftd3_load_mzero_damping(error, "pbe", false);
+   if (dftd3_check_error(error)) return 1;
+
+   dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 0;
+
+unexpected:
+   printf("[Fatal] Unexpected pass for unsupported-damping test\n");
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 1;
+}
+
+int
+test_ewald_realspace_only (void)
+{
+   printf("Start test: Ewald summation with real space only properties\n");
+   double energy;
+   double pair_disp2[4], pair_disp3[4];
+   double hessian[36];
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_model disp = NULL;
+   dftd3_param param = NULL;
+
+   error = dftd3_new_error();
+   mol = get_periodic_test_structure(error);
+   if (dftd3_check_error(error)) return 1;
+
+   param = dftd3_load_rational_damping(error, "pbe", false);
+   if (dftd3_check_error(error)) return 1;
+
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0);
+   if (dftd3_check_error(error)) return 1;
+
+   /* the pairwise decomposition would not add up to the reciprocal space energy */
+   dftd3_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   /* the second derivatives are only implemented in real space */
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &energy, hessian);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   /* the energy itself is still available */
+   dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
+   if (dftd3_check_error(error)) return 1;
+
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 0;
+
+unexpected:
+   printf("[Fatal] Unexpected pass for real-space-only property\n");
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 1;
+}
+
+int
 main (void)
 {
    int stat = 0;
@@ -688,5 +871,8 @@ main (void)
    stat += test_hessian();
    stat += test_gcp();
    stat += test_gcp_hessian();
+   stat += test_ewald();
+   stat += test_ewald_unsupported();
+   stat += test_ewald_realspace_only();
    return stat;
 }

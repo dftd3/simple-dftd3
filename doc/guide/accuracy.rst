@@ -1,0 +1,137 @@
+Periodic systems: cutoffs and summation accuracy
+================================================
+
+For a periodic system the two-body dispersion energy is a lattice sum.
+Because the leading term decays only as :math:`r^{-6}`, truncating the sum at a real space cutoff leaves a systematic error which converges slowly with the cutoff radius.
+This page documents the size of that error, how to pick a cutoff for a target accuracy, and how to remove it entirely with the reciprocal space summation.
+
+
+Truncation error of the real space sum
+--------------------------------------
+
+Beyond the damping region the pair interaction approaches the bare :math:`C_6` tail.
+Integrating it over the :math:`d` periodic dimensions gives the energy missing from a sum truncated at :math:`R`
+
+.. math::
+
+   \frac{\Delta E}{N} = \frac{\rho\,\langle C_6\rangle\, S_d}{2\,(6-d)\,R^{6-d}}
+   \qquad
+   \langle C_6\rangle = \frac{1}{N^2}\sum_{ij} C_6^{ij}
+
+with the number density :math:`\rho` of the periodic cell and the surface :math:`S_d` of the :math:`d`-dimensional unit sphere.
+For a bulk system this is :math:`\Delta E/N = 2\pi\rho\langle C_6\rangle/(3R^3)`, i.e. the error decays only as :math:`R^{-3}`.
+The relation is independent of the damping function, since every damping function approaches one at large distances.
+
+The table below lists the error per atom for PBE-D3(BJ) against a converged reciprocal space reference.
+All values in Hartree per atom.
+
+============ ============ ============ ============ ============ ============
+ disp2 / a₀   benzene      urea         anthracene   ice Ih       ice VII
+============ ============ ============ ============ ============ ============
+ 20           4.6e-5       3.7e-5       5.6e-5       2.0e-5       3.0e-5
+ 30           1.4e-5       1.1e-5       1.6e-5       5.9e-6       9.1e-6
+ 40           5.8e-6       4.6e-6       6.9e-6       2.5e-6       3.8e-6
+ 60           1.7e-6       1.4e-6       2.0e-6       7.3e-7       1.1e-6
+ 80           7.2e-7       5.8e-7       8.6e-7       3.1e-7       4.8e-7
+ 100          3.7e-7       3.0e-7       4.4e-7       1.6e-7       2.4e-7
+ 140          1.3e-7       1.1e-7       1.6e-7       5.8e-8       8.9e-8
+ 200          4.6e-8       3.7e-8       5.5e-8       2.0e-8       3.0e-8
+ 300          1.4e-8       1.1e-8       1.6e-8       5.9e-9       9.0e-9
+============ ============ ============ ============ ============ ============
+
+The measured amplitudes :math:`\Delta E R^3/N` agree with the predicted :math:`2\pi\rho\langle C_6\rangle/3` to better than one percent:
+
+=============== ============ ============ ============ ============ ============
+                 benzene      urea         anthracene   ice Ih       ice VII
+=============== ============ ============ ============ ============ ============
+ predicted       0.369        0.295        0.439        0.158        0.244
+ measured        0.369        0.295        0.439        0.158        0.244
+=============== ============ ============ ============ ============ ============
+
+The default cutoff of 60 a₀ therefore leaves an error of roughly 1 to 2 µHartree per atom for a molecular crystal, which is small on an absolute scale but can be comparable to the energy differences between polymorphs.
+Note that the cost of the real space sum grows as :math:`R^3`, so reducing the error by one order of magnitude costs about a factor of ten in time.
+
+
+Choosing a cutoff for a target accuracy
+---------------------------------------
+
+Inverting the relation above yields the cutoff needed for a requested accuracy.
+The ``get_realspace_cutoff`` function performs this estimate for a given structure and dispersion model:
+
+.. code-block:: fortran
+
+   use dftd3, only : realspace_cutoff, get_realspace_cutoff
+
+   type(realspace_cutoff) :: cutoff
+
+   ! two-body energy converged to 1 µHartree per atom
+   cutoff = get_realspace_cutoff(mol, disp, 1.0e-6_wp)
+
+The estimate covers three, two and one dimensional boundary conditions, and returns a cutoff spanning the whole system for a finite one.
+It assumes a scaling factor :math:`s_6` of one and neglects the faster decaying :math:`C_8` tail, both of which are covered by a safety margin.
+
+Only the two-body cutoff is derived from the accuracy target.
+The three-body cutoff is left at its default, and the coordination number cutoff is not an accuracy parameter at all: the D3 counting function has a non-vanishing limit at large distances, so increasing ``cn`` does not converge the coordination number but changes it.
+Energies computed with different ``cn`` values are not comparable at the sub-µHartree level, which matters when validating cutoff settings against each other.
+
+
+Reciprocal space summation
+--------------------------
+
+The truncation error can be removed altogether by evaluating the two-body sum in reciprocal space.\ :footcite:`valeeva2026`
+This requires a separable representation of the environment dependent :math:`C_6` coefficients, which is created by passing a ``d3_lowrank_config`` to the model constructor:
+
+.. code-block:: fortran
+
+   use dftd3, only : d3_model, new_d3_model, d3_lowrank_config
+
+   type(d3_model) :: disp
+
+   call new_d3_model(disp, mol, lowrank=d3_lowrank_config())
+
+A model set up this way uses the Ewald summation for the two-body energy whenever the system is periodic in all three dimensions and the damping function supports it, and ``disp2`` is then ignored.
+The rational and zero damping functions are supported; all others report an error.
+
+The accuracy of the expansion and of the reciprocal sum are controlled independently:
+
+``tolerance``
+  Maximum relative error of the reconstructed reference :math:`C_6` coefficients.
+  The default of 1e-4 needs a rank below ten for typical systems.
+
+``rank``
+  Fixed rank of the expansion, overriding ``tolerance``.
+
+``kcut``
+  Reciprocal space cutoff in inverse Bohr.
+  The default of zero derives it from the damping radii.
+
+Convergence with respect to ``kcut`` is exponential.
+The table lists the deviation from a reference computed with ``kcut`` of 14 a₀\ :sup:`-1`, in Hartree per atom:
+
+============ ============ ============ ============ ============ ============
+ kcut         benzene      urea         anthracene   ice Ih       ice VII
+============ ============ ============ ============ ============ ============
+ 4            2.7e-09      1.4e-08      3.1e-10      1.1e-08      1.9e-08
+ 6            6.5e-11      2.0e-11      7.8e-11      7.9e-12      5.4e-11
+ 8            7.8e-13      1.6e-13      6.4e-13      3.9e-13      3.6e-13
+ 10           1.9e-14      2.1e-14      1.7e-14      1.6e-14      2.6e-14
+============ ============ ============ ============ ============ ============
+
+A cutoff of 8 a₀\ :sup:`-1` reaches one picohartree per atom, and the automatic setting is more accurate than any real space cutoff of practical size.
+For the zero damping function the transform decays more slowly and roughly twice the cutoff is needed for the same accuracy.
+
+The converged two-body energies used as reference above, for PBE-D3(BJ) with :math:`s_9 = 0` and the default coordination number cutoff, are
+
+=================== ======== ==========================
+ structure           atoms    E(2) / Hartree
+=================== ======== ==========================
+ X23 benzene         48       -1.26322976499534e-01
+ X23 urea            16       -3.53548720665777e-02
+ X23 anthracene      48       -1.49958203449099e-01
+ ICE10 ice Ih        48       -5.87846231499417e-02
+ ICE10 ice VII       48       -9.93223913624172e-02
+=================== ======== ==========================
+
+Reproducing these with the real space summation requires a cutoff beyond 300 a₀.
+
+.. footbibliography::

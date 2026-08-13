@@ -62,6 +62,8 @@ module dftd3_app_cli
       logical :: pair_resolved = .false.
       logical :: citation = .false.
       logical :: gcp = .false.
+      logical :: ewald = .false.
+      real(wp) :: ewald_kcut = 0.0_wp
       character(len=:), allocatable :: citation_output
       integer, allocatable :: ghost(:)
       !> Parameter data base
@@ -374,6 +376,14 @@ subroutine get_run_arguments(config, list, start, error)
       case("--atm")
          config%inp%s9 = 1.0_wp
          config%atm = .true.
+      case("--ewald")
+         config%ewald = .true.
+      case("--ewald-kcut")
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         call get_argument_as_real(arg, config%ewald_kcut, error)
+         if (allocated(error)) exit
+         config%ewald = .true.
       case("--atm-scale")
          iarg = iarg + 1
          call list%get(iarg, arg)

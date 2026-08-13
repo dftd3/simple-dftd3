@@ -18,7 +18,7 @@ from typing import Optional
 
 import numpy as np
 import pytest
-from pytest import approx
+from pytest import approx, raises
 
 try:
     import pyscf
@@ -244,6 +244,35 @@ def test_energy_r2scan_d3() -> None:
 
     d3 = disp.DFTD3Dispersion(mol, xc="r2SCAN")
     assert d3.kernel()[0] == approx(-0.00578401192369041, abs=1.0e-7)
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_energy_ewald() -> None:
+    """The reciprocal space summation reproduces a converged real space sum."""
+
+    cell = pbc.gto.Cell()
+    cell.atom = """
+        C 0.211665 0.423330 0.634995
+        O 2.328315 1.481655 1.904985
+        """
+    cell.a = np.diag(np.full(3, 4.2333))
+    cell.basis = "sto-3g"
+    cell.build()
+
+    truncated = disp.DFTD3Dispersion(cell, xc="PBE").kernel()[0]
+    ewald = disp.DFTD3Dispersion(cell, xc="PBE", ewald={"kcut": 10.0}).kernel()[0]
+
+    assert ewald != approx(truncated, abs=1.0e-6)
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+def test_energy_ewald_molecular() -> None:
+    """A finite system has no reciprocal lattice to sum over."""
+
+    mol = gto.M(atom="He 0 0 0; He 0 0 2")
+
+    with raises(ValueError, match="Ewald summation"):
+        disp.DFTD3Dispersion(mol, xc="PBE", ewald={}).kernel()
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
