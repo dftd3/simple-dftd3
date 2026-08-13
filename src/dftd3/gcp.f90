@@ -1417,8 +1417,9 @@ pure subroutine bint_all(x, b)
    integer :: i, k
 
    if (abs(x) < 1e-6_wp) then
-      do k = 0, ubound(b, 1)
-         b(k) = (1.0_wp + (-1.0_wp)**k)/(real(k, wp) + 1.0_wp)
+      b(:) = 0.0_wp
+      do k = 0, ubound(b, 1), 2
+         b(k) = 2.0_wp/(real(k, wp) + 1.0_wp)
       end do
       return
    end if
