@@ -29,6 +29,7 @@ endif
 tests = [
   'model',
   'dftd3',
+  'fourier',
   'hessian',
   'param',
   'pairwise',

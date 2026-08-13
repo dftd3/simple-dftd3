@@ -14,44 +14,14 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-# Unit testing
-set(
-  tests
-  "model"
-  "dftd3"
-  "fourier"
-  "hessian"
-  "param"
-  "pairwise"
-  "periodic_1d"
-  "periodic_2d"
-  "periodic_3d"
-  "periodic_atm"
-  "gcp"
-  "gcp_hessian"
-  "output"
-  "regression"
-)
-set(
-  test-srcs
-  "main.f90"
-)
-foreach(t IN LISTS tests)
-  string(MAKE_C_IDENTIFIER ${t} t) 
-  list(APPEND test-srcs "test_${t}.f90")
-endforeach()
+set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
-add_executable(
-  "${PROJECT_NAME}-tester"
-  "${test-srcs}"
-)
-target_link_libraries(
-  "${PROJECT_NAME}-tester"
-  PRIVATE
-  "${PROJECT_NAME}-lib"
-  "mstore::mstore"
+list(
+  APPEND srcs
+  "${dir}/decomposition.f90"
+  "${dir}/ewald.f90"
+  "${dir}/jacobi.f90"
+  "${dir}/kernel.f90"
 )
 
-foreach(t IN LISTS tests)
-   add_test("${PROJECT_NAME}/${t}" "${PROJECT_NAME}-tester" "${t}")
-endforeach()
+set(srcs "${srcs}" PARENT_SCOPE)

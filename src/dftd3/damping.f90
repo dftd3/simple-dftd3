@@ -16,13 +16,21 @@
 
 module dftd3_damping
    use dftd3_cutoff, only : smooth_cutoff_r2
-   use mctc_env, only : wp
+   use dftd3_fourier_ewald, only : get_dispersion_ewald
+   use dftd3_fourier_kernel, only : fourier_term, max_fourier_terms, &
+      & is_supported_term, get_reciprocal_cutoff
+   use dftd3_model, only : d3_model
+   use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type
    implicit none
    private
 
    public :: damping_param, dispersion_interface
    public :: get_dispersion2_hessian
+
+
+   !> Target accuracy for the automatic reciprocal space cutoff
+   real(wp), parameter :: kcut_tolerance = 1.0e-8_wp
 
 
    type, abstract :: damping_param
@@ -43,6 +51,12 @@ module dftd3_damping
       procedure(damping_kernel_interface), deferred :: get_damping_kernel
       !> Evaluate three-body contribution to the hessian
       procedure(dispersion3_hessian_interface), deferred :: get_dispersion3_hessian
+      !> Whether the damping function can be evaluated by Ewald summation
+      procedure :: supports_ewald
+      !> Reciprocal space representation of the damped pair potential
+      procedure :: get_fourier_terms
+      !> Evaluate the two-body dispersion energy by Ewald summation
+      procedure :: get_dispersion2_ewald
    end type damping_param
 
 
@@ -206,6 +220,137 @@ module dftd3_damping
    end interface
 
 contains
+
+   !> Whether the damping function has a known reciprocal space representation.
+   !>
+   !> Damping functions which are not rational in the interatomic distance, or
+   !> whose damping radius depends on the C6 coefficient, cannot be brought into
+   !> the separable form required by the Ewald summation.
+   pure function supports_ewald(self) result(supported)
+
+      !> Damping parameters
+      class(damping_param), intent(in) :: self
+
+      !> Whether the damping function can be evaluated in reciprocal space
+      logical :: supported
+
+      supported = .false.
+
+   end function supports_ewald
+
+
+   !> Reciprocal space representation of the damped pair potential.
+   !>
+   !> Only meaningful for damping functions reporting support for the Ewald
+   !> summation, all others contribute no terms.
+   pure subroutine get_fourier_terms(self, izp, jzp, rvdw, r4r2, terms, nterm)
+
+      !> Damping parameters
+      class(damping_param), intent(in) :: self
+
+      !> Species indices of the pair
+      integer, intent(in) :: izp, jzp
+
+      !> Van-der-Waals radii for damping function
+      real(wp), intent(in) :: rvdw(:, :)
+
+      !> Expectation values for C8 extrapolation
+      real(wp), intent(in) :: r4r2(:)
+
+      !> Terms of the damped pair potential
+      type(fourier_term), intent(out) :: terms(:)
+
+      !> Number of terms of the damped pair potential
+      integer, intent(out) :: nterm
+
+      nterm = 0
+
+   end subroutine get_fourier_terms
+
+
+   !> Evaluate the two-body dispersion energy by summation over the reciprocal
+   !> lattice.
+   !>
+   !> Requires a separable representation of the C6 coefficients in the dispersion
+   !> model and a damping function supporting the Ewald summation.
+   subroutine get_dispersion2_ewald(self, mol, disp, gwvec, gwdcn, energies, &
+         & dEdcn, gradient, sigma, error)
+
+      !> Damping parameters
+      class(damping_param), intent(in) :: self
+
+      !> Molecular structure data
+      class(structure_type), intent(in) :: mol
+
+      !> Dispersion model
+      class(d3_model), intent(in) :: disp
+
+      !> Weighting function for the atomic reference systems
+      real(wp), intent(in) :: gwvec(:, :)
+
+      !> Derivative of the weighting function w.r.t. the coordination number
+      real(wp), intent(in), optional :: gwdcn(:, :)
+
+      !> Dispersion energy
+      real(wp), intent(inout) :: energies(:)
+
+      !> Derivative of the energy w.r.t. the coordination number
+      real(wp), intent(inout), optional :: dEdcn(:)
+
+      !> Dispersion gradient
+      real(wp), intent(inout), optional :: gradient(:, :)
+
+      !> Dispersion virial
+      real(wp), intent(inout), optional :: sigma(:, :)
+
+      !> Error handling
+      type(error_type), allocatable, intent(out) :: error
+
+      integer :: isp, jsp, it
+      real(wp) :: kcut
+      integer, allocatable :: nterm(:, :)
+      type(fourier_term), allocatable :: terms(:, :, :)
+
+      if (.not.allocated(disp%lowrank)) then
+         call fatal_error(error, "Dispersion model provides no low-rank C6 coefficients")
+         return
+      end if
+
+      if (.not.all(mol%periodic)) then
+         call fatal_error(error, "Ewald summation requires three-dimensional "//&
+            & "periodic boundary conditions")
+         return
+      end if
+
+      allocate(terms(max_fourier_terms, mol%nid, mol%nid))
+      allocate(nterm(mol%nid, mol%nid))
+      kcut = 0.0_wp
+      do isp = 1, mol%nid
+         do jsp = 1, mol%nid
+            call self%get_fourier_terms(isp, jsp, disp%rvdw, disp%r4r2, &
+               & terms(:, jsp, isp), nterm(jsp, isp))
+            do it = 1, nterm(jsp, isp)
+               if (.not.is_supported_term(terms(it, jsp, isp))) then
+                  call fatal_error(error, "Damped pair potential has no known "//&
+                     & "Fourier transform")
+                  return
+               end if
+               kcut = max(kcut, get_reciprocal_cutoff(terms(it, jsp, isp), &
+                  & kcut_tolerance))
+            end do
+         end do
+      end do
+
+      ! all scaling factors vanish, there is nothing to add
+      if (kcut <= 0.0_wp) return
+
+      if (disp%lowrank%kcut > 0.0_wp) kcut = disp%lowrank%kcut
+
+      call get_dispersion_ewald(mol, disp%lowrank, disp%ghost, terms, nterm, kcut, &
+         & gwvec, gwdcn, energies, dEdcn, gradient, sigma)
+
+   end subroutine get_dispersion2_ewald
+
 
    !> Two-body contribution to the analytical Hessian.
    !>

@@ -16,6 +16,7 @@
 
 add_subdirectory("damping")
 add_subdirectory("data")
+add_subdirectory("fourier")
 add_subdirectory("gcp")
 
 set(dir "${CMAKE_CURRENT_SOURCE_DIR}")

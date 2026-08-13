@@ -27,7 +27,8 @@ module dftd3_citation
       & doi_drpa, doi_revdsd, doi_pw91_d3, doi_r2scan_d4, doi_scan_d3, &
       & doi_pbeh3c, doi_hse3c, doi_b973c, doi_hf3c, doi_gcp, doi_d3pbc, &
       & doi_r2scan_hyb, doi_r2scan_dhdf, doi_minnesota_d3, doi_b97m_d3, &
-      & doi_wb97x_d3, doi_hse06_d3, doi_joss, doi_cf22d, doi_skala
+      & doi_wb97x_d3, doi_hse06_d3, doi_joss, doi_cf22d, doi_skala, &
+      & doi_fourier_d3
 
    !> Represents an author to allow creating author lists
    type :: author_type
@@ -88,7 +89,8 @@ module dftd3_citation
       & doi_joss = "10.21105/joss.07169", &
       & doi_dftd3_cso = "10.1021/acs.jctc.5b00400", &
       & doi_cf22d = "10.1038/s43588-022-00371-5", &
-      & doi_skala = "10.48550/arXiv.2506.14665"
+      & doi_skala = "10.48550/arXiv.2506.14665", &
+      & doi_fourier_d3 = "10.48550/arXiv.2607.15103"
 
 contains
 
@@ -707,6 +709,24 @@ pure function get_citation(doi) result(citation)
          volume="2506.14665", &
          pages="2506.14665", &
          year="2025" &
+      )
+
+   case(doi_fourier_d3)
+      citation = new_citation( &
+         doi=doi, &
+         title="A fast summation method for the DFT-D3 dispersion correction", &
+         author=[ &
+         & author_name("Victoria Valeeva"), &
+         & author_name("Cheuk Hin Ho"), &
+         & author_name("Mario Geiger"), &
+         & author_name("Franco Pellegrini"), &
+         & author_name("G{\'a}bor Cs{\'a}nyi"), &
+         & author_name("Emine Kucukbenli"), &
+         & author_name("Christoph Ortner")], &
+         journal="arXiv", &
+         volume="2607.15103", &
+         pages="2607.15103", &
+         year="2026" &
       )
    case default
       continue

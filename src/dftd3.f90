@@ -25,7 +25,7 @@ module dftd3
    use dftd3_damping_z, only : z_damping_param, new_z_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
-   use dftd3_model, only : d3_model, new_d3_model
+   use dftd3_model, only : d3_model, new_d3_model, d3_lowrank_config
    use dftd3_ncoord, only : get_coordination_number
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
@@ -49,6 +49,7 @@ module dftd3
    public :: zero_damping_param, new_zero_damping
    public :: z_damping_param, new_z_damping
    public :: d3_model, new_d3_model
+   public :: d3_lowrank_config
    public :: get_dftd3_version
 
 

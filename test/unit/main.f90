@@ -20,6 +20,7 @@ program tester
    use mctc_env_testing, only : run_testsuite, new_testsuite, testsuite_type, &
       & select_suite, run_selected
    use test_dftd3, only : collect_dftd3
+   use test_fourier, only : collect_fourier
    use test_gcp, only : collect_gcp
    use test_gcp_hessian, only : collect_gcp_hessian
    use test_hessian, only : collect_hessian
@@ -43,6 +44,7 @@ program tester
    testsuites = [ &
       & new_testsuite("model", collect_model), &
       & new_testsuite("dftd3", collect_dftd3), &
+      & new_testsuite("fourier", collect_fourier), &
       & new_testsuite("hessian", collect_hessian), &
       & new_testsuite("param", collect_param), &
       & new_testsuite("pairwise", collect_pairwise), &

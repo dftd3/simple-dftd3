@@ -16,6 +16,7 @@
 
 subdir('damping')
 subdir('data')
+subdir('fourier')
 subdir('gcp')
 
 srcs += files(

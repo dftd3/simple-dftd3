@@ -15,13 +15,14 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_disp
+   use, intrinsic :: iso_fortran_env, only : error_unit
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_damping, only : damping_param, get_dispersion2_hessian
    use dftd3_model, only : d3_model
    use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs, &
       & add_coordination_number_hessian
    use mctc_data, only : get_covalent_rad
-   use mctc_env, only : wp
+   use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type
    use mctc_io_convert, only : autoaa
    implicit none
@@ -34,9 +35,112 @@ module dftd3_disp
    interface get_dispersion
       module procedure :: get_dispersion_atomic
       module procedure :: get_dispersion_scalar
+      module procedure :: get_dispersion_error
    end interface get_dispersion
 
 contains
+
+
+!> Calculate atom-resolved dispersion energies.
+!>
+!> The dispersion model and the damping parameters have to agree on the summation
+!> technique, an inconsistent setup is reported in the error handler.
+subroutine get_dispersion_error(error, mol, disp, param, cutoff, energies, &
+      & gradient, sigma, hessian)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d3_model), intent(in) :: disp
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Dispersion energy
+   real(wp), intent(out) :: energies(:)
+
+   !> Dispersion gradient
+   real(wp), intent(out), contiguous, optional :: gradient(:, :)
+
+   !> Dispersion virial
+   real(wp), intent(out), contiguous, optional :: sigma(:, :)
+
+   !> Dispersion hessian
+   real(wp), intent(out), contiguous, optional :: hessian(:, :)
+
+   logical :: grad, hess, ewald
+   integer :: mref
+   real(wp), allocatable :: cn(:)
+   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
+   real(wp), allocatable :: dEdcn(:)
+   real(wp), allocatable :: lattr(:, :)
+   real(wp), allocatable :: gradient_local(:, :), sigma_local(:, :)
+
+   mref = maxval(disp%ref)
+   grad = present(gradient) .or. present(sigma)
+   hess = present(hessian)
+
+   ! a low-rank model under three-dimensional boundary conditions asks for the
+   ! reciprocal space summation, which the damping function has to support
+   ewald = allocated(disp%lowrank) .and. all(mol%periodic)
+   if (ewald .and. .not.param%supports_ewald()) then
+      call fatal_error(error, "Damping function does not support Ewald summation")
+      return
+   end if
+
+   allocate(cn(mol%nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
+
+   allocate(gwvec(mref, mol%nat))
+   if (grad) allocate(gwdcn(mref, mol%nat))
+   call disp%weight_references(mol, cn, gwvec, gwdcn)
+
+   allocate(c6(mol%nat, mol%nat))
+   if (grad) allocate(dc6dcn(mol%nat, mol%nat))
+   call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
+
+   energies(:) = 0.0_wp
+   if (grad) then
+      allocate(dEdcn(mol%nat))
+      dEdcn(:) = 0.0_wp
+      if (present(gradient)) gradient(:, :) = 0.0_wp
+      if (present(sigma)) sigma(:, :) = 0.0_wp
+      allocate(gradient_local(3, mol%nat), source=0.0_wp)
+      allocate(sigma_local(3, 3), source=0.0_wp)
+   end if
+   if (ewald) then
+      call param%get_dispersion2_ewald(mol, disp, gwvec, gwdcn, energies, dEdcn, &
+         & gradient_local, sigma_local, error)
+      if (allocated(error)) return
+   else
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
+      call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, disp%rvdw, &
+         & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
+   end if
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
+    call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, disp%rvdw, &
+       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
+   if (grad) then
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+      call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
+         & gradient_local, sigma_local)
+      if (present(gradient)) gradient(:, :) = gradient_local(:, :)
+      if (present(sigma)) sigma(:, :) = sigma_local(:, :)
+   end if
+   if (hess) then
+      call get_dispersion_hessian(mol, disp, param, cutoff, hessian)
+   end if
+
+end subroutine get_dispersion_error
 
 
 !> Calculate atom-resolved dispersion energies.
@@ -66,55 +170,15 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
    !> Dispersion hessian
    real(wp), intent(out), contiguous, optional :: hessian(:, :)
 
-   logical :: grad, hess
-   integer :: mref
-   real(wp), allocatable :: cn(:)
-   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
-   real(wp), allocatable :: c6(:, :), dc6dcn(:, :)
-   real(wp), allocatable :: dEdcn(:)
-   real(wp), allocatable :: lattr(:, :)
-   real(wp), allocatable :: gradient_local(:, :), sigma_local(:, :)
+   type(error_type), allocatable :: error
 
-   mref = maxval(disp%ref)
-   grad = present(gradient) .or. present(sigma)
-   hess = present(hessian)
+   call get_dispersion_error(error, mol, disp, param, cutoff, energies, &
+      & gradient, sigma, hessian)
 
-   allocate(cn(mol%nat))
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
-
-   allocate(gwvec(mref, mol%nat))
-   if (grad) allocate(gwdcn(mref, mol%nat))
-   call disp%weight_references(mol, cn, gwvec, gwdcn)
-
-   allocate(c6(mol%nat, mol%nat))
-   if (grad) allocate(dc6dcn(mol%nat, mol%nat))
-   call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
-
-   energies(:) = 0.0_wp
-   if (grad) then
-      allocate(dEdcn(mol%nat))
-      dEdcn(:) = 0.0_wp
-      if (present(gradient)) gradient(:, :) = 0.0_wp
-      if (present(sigma)) sigma(:, :) = 0.0_wp
-      allocate(gradient_local(3, mol%nat), source=0.0_wp)
-      allocate(sigma_local(3, 3), source=0.0_wp)
-   end if
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-    call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, disp%rvdw, &
-       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-    call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, disp%rvdw, &
-       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
-   if (grad) then
-      call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-      call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
-         & gradient_local, sigma_local)
-      if (present(gradient)) gradient(:, :) = gradient_local(:, :)
-      if (present(sigma)) sigma(:, :) = sigma_local(:, :)
-   end if
-   if (hess) then
-      call get_dispersion_hessian(mol, disp, param, cutoff, hessian)
+   ! this interface cannot propagate the inconsistent setup to the caller
+   if (allocated(error)) then
+      write(error_unit, '("[Fatal]", 1x, a)') error%message
+      error stop
    end if
 
 end subroutine get_dispersion_atomic
