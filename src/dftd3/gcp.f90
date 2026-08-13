@@ -147,7 +147,7 @@ subroutine get_geometric_counterpoise_hessian(mol, param, cutoff, hessian)
    type(realspace_cutoff), intent(in) :: cutoff
 
    !> Counter-poise hessian
-   real(wp), intent(out) :: hessian(:, :)
+   real(wp), intent(out), contiguous :: hessian(:, :)
 
    real(wp), allocatable :: lattr(:, :)
 
@@ -553,13 +553,13 @@ subroutine gcp_hessian(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, a
    !> Damping exponent
    real(wp), intent(in) :: dmp_exp
    !> Second derivative of the energy w.r.t. the Cartesian coordinates
-   real(wp), intent(inout) :: hessian(:, :)
+   real(wp), intent(inout), contiguous :: hessian(:, :)
 
    integer :: iat, jat, jtr, izp, jzp
    real(wp) :: xvi, xvj, emi, emj, emij
    real(wp) :: r0, r1, vec(3), rscal, rscalexp, dmpq1, dmpq2
-   real(wp) :: sij, gij, hij, ovl1, ovl2
-   real(wp) :: expv, expv1, expv2, arg1, arg2
+   real(wp) :: sij, gij, hij, srt, ovl0, ovl1, ovl2
+   real(wp) :: expv, expv1, expv2, arg1, arg2, rbeta
    real(wp) :: bsse, bsse1, bsse2
    real(wp) :: dampval, damp1, damp2
    real(wp) :: dE1, dE2
@@ -582,30 +582,31 @@ subroutine gcp_hessian(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, a
 
             if(r1 > cutoff .or. r1 < epsilon(1.0_wp)) cycle
 
-            call ssovl(r1, izp, jzp, iz, slater(izp), slater(jzp), sij)
-            call gsovl(r1, izp, jzp, iz, slater(izp), slater(jzp), gij)
-            call hsovl(r1, izp, jzp, iz, slater(izp), slater(jzp), hij)
+            call dsovl(r1, izp, jzp, iz, slater(izp), slater(jzp), sij, gij, hij)
 
             ! derivatives of the inverse square root of the overlap
-            ovl1 = -0.5_wp*gij/sij**1.5_wp
-            ovl2 = 0.75_wp*gij*gij/sij**2.5_wp - 0.5_wp*hij/sij**1.5_wp
+            srt = sqrt(sij)
+            ovl0 = 1.0_wp/srt
+            ovl1 = -0.5_wp*gij/(sij*srt)
+            ovl2 = (0.75_wp*gij*gij/sij - 0.5_wp*hij)/(sij*srt)
 
             ! derivatives of the exponential prefactor
-            arg1 = alpha*beta*r1**(beta-1.0_wp)
-            arg2 = alpha*beta*(beta-1.0_wp)*r1**(beta-2.0_wp)
-            expv = exp(-alpha*r1**beta)
+            rbeta = r1**beta
+            arg1 = alpha*beta*rbeta/r1
+            arg2 = arg1*(beta-1.0_wp)/r1
+            expv = exp(-alpha*rbeta)
             expv1 = -arg1*expv
             expv2 = (arg1*arg1 - arg2)*expv
 
-            bsse = expv/sqrt(sij)
-            bsse1 = expv1/sqrt(sij) + expv*ovl1
-            bsse2 = expv2/sqrt(sij) + 2.0_wp*expv1*ovl1 + expv*ovl2
+            bsse = expv*ovl0
+            bsse1 = expv1*ovl0 + expv*ovl1
+            bsse2 = expv2*ovl0 + 2.0_wp*expv1*ovl1 + expv*ovl2
 
             if (damp) then
                rscal = r1/r0
                rscalexp = dmp_scal*rscal**dmp_exp
-               dmpq1 = dmp_scal*dmp_exp*rscal**(dmp_exp-1.0_wp)/r0
-               dmpq2 = dmp_scal*dmp_exp*(dmp_exp-1.0_wp)*rscal**(dmp_exp-2.0_wp)/(r0*r0)
+               dmpq1 = dmp_exp*rscalexp/(rscal*r0)
+               dmpq2 = dmpq1*(dmp_exp-1.0_wp)/(rscal*r0)
                dampval = rscalexp/(1.0_wp+rscalexp)
                damp1 = dmpq1/(1.0_wp+rscalexp)**2
                damp2 = dmpq2/(1.0_wp+rscalexp)**2 &
@@ -648,7 +649,7 @@ subroutine srb_hessian(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, h
    !> Exponent for charges
    real(wp), intent(in) :: zexp
    !> Second derivative of the energy w.r.t. the Cartesian coordinates
-   real(wp), intent(inout) :: hessian(:, :)
+   real(wp), intent(inout), contiguous :: hessian(:, :)
 
    real(wp) :: fi, fj, ff, r1, expt
    real(wp) :: r0, vec(3), dE1, dE2
@@ -683,7 +684,7 @@ end subroutine srb_hessian
 !> Distribute the second derivatives of a radial pair potential to the hessian
 pure subroutine add_pair_hessian(hessian, iat, jat, vec, r1, dE1, dE2)
    !> Second derivative of the energy w.r.t. the Cartesian coordinates
-   real(wp), intent(inout) :: hessian(:, :)
+   real(wp), intent(inout), contiguous :: hessian(:, :)
    !> Atom indices of the interacting pair
    integer, intent(in) :: iat, jat
    !> Distance vector and its norm
@@ -691,27 +692,26 @@ pure subroutine add_pair_hessian(hessian, iat, jat, vec, r1, dE1, dE2)
    !> First and second derivative of the pair potential w.r.t. the distance
    real(wp), intent(in) :: dE1, dE2
 
-   integer :: ic, jc
-   real(wp) :: hblk(3, 3), fr
+   integer :: ic, jc, ii, jj
+   real(wp) :: hblk(3, 3), fr, fc
 
    fr = dE1/r1
+   fc = (dE2 - fr)/(r1*r1)
    do ic = 1, 3
       do jc = 1, 3
-         hblk(ic, jc) = (dE2 - fr)*vec(ic)*vec(jc)/(r1*r1)
+         hblk(jc, ic) = fc*vec(ic)*vec(jc)
       end do
       hblk(ic, ic) = hblk(ic, ic) + fr
    end do
 
+   ii = 3*(iat - 1)
+   jj = 3*(jat - 1)
    do ic = 1, 3
       do jc = 1, 3
-         hessian(3*(iat-1)+ic, 3*(iat-1)+jc) = &
-            & hessian(3*(iat-1)+ic, 3*(iat-1)+jc) + hblk(ic, jc)
-         hessian(3*(jat-1)+ic, 3*(jat-1)+jc) = &
-            & hessian(3*(jat-1)+ic, 3*(jat-1)+jc) + hblk(ic, jc)
-         hessian(3*(iat-1)+ic, 3*(jat-1)+jc) = &
-            & hessian(3*(iat-1)+ic, 3*(jat-1)+jc) - hblk(ic, jc)
-         hessian(3*(jat-1)+ic, 3*(iat-1)+jc) = &
-            & hessian(3*(jat-1)+ic, 3*(iat-1)+jc) - hblk(ic, jc)
+         hessian(jj+jc, jj+ic) = hessian(jj+jc, jj+ic) + hblk(jc, ic)
+         hessian(ii+jc, ii+ic) = hessian(ii+jc, ii+ic) + hblk(jc, ic)
+         hessian(jj+jc, ii+ic) = hessian(jj+jc, ii+ic) - hblk(jc, ic)
+         hessian(ii+jc, jj+ic) = hessian(ii+jc, jj+ic) - hblk(jc, ic)
       end do
    end do
 
@@ -1340,14 +1340,12 @@ subroutine dsovl(r, iat, jat, iz, xza, xzb, s0, s1, s2)
    ax = ha*r
    bx = hb*r
 
-   do k = 0, 8
-      av(k) = Aaux(ax, k)
-      if (lsame) then
-         bv(k) = Bint(bx, k)
-      else
-         bv(k) = Baux(bx, k)
-      end if
-   end do
+   call aaux_all(ax, av)
+   if (lsame) then
+      call bint_all(bx, bv)
+   else
+      call baux_all(bx, bv)
+   end if
 
    f0 = 0.0_wp
    f1 = 0.0_wp
@@ -1369,40 +1367,76 @@ subroutine dsovl(r, iat, jat, iz, xza, xzb, s0, s1, s2)
 end subroutine dsovl
 
 
-!> Auxiliary integral A_k(x) = int_1^inf t**k exp(-x*t) dt
-real(wp) pure function Aaux(x, k)
+!> All auxiliary integrals A_k(x) from the recursion x*A_k = k*A_(k-1) + exp(-x)
+pure subroutine aaux_all(x, a)
    real(wp), intent(in) :: x
-   integer, intent(in) :: k
-   real(wp) :: term
-   integer :: j
-   term = 1.0_wp/x
-   Aaux = term
-   do j = 1, k
-      term = term*real(k-j+1, wp)/x
-      Aaux = Aaux + term
+   real(wp), intent(out) :: a(0:)
+   real(wp) :: ex, rx
+   integer :: k
+   ex = exp(-x)
+   rx = 1.0_wp/x
+   a(0) = ex*rx
+   do k = 1, ubound(a, 1)
+      a(k) = (real(k, wp)*a(k-1) + ex)*rx
    end do
-   Aaux = Aaux*exp(-x)
-end function Aaux
+end subroutine aaux_all
 
 
-!> Auxiliary integral B_k(x) = int_-1^1 t**k exp(-x*t) dt
-real(wp) pure function Baux(x, k)
+!> All auxiliary integrals B_k(x), sharing the two exponentials between orders
+pure subroutine baux_all(x, b)
    real(wp), intent(in) :: x
-   integer, intent(in) :: k
-   real(wp) :: term, sp, sm, sgn
-   integer :: j
-   term = 1.0_wp/x
-   sgn = merge(1.0_wp, -1.0_wp, mod(k, 2) == 0)
-   sp = sgn*term
-   sm = term
-   do j = 1, k
-      term = term*real(k-j+1, wp)/x
-      sgn = -sgn
-      sp = sp + sgn*term
-      sm = sm + term
+   real(wp), intent(out) :: b(0:)
+   real(wp) :: ep, em, rx, term, sp, sm, sgn
+   integer :: j, k
+   ep = exp(x)
+   em = exp(-x)
+   rx = 1.0_wp/x
+   do k = 0, ubound(b, 1)
+      term = rx
+      sgn = merge(1.0_wp, -1.0_wp, mod(k, 2) == 0)
+      sp = sgn*term
+      sm = term
+      do j = 1, k
+         term = term*real(k-j+1, wp)*rx
+         sgn = -sgn
+         sp = sp + sgn*term
+         sm = sm + term
+      end do
+      b(k) = ep*sp - em*sm
    end do
-   Baux = exp(x)*sp - exp(-x)*sm
-end function Baux
+end subroutine baux_all
+
+
+!> All auxiliary integrals B_k(x) from the series expansion used for small x,
+!> the terms (-x)**i/i! are shared between the orders
+pure subroutine bint_all(x, b)
+   real(wp), intent(in) :: x
+   real(wp), intent(out) :: b(0:)
+   integer, parameter :: nterm = 12
+   real(wp) :: pw(0:nterm), acc
+   integer :: i, k
+
+   if (abs(x) < 1e-6_wp) then
+      do k = 0, ubound(b, 1)
+         b(k) = (1.0_wp + (-1.0_wp)**k)/(real(k, wp) + 1.0_wp)
+      end do
+      return
+   end if
+
+   pw(0) = 1.0_wp
+   do i = 1, nterm
+      pw(i) = pw(i-1)*(-x)/real(i, wp)
+   end do
+
+   ! only terms with k+i even contribute, they enter with a factor of two
+   do k = 0, ubound(b, 1)
+      acc = 0.0_wp
+      do i = mod(k, 2), nterm, 2
+         acc = acc + pw(i)/real(k+i+1, wp)
+      end do
+      b(k) = 2.0_wp*acc
+   end do
+end subroutine bint_all
 
 
 !-------------------------------------------------------------

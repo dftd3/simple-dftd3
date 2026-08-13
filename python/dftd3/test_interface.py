@@ -377,6 +377,10 @@ def test_gcp_empty(numbers: np.ndarray, positions: np.ndarray) -> None:
     res = gcp.get_counterpoise(grad=False)
     assert approx(res.get("energy")) == 0.0
 
+    hess = gcp.get_hessian().get("hessian")
+    assert hess.shape == (3 * len(numbers), 3 * len(numbers))
+    assert hess == approx(np.zeros_like(hess), abs=0.0)
+
 
 @pytest.mark.parametrize("method", ["b973c"])
 def test_gcp_3c(numbers: np.ndarray, positions: np.ndarray, method: str) -> None:
