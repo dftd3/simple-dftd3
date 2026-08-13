@@ -40,7 +40,7 @@ int main(void)
   dftd3_delete(param);
   return 0;
 
-handle_error:
+handle_error: {
   char msg[512];
   dftd3_get_error(error, msg, NULL);
   printf("Error: %s\n", msg);
@@ -50,4 +50,5 @@ handle_error:
   dftd3_delete(d3);
   dftd3_delete(param);
   return 1;
+}
 }
