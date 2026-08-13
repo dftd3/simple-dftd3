@@ -19,7 +19,7 @@ module test_fourier
       & get_lattice_points, realspace_cutoff, get_realspace_cutoff, d3_param, &
       & rational_damping_param, new_rational_damping, zero_damping_param, &
       & new_zero_damping, mzero_damping_param, new_mzero_damping, d3_model, &
-      & new_d3_model, d3_lowrank_config
+      & new_d3_model, d3_lowrank_config, get_pairwise_dispersion
    use dftd3_citation, only : citation_type, is_citation_present, doi_fourier_d3
    use dftd3_fourier_jacobi, only : symmetric_eigendecomposition
    use dftd3_fourier_kernel, only : fourier_term, get_fourier_transform, &
@@ -90,6 +90,8 @@ subroutine collect_fourier(testsuite)
       & new_unittest("fourier-transform", test_fourier_transform), &
       & new_unittest("ewald-molecular", test_ewald_molecular), &
       & new_unittest("ewald-unsupported-damping", test_ewald_unsupported), &
+      & new_unittest("ewald-hessian-rejected", test_ewald_hessian), &
+      & new_unittest("ewald-pairwise-rejected", test_ewald_pairwise), &
       & new_unittest("ewald-converged-bj", test_ewald_converged_bj), &
       & new_unittest("ewald-converged-zero", test_ewald_converged_zero), &
       & new_unittest("ewald-kcut-convergence", test_ewald_kcut), &
@@ -786,6 +788,88 @@ subroutine test_ewald_unsupported(error)
    call check(error, sum(energies), sum(energies_ref), thr=thr)
 
 end subroutine test_ewald_unsupported
+
+
+!> The second derivatives are only available from the real space summation
+subroutine test_ewald_hessian(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3, d3lr
+   type(rational_damping_param) :: param
+   type(error_type), allocatable :: setup_error
+   real(wp), allocatable :: energies(:), hessian(:, :)
+
+   call get_cubic(mol, 8.0_wp, 1)
+   call new_d3_model(d3, mol)
+   call new_d3_model(d3lr, mol, lowrank=tight)
+   call new_rational_damping(param, pbe_bj)
+
+   allocate(energies(mol%nat), hessian(3*mol%nat, 3*mol%nat))
+   call get_dispersion(setup_error, mol, d3lr, param, cutoff, energies, &
+      & hessian=hessian)
+   if (.not.allocated(setup_error)) then
+      call test_failed(error, "Hessian of a low-rank model is not reported")
+      return
+   end if
+
+   ! the energy alone is available from the same model
+   call get_dispersion(setup_error, mol, d3lr, param, cutoff, energies)
+   if (allocated(setup_error)) then
+      call test_failed(error, "Ewald energy is rejected")
+      return
+   end if
+
+   ! without the low-rank expansion the hessian is evaluated in real space
+   call get_dispersion(setup_error, mol, d3, param, cutoff, energies, &
+      & hessian=hessian)
+   if (allocated(setup_error)) then
+      call test_failed(error, "Real space hessian is rejected")
+      return
+   end if
+
+end subroutine test_ewald_hessian
+
+
+!> The pairwise decomposition would not add up to the reciprocal space energy
+subroutine test_ewald_pairwise(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3, d3lr
+   type(rational_damping_param) :: param
+   type(error_type), allocatable :: setup_error
+   real(wp), allocatable :: energy2(:, :), energy3(:, :), energies(:)
+
+   call get_cubic(mol, 8.0_wp, 1)
+   call new_d3_model(d3, mol)
+   call new_d3_model(d3lr, mol, lowrank=tight)
+   call new_rational_damping(param, pbe_bj)
+
+   allocate(energy2(mol%nat, mol%nat), energy3(mol%nat, mol%nat), energies(mol%nat))
+   call get_pairwise_dispersion(setup_error, mol, d3lr, param, cutoff, &
+      & energy2, energy3)
+   if (.not.allocated(setup_error)) then
+      call test_failed(error, "Pairwise analysis of a low-rank model is not reported")
+      return
+   end if
+
+   ! without the low-rank expansion the decomposition is available
+   call get_pairwise_dispersion(setup_error, mol, d3, param, cutoff, &
+      & energy2, energy3)
+   if (allocated(setup_error)) then
+      call test_failed(error, "Real space pairwise analysis is rejected")
+      return
+   end if
+
+   call get_dispersion(mol, d3, param, cutoff, energies)
+   call check(error, sum(energies), sum(energy2) + sum(energy3), thr=thr)
+
+end subroutine test_ewald_pairwise
 
 
 !> The reciprocal sum reproduces a converged real space summation

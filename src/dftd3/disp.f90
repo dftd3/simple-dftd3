@@ -39,6 +39,12 @@ module dftd3_disp
       module procedure :: get_dispersion_scalar_error
    end interface get_dispersion
 
+   !> Calculate pairwise representation of the dispersion energy
+   interface get_pairwise_dispersion
+      module procedure :: get_pairwise_dispersion_plain
+      module procedure :: get_pairwise_dispersion_error
+   end interface get_pairwise_dispersion
+
 contains
 
 
@@ -94,6 +100,13 @@ subroutine get_dispersion_error(error, mol, disp, param, cutoff, energies, &
    ewald = allocated(disp%lowrank) .and. all(mol%periodic)
    if (ewald .and. .not.param%supports_ewald()) then
       call fatal_error(error, "Damping function does not support Ewald summation")
+      return
+   end if
+
+   ! the second derivatives are only implemented for the real space summation,
+   ! returning them next to an Ewald energy would mix both summation techniques
+   if (ewald .and. hess) then
+      call fatal_error(error, "Hessian is only available for the real space summation")
       return
    end if
 
@@ -345,8 +358,43 @@ subroutine get_dispersion_scalar_error(error, mol, disp, param, cutoff, energy, 
 end subroutine get_dispersion_scalar_error
 
 
+!> Calculate the pairwise representation
+subroutine get_pairwise_dispersion_error(error, mol, disp, param, cutoff, energy2, energy3)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d3_model), intent(in) :: disp
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Pairwise representation of additive dispersion energy
+   real(wp), intent(out) :: energy2(:, :)
+
+   !> Pairwise representation of non-additive dispersion energy
+   real(wp), intent(out) :: energy3(:, :)
+
+   if (allocated(disp%lowrank) .and. all(mol%periodic)) then
+      call fatal_error(error, "Pairwise analysis is only available for the "//&
+         & "real space summation")
+      return
+   end if
+
+   call get_pairwise_dispersion_plain(mol, disp, param, cutoff, energy2, energy3)
+
+end subroutine get_pairwise_dispersion_error
+
+
 !> Wrapper to handle the evaluation of pairwise representation of the dispersion energy
-subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
+subroutine get_pairwise_dispersion_plain(mol, disp, param, cutoff, energy2, energy3)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -391,7 +439,7 @@ subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
     call param%get_pairwise_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
        & disp%rvdw, disp%r4r2, c6, energy3)
 
-end subroutine get_pairwise_dispersion
+end subroutine get_pairwise_dispersion_plain
 
 
 end module dftd3_disp

@@ -801,6 +801,60 @@ unexpected:
 }
 
 int
+test_ewald_realspace_only (void)
+{
+   printf("Start test: Ewald summation with real space only properties\n");
+   double energy;
+   double pair_disp2[4], pair_disp3[4];
+   double hessian[36];
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_model disp = NULL;
+   dftd3_param param = NULL;
+
+   error = dftd3_new_error();
+   mol = get_periodic_test_structure(error);
+   if (dftd3_check_error(error)) return 1;
+
+   param = dftd3_load_rational_damping(error, "pbe", false);
+   if (dftd3_check_error(error)) return 1;
+
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0);
+   if (dftd3_check_error(error)) return 1;
+
+   /* the pairwise decomposition would not add up to the reciprocal space energy */
+   dftd3_get_pairwise_dispersion(error, mol, disp, param, pair_disp2, pair_disp3);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   /* the second derivatives are only implemented in real space */
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &energy, hessian);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   /* the energy itself is still available */
+   dftd3_get_dispersion(error, mol, disp, param, &energy, NULL, NULL);
+   if (dftd3_check_error(error)) return 1;
+
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 0;
+
+unexpected:
+   printf("[Fatal] Unexpected pass for real-space-only property\n");
+   dftd3_delete(param);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 1;
+}
+
+int
 main (void)
 {
    int stat = 0;
@@ -819,5 +873,6 @@ main (void)
    stat += test_gcp_hessian();
    stat += test_ewald();
    stat += test_ewald_unsupported();
+   stat += test_ewald_realspace_only();
    return stat;
 }

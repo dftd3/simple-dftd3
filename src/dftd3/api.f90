@@ -1126,7 +1126,7 @@ subroutine get_pairwise_dispersion_api(verror, vmol, vdisp, vparam, &
    if (allocated(disp%cutoff)) then
       cutoff = disp%cutoff
    end if
-   call get_pairwise_dispersion(mol%ptr, disp%ptr, param%ptr, cutoff, &
+   call get_pairwise_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
       & pair_energy2, pair_energy3)
 
 end subroutine get_pairwise_dispersion_api

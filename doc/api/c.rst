@@ -437,7 +437,9 @@ To evaluate dispersion energies or related properties the :c:func:`dftd3_get_dis
    :param energy2: Pairwise additive dispersion energies
    :param energy3: Pairwise non-addititive dispersion energies
 
-   Evaluate the pairwise representation of the dispersion energy
+   Evaluate the pairwise representation of the dispersion energy.
+   Only the real space summation provides a pairwise decomposition, a model
+   with :c:func:`dftd3_set_model_ewald` enabled is rejected in the error handle.
 
 .. c:function:: void dftd3_get_dispersion_hessian(dftd3_error error, dftd3_structure mol, dftd3_model disp, dftd3_param param, double* energy, double* hessian);
 
@@ -453,6 +455,9 @@ To evaluate dispersion energies or related properties the :c:func:`dftd3_get_dis
    The index convention is ``3*i + c`` for the Cartesian component *c* of the
    zero-based atom index *i*.
    Since the hessian is symmetric, row- and column-major layouts are equivalent.
+   The second derivatives are only implemented for the real space summation, a
+   model with :c:func:`dftd3_set_model_ewald` enabled is rejected in the error
+   handle.
 
 .. c:function:: void dftd3_get_counterpoise(dftd3_error error, dftd3_structure mol, dftd3_gcp gcp, double* energy, double* gradient, double* sigma);
 
