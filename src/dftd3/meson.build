@@ -20,6 +20,7 @@ subdir('fourier')
 subdir('gcp')
 
 srcs += files(
+  'accuracy.f90',
   'citation.f90',
   'cutoff.f90',
   'damping.f90',

@@ -23,6 +23,7 @@ set(dir "${CMAKE_CURRENT_SOURCE_DIR}")
 
 list(
   APPEND srcs
+  "${dir}/accuracy.f90"
   "${dir}/citation.f90"
   "${dir}/cutoff.f90"
   "${dir}/damping.f90"

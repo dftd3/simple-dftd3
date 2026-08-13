@@ -16,10 +16,10 @@
 
 module test_fourier
    use dftd3, only : get_dispersion, get_coordination_number, &
-      & get_lattice_points, realspace_cutoff, d3_param, rational_damping_param, &
-      & new_rational_damping, zero_damping_param, new_zero_damping, &
-      & mzero_damping_param, new_mzero_damping, d3_model, new_d3_model, &
-      & d3_lowrank_config
+      & get_lattice_points, realspace_cutoff, get_realspace_cutoff, d3_param, &
+      & rational_damping_param, new_rational_damping, zero_damping_param, &
+      & new_zero_damping, mzero_damping_param, new_mzero_damping, d3_model, &
+      & new_d3_model, d3_lowrank_config
    use dftd3_citation, only : citation_type, is_citation_present, doi_fourier_d3
    use dftd3_fourier_jacobi, only : symmetric_eigendecomposition
    use dftd3_fourier_kernel, only : fourier_term, get_fourier_transform, &
@@ -96,7 +96,11 @@ subroutine collect_fourier(testsuite)
       & new_unittest("ewald-supercell", test_ewald_supercell), &
       & new_unittest("ewald-translation", test_ewald_translation), &
       & new_unittest("ewald-gradient", test_ewald_gradient), &
-      & new_unittest("ewald-sigma", test_ewald_sigma) &
+      & new_unittest("ewald-sigma", test_ewald_sigma), &
+      & new_unittest("cutoff-accuracy-cubic", test_cutoff_accuracy_cubic), &
+      & new_unittest("cutoff-accuracy-benzene", test_cutoff_accuracy_benzene), &
+      & new_unittest("cutoff-accuracy-slab", test_cutoff_accuracy_slab), &
+      & new_unittest("cutoff-accuracy-molecular", test_cutoff_molecular) &
       & ]
 
 end subroutine collect_fourier
@@ -1075,6 +1079,155 @@ subroutine test_ewald_sigma(error)
    end if
 
 end subroutine test_ewald_sigma
+
+
+!> The estimated cutoff reproduces the reciprocal space energy to the requested
+!> accuracy, and a tighter request produces a longer cutoff
+subroutine test_cutoff_accuracy_gen(error, mol)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   integer :: istep
+   type(d3_model) :: d3, d3lr
+   type(rational_damping_param) :: param
+   type(realspace_cutoff) :: rcut, ewald_cut
+   real(wp) :: eref, energy, last, achieved
+   real(wp), allocatable :: energies(:)
+   real(wp), parameter :: accuracy(3) = [1.0e-6_wp, 1.0e-7_wp, 1.0e-8_wp]
+
+   call new_d3_model(d3, mol)
+   call new_d3_model(d3lr, mol, lowrank=tight)
+   call new_rational_damping(param, pbe_bj)
+
+   ! the estimate keeps the default coordination number cutoff, which has to be
+   ! matched by the reference to isolate the pair truncation error
+   ewald_cut = realspace_cutoff()
+
+   allocate(energies(mol%nat))
+   call get_dispersion(mol, d3lr, param, ewald_cut, energies)
+   eref = sum(energies)
+
+   last = 0.0_wp
+   do istep = 1, size(accuracy)
+      rcut = get_realspace_cutoff(mol, d3, accuracy(istep))
+      if (rcut%disp2 <= last) then
+         call test_failed(error, "Cutoff does not grow with the requested accuracy")
+         return
+      end if
+      last = rcut%disp2
+
+      call get_dispersion(mol, d3, param, rcut, energies)
+      energy = sum(energies)
+      achieved = abs(energy - eref) / mol%nat
+      if (achieved > accuracy(istep)) then
+         call test_failed(error, "Requested accuracy is not reached")
+         print "(a, es11.3, a, f9.2, a, es11.3)", "target ", accuracy(istep), &
+            & "  cutoff ", rcut%disp2, "  achieved ", achieved
+         return
+      end if
+   end do
+
+end subroutine test_cutoff_accuracy_gen
+
+
+subroutine test_cutoff_accuracy_cubic(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   call get_cubic(mol, 8.0_wp, 1)
+   call test_cutoff_accuracy_gen(error, mol)
+
+end subroutine test_cutoff_accuracy_cubic
+
+
+subroutine test_cutoff_accuracy_benzene(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+
+   call get_structure(mol, "X23", "benzene")
+   call test_cutoff_accuracy_gen(error, mol)
+
+end subroutine test_cutoff_accuracy_benzene
+
+
+!> A slab converges faster than a bulk system of the same density
+subroutine test_cutoff_accuracy_slab(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3
+   type(rational_damping_param) :: param
+   type(realspace_cutoff) :: rcut, tight_cut
+   real(wp) :: eref, energy
+   real(wp), allocatable :: energies(:)
+   real(wp), parameter :: accuracy = 1.0e-7_wp
+
+   call get_cubic(mol, 8.0_wp, 2, periodic=[.true., .true., .false.])
+   call new_d3_model(d3, mol)
+   call new_rational_damping(param, pbe_bj)
+
+   rcut = get_realspace_cutoff(mol, d3, accuracy)
+   tight_cut = realspace_cutoff()
+   tight_cut%disp2 = 400.0_wp
+
+   allocate(energies(mol%nat))
+   call get_dispersion(mol, d3, param, tight_cut, energies)
+   eref = sum(energies)
+   call get_dispersion(mol, d3, param, rcut, energies)
+   energy = sum(energies)
+
+   if (abs(energy - eref)/mol%nat > accuracy) then
+      call test_failed(error, "Requested accuracy is not reached for a slab")
+      print "(a, f9.2, a, es11.3)", "cutoff ", rcut%disp2, "  achieved ", &
+         & abs(energy - eref)/mol%nat
+      return
+   end if
+
+end subroutine test_cutoff_accuracy_slab
+
+
+!> A finite system is summed exactly once all pairs are covered
+subroutine test_cutoff_molecular(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3
+   type(rational_damping_param) :: param
+   type(realspace_cutoff) :: rcut, huge_cut
+   real(wp) :: energy, eref
+   real(wp), allocatable :: energies(:)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d3_model(d3, mol)
+   call new_rational_damping(param, pbe_bj)
+
+   rcut = get_realspace_cutoff(mol, d3, 1.0e-10_wp)
+   huge_cut = realspace_cutoff()
+   huge_cut%disp2 = 1000.0_wp
+
+   allocate(energies(mol%nat))
+   call get_dispersion(mol, d3, param, rcut, energies)
+   energy = sum(energies)
+   call get_dispersion(mol, d3, param, huge_cut, energies)
+   eref = sum(energies)
+
+   call check(error, energy, eref, thr=thr)
+
+end subroutine test_cutoff_molecular
 
 
 end module test_fourier
