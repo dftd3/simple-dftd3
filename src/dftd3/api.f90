@@ -34,7 +34,7 @@ module dftd3_api
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise, &
       & get_geometric_counterpoise_hessian
-   use dftd3_model, only : d3_model, new_d3_model
+   use dftd3_model, only : d3_model, new_d3_model, d3_lowrank_config
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
       & get_cso_damping, get_z_damping
@@ -54,6 +54,7 @@ module dftd3_api
    public :: new_structure_api, delete_structure_api, update_structure_api
 
    public :: set_model_realspace_cutoff, set_model_realspace_cutoff_smooth
+   public :: set_model_ewald
    public :: get_dispersion_api, get_pairwise_dispersion_api
    public :: get_dispersion_hessian_api
    public :: vp_model
@@ -116,7 +117,7 @@ module dftd3_api
 contains
 
 
-!> Obtain library version as major * 10000 + minor + 100 + patch
+!> Obtain library version as major * 10000 + minor * 100 + patch
 function get_version_api() result(version) &
       & bind(C, name=namespace//"get_version")
    integer(c_int) :: version
@@ -377,6 +378,41 @@ subroutine set_model_realspace_cutoff_smooth(verror, vdisp, disp2, disp3, cn, wi
    disp%cutoff = realspace_cutoff(disp2=disp2, disp3=disp3, cn=cn, &
       & width2=width2, width3=width3)
 end subroutine set_model_realspace_cutoff_smooth
+
+
+!> Evaluate the two-body dispersion energy by Ewald summation.
+!>
+!> Non-positive values select the respective default, a vanishing rank derives
+!> the rank from the tolerance and a vanishing reciprocal cutoff derives it from
+!> the damping radii.
+subroutine set_model_ewald(verror, vdisp, rank, tolerance, kcut) &
+      & bind(C, name=namespace//"set_model_ewald")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   integer(c_int), value, intent(in) :: rank
+   real(c_double), value, intent(in) :: tolerance
+   real(c_double), value, intent(in) :: kcut
+
+   type(d3_lowrank_config) :: config
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "D3 dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   config = d3_lowrank_config()
+   if (rank > 0) config%rank = rank
+   if (tolerance > 0.0_wp) config%tolerance = tolerance
+   if (kcut > 0.0_wp) config%kcut = kcut
+
+   call disp%ptr%set_lowrank(config)
+end subroutine set_model_ewald
 
 
 subroutine set_model_ghost_index(verror, vdisp, ghost, nidx) &
@@ -964,8 +1000,9 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    if (allocated(disp%cutoff)) then
       cutoff = disp%cutoff
    end if
-   call get_dispersion(mol%ptr, disp%ptr, param%ptr, cutoff, &
+   call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
       & energy, gradient, sigma)
+   if (allocated(error%ptr)) return
 
    if (present(c_gradient)) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -1029,8 +1066,9 @@ subroutine get_dispersion_hessian_api(verror, vmol, vdisp, vparam, &
    if (allocated(disp%cutoff)) then
       cutoff = disp%cutoff
    end if
-   call get_dispersion(mol%ptr, disp%ptr, param%ptr, cutoff, &
+   call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
       & energy, hessian=hessian)
+   if (allocated(error%ptr)) return
 
    c_hessian(:ndim*ndim) = reshape(hessian, [ndim*ndim])
 

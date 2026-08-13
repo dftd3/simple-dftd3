@@ -67,7 +67,7 @@ typedef struct _dftd3_param* dftd3_param;
  * Global API queries
 **/
 
-/// Obtain library version as major * 10000 + minor + 100 + patch
+/// Obtain library version as major * 10000 + minor * 100 + patch
 SDFTD3_API_ENTRY int SDFTD3_API_CALL
 dftd3_get_version() SDFTD3_API_SUFFIX__V_0_2;
 
@@ -150,6 +150,23 @@ dftd3_set_model_realspace_cutoff_smooth(dftd3_error /* error */,
                                         double /* cn */,
                                         double /* width2 */,
                                         double /* width3 */) SDFTD3_API_SUFFIX__V_1_4;
+
+/// Evaluate the two-body dispersion energy by Ewald summation.
+///
+/// Requires three-dimensional periodic boundary conditions and a damping
+/// function supporting the reciprocal space summation, currently the rational
+/// and the zero damping function. The real space cutoff for the two-body
+/// interactions is ignored once this is enabled.
+///
+/// Non-positive arguments select the respective default, a vanishing rank
+/// derives the rank of the expansion from the tolerance and a vanishing
+/// reciprocal cutoff derives it from the damping radii.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_model_ewald(dftd3_error /* error */,
+                      dftd3_model /* model */,
+                      int /* rank */,
+                      double /* tolerance */,
+                      double /* kcut */) SDFTD3_API_SUFFIX__V_1_6;
 
 /// Delete dispersion model
 SDFTD3_API_ENTRY void SDFTD3_API_CALL

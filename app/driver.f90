@@ -23,7 +23,7 @@ module dftd3_app_driver
       & get_optimizedpower_damping, optimizedpower_damping_param, &
       & new_optimizedpower_damping, &
       & get_cso_damping, cso_damping_param, new_cso_damping, &
-      & new_d3_model, get_pairwise_dispersion, &
+      & new_d3_model, get_pairwise_dispersion, d3_lowrank_config, &
       & realspace_cutoff, get_lattice_points, get_coordination_number
    use dftd3_app_cli, only : app_config, run_config, param_config, gcp_config, get_arguments
    use dftd3_app_help, only : header
@@ -77,7 +77,7 @@ subroutine run_driver(config, error)
    real(wp) :: energy
    character(len=:), allocatable :: output
    integer :: unit
-   type(citation_type) :: citation, param_citation
+   type(citation_type) :: citation, param_citation, ewald_citation
 
    if (config%verbosity > 1) then
       call header(output_unit)
@@ -233,15 +233,32 @@ subroutine run_driver(config, error)
       end if
    end if
 
-   call new_d3_model(d3, mol, ghost=config%ghost)
+   if (config%ewald .and. config%pair_resolved) then
+      call fatal_error(error, "Pairwise analysis is only available for the real space summation")
+      return
+   end if
+
+   if (config%ewald .and. .not.all(mol%periodic)) then
+      call fatal_error(error, "Ewald summation requires three-dimensional "//&
+         & "periodic boundary conditions")
+      return
+   end if
+
+   if (config%ewald) then
+      call new_d3_model(d3, mol, ghost=config%ghost, citation=ewald_citation, &
+         & lowrank=d3_lowrank_config(kcut=config%ewald_kcut))
+   else
+      call new_d3_model(d3, mol, ghost=config%ghost)
+   end if
 
    if (config%properties) then
       call property_calc(output_unit, mol, d3, config%verbosity)
    end if
 
    if (allocated(param)) then
-      call get_dispersion(mol, d3, param, realspace_cutoff(), energies, &
+      call get_dispersion(error, mol, d3, param, realspace_cutoff(), energies, &
          & gradient, sigma, hessian)
+      if (allocated(error)) return
       if (config%gcp) then
          call get_geometric_counterpoise(mol, gcp, realspace_cutoff(), energies, gradient, sigma)
          if (config%hessian) then
@@ -314,6 +331,10 @@ subroutine run_driver(config, error)
       end if
       call format_bibtex(output, param_citation)
       if (allocated(output)) write(unit, "(a)") output
+      if (is_citation_present(ewald_citation)) then
+         call format_bibtex(output, ewald_citation)
+         if (allocated(output)) write(unit, "(a)") output
+      end if
       close(unit)
       if (config%verbosity > 0) then
          write(output_unit, "(a)") &

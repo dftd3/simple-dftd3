@@ -26,6 +26,17 @@ Overall five classes of objects are provided by the library
    Generally, all quantities provided to the library are assumed to be in `atomic units <https://en.wikipedia.org/wiki/Hartree_atomic_units>`_.
 
 
+Global API queries
+------------------
+
+.. c:function:: int dftd3_get_version();
+
+   :returns: Version of the library as ``major * 10000 + minor * 100 + patch``
+
+   Query the version of the linked library, which allows to check for the
+   availability of an API feature at runtime.
+
+
 Error handling
 --------------
 
@@ -144,6 +155,44 @@ Recreating a structure object requires to recreate the dispersion model as well.
 
    Set realspace cutoffs and optional smoothing widths for usage in the dispersion calculation.
    Smoothing is active for a contribution when the corresponding width is larger than zero.
+
+.. c:function:: void dftd3_set_model_ghost_index(dftd3_error error, dftd3_model model, const int* ghost, int nidx);
+
+   :param error: Error handle
+   :param model: Dispersion model handle
+   :param ghost: Indices of the atoms to exclude [nidx]
+   :param nidx: Number of excluded atoms
+
+   Disable the dispersion contribution of the selected atoms, which allows to
+   evaluate the dispersion energy of a fragment in the basis of the full system.
+   The atom indices are zero-based in the C API, while the Fortran API and the
+   command line interface use one-based indices.
+   Indices outside of the structure are reported in the error handle.
+
+.. c:function:: void dftd3_set_model_ewald(dftd3_error error, dftd3_model model, int rank, double tolerance, double kcut);
+
+   :param error: Error handle
+   :param model: Dispersion model handle
+   :param rank: Rank of the separable expansion of the C6 coefficients
+   :param tolerance: Maximum relative error of the reconstructed reference C6 coefficients
+   :param kcut: Reciprocal space cutoff in inverse Bohr
+
+   Evaluate the two-body dispersion energy by summation over the reciprocal lattice.
+   This removes the truncation error of the real space summation, which decays only
+   with the third power of the cutoff radius, and makes the two-body cutoff set by
+   :c:func:`dftd3_set_model_realspace_cutoff` irrelevant.
+   The three-body contribution is still evaluated in real space.
+
+   Requires three-dimensional periodic boundary conditions and a damping function
+   with a known reciprocal space representation, currently the rational and the zero
+   damping function.
+   Any other damping function is rejected when the dispersion energy is evaluated.
+
+   Non-positive arguments select the respective default.
+   A vanishing rank derives the rank of the expansion from the tolerance, and a
+   vanishing reciprocal cutoff derives it from the damping radii.
+
+   See :doc:`../guide/accuracy` for the accuracy of both summation techniques.
 
 .. c:function:: void dftd3_delete_model(dftd3_model* disp);
 
@@ -375,6 +424,9 @@ To evaluate dispersion energies or related properties the :c:func:`dftd3_get_dis
    :param sigma: Dispersion strain derivatives [3, 3] (optional)
 
    Evaluate the dispersion energy and its derivatives.
+   A model set up for the reciprocal space summation with
+   :c:func:`dftd3_set_model_ewald` requires a damping function supporting it,
+   an inconsistent setup is reported in the error handle.
 
 .. c:function:: void dftd3_get_pairwise_dispersion(dftd3_error error, dftd3_structure mol, dftd3_model disp, dftd3_param param, double* pair_energy2, double* pair_energy3);
 

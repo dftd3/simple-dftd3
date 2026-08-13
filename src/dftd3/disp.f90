@@ -36,6 +36,7 @@ module dftd3_disp
       module procedure :: get_dispersion_atomic
       module procedure :: get_dispersion_scalar
       module procedure :: get_dispersion_error
+      module procedure :: get_dispersion_scalar_error
    end interface get_dispersion
 
 contains
@@ -297,6 +298,51 @@ subroutine get_dispersion_scalar(mol, disp, param, cutoff, energy, gradient, sig
    energy = sum(energies)
 
 end subroutine get_dispersion_scalar
+
+
+!> Calculate scalar dispersion energy, reporting an inconsistent setup.
+subroutine get_dispersion_scalar_error(error, mol, disp, param, cutoff, energy, &
+      & gradient, sigma, hessian)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d3_model), intent(in) :: disp
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Dispersion energy
+   real(wp), intent(out) :: energy
+
+   !> Dispersion gradient
+   real(wp), intent(out), contiguous, optional :: gradient(:, :)
+
+   !> Dispersion virial
+   real(wp), intent(out), contiguous, optional :: sigma(:, :)
+
+   !> Dispersion hessian
+   real(wp), intent(out), contiguous, optional :: hessian(:, :)
+
+   real(wp), allocatable :: energies(:)
+
+   allocate(energies(mol%nat))
+   energy = 0.0_wp
+
+   call get_dispersion_error(error, mol, disp, param, cutoff, energies, &
+      & gradient, sigma, hessian)
+   if (allocated(error)) return
+
+   energy = sum(energies)
+
+end subroutine get_dispersion_scalar_error
 
 
 !> Wrapper to handle the evaluation of pairwise representation of the dispersion energy

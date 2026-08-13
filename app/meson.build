@@ -43,6 +43,18 @@ if os != 'windows'
   test('gcp-hessian', sdftd3_exe,
     args: ['gcp', '-l', 'hf3c', '--hessian', '--nocpc', files('example.xyz')],
     suite: 'app')
+  test('ewald', sdftd3_exe,
+    args: ['--bj', 'pbe', '--ewald', '--noedisp', files('example.poscar')],
+    suite: 'app')
+  test('ewald-kcut', sdftd3_exe,
+    args: ['--bj', 'pbe', '--ewald-kcut', '8.0', '--noedisp', files('example.poscar')],
+    suite: 'app')
+  test('ewald-molecular', sdftd3_exe,
+    args: ['--bj', 'pbe', '--ewald', '--noedisp', files('example.xyz')],
+    should_fail: true, suite: 'app')
+  test('ewald-unsupported', sdftd3_exe,
+    args: ['--zerom', 'pbe', '--ewald', '--noedisp', files('example.poscar')],
+    should_fail: true, suite: 'app')
   test('param-all', sdftd3_exe, args: ['param', sdftd3_parameters], suite: 'app')
   test('param-select', sdftd3_exe, args: ['param', sdftd3_parameters, 'b2plyp'], suite: 'app')
 endif

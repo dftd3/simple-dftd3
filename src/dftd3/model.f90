@@ -66,6 +66,9 @@ module dftd3_model
       !> Generate weights for all reference systems
       procedure :: weight_references
 
+      !> Set up a separable low-rank representation of the C6 coefficients
+      procedure :: set_lowrank
+
       !> Evaluate C6 coefficient
       procedure :: get_atomic_c6
 
@@ -170,12 +173,26 @@ subroutine new_d3_model(self, mol, wf, ghost, lowrank, citation)
    end if
 
    if (present(lowrank)) then
-      allocate(self%lowrank)
-      call new_lowrank_c6(self%lowrank, self%ref, self%c6, lowrank)
+      call self%set_lowrank(lowrank)
       if (present(citation)) citation = get_citation(doi_fourier_d3)
    end if
 
 end subroutine new_d3_model
+
+
+!> Set up a separable low-rank representation of the reference C6 coefficients
+subroutine set_lowrank(self, config)
+
+   !> Instance of the dispersion model
+   class(d3_model), intent(inout) :: self
+
+   !> Setup of the separable representation
+   type(d3_lowrank_config), intent(in) :: config
+
+   if (.not.allocated(self%lowrank)) allocate(self%lowrank)
+   call new_lowrank_c6(self%lowrank, self%ref, self%c6, config)
+
+end subroutine set_lowrank
 
 
 !> Calculate the weights of the reference system and the derivatives w.r.t.
