@@ -7,5 +7,6 @@ This section contains guides on how to use D3 for your applications.
 
    minimal-example
    pbc
+   partition
    accuracy
    citing
