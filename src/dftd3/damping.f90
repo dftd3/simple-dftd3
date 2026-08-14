@@ -20,6 +20,7 @@ module dftd3_damping
    use dftd3_fourier_kernel, only : fourier_term, max_fourier_terms, &
       & is_supported_term, get_reciprocal_cutoff
    use dftd3_model, only : d3_model
+   use dftd3_partition, only : work_partition, owns_pair
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type
    implicit none
@@ -95,8 +96,9 @@ module dftd3_damping
 
       !> Evaluation of the three-body contribution to the hessian
       subroutine dispersion3_hessian_interface(self, mol, trans, cutoff, width, rvdw, &
-            & r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
-         import :: structure_type, damping_param, wp
+            & r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn, &
+            & partition)
+         import :: structure_type, damping_param, work_partition, wp
 
          !> Damping parameters
          class(damping_param), intent(in) :: self
@@ -136,13 +138,16 @@ module dftd3_damping
 
          !> Second derivative w.r.t. the coordination numbers
          real(wp), intent(inout) :: dEdcndcn(:, :)
+
+         !> Work partition of the atom pairs, defaults to the complete work
+         type(work_partition), intent(in), optional :: partition
       end subroutine dispersion3_hessian_interface
 
 
       !> Evaluation of the dispersion energy expression
       subroutine dispersion_interface(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
-            & energy, dEdcn, gradient, sigma)
-         import :: structure_type, damping_param, wp
+            & energy, dEdcn, gradient, sigma, partition)
+         import :: structure_type, damping_param, work_partition, wp
 
          !> Damping parameters
          class(damping_param), intent(in) :: self
@@ -182,6 +187,9 @@ module dftd3_damping
 
          !> Dispersion virial
          real(wp), intent(inout), optional :: sigma(:, :)
+
+         !> Work partition of the atom pairs, defaults to the complete work
+         type(work_partition), intent(in), optional :: partition
       end subroutine dispersion_interface
 
 
@@ -274,7 +282,7 @@ contains
    !> Requires a separable representation of the C6 coefficients in the dispersion
    !> model and a damping function supporting the Ewald summation.
    subroutine get_dispersion2_ewald(self, mol, disp, gwvec, gwdcn, energies, &
-         & dEdcn, gradient, sigma, error)
+         & dEdcn, gradient, sigma, error, partition)
 
       !> Damping parameters
       class(damping_param), intent(in) :: self
@@ -306,6 +314,9 @@ contains
       !> Error handling
       type(error_type), allocatable, intent(out) :: error
 
+      !> Work partition of the reciprocal space summation
+      type(work_partition), intent(in), optional :: partition
+
       integer :: isp, jsp, it
       real(wp) :: kcut
       integer, allocatable :: nterm(:, :)
@@ -336,7 +347,7 @@ contains
       if (disp%lowrank%kcut > 0.0_wp) kcut = disp%lowrank%kcut
 
       call get_dispersion_ewald(mol, disp%lowrank, disp%ghost, terms, nterm, kcut, &
-         & gwvec, gwdcn, energies, dEdcn, gradient, sigma)
+         & gwvec, gwdcn, energies, dEdcn, gradient, sigma, partition)
 
    end subroutine get_dispersion2_ewald
 
@@ -347,7 +358,7 @@ contains
    !> together with the derivatives w.r.t. the coordination number, which are
    !> contracted with the coordination number derivatives by the caller.
    subroutine get_dispersion2_hessian(self, mol, trans, cutoff, width, rvdw, r4r2, &
-         & c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
+         & c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn, partition)
 
       !> Damping parameters
       class(damping_param), intent(in) :: self
@@ -388,6 +399,9 @@ contains
       !> Second derivative w.r.t. the coordination numbers
       real(wp), intent(inout) :: dEdcndcn(:, :)
 
+      !> Work partition of the atom pairs
+      type(work_partition), intent(in), optional :: partition
+
       integer :: iat, jat, izp, jzp, jtr, ic, jc, ii, jj, ia, ib, nc
       integer :: cnat(2)
       real(wp) :: vec(3), r2, cutoff2, c6ij, fac
@@ -402,6 +416,7 @@ contains
       do iat = 1, mol%nat
          izp = mol%id(iat)
          do jat = 1, iat
+            if (.not.owns_pair(partition, iat, jat)) cycle
             jzp = mol%id(jat)
             c6ij = c6(jat, iat)
             if (iat /= jat) then
@@ -492,6 +507,8 @@ contains
 
 
    !> Evaluation of the dispersion energy expression
+   !>
+   !> deprecated: removed with the v2 API, use the interface with an explicit width
    subroutine get_dispersion2_compat(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
          & energy, dEdcn, gradient, sigma)
 
@@ -537,6 +554,8 @@ contains
 
 
    !> Evaluation of the dispersion energy expression
+   !>
+   !> deprecated: removed with the v2 API, use the interface with an explicit width
    subroutine get_dispersion3_compat(self, mol, trans, cutoff, rvdw, r4r2, c6, dc6dcn, &
          & energy, dEdcn, gradient, sigma)
 
@@ -582,6 +601,8 @@ contains
 
 
    !> Evaluation of the pairwise representation of the dispersion energy
+   !>
+   !> deprecated: removed with the v2 API, use the interface with an explicit width
    subroutine get_pairwise_dispersion2_compat(self, mol, trans, cutoff, rvdw, r4r2, c6, &
          & energy)
 
@@ -614,6 +635,8 @@ contains
 
 
    !> Evaluation of the pairwise representation of the dispersion energy
+   !>
+   !> deprecated: removed with the v2 API, use the interface with an explicit width
    subroutine get_pairwise_dispersion3_compat(self, mol, trans, cutoff, rvdw, r4r2, c6, &
          & energy)
 

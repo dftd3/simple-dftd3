@@ -38,6 +38,7 @@ module dftd3_api
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
       & get_cso_damping, get_z_damping
+   use dftd3_partition, only : work_partition, new_work_partition
    use dftd3_utils, only : wrap_to_central_cell
    use dftd3_version, only : get_dftd3_version
    use mctc_env, only : wp, error_type, fatal_error
@@ -54,7 +55,7 @@ module dftd3_api
    public :: new_structure_api, delete_structure_api, update_structure_api
 
    public :: set_model_realspace_cutoff, set_model_realspace_cutoff_smooth
-   public :: set_model_ewald
+   public :: set_model_ewald, set_model_work_partition
    public :: get_dispersion_api, get_pairwise_dispersion_api
    public :: get_dispersion_hessian_api
    public :: vp_model
@@ -72,6 +73,7 @@ module dftd3_api
 
    public :: vp_gcp
    public :: load_gcp_param_api, delete_gcp_api, set_gcp_realspace_cutoff
+   public :: set_gcp_work_partition
    public :: get_counterpoise_api
    public :: get_counterpoise_hessian_api
 
@@ -94,6 +96,8 @@ module dftd3_api
       type(d3_model) :: ptr
       !> Additional real space cutoff
       type(realspace_cutoff), allocatable :: cutoff
+      !> Work partition of the interaction loops
+      type(work_partition) :: partition
    end type vp_model
 
    !> Void pointer to damping parameters
@@ -108,6 +112,8 @@ module dftd3_api
       type(gcp_param) :: ptr
       !> Additional real space cutoff
       type(realspace_cutoff), allocatable :: cutoff
+      !> Work partition of the interaction loops
+      type(work_partition) :: partition
    end type vp_gcp
 
 
@@ -331,6 +337,9 @@ function new_d3_model_api(verror, vmol) &
 end function new_d3_model_api
 
 
+!> Set realspace cutoffs
+!>
+!> deprecated: removed with the v2 API, use set_model_realspace_cutoff_smooth
 subroutine set_model_realspace_cutoff(verror, vdisp, disp2, disp3, cn) &
       & bind(C, name=namespace//"set_model_realspace_cutoff")
    type(c_ptr), value :: verror
@@ -413,6 +422,32 @@ subroutine set_model_ewald(verror, vdisp, rank, tolerance, kcut) &
 
    call disp%ptr%set_lowrank(config)
 end subroutine set_model_ewald
+
+
+!> Assign an externally managed part of the interaction loops to this model.
+!>
+!> Parts are zero based, summing the results of all parts reproduces the
+!> complete calculation.
+subroutine set_model_work_partition(verror, vdisp, part, nparts) &
+      & bind(C, name=namespace//"set_model_work_partition")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   integer(c_int), value, intent(in) :: part
+   integer(c_int), value, intent(in) :: nparts
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "D3 dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   call new_work_partition(error%ptr, disp%partition, int(part), int(nparts))
+end subroutine set_model_work_partition
 
 
 subroutine set_model_ghost_index(verror, vdisp, ghost, nidx) &
@@ -1001,7 +1036,7 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
       cutoff = disp%cutoff
    end if
    call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
-      & energy, gradient, sigma)
+      & energy, gradient, sigma, partition=disp%partition)
    if (allocated(error%ptr)) return
 
    if (present(c_gradient)) then
@@ -1067,7 +1102,7 @@ subroutine get_dispersion_hessian_api(verror, vmol, vdisp, vparam, &
       cutoff = disp%cutoff
    end if
    call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
-      & energy, hessian=hessian)
+      & energy, hessian=hessian, partition=disp%partition)
    if (allocated(error%ptr)) return
 
    c_hessian(:ndim*ndim) = reshape(hessian, [ndim*ndim])
@@ -1190,6 +1225,32 @@ subroutine set_gcp_realspace_cutoff(verror, vgcp, bas, srb) &
 end subroutine set_gcp_realspace_cutoff
 
 
+!> Assign an externally managed part of the interaction loops to these parameters.
+!>
+!> Parts are zero based, summing the results of all parts reproduces the
+!> complete calculation.
+subroutine set_gcp_work_partition(verror, vgcp, part, nparts) &
+      & bind(C, name=namespace//"set_gcp_work_partition")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vgcp
+   type(vp_gcp), pointer :: gcp
+   integer(c_int), value, intent(in) :: part
+   integer(c_int), value, intent(in) :: nparts
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vgcp)) then
+      call fatal_error(error%ptr, "Counter-poise parameters are missing")
+      return
+   end if
+   call c_f_pointer(vgcp, gcp)
+
+   call new_work_partition(error%ptr, gcp%partition, int(part), int(nparts))
+end subroutine set_gcp_work_partition
+
+
 !> Delete counter-poise parameter handle object
 subroutine delete_gcp_api(vgcp) &
       & bind(C, name=namespace//"delete_gcp")
@@ -1252,7 +1313,7 @@ subroutine get_counterpoise_api(verror, vmol, vgcp, &
    end if
    energy = 0.0_wp
    call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, &
-      & energy, gradient, sigma)
+      & energy, gradient, sigma, gcp%partition)
 
    if (present(c_gradient)) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -1304,8 +1365,8 @@ subroutine get_counterpoise_hessian_api(verror, vmol, vgcp, &
       cutoff = gcp%cutoff
    end if
    energy = 0.0_wp
-   call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, energy)
-   call get_geometric_counterpoise_hessian(mol%ptr, gcp%ptr, cutoff, hessian)
+   call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, energy, partition=gcp%partition)
+   call get_geometric_counterpoise_hessian(mol%ptr, gcp%ptr, cutoff, hessian, gcp%partition)
 
    c_hessian(:ndim*ndim) = reshape(hessian, [ndim*ndim])
 

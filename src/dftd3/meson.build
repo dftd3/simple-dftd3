@@ -31,6 +31,7 @@ srcs += files(
   'ncoord.f90',
   'output.f90',
   'param.f90',
+  'partition.f90',
   'reference.f90',
   'utils.f90',
   'version.f90',

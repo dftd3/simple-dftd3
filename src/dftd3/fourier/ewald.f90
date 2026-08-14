@@ -29,6 +29,7 @@ module dftd3_fourier_ewald
    use dftd3_fourier_decomposition, only : d3_lowrank_c6
    use dftd3_fourier_kernel, only : fourier_term, get_fourier_transform, &
       & get_potential_zero
+   use dftd3_partition, only : work_partition, owns_index
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    use mctc_io_constants, only : pi
@@ -44,7 +45,7 @@ contains
 
 !> Evaluate the two-body dispersion energy by summation over the reciprocal lattice
 subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, &
-      & gwdcn, energies, dEdcn, gradient, sigma)
+      & gwdcn, energies, dEdcn, gradient, sigma, partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -82,7 +83,11 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
+   !> Work partition of the reciprocal space summation
+   type(work_partition), intent(in), optional :: partition
+
    logical :: grad
+   type(work_partition) :: part
    integer :: nat, nid, rank, nk, ik, iat, izp, jzp, il, it, ic
    real(wp) :: vol, rec(3, 3), kvec(3), knorm, kr, erecip, phi, dphi, pval, dpval
    real(wp) :: qq, zre, zim
@@ -118,26 +123,29 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    allocate(gsum(3, nat), source=0.0_wp)
    allocate(ssum(3, 3), source=0.0_wp)
 
-   do iat = 1, nat
-      izp = mol%id(iat)
-      pval = 0.0_wp
-      do it = 1, nterm(izp, izp)
-         pval = pval + get_potential_zero(terms(it, izp, izp))
+   ! the self interaction is not partitioned, the first part removes it in full
+   if (owns_index(partition, 1)) then
+      do iat = 1, nat
+         izp = mol%id(iat)
+         pval = 0.0_wp
+         do it = 1, nterm(izp, izp)
+            pval = pval + get_potential_zero(terms(it, izp, izp))
+         end do
+         do il = 1, rank
+            esum(iat) = esum(iat) &
+               & + 0.5_wp * lowrank%lambda(il) * c6l(il, iat)**2 * pval
+            dsum(iat) = dsum(iat) &
+               & + lowrank%lambda(il) * c6l(il, iat) * dc6ldcn(il, iat) * pval
+         end do
       end do
-      do il = 1, rank
-         esum(iat) = esum(iat) &
-            & + 0.5_wp * lowrank%lambda(il) * c6l(il, iat)**2 * pval
-         dsum(iat) = dsum(iat) &
-            & + lowrank%lambda(il) * c6l(il, iat) * dc6ldcn(il, iat) * pval
-      end do
-   end do
+   end if
 
    ! everything added to esum past this point is the reciprocal space energy
    erecip = -sum(esum)
 
    !$omp parallel default(none) &
    !$omp shared(mol, lowrank, terms, nterm, kcut, kpoints, nk, nat, nid, rank, &
-   !$omp& c6l, dc6ldcn, vol, grad, esum, dsum, gsum, ssum) &
+   !$omp& c6l, dc6ldcn, vol, grad, partition, esum, dsum, gsum, ssum) &
    !$omp private(ik, iat, izp, jzp, il, it, ic, kvec, knorm, kr, phi, dphi, &
    !$omp& pval, dpval, qq, zval, zre, zim, phihat, dphihat, phase, sf, fvec, &
    !$omp& energies_local, dEdcn_local, gradient_local, sigma_local)
@@ -150,6 +158,7 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
 
    !$omp do schedule(runtime)
    do ik = 1, nk
+      if (.not.owns_index(partition, ik)) cycle
       kvec(:) = kpoints(:, ik)
       knorm = norm2(kvec)
       if (knorm > kcut) cycle

@@ -21,6 +21,7 @@ module dftd3_damping_zero
       & get_atm_dispersion_hessian
    use dftd3_fourier_kernel, only : fourier_term
    use dftd3_param, only : d3_param
+   use dftd3_partition, only : work_partition, owns_pair
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -223,7 +224,7 @@ end subroutine get_damping_kernel
 
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion2(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energy, dEdcn, gradient, sigma, partition)
 
    !> Damping parameters
    class(zero_damping_param), intent(in) :: self
@@ -264,6 +265,9 @@ subroutine get_dispersion2(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6d
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
+   !> Work partition of the atom pairs, defaults to the complete work
+   type(work_partition), intent(in), optional :: partition
+
    logical :: grad
 
    if (abs(self%s6) < epsilon(1.0_wp) .and. abs(self%s8) < epsilon(1.0_wp)) return
@@ -272,16 +276,18 @@ subroutine get_dispersion2(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6d
 
    if (grad) then
       call get_dispersion_derivs(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energy, dEdcn, gradient, sigma, partition)
    else
-      call get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy)
+      call get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy, &
+      & partition)
    end if
 
 end subroutine get_dispersion2
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy)
+subroutine get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6, energy, &
+      & partition)
 
    !> Damping parameters
    class(zero_damping_param), intent(in) :: self
@@ -310,6 +316,9 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    integer :: iat, jat, izp, jzp, jtr
    real(wp) :: vec(3), r2, r1, r6, r8, t6, t8, f6, f8, alp6, alp8
    real(wp) :: edisp, cutoff2, r0ij, rrij, c6ij, dE
@@ -324,9 +333,10 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6
    alp8 = self%alp + 2.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, self, c6, trans, cutoff2, cutoff, width, alp6, alp8, rvdw, r4r2) &
-   !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r1, r6, r8, t6, t8, f6, &
-   !$omp& f8, edisp, r0ij, rrij, c6ij, dE, rs6r0, rs8r0, sw, dswdr) &
+   !$omp shared(mol, self, c6, trans, cutoff2, cutoff, width, alp6, alp8, rvdw, r4r2, &
+   !$omp& partition) &
+   !$omp private(iat, jat, izp, jzp, jtr, vec, r2, r1, r6, r8, t6, t8, f6, f8, &
+   !$omp& edisp, r0ij, rrij, c6ij, dE, rs6r0, rs8r0, sw, dswdr) &
    !$omp shared(energy) &
    !$omp private(energy_local)
    allocate(energy_local(size(energy, 1)), source=0.0_wp)
@@ -334,6 +344,7 @@ subroutine get_dispersion_energy(self, mol, trans, cutoff, width, rvdw, r4r2, c6
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = rvdw(jzp, izp)
@@ -379,7 +390,7 @@ end subroutine get_dispersion_energy
 
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energy, dEdcn, gradient, sigma, partition)
 
    !> Damping parameters
    class(zero_damping_param), intent(in) :: self
@@ -420,6 +431,9 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, rvdw, r4r2, c6
    !> Dispersion virial
    real(wp), intent(inout) :: sigma(:, :)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    integer :: iat, jat, izp, jzp, jtr, ic, jc
    real(wp) :: vec(3), r2, r1, r6, r8, t6, t8, d6, d8, f6, f8, alp6, alp8
    real(wp) :: edisp0, gdisp0, edisp, gdisp, cutoff2, r0ij, rrij, c6ij, dE, dG(3), dS(3, 3)
@@ -437,7 +451,8 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, rvdw, r4r2, c6
    alp8 = self%alp + 2.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, cutoff, width, alp6, alp8, r4r2, rvdw) &
+   !$omp shared(mol, self, c6, dc6dcn, trans, cutoff2, cutoff, width, alp6, alp8, r4r2, &
+   !$omp& rvdw, partition) &
    !$omp private(iat, jat, izp, jzp, jtr, ic, jc, vec, r2, r1, r6, r8, t6, t8, d6, &
    !$omp& d8, f6, f8, edisp0, gdisp0, edisp, gdisp, r0ij, rrij, c6ij, dE, &
    !$omp& dG, dS, rs6r0, rs8r0, sw, dswdr) &
@@ -451,6 +466,7 @@ subroutine get_dispersion_derivs(self, mol, trans, cutoff, width, rvdw, r4r2, c6
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          rrij = 3*r4r2(izp)*r4r2(jzp)
          r0ij = rvdw(jzp, izp)
@@ -522,7 +538,7 @@ end subroutine get_dispersion_derivs
 
 !> Evaluation of the dispersion energy expression
 subroutine get_dispersion3(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energy, dEdcn, gradient, sigma, partition)
 
    !> Damping parameters
    class(zero_damping_param), intent(in) :: self
@@ -563,15 +579,18 @@ subroutine get_dispersion3(self, mol, trans, cutoff, width, rvdw, r4r2, c6, dc6d
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
+   !> Work partition of the atom pairs, defaults to the complete work
+   type(work_partition), intent(in), optional :: partition
+
    call get_atm_dispersion(mol, trans, cutoff, width, self%s9, rs9, self%alp+2, &
-      & rvdw, c6, dc6dcn, energy, dEdcn, gradient, sigma)
+      & rvdw, c6, dc6dcn, energy, dEdcn, gradient, sigma, partition)
 
 end subroutine get_dispersion3
 
 
 !> Evaluation of the three-body contribution to the hessian
 subroutine get_dispersion3_hessian(self, mol, trans, cutoff, width, rvdw, &
-      & r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
+      & r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn, partition)
 
    !> Damping parameters
    class(zero_damping_param), intent(in) :: self
@@ -612,8 +631,12 @@ subroutine get_dispersion3_hessian(self, mol, trans, cutoff, width, rvdw, &
    !> Second derivative w.r.t. the coordination numbers
    real(wp), intent(inout) :: dEdcndcn(:, :)
 
+   !> Work partition of the atom pairs, defaults to the complete work
+   type(work_partition), intent(in), optional :: partition
+
    call get_atm_dispersion_hessian(mol, trans, cutoff, width, self%s9, rs9, self%alp+2, &
-      & rvdw, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
+      & rvdw, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn, &
+      & partition)
 
 end subroutine get_dispersion3_hessian
 

@@ -34,6 +34,7 @@ list(
   "${dir}/ncoord.f90"
   "${dir}/output.f90"
   "${dir}/param.f90"
+  "${dir}/partition.f90"
   "${dir}/reference.f90"
   "${dir}/utils.f90"
   "${dir}/version.f90"

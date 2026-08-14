@@ -564,6 +564,18 @@ class DispersionModel(Structure):
 
         library.set_model_ghost_index(self._disp, np.asarray(ghost_atoms, dtype="i4"))
 
+    def set_work_partition(self, part: int, nparts: int) -> None:
+        """
+        Assign an externally managed part of the interaction loops to this model.
+
+        Parts are zero based, summing the results of all parts reproduces the
+        complete calculation. Structure dependent quantities are evaluated for
+        the full system on every part, only the pairwise, three-body and
+        reciprocal space loops are partitioned.
+        """
+
+        library.set_model_work_partition(self._disp, part, nparts)
+
     def get_dispersion(self, param: DampingParam, grad: bool) -> dict:
         """Perform actual evaluation of the dispersion correction"""
 
@@ -664,6 +676,17 @@ class GeometricCounterpoise(Structure):
 
         library.set_gcp_realspace_cutoff(self._gcp, bas, srb)
 
+    def set_work_partition(self, part: int, nparts: int) -> None:
+        """
+        Assign an externally managed part of the interaction loops to these
+        parameters.
+
+        Parts are zero based, summing the results of all parts reproduces the
+        complete calculation.
+        """
+
+        library.set_gcp_work_partition(self._gcp, part, nparts)
+
     def get_counterpoise(self, grad: bool) -> dict:
         """Evaluate the counterpoise corrected interaction energy"""
 
@@ -703,6 +726,10 @@ class GeometricCounterpoise(Structure):
 
 
 def _rename_kwargs(kwargs, old_name, new_name):
+    """Accept the legacy spelling of a damping parameter.
+
+    deprecated: removed with the v2 API, use the documented parameter names
+    """
     if old_name in kwargs and new_name not in kwargs:
         kwargs[new_name] = kwargs[old_name]
         del kwargs[old_name]

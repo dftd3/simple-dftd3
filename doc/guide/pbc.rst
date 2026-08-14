@@ -101,7 +101,7 @@ The same is available from the command line with
 
 .. code-block:: shell
 
-   ❯ s-dftd3 run --ewald --func r2scan structure.poscar
+   ❯ s-dftd3 run --ewald --bj r2scan structure.poscar
 
 Note that the pairwise decomposition and the analytical Hessian are only implemented for the real space summation and are rejected for such a model.
 
