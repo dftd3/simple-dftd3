@@ -1,11 +1,13 @@
 program mpi_partition
    use, intrinsic :: iso_fortran_env, only : r8 => real64
-   use mpi_f08
    use dftd3, only: d3_model, d3_param, rational_damping_param, get_rational_damping, &
       & new_rational_damping, new_d3_model, get_dispersion, realspace_cutoff, &
       & work_partition, new_work_partition
    use mctc_env, only: error_type
    use mctc_io, only: structure_type, new
+   use mpi_f08, only : MPI_COMM_WORLD, MPI_DOUBLE_PRECISION, MPI_IN_PLACE, MPI_SUM, &
+      & MPI_Abort, MPI_Finalize, MPI_Init, MPI_Comm_rank, MPI_Comm_size, &
+      & MPI_Allreduce
    implicit none
 
    character(len=:), allocatable :: method
