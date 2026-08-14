@@ -855,6 +855,189 @@ unexpected:
 }
 
 int
+test_work_partition (void)
+{
+   printf("Start test: work partition\n");
+   static const int nparts = 3;
+   static const int nat = 7;
+   double energy, part_energy, sum_energy;
+   double gradient[21], part_gradient[21], sum_gradient[21];
+   double sigma[9], part_sigma[9], sum_sigma[9];
+   double hessian[441], part_hessian[441], sum_hessian[441];
+   int i, part;
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_model disp = NULL;
+   dftd3_gcp gcp = NULL;
+   dftd3_param param = NULL;
+
+   error = dftd3_new_error();
+   mol = get_test_structure(error);
+   if (dftd3_check_error(error)) return 1;
+
+   param = dftd3_load_rational_damping(error, "pbe", true);
+   if (dftd3_check_error(error)) return 1;
+
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, sigma);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_dispersion_hessian(error, mol, disp, param, &part_energy, hessian);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_delete(disp);
+
+   sum_energy = 0.0;
+   for (i = 0; i < 3 * nat; i++) sum_gradient[i] = 0.0;
+   for (i = 0; i < 9; i++) sum_sigma[i] = 0.0;
+   for (i = 0; i < 9 * nat * nat; i++) sum_hessian[i] = 0.0;
+
+   for (part = 0; part < nparts; part++) {
+      disp = dftd3_new_d3_model(error, mol);
+      if (dftd3_check_error(error)) return 1;
+      dftd3_set_model_work_partition(error, disp, part, nparts);
+      if (dftd3_check_error(error)) return 1;
+
+      dftd3_get_dispersion(error, mol, disp, param, &part_energy, part_gradient, part_sigma);
+      if (dftd3_check_error(error)) return 1;
+      dftd3_get_dispersion_hessian(error, mol, disp, param, &part_energy, part_hessian);
+      if (dftd3_check_error(error)) return 1;
+      dftd3_delete(disp);
+
+      sum_energy += part_energy;
+      for (i = 0; i < 3 * nat; i++) sum_gradient[i] += part_gradient[i];
+      for (i = 0; i < 9; i++) sum_sigma[i] += part_sigma[i];
+      for (i = 0; i < 9 * nat * nat; i++) sum_hessian[i] += part_hessian[i];
+   }
+
+   if (fabs(sum_energy - energy) > 1.0e-12) {
+      printf("[Fatal] Partitioned dispersion energy does not match\n");
+      return 1;
+   }
+   for (i = 0; i < 3 * nat; i++) {
+      if (fabs(sum_gradient[i] - gradient[i]) > 1.0e-12) {
+         printf("[Fatal] Partitioned dispersion gradient does not match\n");
+         return 1;
+      }
+   }
+   for (i = 0; i < 9; i++) {
+      if (fabs(sum_sigma[i] - sigma[i]) > 1.0e-12) {
+         printf("[Fatal] Partitioned dispersion virial does not match\n");
+         return 1;
+      }
+   }
+   for (i = 0; i < 9 * nat * nat; i++) {
+      if (fabs(sum_hessian[i] - hessian[i]) > 1.0e-12) {
+         printf("[Fatal] Partitioned dispersion hessian does not match\n");
+         return 1;
+      }
+   }
+
+   /* the counterpoise correction carries its own partition */
+   gcp = dftd3_load_gcp_param(error, mol, "hf3c", NULL);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_counterpoise(error, mol, gcp, &energy, gradient, sigma);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_delete(gcp);
+
+   sum_energy = 0.0;
+   for (i = 0; i < 3 * nat; i++) sum_gradient[i] = 0.0;
+   for (part = 0; part < nparts; part++) {
+      gcp = dftd3_load_gcp_param(error, mol, "hf3c", NULL);
+      if (dftd3_check_error(error)) return 1;
+      dftd3_set_gcp_work_partition(error, gcp, part, nparts);
+      if (dftd3_check_error(error)) return 1;
+      dftd3_get_counterpoise(error, mol, gcp, &part_energy, part_gradient, part_sigma);
+      if (dftd3_check_error(error)) return 1;
+      dftd3_delete(gcp);
+
+      sum_energy += part_energy;
+      for (i = 0; i < 3 * nat; i++) sum_gradient[i] += part_gradient[i];
+   }
+
+   if (fabs(sum_energy - energy) > 1.0e-12) {
+      printf("[Fatal] Partitioned counterpoise energy does not match\n");
+      return 1;
+   }
+   for (i = 0; i < 3 * nat; i++) {
+      if (fabs(sum_gradient[i] - gradient[i]) > 1.0e-12) {
+         printf("[Fatal] Partitioned counterpoise gradient does not match\n");
+         return 1;
+      }
+   }
+
+   dftd3_delete(param);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 0;
+}
+
+int
+test_invalid_work_partition (void)
+{
+   printf("Start test: invalid work partition\n");
+
+   dftd3_error error = NULL;
+   dftd3_structure mol = NULL;
+   dftd3_model disp = NULL;
+   dftd3_gcp gcp = NULL;
+   int i;
+
+   /* part index, number of parts */
+   int const invalid[4][2] = {{-1, 3}, {3, 3}, {0, 0}, {1, 1}};
+
+   error = dftd3_new_error();
+   mol = get_test_structure(error);
+   if (dftd3_check_error(error)) return 1;
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   gcp = dftd3_load_gcp_param(error, mol, "hf3c", NULL);
+   if (dftd3_check_error(error)) return 1;
+
+   /* the error handle is not cleared by reading it, use a fresh one per case */
+   for (i = 0; i < 4; i++) {
+      dftd3_delete(error);
+      error = dftd3_new_error();
+      dftd3_set_model_work_partition(error, disp, invalid[i][0], invalid[i][1]);
+      if (!dftd3_check_error(error)) goto unexpected;
+      show_error(error);
+
+      dftd3_delete(error);
+      error = dftd3_new_error();
+      dftd3_set_gcp_work_partition(error, gcp, invalid[i][0], invalid[i][1]);
+      if (!dftd3_check_error(error)) goto unexpected;
+      show_error(error);
+   }
+
+   /* assigning a partition without a handle has to be reported */
+   dftd3_delete(error);
+   error = dftd3_new_error();
+   dftd3_set_model_work_partition(error, NULL, 0, 1);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   dftd3_delete(error);
+   error = dftd3_new_error();
+   dftd3_set_gcp_work_partition(error, NULL, 0, 1);
+   if (!dftd3_check_error(error)) goto unexpected;
+   show_error(error);
+
+   dftd3_delete(gcp);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 0;
+
+unexpected:
+   printf("[Fatal] Unexpected pass for invalid work partition\n");
+   dftd3_delete(gcp);
+   dftd3_delete(disp);
+   dftd3_delete(mol);
+   dftd3_delete(error);
+   return 1;
+}
+
+int
 main (void)
 {
    int stat = 0;
@@ -874,5 +1057,7 @@ main (void)
    stat += test_ewald();
    stat += test_ewald_unsupported();
    stat += test_ewald_realspace_only();
+   stat += test_work_partition();
+   stat += test_invalid_work_partition();
    return stat;
 }
