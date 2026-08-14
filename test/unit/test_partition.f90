@@ -195,6 +195,8 @@ subroutine make_damping(param, idamp)
          & s6=1.0_wp, s9=1.0_wp, alp=14.0_wp, a1=200770.0_wp, a2=0.0_wp, rs6=0.0_wp, &
          & rs8=6.25_wp))
       param = z
+   case default
+      continue
    end select
 
 end subroutine make_damping
