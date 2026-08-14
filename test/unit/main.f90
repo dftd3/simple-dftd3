@@ -28,6 +28,7 @@ program tester
    use test_output, only : collect_output
    use test_pairwise, only : collect_pairwise
    use test_param, only : collect_param
+   use test_partition, only : collect_partition
    use test_periodic_1d, only : collect_periodic_1d
    use test_periodic_2d, only : collect_periodic_2d
    use test_periodic_3d, only : collect_periodic_3d
@@ -48,6 +49,7 @@ program tester
       & new_testsuite("hessian", collect_hessian), &
       & new_testsuite("param", collect_param), &
       & new_testsuite("pairwise", collect_pairwise), &
+      & new_testsuite("partition", collect_partition), &
       & new_testsuite("periodic_1d", collect_periodic_1d), &
       & new_testsuite("periodic_2d", collect_periodic_2d), &
       & new_testsuite("periodic_3d", collect_periodic_3d), &

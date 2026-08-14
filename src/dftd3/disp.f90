@@ -21,6 +21,7 @@ module dftd3_disp
    use dftd3_model, only : d3_model
    use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs, &
       & add_coordination_number_hessian
+   use dftd3_partition, only : work_partition
    use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type
@@ -35,14 +36,14 @@ module dftd3_disp
    interface get_dispersion
       module procedure :: get_dispersion_atomic
       module procedure :: get_dispersion_scalar
-      module procedure :: get_dispersion_error
-      module procedure :: get_dispersion_scalar_error
+      module procedure :: get_dispersion_atomic_v2
+      module procedure :: get_dispersion_scalar_v2
    end interface get_dispersion
 
    !> Calculate pairwise representation of the dispersion energy
    interface get_pairwise_dispersion
-      module procedure :: get_pairwise_dispersion_plain
-      module procedure :: get_pairwise_dispersion_error
+      module procedure :: get_pairwise_dispersion
+      module procedure :: get_pairwise_dispersion_v2
    end interface get_pairwise_dispersion
 
 contains
@@ -52,8 +53,8 @@ contains
 !>
 !> The dispersion model and the damping parameters have to agree on the summation
 !> technique, an inconsistent setup is reported in the error handler.
-subroutine get_dispersion_error(error, mol, disp, param, cutoff, energies, &
-      & gradient, sigma, hessian)
+subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
+      & gradient, sigma, hessian, partition)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -81,6 +82,9 @@ subroutine get_dispersion_error(error, mol, disp, param, cutoff, energies, &
 
    !> Dispersion hessian
    real(wp), intent(out), contiguous, optional :: hessian(:, :)
+
+   !> Work partition of the interaction loops, see dftd3_partition
+   type(work_partition), intent(in), optional :: partition
 
    logical :: grad, hess, ewald
    integer :: mref
@@ -133,16 +137,18 @@ subroutine get_dispersion_error(error, mol, disp, param, cutoff, energies, &
    end if
    if (ewald) then
       call param%get_dispersion2_ewald(mol, disp, gwvec, gwdcn, energies, dEdcn, &
-         & gradient_local, sigma_local, error)
+         & gradient_local, sigma_local, error, partition)
       if (allocated(error)) return
    else
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
-      call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, disp%rvdw, &
-         & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
+      call param%get_dispersion2(mol, lattr, cutoff%disp2, cutoff%width2, &
+         & disp%rvdw, disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, &
+         & sigma_local, partition)
    end if
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-    call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, disp%rvdw, &
-       & disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, sigma_local)
+   call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
+      & disp%rvdw, disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, &
+      & sigma_local, partition)
    if (grad) then
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
       call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
@@ -151,13 +157,15 @@ subroutine get_dispersion_error(error, mol, disp, param, cutoff, energies, &
       if (present(sigma)) sigma(:, :) = sigma_local(:, :)
    end if
    if (hess) then
-      call get_dispersion_hessian(mol, disp, param, cutoff, hessian)
+      call get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition)
    end if
 
-end subroutine get_dispersion_error
+end subroutine get_dispersion_atomic_v2
 
 
 !> Calculate atom-resolved dispersion energies.
+!>
+!> deprecated: removed with the v2 API, use the interface with error handling
 subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, sigma, hessian)
 
    !> Molecular structure data
@@ -186,7 +194,7 @@ subroutine get_dispersion_atomic(mol, disp, param, cutoff, energies, gradient, s
 
    type(error_type), allocatable :: error
 
-   call get_dispersion_error(error, mol, disp, param, cutoff, energies, &
+   call get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
       & gradient, sigma, hessian)
 
    ! this interface cannot propagate the inconsistent setup to the caller
@@ -203,7 +211,7 @@ end subroutine get_dispersion_atomic
 !> The energy depends on the coordinates directly and through the coordination
 !> number. Both contributions are accumulated separately and the coordination
 !> number part is contracted with dCN/dR afterwards.
-subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian)
+subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian, partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -219,6 +227,9 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian)
 
    !> Dispersion hessian
    real(wp), intent(out) :: hessian(:, :)
+
+   !> Work partition of the interaction loops
+   type(work_partition), intent(in), optional :: partition
 
    integer :: mref, nat, ndim, iat, ic, kat
    real(wp), allocatable :: cn(:), dcndr(:, :, :), dcndL(:, :, :)
@@ -249,12 +260,12 @@ subroutine get_dispersion_hessian(mol, disp, param, cutoff, hessian)
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp2, lattr)
    call get_dispersion2_hessian(param, mol, lattr, cutoff%disp2, cutoff%width2, &
       & disp%rvdw, disp%r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, &
-      & dEdcndr, dEdcndcn)
+      & dEdcndr, dEdcndcn, partition)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_dispersion3_hessian(mol, lattr, cutoff%disp3, cutoff%width3, &
-      & disp%rvdw, disp%r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, &
-      & dEdcndr, dEdcndcn)
+   call param%get_dispersion3_hessian(mol, lattr, cutoff%disp3, &
+      & cutoff%width3, disp%rvdw, disp%r4r2, c6, dc6dcn, d2c6dcn2, d2c6dcnij, &
+      & hessian, dEdcn, dEdcndr, dEdcndcn, partition)
 
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
    call add_coordination_number_hessian(mol, lattr, cutoff%cn, disp%rcov, dEdcn, hessian)
@@ -276,6 +287,8 @@ end subroutine get_dispersion_hessian
 
 
 !> Calculate scalar dispersion energy.
+!>
+!> deprecated: removed with the v2 API, use the interface with error handling
 subroutine get_dispersion_scalar(mol, disp, param, cutoff, energy, gradient, sigma, hessian)
 
    !> Molecular structure data
@@ -314,8 +327,8 @@ end subroutine get_dispersion_scalar
 
 
 !> Calculate scalar dispersion energy, reporting an inconsistent setup.
-subroutine get_dispersion_scalar_error(error, mol, disp, param, cutoff, energy, &
-      & gradient, sigma, hessian)
+subroutine get_dispersion_scalar_v2(error, mol, disp, param, cutoff, energy, &
+      & gradient, sigma, hessian, partition)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -344,22 +357,25 @@ subroutine get_dispersion_scalar_error(error, mol, disp, param, cutoff, energy, 
    !> Dispersion hessian
    real(wp), intent(out), contiguous, optional :: hessian(:, :)
 
+   !> Work partition of the interaction loops, see dftd3_partition
+   type(work_partition), intent(in), optional :: partition
+
    real(wp), allocatable :: energies(:)
 
    allocate(energies(mol%nat))
    energy = 0.0_wp
 
-   call get_dispersion_error(error, mol, disp, param, cutoff, energies, &
-      & gradient, sigma, hessian)
+   call get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
+      & gradient, sigma, hessian, partition)
    if (allocated(error)) return
 
    energy = sum(energies)
 
-end subroutine get_dispersion_scalar_error
+end subroutine get_dispersion_scalar_v2
 
 
 !> Calculate the pairwise representation
-subroutine get_pairwise_dispersion_error(error, mol, disp, param, cutoff, energy2, energy3)
+subroutine get_pairwise_dispersion_v2(error, mol, disp, param, cutoff, energy2, energy3)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -382,40 +398,14 @@ subroutine get_pairwise_dispersion_error(error, mol, disp, param, cutoff, energy
    !> Pairwise representation of non-additive dispersion energy
    real(wp), intent(out) :: energy3(:, :)
 
+   integer :: mref
+   real(wp), allocatable :: cn(:), gwvec(:, :), c6(:, :), lattr(:, :)
+
    if (allocated(disp%lowrank) .and. all(mol%periodic)) then
       call fatal_error(error, "Pairwise analysis is only available for the "//&
          & "real space summation")
       return
    end if
-
-   call get_pairwise_dispersion_plain(mol, disp, param, cutoff, energy2, energy3)
-
-end subroutine get_pairwise_dispersion_error
-
-
-!> Wrapper to handle the evaluation of pairwise representation of the dispersion energy
-subroutine get_pairwise_dispersion_plain(mol, disp, param, cutoff, energy2, energy3)
-
-   !> Molecular structure data
-   class(structure_type), intent(in) :: mol
-
-   !> Dispersion model
-   class(d3_model), intent(in) :: disp
-
-   !> Damping parameters
-   class(damping_param), intent(in) :: param
-
-   !> Realspace cutoffs
-   type(realspace_cutoff), intent(in) :: cutoff
-
-   !> Pairwise representation of additive dispersion energy
-   real(wp), intent(out) :: energy2(:, :)
-
-   !> Pairwise representation of non-additive dispersion energy
-   real(wp), intent(out) :: energy3(:, :)
-
-   integer :: mref
-   real(wp), allocatable :: cn(:), gwvec(:, :), c6(:, :), lattr(:, :)
 
    mref = maxval(disp%ref)
 
@@ -439,7 +429,42 @@ subroutine get_pairwise_dispersion_plain(mol, disp, param, cutoff, energy2, ener
     call param%get_pairwise_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
        & disp%rvdw, disp%r4r2, c6, energy3)
 
-end subroutine get_pairwise_dispersion_plain
+end subroutine get_pairwise_dispersion_v2
+
+
+!> Wrapper to handle the evaluation of pairwise representation of the dispersion energy
+!>
+!> deprecated: removed with the v2 API, use the interface with error handling
+subroutine get_pairwise_dispersion(mol, disp, param, cutoff, energy2, energy3)
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Dispersion model
+   class(d3_model), intent(in) :: disp
+
+   !> Damping parameters
+   class(damping_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> Pairwise representation of additive dispersion energy
+   real(wp), intent(out) :: energy2(:, :)
+
+   !> Pairwise representation of non-additive dispersion energy
+   real(wp), intent(out) :: energy3(:, :)
+
+   type(error_type), allocatable :: error
+
+   call get_pairwise_dispersion_v2(error, mol, disp, param, cutoff, energy2, energy3)
+
+   if (allocated(error)) then
+      write(error_unit, '("[Fatal]", 1x, a)') error%message
+      error stop
+   end if
+
+end subroutine get_pairwise_dispersion
 
 
 end module dftd3_disp

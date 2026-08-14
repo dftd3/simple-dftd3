@@ -430,6 +430,65 @@ def test_hessian_ghost_atoms() -> None:
     assert hessian == approx(numhess, abs=thr)
 
 
+def test_work_partition(numbers: np.ndarray, positions: np.ndarray) -> None:
+    """Summing all parts must reproduce the complete dispersion calculation"""
+    thr = 1.0e-12
+    nparts = 3
+    param = RationalDampingParam(method="pbe0", atm=True)
+
+    ref = DispersionModel(numbers, positions).get_dispersion(param, grad=True)
+    ref_hessian = DispersionModel(numbers, positions).get_hessian(param)["hessian"]
+
+    energy = 0.0
+    gradient = np.zeros_like(ref["gradient"])
+    virial = np.zeros_like(ref["virial"])
+    hessian = np.zeros_like(ref_hessian)
+    for part in range(nparts):
+        model = DispersionModel(numbers, positions)
+        model.set_work_partition(part, nparts)
+        res = model.get_dispersion(param, grad=True)
+        energy += res["energy"]
+        gradient += res["gradient"]
+        virial += res["virial"]
+        hessian += model.get_hessian(param)["hessian"]
+
+    assert energy == approx(ref["energy"], abs=thr)
+    assert gradient == approx(ref["gradient"], abs=thr)
+    assert virial == approx(ref["virial"], abs=thr)
+    assert hessian == approx(ref_hessian, abs=thr)
+
+
+def test_work_partition_invalid(numbers: np.ndarray, positions: np.ndarray) -> None:
+    model = DispersionModel(numbers, positions)
+    with raises(RuntimeError, match="Invalid dispersion work partition"):
+        model.set_work_partition(3, 3)
+
+
+def test_gcp_work_partition(numbers: np.ndarray, positions: np.ndarray) -> None:
+    """Summing all parts must reproduce the complete counterpoise correction"""
+    thr = 1.0e-12
+    nparts = 3
+
+    ref = GeometricCounterpoise(numbers, positions, method="hf3c").get_counterpoise(
+        grad=True
+    )
+
+    energy = 0.0
+    gradient = np.zeros_like(ref["gradient"])
+    virial = np.zeros_like(ref["virial"])
+    for part in range(nparts):
+        gcp = GeometricCounterpoise(numbers, positions, method="hf3c")
+        gcp.set_work_partition(part, nparts)
+        res = gcp.get_counterpoise(grad=True)
+        energy += res["energy"]
+        gradient += res["gradient"]
+        virial += res["virial"]
+
+    assert energy == approx(ref["energy"], abs=thr)
+    assert gradient == approx(ref["gradient"], abs=thr)
+    assert virial == approx(ref["virial"], abs=thr)
+
+
 def test_gcp_empty(numbers: np.ndarray, positions: np.ndarray) -> None:
     gcp = GeometricCounterpoise(
         numbers,

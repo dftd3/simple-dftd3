@@ -31,6 +31,8 @@ module dftd3
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
       & get_cso_damping, get_z_damping
+   use dftd3_partition, only : work_partition, new_work_partition, &
+      & serial_work_partition
    use dftd3_version, only : get_dftd3_version
    implicit none
    private
@@ -52,6 +54,7 @@ module dftd3
    public :: z_damping_param, new_z_damping
    public :: d3_model, new_d3_model
    public :: d3_lowrank_config
+   public :: work_partition, new_work_partition, serial_work_partition
    public :: get_dftd3_version
 
 

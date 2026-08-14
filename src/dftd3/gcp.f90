@@ -17,6 +17,7 @@
 module dftd3_gcp
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_gcp_param, only : gcp_param, get_gcp_param
+   use dftd3_partition, only : work_partition, owns_pair
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -40,7 +41,7 @@ contains
 
 
 !> Geometric counterpoise correction
-subroutine get_geometric_counterpoise(mol, param, cutoff, energy, gradient, sigma)
+subroutine get_geometric_counterpoise(mol, param, cutoff, energy, gradient, sigma, partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -60,16 +61,21 @@ subroutine get_geometric_counterpoise(mol, param, cutoff, energy, gradient, sigm
    !> Counter-poise virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    real(wp), allocatable :: energies(:)
 
    allocate(energies(mol%nat), source=0.0_wp)
-   call get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradient, sigma)
+   call get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradient, sigma, &
+      & partition)
    energy = energy + sum(energies)
 end subroutine get_geometric_counterpoise
 
 
 !> Geometric counterpoise correction with atom-resolved energies
-subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradient, sigma)
+subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradient, sigma, &
+      & partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -89,6 +95,9 @@ subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradi
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    real(wp), allocatable :: lattr(:, :)
    logical :: grad
 
@@ -99,11 +108,11 @@ subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradi
       if (grad) then
          call gcp_deriv(mol, lattr, cutoff%gcp, param%zeff, param%emiss, param%slater, &
             & param%xv, param%rvdw, param%sigma, param%alpha, param%beta, param%damp, &
-            & param%dmp_scal, param%dmp_exp, energies, gradient, sigma)
+            & param%dmp_scal, param%dmp_exp, energies, gradient, sigma, partition)
       else
          call gcp_energy(mol, lattr, cutoff%gcp, param%zeff, param%emiss, param%slater, &
             & param%xv, param%rvdw, param%sigma, param%alpha, param%beta, param%damp, &
-            & param%dmp_scal, param%dmp_exp, energies)
+            & param%dmp_scal, param%dmp_exp, energies, partition)
       end if
    end if
 
@@ -114,20 +123,20 @@ subroutine get_geometric_counterpoise_atomic(mol, param, cutoff, energies, gradi
    if (param%srb) then
       if (grad) then
          call srb_deriv(mol, lattr, cutoff%srb, mol%num, param%rvdw_srb, param%rscal, param%qscal, &
-            & rexp_srb, zexp_srb, energies, gradient, sigma)
+            & rexp_srb, zexp_srb, energies, gradient, sigma, partition)
       else
          call srb_energy(mol, lattr, cutoff%srb, mol%num, param%rvdw_srb, param%rscal, param%qscal, &
-            & rexp_srb, zexp_srb, energies)
+            & rexp_srb, zexp_srb, energies, partition)
       end if
    end if
 
    if (param%base) then
       if (grad) then
          call srb_deriv(mol, lattr, cutoff%srb, param%zeff, param%rvdw, param%rscal, param%qscal, &
-            & rexp_base, zexp_base, energies, gradient, sigma)
+            & rexp_base, zexp_base, energies, gradient, sigma, partition)
       else
          call srb_energy(mol, lattr, cutoff%srb, param%zeff, param%rvdw, param%rscal, param%qscal, &
-            & rexp_base, zexp_base, energies)
+            & rexp_base, zexp_base, energies, partition)
       end if
    end if
 end subroutine get_geometric_counterpoise_atomic
@@ -135,7 +144,7 @@ end subroutine get_geometric_counterpoise_atomic
 
 !> Analytical second derivatives of the geometric counterpoise correction
 !> with respect to the Cartesian coordinates
-subroutine get_geometric_counterpoise_hessian(mol, param, cutoff, hessian)
+subroutine get_geometric_counterpoise_hessian(mol, param, cutoff, hessian, partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -149,6 +158,9 @@ subroutine get_geometric_counterpoise_hessian(mol, param, cutoff, hessian)
    !> Counter-poise hessian
    real(wp), intent(out), contiguous :: hessian(:, :)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    real(wp), allocatable :: lattr(:, :)
 
    hessian(:, :) = 0.0_wp
@@ -157,7 +169,7 @@ subroutine get_geometric_counterpoise_hessian(mol, param, cutoff, hessian)
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%gcp, lattr)
       call gcp_hessian(mol, lattr, cutoff%gcp, param%zeff, param%emiss, param%slater, &
          & param%xv, param%rvdw, param%sigma, param%alpha, param%beta, param%damp, &
-         & param%dmp_scal, param%dmp_exp, hessian)
+         & param%dmp_scal, param%dmp_exp, hessian, partition)
    end if
 
    if (param%srb .or. param%base) then
@@ -166,19 +178,19 @@ subroutine get_geometric_counterpoise_hessian(mol, param, cutoff, hessian)
 
    if (param%srb) then
       call srb_hessian(mol, lattr, cutoff%srb, mol%num, param%rvdw_srb, param%rscal, &
-         & param%qscal, rexp_srb, zexp_srb, hessian)
+         & param%qscal, rexp_srb, zexp_srb, hessian, partition)
    end if
 
    if (param%base) then
       call srb_hessian(mol, lattr, cutoff%srb, param%zeff, param%rvdw, param%rscal, &
-         & param%qscal, rexp_base, zexp_base, hessian)
+         & param%qscal, rexp_base, zexp_base, hessian, partition)
    end if
 end subroutine get_geometric_counterpoise_hessian
 
 
 !> Geometric counterpoise correction
 subroutine gcp_energy(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alpha, beta, &
-      & damp, dmp_scal, dmp_exp, energies)
+      & damp, dmp_scal, dmp_exp, energies, partition)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Translation vectors
@@ -209,6 +221,8 @@ subroutine gcp_energy(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, al
    real(wp), intent(in) :: dmp_exp
    !> Atom-resolved energy
    real(wp), intent(inout) :: energies(:)
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    integer :: iat, jat, jtr, izp, jzp
    real(wp) :: argv
@@ -222,7 +236,7 @@ subroutine gcp_energy(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, al
    !$omp parallel do default(none) &
    !$omp reduction(+:energies) &
    !$omp shared(mol, iz, xv, emiss, rvdw, trans, cutoff, alpha, beta, &
-   !$omp&       dmp_scal, dmp_exp, escal, slater, damp) &
+   !$omp&       dmp_scal, dmp_exp, escal, slater, damp, partition) &
    !$omp private(izp, jat, jzp, xvi, xvj, emi, emj, r0, jtr, vec, r1, sij, &
    !$omp&        expv, bsse, argv, dE, dampval, grd_dmp, rscal, rscalexp)
    do iat = 1, mol%nat
@@ -231,6 +245,7 @@ subroutine gcp_energy(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, al
 
       ! the BSSE due to atom jat, Loop over all j atoms
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          xvj = merge(1.0_wp / sqrt(xv(jzp)), 0.0_wp, xv(jzp) >= 0.5_wp)
 
@@ -269,7 +284,7 @@ end subroutine gcp_energy
 
 !> Geometric counterpoise correction
 subroutine gcp_deriv(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alpha, beta, &
-      & damp, dmp_scal, dmp_exp, energies, gradient, sigma)
+      & damp, dmp_scal, dmp_exp, energies, gradient, sigma, partition)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Translation vectors
@@ -304,6 +319,8 @@ subroutine gcp_deriv(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alp
    real(wp), intent(inout) :: gradient(:, :)
    !> Virial
    real(wp), intent(inout) :: sigma(:, :)
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    integer :: iat, jat, jtr, izp, jzp
    real(wp) :: argv, argd, ovlpd
@@ -317,7 +334,7 @@ subroutine gcp_deriv(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alp
    !$omp parallel do default(none) &
    !$omp reduction(+:energies, gradient, sigma) &
    !$omp shared(mol, iz, xv, emiss, rvdw, trans, cutoff, alpha, beta, &
-   !$omp&       dmp_scal, dmp_exp, escal, slater, damp) &
+   !$omp&       dmp_scal, dmp_exp, escal, slater, damp, partition) &
    !$omp private(izp, jat, jzp, xvi, xvj, emi, emj, r0, jtr, vec, r1, sij, gij, emij, &
    !$omp&        expv, bsse, argv, dE, dampval, grd_dmp, dG, dS, expd, argd, ovlpd, gs, &
    !$omp&        rscal, rscalexp, rscalexpm1)
@@ -327,6 +344,7 @@ subroutine gcp_deriv(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alp
 
       ! the BSSE due to atom jat, Loop over all j atoms
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          xvj = merge(1.0_wp / sqrt(xv(jzp)), 0.0_wp, xv(jzp) >= 0.5_wp)
 
@@ -391,7 +409,8 @@ end subroutine gcp_deriv
 
 
 !> Short-range bond length correction for HF-3c
-subroutine srb_energy(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, energies)
+subroutine srb_energy(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, energies, &
+      & partition)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Translation vectors
@@ -412,6 +431,8 @@ subroutine srb_energy(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, en
    real(wp), intent(in) :: zexp
    !> Atom-resolved energy
    real(wp), intent(inout) :: energies(:)
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    real(wp) :: fi, fj, ff, r1, expt
    real(wp) :: r0, vec(3), dE
@@ -419,12 +440,13 @@ subroutine srb_energy(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, en
 
    !$omp parallel do default(none) &
    !$omp reduction(+:energies) &
-   !$omp shared(mol, trans, cutoff, iz, r0ab, rexp, zexp, rscal, qscal) &
+   !$omp shared(mol, trans, cutoff, iz, r0ab, rexp, zexp, rscal, qscal, partition) &
    !$omp private(izp, jat, jzp, r0, vec, r1, fi, fj, ff, expt, dE)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       fi = real(iz(izp), wp)
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          r0 = rscal*r0ab(izp, jzp)**rexp
          fj = real(iz(jzp), wp)
@@ -449,7 +471,8 @@ end subroutine srb_energy
 
 
 !> Short-range bond length correction for HF-3c
-subroutine srb_deriv(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, energies, gradient, sigma)
+subroutine srb_deriv(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, energies, &
+      & gradient, sigma, partition)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Translation vectors
@@ -474,6 +497,8 @@ subroutine srb_deriv(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, ene
    real(wp), intent(inout) :: gradient(:, :)
    !> Molecular virial
    real(wp), intent(inout) :: sigma(:, :)
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    real(wp) :: fi, fj, ff, rf, r1, expt
    real(wp) :: r0, vec(3), dE, dG(3), dS(3, 3)
@@ -481,12 +506,13 @@ subroutine srb_deriv(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, ene
 
    !$omp parallel do default(none) &
    !$omp reduction(+:energies, gradient, sigma) &
-   !$omp shared(mol, trans, cutoff, iz, r0ab, rexp, zexp, rscal, qscal) &
+   !$omp shared(mol, trans, cutoff, iz, r0ab, rexp, zexp, rscal, qscal, partition) &
    !$omp private(izp, jat, jzp, r0, vec, r1, fi, fj, ff, expt, rf, dE, dG, dS)
    do iat = 1, mol%nat
       izp = mol%id(iat)
       fi = real(iz(izp), wp)
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          r0 = rscal*r0ab(izp, jzp)**rexp
          fj = real(iz(jzp), wp)
@@ -523,7 +549,7 @@ end subroutine srb_deriv
 
 !> Second derivatives of the geometric counterpoise correction
 subroutine gcp_hessian(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, alpha, beta, &
-      & damp, dmp_scal, dmp_exp, hessian)
+      & damp, dmp_scal, dmp_exp, hessian, partition)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Translation vectors
@@ -554,6 +580,8 @@ subroutine gcp_hessian(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, a
    real(wp), intent(in) :: dmp_exp
    !> Second derivative of the energy w.r.t. the Cartesian coordinates
    real(wp), intent(inout), contiguous :: hessian(:, :)
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    integer :: iat, jat, jtr, izp, jzp
    real(wp) :: xvi, xvj, emi, emj, emij
@@ -569,6 +597,7 @@ subroutine gcp_hessian(mol, trans, cutoff, iz, emiss, slater, xv, rvdw, escal, a
       xvi = merge(1.0_wp / sqrt(xv(izp)), 0.0_wp, xv(izp) >= 0.5_wp)
 
       do jat = 1, iat - 1
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          xvj = merge(1.0_wp / sqrt(xv(jzp)), 0.0_wp, xv(jzp) >= 0.5_wp)
 
@@ -629,7 +658,8 @@ end subroutine gcp_hessian
 
 
 !> Second derivatives of the short-range bond length correction for HF-3c
-subroutine srb_hessian(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, hessian)
+subroutine srb_hessian(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, hessian, &
+      & partition)
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
    !> Translation vectors
@@ -650,6 +680,8 @@ subroutine srb_hessian(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, h
    real(wp), intent(in) :: zexp
    !> Second derivative of the energy w.r.t. the Cartesian coordinates
    real(wp), intent(inout), contiguous :: hessian(:, :)
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
    real(wp) :: fi, fj, ff, r1, expt
    real(wp) :: r0, vec(3), dE1, dE2
@@ -659,6 +691,7 @@ subroutine srb_hessian(mol, trans, cutoff, iz, r0ab, rscal, qscal, rexp, zexp, h
       izp = mol%id(iat)
       fi = real(iz(izp), wp)
       do jat = 1, iat - 1
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          r0 = rscal*r0ab(izp, jzp)**rexp
          fj = real(iz(jzp), wp)

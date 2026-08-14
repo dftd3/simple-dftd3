@@ -188,6 +188,11 @@ def set_model_ghost_index(disp: ModelHandle, ghost: np.ndarray) -> None:
     )
 
 
+def set_model_work_partition(disp: ModelHandle, part: int, nparts: int) -> None:
+    """Assign an externally managed part of the interaction loops to this model"""
+    error_check(lib.dftd3_set_model_work_partition)(disp.handle, part, nparts)
+
+
 def new_zero_damping(
     s6: float, s8: float, s9: float, rs6: float, rs8: float, alp: float
 ) -> ParamHandle:
@@ -372,6 +377,11 @@ def load_gcp_param(
 
 def set_gcp_realspace_cutoff(gcp: GCPHandle, bas: float, srb: float) -> None:
     error_check(lib.dftd3_set_gcp_realspace_cutoff)(gcp.handle, bas, srb)
+
+
+def set_gcp_work_partition(gcp: GCPHandle, part: int, nparts: int) -> None:
+    """Assign an externally managed part of the interaction loops to these parameters"""
+    error_check(lib.dftd3_set_gcp_work_partition)(gcp.handle, part, nparts)
 
 
 def get_counterpoise(

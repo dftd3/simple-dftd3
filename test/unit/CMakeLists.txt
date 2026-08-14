@@ -23,6 +23,7 @@ set(
   "hessian"
   "param"
   "pairwise"
+  "partition"
   "periodic_1d"
   "periodic_2d"
   "periodic_3d"

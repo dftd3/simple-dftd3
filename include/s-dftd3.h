@@ -127,6 +127,8 @@ dftd3_new_d3_model(dftd3_error /* error */,
                    dftd3_structure /* mol */) SDFTD3_API_SUFFIX__V_0_2;
 
 /// Set realspace cutoffs (quantities in Bohr)
+///
+/// deprecated: removed with the v2 API, use dftd3_set_model_realspace_cutoff_smooth
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
 dftd3_set_model_realspace_cutoff(dftd3_error /* error */,
                                  dftd3_model /* model */,
@@ -167,6 +169,18 @@ dftd3_set_model_ewald(dftd3_error /* error */,
                       int /* rank */,
                       double /* tolerance */,
                       double /* kcut */) SDFTD3_API_SUFFIX__V_1_6;
+
+/// Assign an externally managed part of the interaction loops to this model.
+///
+/// The part index is zero based and must be smaller than nparts. Summing the
+/// results of all parts reproduces the complete calculation. Structure
+/// dependent quantities are evaluated for the full system on every part, only
+/// the pairwise, three-body and reciprocal space loops are partitioned.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_model_work_partition(dftd3_error /* error */,
+                               dftd3_model /* model */,
+                               int /* part */,
+                               int /* nparts */) SDFTD3_API_SUFFIX__V_1_6;
 
 /// Delete dispersion model
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
@@ -311,6 +325,16 @@ dftd3_set_gcp_realspace_cutoff(dftd3_error /* error */,
                                dftd3_gcp /* gcp */,
                                double /* bas */,
                                double /* srb */) SDFTD3_API_SUFFIX__V_1_3;
+
+/// Assign an externally managed part of the interaction loops to these parameters.
+///
+/// The part index is zero based and must be smaller than nparts. Summing the
+/// results of all parts reproduces the complete calculation.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_gcp_work_partition(dftd3_error /* error */,
+                             dftd3_gcp /* gcp */,
+                             int /* part */,
+                             int /* nparts */) SDFTD3_API_SUFFIX__V_1_6;
 
 /// Delete counter-poise parameters
 SDFTD3_API_ENTRY void SDFTD3_API_CALL

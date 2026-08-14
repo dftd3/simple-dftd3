@@ -16,6 +16,7 @@
 
 module dftd3_damping_atm
    use dftd3_cutoff, only : smooth_cutoff, smooth_cutoff_r2
+   use dftd3_partition, only : work_partition, owns_pair
    use mctc_env, only : wp
    use mctc_io, only : structure_type
    implicit none
@@ -35,7 +36,7 @@ contains
 !> derivatives at fixed coordination number plus the derivatives with respect to
 !> the coordination numbers, which the caller contracts with dCN/dR.
 subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, rvdw, &
-      & c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn)
+      & c6, dc6dcn, d2c6dcn2, d2c6dcnij, hessian, dEdcn, dEdcndr, dEdcndcn, partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -79,6 +80,9 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
    !> Second derivative w.r.t. the coordination numbers
    real(wp), intent(inout) :: dEdcndcn(:, :)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    integer :: ip, iq, il, im, ia, ib, ic, jc, ie, if_, nent
    integer :: at(3), pat(2, 3), ent_atom(6), ent_pair(6)
@@ -100,6 +104,7 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
    ! Thread-private arrays for reduction, these are O(N^2) unlike the gradient
    real(wp), allocatable :: hessian_local(:, :), dEdcn_local(:)
    real(wp), allocatable :: dEdcndr_local(:, :), dEdcndcn_local(:, :)
+   type(work_partition) :: part
 
    if (abs(s9) < epsilon(1.0_wp)) return
    cutoff2 = cutoff*cutoff
@@ -108,7 +113,7 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
 
    !$omp parallel default(none) &
    !$omp shared(mol, trans, cutoff, width, s9, rs9, rvdw, c6, dc6dcn, &
-   !$omp& d2c6dcn2, d2c6dcnij, cutoff2, alp3, aexp) &
+   !$omp& d2c6dcn2, d2c6dcnij, cutoff2, alp3, aexp, partition) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, ip, iq, il, im, &
    !$omp& ia, ib, ic, jc, ie, if_, nent, at, pat, ent_atom, ent_pair, &
    !$omp& vec, u, triple, r0, cval, swp, dswp, d2swp, sval, sp, spq, &
@@ -128,6 +133,7 @@ subroutine get_atm_dispersion_hessian(mol, trans, cutoff, width, s9, rs9, alp, r
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          do jtr = 1, size(trans, 2)
             vec(:, 1) = mol%xyz(:, jat) + trans(:, jtr) - mol%xyz(:, iat)
@@ -425,7 +431,7 @@ end subroutine get_atm_dispersion_hessian
 
 !> Evaluation of the dispersion energy expression
 subroutine get_atm_dispersion(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energy, dEdcn, gradient, sigma, partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -469,7 +475,11 @@ subroutine get_atm_dispersion(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6,
    !> Dispersion virial
    real(wp), intent(inout), optional :: sigma(:, :)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    logical :: grad
+   type(work_partition) :: part
 
    if (abs(s9) < epsilon(1.0_wp)) return
    grad = present(dc6dcn) .and. present(dEdcn) .and. present(gradient) &
@@ -477,16 +487,18 @@ subroutine get_atm_dispersion(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6,
 
    if (grad) then
       call get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energy, dEdcn, gradient, sigma, partition)
    else
-      call get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, energy)
+      call get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, energy, &
+      & partition)
    end if
 
 end subroutine get_atm_dispersion
 
 
 !> Evaluation of the dispersion energy expression
-subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, energy)
+subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, energy, &
+      & partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -518,6 +530,9 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rv
    !> Dispersion energy
    real(wp), intent(inout) :: energy(:)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, rij, rjk, rik
    real(wp) :: c6ij, c6jk, c6ik, triple
@@ -533,7 +548,7 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rv
    alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, rs9, alp3, rvdw, cutoff2, cutoff, width) &
+   !$omp shared(mol, trans, c6, s9, rs9, alp3, rvdw, cutoff2, cutoff, width, partition) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, rij, rjk, rik, c6ij, c6jk, c6ik, triple, &
    !$omp& r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, ang, c9, dE, &
@@ -545,6 +560,7 @@ subroutine get_atm_dispersion_energy(mol, trans, cutoff, width, s9, rs9, alp, rv
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          c6ij = c6(jat, iat)
          r0ij = rs9 * rvdw(jzp, izp)
@@ -607,7 +623,7 @@ end subroutine get_atm_dispersion_energy
 
 !> Evaluation of the dispersion energy expression
 subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rvdw, c6, dc6dcn, &
-      & energy, dEdcn, gradient, sigma)
+      & energy, dEdcn, gradient, sigma, partition)
 
    !> Molecular structure data
    class(structure_type), intent(in) :: mol
@@ -651,6 +667,9 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rv
    !> Dispersion virial
    real(wp), intent(inout) :: sigma(:, :)
 
+   !> Work partition of the atom pairs, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
    integer :: iat, jat, kat, izp, jzp, kzp, jtr, ktr, ic, jc
    real(wp) :: vij(3), vjk(3), vik(3), r2ij, r2jk, r2ik, rij, rjk, rik
    real(wp) :: c6ij, c6jk, c6ik, triple
@@ -670,7 +689,8 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rv
    alp3 = alp / 3.0_wp
 
    !$omp parallel default(none) &
-   !$omp shared(mol, trans, c6, s9, rs9, alp, alp3, rvdw, cutoff2, cutoff, width, dc6dcn) &
+   !$omp shared(mol, trans, c6, s9, rs9, alp, alp3, rvdw, cutoff2, cutoff, width, dc6dcn, &
+   !$omp& partition) &
    !$omp private(iat, jat, kat, izp, jzp, kzp, jtr, ktr, ic, jc, vij, vjk, vik, &
    !$omp& r2ij, r2jk, r2ik, rij, rjk, rik, c6ij, c6jk, c6ik, triple, &
    !$omp& r0ij, r0jk, r0ik, r0, r1, r2, r3, r5, rr, fdmp, dfdmp, ang, &
@@ -686,6 +706,7 @@ subroutine get_atm_dispersion_derivs(mol, trans, cutoff, width, s9, rs9, alp, rv
    do iat = 1, mol%nat
       izp = mol%id(iat)
       do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
          jzp = mol%id(jat)
          c6ij = c6(jat, iat)
          r0ij = rs9 * rvdw(jzp, izp)
