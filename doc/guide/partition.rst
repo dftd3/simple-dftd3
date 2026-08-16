@@ -9,8 +9,8 @@ D3 itself performs no communication, the reduction is left to the caller.
 
 .. note::
 
-   Structure dependent quantities such as coordination numbers and :math:`C_6` coefficients are evaluated for the full system on every part.
-   The speedup is therefore bound by the interaction loops, which dominate for larger systems.
+   Without a communication backend the coordination number and the :math:`C_6` coefficients are evaluated for the full system on every part, they are consumed in full by the interaction loops.
+   For a two-body calculation that is more than half of the runtime and caps the speedup at about two, see :ref:`reducer` for how to lift it.
 
 To test the examples you can install the dependencies with
 
@@ -128,3 +128,30 @@ The build configuration can be queried at compile time and at runtime:
    if (dftd3_has_feature("mpi")) then
       ! ...
    end if
+
+
+.. _reducer:
+
+Partition the coordination number
+---------------------------------
+
+The coordination number is needed in full by every part, so it can only be partitioned if the parts exchange it halfway through the calculation.
+Passing a ``work_reducer`` alongside the partition enables this, ``get_dispersion_mpi`` does so automatically.
+Bring your own communication layer by implementing the deferred ``reduce`` binding:
+
+.. code-block:: fortran
+
+   type, extends(work_reducer) :: my_reducer
+   contains
+      procedure :: reduce => my_reduce
+   end type my_reducer
+
+   ! sum val over all parts, in place
+   subroutine my_reduce(self, val, error)
+      class(my_reducer), intent(in) :: self
+      real(wp), intent(inout), contiguous :: val(:)
+      type(error_type), allocatable, intent(out) :: error
+   end subroutine my_reduce
+
+The reducer is called twice per gradient evaluation, both times on an array of the size of the system.
+Without it the coordination number stages stay unpartitioned and the results are unchanged.

@@ -16,12 +16,13 @@
 
 !> Work partitioning for externally distributed dispersion calculations
 module dftd3_partition
-   use mctc_env, only : error_type, fatal_error, i8
+   use mctc_env, only : error_type, fatal_error, i8, wp
    implicit none
    private
 
    public :: work_partition, new_work_partition, serial_work_partition
    public :: owns_index, owns_pair
+   public :: work_reducer
 
 
    !> Cyclic partition of the work of a dispersion calculation.
@@ -42,6 +43,34 @@ module dftd3_partition
    !> Complete work of an ordinary serial calculation, equivalent to omitting
    !> the partition entirely
    type(work_partition), parameter :: serial_work_partition = work_partition()
+
+
+   !> Communication backend of a partitioned calculation.
+   !>
+   !> Intermediates that every part consumes in full, like the coordination
+   !> number, can only be partitioned if the parts can exchange them halfway
+   !> through the calculation. Providing a reducer enables those stages,
+   !> omitting it leaves them to be evaluated redundantly by every part.
+   type, abstract :: work_reducer
+   contains
+      procedure(reduce_interface), deferred :: reduce
+   end type work_reducer
+
+   abstract interface
+      !> Sum a partitioned quantity over all parts, in place
+      subroutine reduce_interface(self, val, error)
+         import :: work_reducer, wp, error_type
+
+         !> Communication backend
+         class(work_reducer), intent(in) :: self
+
+         !> Values to sum over all parts
+         real(wp), intent(inout), contiguous :: val(:)
+
+         !> Error handling
+         type(error_type), allocatable, intent(out) :: error
+      end subroutine reduce_interface
+   end interface
 
 
 contains

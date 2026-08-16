@@ -26,13 +26,21 @@ module dftd3_mpi
    use dftd3_disp, only : get_dispersion
    use dftd3_model, only : d3_model
    use dftd3_mpi_utils, only : get_mpi_comm_info, mpi_allreduce_sum
-   use dftd3_partition, only : work_partition, new_work_partition
+   use dftd3_partition, only : work_partition, new_work_partition, work_reducer
    use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type
    implicit none
    private
 
    public :: new_mpi_work_partition, get_dispersion_mpi
+
+
+   !> Reduces the intermediates of a partitioned calculation over a communicator
+   type, extends(work_reducer) :: mpi_reducer
+      integer :: comm
+   contains
+      procedure :: reduce => mpi_reduce
+   end type mpi_reducer
 
 
    !> Calculate dispersion energy distributed over an MPI communicator
@@ -43,6 +51,23 @@ module dftd3_mpi
 
 
 contains
+
+
+!> Sum a partitioned quantity over all ranks of the communicator
+subroutine mpi_reduce(self, val, error)
+
+   !> Communication backend
+   class(mpi_reducer), intent(in) :: self
+
+   !> Values to sum over all ranks
+   real(wp), intent(inout), contiguous :: val(:)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   call mpi_allreduce_sum(self%comm, val, error)
+
+end subroutine mpi_reduce
 
 
 !> Create the work partition of the calling rank in a communicator
@@ -102,12 +127,14 @@ subroutine get_dispersion_mpi_atomic(error, mol, disp, param, cutoff, comm, &
    real(wp), intent(out), contiguous, optional :: hessian(:, :)
 
    type(work_partition) :: partition
+   type(mpi_reducer) :: reducer
 
    call new_mpi_work_partition(error, partition, comm)
    if (allocated(error)) return
 
+   reducer%comm = comm
    call get_dispersion(error, mol, disp, param, cutoff, energies, gradient, &
-      & sigma, hessian, partition)
+      & sigma, hessian, partition, reducer)
    if (allocated(error)) return
 
    call mpi_allreduce_sum(comm, energies, error)

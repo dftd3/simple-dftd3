@@ -23,13 +23,17 @@ module test_partition
       & optimizedpower_damping_param, new_optimizedpower_damping, &
       & cso_damping_param, new_cso_damping, &
       & z_damping_param, new_z_damping, &
-      & work_partition, new_work_partition, serial_work_partition
+      & work_partition, new_work_partition, serial_work_partition, work_reducer, &
+      & get_lattice_points
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise, &
       & get_geometric_counterpoise_hessian
+   use dftd3_ncoord, only : get_partitioned_coordination_number, &
+      & add_coordination_number_derivs
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type
+   use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
    use mstore, only : get_structure
    implicit none
    private
@@ -39,9 +43,17 @@ module test_partition
    integer, parameter :: nparts = 3
    integer, parameter :: ndamping = 6
    real(wp), parameter :: thr = 100*epsilon(1.0_wp)
+   !> Summing the parts regroups the additions, this is well below a missing pair
+   real(wp), parameter :: cnthr = 1.0e-10_wp
 
    type(d3_param), parameter :: pbe0_d3bj = d3_param(&
       & s6=1.0_wp, s8=1.2177_wp, a1=0.4145_wp, a2=4.8593_wp, s9=1.0_wp, alp=14.0_wp)
+
+   !> Reducer over a single part, exercises the reduction path without MPI
+   type, extends(work_reducer) :: identity_reducer
+   contains
+      procedure :: reduce => identity_reduce
+   end type identity_reducer
 
 
 contains
@@ -56,6 +68,8 @@ subroutine collect_partition(testsuite)
    testsuite = [ &
       & new_unittest("invalid partition", test_invalid), &
       & new_unittest("serial partition", test_serial), &
+      & new_unittest("coordination number", test_coordination_number), &
+      & new_unittest("reducer", test_reducer), &
       & new_unittest("dispersion", test_dispersion_partitioned), &
       & new_unittest("hessian", test_hessian_partitioned), &
       & new_unittest("ewald", test_ewald_partitioned), &
@@ -149,6 +163,147 @@ subroutine test_serial(error)
    end if
 
 end subroutine test_serial
+
+
+!> The local coordination number loops must reproduce mctc-lib and must sum up
+!> over the parts
+subroutine test_coordination_number(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   call check_coordination_number(error, "MB16-43", "01")
+   if (allocated(error)) return
+
+   call check_coordination_number(error, "X23", "acetic")
+
+end subroutine test_coordination_number
+
+
+subroutine check_coordination_number(error, set, id)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Structure set and identifier
+   character(len=*), intent(in) :: set, id
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3
+   type(realspace_cutoff) :: cutoff
+   type(work_partition) :: partition
+   class(ncoord_type), allocatable :: ncoord
+   type(error_type), allocatable :: ncoord_error
+   real(wp), allocatable :: lattr(:, :), cn(:), cn_ref(:), cn_part(:), dEdcn(:)
+   real(wp), allocatable :: gradient(:, :), gradient_ref(:, :)
+   real(wp) :: sigma(3, 3), sigma_ref(3, 3)
+   integer :: ipart, iat
+
+   call get_structure(mol, set, id)
+   call new_d3_model(d3, mol)
+   cutoff = realspace_cutoff()
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+
+   ! steepness of the counting function, private in dftd3_ncoord
+   call new_ncoord(ncoord, mol, cn_count%exp, ncoord_error, kcn=16.0_wp, &
+      & cutoff=cutoff%cn, rcov=d3%rcov)
+   if (allocated(ncoord_error)) then
+      call test_failed(error, ncoord_error%message)
+      return
+   end if
+
+   allocate(cn(mol%nat), cn_ref(mol%nat), cn_part(mol%nat), dEdcn(mol%nat))
+   call ncoord%get_coordination_number(mol, lattr, cn_ref)
+   call get_partitioned_coordination_number(mol, lattr, cutoff%cn, d3%rcov, cn)
+   if (any(abs(cn - cn_ref) > cnthr)) then
+      call test_failed(error, "Coordination number does not match mctc-lib for "//set)
+      return
+   end if
+
+   cn(:) = 0.0_wp
+   do ipart = 0, nparts - 1
+      call new_work_partition(error, partition, ipart, nparts)
+      if (allocated(error)) return
+      call get_partitioned_coordination_number(mol, lattr, cutoff%cn, d3%rcov, &
+         & cn_part, partition)
+      cn(:) = cn + cn_part
+   end do
+   if (any(abs(cn - cn_ref) > cnthr)) then
+      call test_failed(error, "Partitioned coordination number does not sum up for "//set)
+      return
+   end if
+
+   do iat = 1, mol%nat
+      dEdcn(iat) = 0.01_wp*iat
+   end do
+   allocate(gradient(3, mol%nat), gradient_ref(3, mol%nat), source=0.0_wp)
+   sigma(:, :) = 0.0_wp
+   sigma_ref(:, :) = 0.0_wp
+
+   call ncoord%add_coordination_number_derivs(mol, lattr, dEdcn, gradient_ref, sigma_ref)
+   do ipart = 0, nparts - 1
+      call new_work_partition(error, partition, ipart, nparts)
+      if (allocated(error)) return
+      call add_coordination_number_derivs(mol, lattr, cutoff%cn, d3%rcov, dEdcn, &
+         & gradient, sigma, partition)
+   end do
+   if (any(abs(gradient - gradient_ref) > cnthr) .or. &
+      & any(abs(sigma - sigma_ref) > cnthr)) then
+      call test_failed(error, "Partitioned CN derivatives do not sum up for "//set)
+   end if
+
+end subroutine check_coordination_number
+
+
+!> Reducing over a single part must not change the result
+subroutine test_reducer(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3
+   type(rational_damping_param) :: param
+   type(identity_reducer) :: reducer
+   real(wp) :: energy, ref_energy, sigma(3, 3), ref_sigma(3, 3)
+   real(wp), allocatable :: gradient(:, :), ref_gradient(:, :)
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d3_model(d3, mol)
+   call new_rational_damping(param, pbe0_d3bj)
+   allocate(gradient(3, mol%nat), ref_gradient(3, mol%nat))
+
+   call get_dispersion(error, mol, d3, param, realspace_cutoff(), ref_energy, &
+      & ref_gradient, ref_sigma)
+   if (allocated(error)) return
+
+   call get_dispersion(error, mol, d3, param, realspace_cutoff(), energy, &
+      & gradient, sigma, partition=serial_work_partition, reducer=reducer)
+   if (allocated(error)) return
+
+   call check(error, energy, ref_energy, thr=thr)
+   if (allocated(error)) return
+
+   if (any(abs(gradient - ref_gradient) > thr) .or. &
+      & any(abs(sigma - ref_sigma) > thr)) then
+      call test_failed(error, "Reduced serial partition does not match")
+   end if
+
+end subroutine test_reducer
+
+
+subroutine identity_reduce(self, val, error)
+
+   !> Communication backend
+   class(identity_reducer), intent(in) :: self
+
+   !> Values to sum over all parts
+   real(wp), intent(inout), contiguous :: val(:)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+end subroutine identity_reduce
 
 
 !> Damping parameters covering every implementation of the partitioned loops
