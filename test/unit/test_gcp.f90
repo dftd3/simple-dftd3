@@ -206,7 +206,7 @@ subroutine test_pbeh3c(error)
    energy = 0.0_wp
    call get_geometric_counterpoise(mol, param, realspace_cutoff(), energy)
 
-   call check(error, energy, 0.0206352378_wp, thr=thr2)
+   call check(error, energy, 0.0206720433_wp, thr=thr2)
 end subroutine test_pbeh3c
 
 
@@ -866,7 +866,7 @@ subroutine test_msvp(error)
 
    type(structure_type) :: mol
    call get_structure(mol, "MB16-43", "16")
-   call test_generic_basis(error, mol, "msvp", 0.0927839764_wp)
+   call test_generic_basis(error, mol, "msvp", 0.0928976203_wp)
 end subroutine test_msvp
 
 subroutine test_def2mtzvp(error)

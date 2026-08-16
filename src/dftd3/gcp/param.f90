@@ -463,7 +463,7 @@ module dftd3_gcp_param
 
    integer, parameter :: nbas_msvp(*) = [ &  ! modified Ahlrichs DZ, supplemented by def2-SV(P)
       & 2, 2,&
-      & 10, 10, 15, 15, 15, 15, 15, 15,&
+      & 9, 9, 15, 15, 15, 15, 15, 15,&
       & 15, 18, 18, 18, 18, 18, 18, 18,&
       & 24, 24, &
       & 31, 31, 31, 31, 31, 31, 31, 31, 31, 31,&
