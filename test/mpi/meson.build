@@ -14,7 +14,25 @@
 # You should have received a copy of the GNU Lesser General Public License
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
-add_subdirectory("unit")
-if(SDFTD3_WITH_MPI)
-  add_subdirectory("mpi")
-endif()
+mpiexec = find_program('mpiexec', required: false)
+if not mpiexec.found()
+  subdir_done()
+endif
+
+mpi_tester = executable(
+  'mpi-tester',
+  sources: files('main.f90'),
+  dependencies: [sdftd3_dep, mstore_dep, mpi_dep],
+)
+
+foreach n : ['1', '2', '3']
+  test(
+    'ranks-' + n,
+    mpiexec,
+    args: ['-n', n, mpi_tester],
+    suite: 'mpi',
+    # one thread per rank, oversubscribing the machine makes the ranks crawl
+    env: {'OMP_NUM_THREADS': '1'},
+    timeout: 120,
+  )
+endforeach

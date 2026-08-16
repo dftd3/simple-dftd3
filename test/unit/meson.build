@@ -31,6 +31,7 @@ tests = [
   'dftd3',
   'fourier',
   'hessian',
+  'mpi',
   'param',
   'pairwise',
   'partition',

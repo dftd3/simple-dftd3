@@ -35,6 +35,12 @@ option(
   description: 'Use OpenMP parallelisation',
 )
 option(
+  'mpi',
+  type: 'boolean',
+  value: false,
+  description: 'Use MPI parallelisation',
+)
+option(
   'api',
   type: 'boolean',
   value: true,

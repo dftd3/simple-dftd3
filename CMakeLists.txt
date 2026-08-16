@@ -32,6 +32,9 @@ add_subdirectory("config")
 if(NOT TARGET "OpenMP::OpenMP_Fortran" AND SDFTD3_WITH_OpenMP)
   find_package("OpenMP" REQUIRED)
 endif()
+if(NOT TARGET "MPI::MPI_Fortran" AND SDFTD3_WITH_MPI)
+  find_package("MPI" REQUIRED COMPONENTS "Fortran")
+endif()
 
 # Collect subprojects
 if(NOT TARGET "toml-f::toml-f")
@@ -85,6 +88,18 @@ if(SDFTD3_WITH_OpenMP)
     "${PROJECT_NAME}-lib"
     PUBLIC
     "OpenMP::OpenMP_Fortran"
+  )
+endif()
+if(SDFTD3_WITH_MPI)
+  target_link_libraries(
+    "${PROJECT_NAME}-lib"
+    PUBLIC
+    "MPI::MPI_Fortran"
+  )
+  target_compile_definitions(
+    "${PROJECT_NAME}-lib"
+    PRIVATE
+    "WITH_MPI"
   )
 endif()
 target_include_directories(

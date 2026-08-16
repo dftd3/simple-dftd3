@@ -80,3 +80,51 @@ The result is independent of the number of ranks up to the summation order.
 Running with a single rank is identical to omitting the partition, which is also available as ``serial_work_partition`` if you prefer to always pass it explicitly.
 
 The analytical Hessian and the geometric counterpoise correction accept the same partition, the pairwise decomposition does not.
+
+
+Let D3 do the reduction
+-----------------------
+
+MPI support is an opt-in build option:
+
+.. tab-set::
+
+   .. tab-item:: meson
+
+      .. code-block:: shell
+
+         meson setup _build -Dmpi=true
+
+   .. tab-item:: CMake
+
+      .. code-block:: shell
+
+         cmake -B _build -DSDFTD3_WITH_MPI=ON
+
+It enables the ``dftd3_mpi`` module, which derives the partition from a communicator and reduces the results, replacing the whole boilerplate above:
+
+.. code-block:: fortran
+
+   use dftd3, only : get_dispersion_mpi
+   use mpi, only : MPI_COMM_WORLD
+
+   call get_dispersion_mpi(error, mol, disp, param, realspace_cutoff(), MPI_COMM_WORLD, &
+      & energy, gradient)
+
+Communicators are passed as plain handles, users of ``mpi_f08`` pass ``comm%mpi_val``.
+For the calculations without an MPI aware entry point, ``new_mpi_work_partition`` creates the partition of the calling rank and leaves the reduction to you.
+
+.. note::
+
+   The routines are collective, every rank of the communicator has to call them with the same input.
+
+Without MPI support the module is still there, but every entry point reports the missing feature in the error handler instead.
+The build configuration can be queried at compile time and at runtime:
+
+.. code-block:: fortran
+
+   use dftd3, only : dftd3_has_mpi, dftd3_has_feature
+
+   if (dftd3_has_feature("mpi")) then
+      ! ...
+   end if

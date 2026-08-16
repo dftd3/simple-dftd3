@@ -25,6 +25,7 @@ program tester
    use test_gcp_hessian, only : collect_gcp_hessian
    use test_hessian, only : collect_hessian
    use test_model, only : collect_model
+   use test_mpi, only : collect_mpi
    use test_output, only : collect_output
    use test_pairwise, only : collect_pairwise
    use test_param, only : collect_param
@@ -47,6 +48,7 @@ program tester
       & new_testsuite("dftd3", collect_dftd3), &
       & new_testsuite("fourier", collect_fourier), &
       & new_testsuite("hessian", collect_hessian), &
+      & new_testsuite("mpi", collect_mpi), &
       & new_testsuite("param", collect_param), &
       & new_testsuite("pairwise", collect_pairwise), &
       & new_testsuite("partition", collect_partition), &

@@ -2,6 +2,7 @@
 
 set("SDFTD3_WITH_API" @SDFTD3_WITH_API@)
 set("SDFTD3_WITH_OpenMP" @SDFTD3_WITH_OpenMP@)
+set("SDFTD3_WITH_MPI" @SDFTD3_WITH_MPI@)
 set("SDFTD3_USE_MCTCLIB" @SDFTD3_USE_MCTCLIB@)
 
 if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
@@ -10,6 +11,10 @@ if(NOT TARGET "@PROJECT_NAME@::@PROJECT_NAME@")
 
   if(NOT TARGET "OpenMP::OpenMP_Fortran" AND SDFTD3_WITH_OpenMP)
     find_dependency("OpenMP")
+  endif()
+
+  if(NOT TARGET "MPI::MPI_Fortran" AND SDFTD3_WITH_MPI)
+    find_dependency("MPI" COMPONENTS "Fortran")
   endif()
 
   if(NOT TARGET "mctc-lib::mctc-lib" AND SDFTD3_USE_MCTCLIB)
