@@ -33,7 +33,6 @@ module dftd3_damping_optimizedpower
    type, extends(damping_param) :: optimizedpower_damping_param
       real(wp) :: s6
       real(wp) :: s8
-      real(wp) :: s9
       real(wp) :: a1
       real(wp) :: a2
       real(wp) :: alp

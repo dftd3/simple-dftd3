@@ -34,11 +34,12 @@ program mpi_tester
    type(error_type), allocatable :: error
    type(structure_type) :: mol
    type(d3_model) :: d3
+   type(d3_param) :: input
    type(rational_damping_param) :: param
    type(work_partition) :: partition
    real(wp) :: energy, energy_ref, sigma(3, 3), sigma_ref(3, 3)
    real(wp), allocatable :: gradient(:, :), gradient_ref(:, :)
-   integer :: stat, rank
+   integer :: stat, rank, idamp
 
    call MPI_Init(stat)
    call MPI_Comm_rank(MPI_COMM_WORLD, rank, stat)
@@ -50,20 +51,26 @@ program mpi_tester
 
    call get_structure(mol, "MB16-43", "01")
    call new_d3_model(d3, mol)
-   call new_rational_damping(param, pbe0_d3bj)
    allocate(gradient(3, mol%nat), gradient_ref(3, mol%nat))
 
-   call get_dispersion(error, mol, d3, param, realspace_cutoff(), energy_ref, &
-      & gradient_ref, sigma_ref)
-   if (allocated(error)) call fatal(error%message)
+   ! without the three-body term the C6 coefficients are partitioned as well
+   do idamp = 1, 2
+      input = pbe0_d3bj
+      input%s9 = merge(0.0_wp, 1.0_wp, idamp == 1)
+      call new_rational_damping(param, input)
 
-   call get_dispersion_mpi(error, mol, d3, param, realspace_cutoff(), MPI_COMM_WORLD, &
-      & energy, gradient, sigma)
-   if (allocated(error)) call fatal(error%message)
+      call get_dispersion(error, mol, d3, param, realspace_cutoff(), energy_ref, &
+         & gradient_ref, sigma_ref)
+      if (allocated(error)) call fatal(error%message)
 
-   call expect(abs(energy - energy_ref) < thr, "energy")
-   call expect(all(abs(gradient - gradient_ref) < thr), "gradient")
-   call expect(all(abs(sigma - sigma_ref) < thr), "virial")
+      call get_dispersion_mpi(error, mol, d3, param, realspace_cutoff(), MPI_COMM_WORLD, &
+         & energy, gradient, sigma)
+      if (allocated(error)) call fatal(error%message)
+
+      call expect(abs(energy - energy_ref) < thr, "energy")
+      call expect(all(abs(gradient - gradient_ref) < thr), "gradient")
+      call expect(all(abs(sigma - sigma_ref) < thr), "virial")
+   end do
 
    if (rank == 0) write(error_unit, '(a)') "# distributed result matches serial result"
 

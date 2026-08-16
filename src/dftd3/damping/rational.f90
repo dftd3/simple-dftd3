@@ -34,7 +34,6 @@ module dftd3_damping_rational
    type, extends(damping_param) :: rational_damping_param
       real(wp) :: s6
       real(wp) :: s8
-      real(wp) :: s9
       real(wp) :: a1
       real(wp) :: a2
       real(wp) :: alp

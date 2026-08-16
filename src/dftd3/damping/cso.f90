@@ -36,7 +36,6 @@ module dftd3_damping_cso
       real(wp) :: a2
       real(wp) :: a3
       real(wp) :: a4
-      real(wp) :: s9
       real(wp) :: alp
    contains
 

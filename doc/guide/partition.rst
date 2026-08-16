@@ -9,8 +9,8 @@ D3 itself performs no communication, the reduction is left to the caller.
 
 .. note::
 
-   Without a communication backend the coordination number and the :math:`C_6` coefficients are evaluated for the full system on every part, they are consumed in full by the interaction loops.
-   For a two-body calculation that is more than half of the runtime and caps the speedup at about two, see :ref:`reducer` for how to lift it.
+   The :math:`C_6` coefficients are only evaluated for the pairs a part consumes, unless the three-body term is active, which reads them for all pairs.
+   The coordination number is consumed in full by every part and stays unpartitioned unless the parts can exchange it, see :ref:`reducer`.
 
 To test the examples you can install the dependencies with
 

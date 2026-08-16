@@ -69,6 +69,7 @@ subroutine collect_partition(testsuite)
       & new_unittest("invalid partition", test_invalid), &
       & new_unittest("serial partition", test_serial), &
       & new_unittest("coordination number", test_coordination_number), &
+      & new_unittest("c6 on demand", test_c6_on_demand), &
       & new_unittest("reducer", test_reducer), &
       & new_unittest("dispersion", test_dispersion_partitioned), &
       & new_unittest("hessian", test_hessian_partitioned), &
@@ -253,6 +254,90 @@ subroutine check_coordination_number(error, set, id)
    end if
 
 end subroutine check_coordination_number
+
+
+!> Without the three-body term the C6 coefficients are only evaluated for the
+!> pairs a part consumes, summing the parts has to restore the complete matrix
+subroutine test_c6_on_demand(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3
+   type(d3_param) :: input
+   type(rational_damping_param) :: param
+   type(realspace_cutoff) :: cutoff
+   type(work_partition) :: partition
+   real(wp), allocatable :: lattr(:, :), cn(:), gwvec(:, :), gwdcn(:, :)
+   real(wp), allocatable :: c6(:, :), dc6dcn(:, :), c6_ref(:, :), dc6dcn_ref(:, :)
+   real(wp), allocatable :: c6_sum(:, :), dc6dcn_sum(:, :)
+   real(wp), allocatable :: gradient(:, :), part_gradient(:, :), sum_gradient(:, :)
+   real(wp) :: energy, part_energy, sum_energy
+   real(wp) :: sigma(3, 3), part_sigma(3, 3), sum_sigma(3, 3)
+   integer :: mref, ipart
+
+   call get_structure(mol, "MB16-43", "01")
+   call new_d3_model(d3, mol)
+   cutoff = realspace_cutoff()
+   mref = maxval(d3%ref)
+
+   allocate(cn(mol%nat), gwvec(mref, mol%nat), gwdcn(mref, mol%nat))
+   call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
+   call get_partitioned_coordination_number(mol, lattr, cutoff%cn, d3%rcov, cn)
+   call d3%weight_references(mol, cn, gwvec, gwdcn)
+
+   allocate(c6(mol%nat, mol%nat), dc6dcn(mol%nat, mol%nat))
+   allocate(c6_ref(mol%nat, mol%nat), dc6dcn_ref(mol%nat, mol%nat))
+   allocate(c6_sum(mol%nat, mol%nat), dc6dcn_sum(mol%nat, mol%nat), source=0.0_wp)
+
+   call d3%get_atomic_c6(mol, gwvec, gwdcn, c6_ref, dc6dcn_ref)
+   do ipart = 0, nparts - 1
+      call new_work_partition(error, partition, ipart, nparts)
+      if (allocated(error)) return
+      call d3%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, partition=partition)
+      c6_sum(:, :) = c6_sum + c6
+      dc6dcn_sum(:, :) = dc6dcn_sum + dc6dcn
+   end do
+
+   if (any(abs(c6_sum - c6_ref) > thr) .or. &
+      & any(abs(dc6dcn_sum - dc6dcn_ref) > thr)) then
+      call test_failed(error, "Partitioned C6 coefficients do not sum up")
+      return
+   end if
+
+   ! the two-body only calculation must not notice the missing coefficients
+   input = pbe0_d3bj
+   input%s9 = 0.0_wp
+   call new_rational_damping(param, input)
+
+   allocate(gradient(3, mol%nat), part_gradient(3, mol%nat), sum_gradient(3, mol%nat))
+   call get_dispersion(error, mol, d3, param, cutoff, energy, gradient, sigma)
+   if (allocated(error)) return
+
+   sum_energy = 0.0_wp
+   sum_gradient(:, :) = 0.0_wp
+   sum_sigma(:, :) = 0.0_wp
+   do ipart = 0, nparts - 1
+      call new_work_partition(error, partition, ipart, nparts)
+      if (allocated(error)) return
+      call get_dispersion(error, mol, d3, param, cutoff, part_energy, part_gradient, &
+         & part_sigma, partition=partition)
+      if (allocated(error)) return
+      sum_energy = sum_energy + part_energy
+      sum_gradient(:, :) = sum_gradient + part_gradient
+      sum_sigma(:, :) = sum_sigma + part_sigma
+   end do
+
+   call check(error, sum_energy, energy, thr=thr)
+   if (allocated(error)) return
+
+   if (any(abs(sum_gradient - gradient) > thr) .or. &
+      & any(abs(sum_sigma - sigma) > thr)) then
+      call test_failed(error, "Partitioned two-body dispersion does not sum up")
+   end if
+
+end subroutine test_c6_on_demand
 
 
 !> Reducing over a single part must not change the result

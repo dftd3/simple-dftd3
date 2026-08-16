@@ -35,6 +35,8 @@ module dftd3_damping
 
 
    type, abstract :: damping_param
+      !> Scaling of the three-body term, a vanishing value disables it
+      real(wp) :: s9 = 0.0_wp
    contains
       generic :: get_dispersion2 => get_dispersion2_impl, get_dispersion2_compat
       procedure(dispersion_interface), deferred :: get_dispersion2_impl

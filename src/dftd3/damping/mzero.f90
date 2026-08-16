@@ -33,7 +33,6 @@ module dftd3_damping_mzero
    type, extends(damping_param) :: mzero_damping_param
       real(wp) :: s6
       real(wp) :: s8
-      real(wp) :: s9
       real(wp) :: rs6
       real(wp) :: rs8
       real(wp) :: alp
