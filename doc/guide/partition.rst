@@ -38,7 +38,7 @@ Partition the interaction loops
 -------------------------------
 
 The Fortran API takes the partition as an optional argument, omitting it selects the complete work.
-The C API stores it on the dispersion model, next to the cutoffs.
+The C API stores it on the dispersion model, next to the cutoffs, and so does the Python API with ``DispersionModel.set_work_partition``.
 
 .. tab-set::
    :sync-group: code
@@ -168,6 +168,12 @@ The command line driver reports the same in ``s-dftd3 --version``.
    The command line driver itself is a serial program, it never initializes MPI and only reports what the library it linked against supports.
    Launching it with ``mpirun -n 4 s-dftd3 ...`` starts four independent complete calculations writing to the same output files, it does not distribute one.
    Distributing a calculation is done from your own program through the APIs above.
+
+.. note::
+
+   The Python API binds the work partition but not the communicator entry points, since taking a communicator would make mpi4py a dependency of the package.
+   Combining ``set_work_partition`` with your own mpi4py reduction works and gives the same result, only the coordination number stays unpartitioned there.
+   This can be revisited if there is demand.
 
 
 .. _reducer:
