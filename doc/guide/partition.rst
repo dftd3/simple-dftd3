@@ -116,7 +116,7 @@ The C API takes the communicator on the model instead of a part index, everythin
          use mpi, only : MPI_COMM_WORLD
 
          call get_dispersion_mpi(error, mol, disp, param, realspace_cutoff(), &
-            & MPI_COMM_WORLD, energy, gradient)
+            & MPI_COMM_WORLD%mpi_val, energy, gradient)
 
    .. tab-item:: C
       :sync: c
@@ -127,6 +127,7 @@ The C API takes the communicator on the model instead of a part index, everythin
          dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, NULL);
 
 Communicators are passed as plain Fortran handles, users of ``mpi_f08`` pass ``comm%mpi_val`` and C callers convert with ``MPI_Comm_c2f``.
+The library itself is built against ``mpi_f08``.
 The counter-poise correction has the same entry points, ``get_counterpoise_mpi`` and ``dftd3_set_gcp_mpi_comm``.
 For everything else, ``new_mpi_work_partition`` creates the partition of the calling rank and leaves the reduction to you.
 
@@ -161,6 +162,12 @@ The build configuration can be queried at compile time and at runtime:
          }
 
 The command line driver reports the same in ``s-dftd3 --version``.
+
+.. warning::
+
+   The command line driver itself is a serial program, it never initializes MPI and only reports what the library it linked against supports.
+   Launching it with ``mpirun -n 4 s-dftd3 ...`` starts four independent complete calculations writing to the same output files, it does not distribute one.
+   Distributing a calculation is done from your own program through the APIs above.
 
 
 .. _reducer:

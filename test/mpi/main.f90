@@ -23,7 +23,7 @@ program mpi_tester
       & rational_damping_param, new_rational_damping, dftd3_has_mpi
    use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type
-   use mpi, only : MPI_COMM_WORLD, MPI_Init, MPI_Finalize, MPI_Abort, MPI_Comm_rank
+   use mpi_f08, only : MPI_COMM_WORLD, MPI_Init, MPI_Finalize, MPI_Abort, MPI_Comm_rank
    use mstore, only : get_structure
    implicit none
 
@@ -46,7 +46,8 @@ program mpi_tester
 
    if (.not.dftd3_has_mpi) call fatal("Library reports MPI support as unavailable")
 
-   call new_mpi_work_partition(error, partition, MPI_COMM_WORLD)
+   ! the library takes plain integer handles from every language binding
+   call new_mpi_work_partition(error, partition, MPI_COMM_WORLD%mpi_val)
    if (allocated(error)) call fatal(error%message)
 
    call get_structure(mol, "MB16-43", "01")
@@ -63,8 +64,8 @@ program mpi_tester
          & gradient_ref, sigma_ref)
       if (allocated(error)) call fatal(error%message)
 
-      call get_dispersion_mpi(error, mol, d3, param, realspace_cutoff(), MPI_COMM_WORLD, &
-         & energy, gradient, sigma)
+      call get_dispersion_mpi(error, mol, d3, param, realspace_cutoff(), &
+         & MPI_COMM_WORLD%mpi_val, energy, gradient, sigma)
       if (allocated(error)) call fatal(error%message)
 
       call expect(abs(energy - energy_ref) < thr, "energy")
@@ -72,7 +73,7 @@ program mpi_tester
       call expect(all(abs(sigma - sigma_ref) < thr), "virial")
    end do
 
-   if (rank == 0) write(error_unit, '(a)') "# distributed result matches serial result"
+   if (rank == 0) write(error_unit, "(a)") "# distributed result matches serial result"
 
    call MPI_Finalize(stat)
 
@@ -86,7 +87,7 @@ contains
 
    subroutine fatal(message)
       character(len=*), intent(in) :: message
-      write(error_unit, '(2a)') "Error: ", message
+      write(error_unit, "(2a)") "Error: ", message
       call MPI_Abort(MPI_COMM_WORLD, 1, stat)
    end subroutine fatal
 

@@ -20,8 +20,8 @@
 !> MPI support every wrapper reports the missing feature in the error handler.
 module dftd3_mpi_utils
 #ifdef WITH_MPI
-   use mpi, only : MPI_Comm_rank, MPI_Comm_size, MPI_Initialized, MPI_Allreduce, &
-      & MPI_DOUBLE_PRECISION, MPI_SUM, MPI_IN_PLACE, MPI_SUCCESS
+   use mpi_f08, only : MPI_Comm, MPI_Comm_rank, MPI_Comm_size, MPI_Initialized, &
+      & MPI_Allreduce, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_IN_PLACE, MPI_SUCCESS
 #endif
    use mctc_env, only : wp, error_type, fatal_error
    implicit none
@@ -59,6 +59,7 @@ subroutine get_mpi_comm_info(comm, rank, nranks, error)
    type(error_type), allocatable, intent(out) :: error
 
 #ifdef WITH_MPI
+   type(MPI_Comm) :: mpi_comm
    integer :: stat
    logical :: initialized
 
@@ -71,13 +72,16 @@ subroutine get_mpi_comm_info(comm, rank, nranks, error)
       return
    end if
 
-   call MPI_Comm_rank(comm, rank, stat)
+   ! the integer handle is the portable currency between the language bindings
+   mpi_comm%mpi_val = comm
+
+   call MPI_Comm_rank(mpi_comm, rank, stat)
    if (stat /= MPI_SUCCESS) then
       call fatal_error(error, "Could not determine rank of MPI communicator")
       return
    end if
 
-   call MPI_Comm_size(comm, nranks, stat)
+   call MPI_Comm_size(mpi_comm, nranks, stat)
    if (stat /= MPI_SUCCESS) then
       call fatal_error(error, "Could not determine size of MPI communicator")
       return
@@ -104,10 +108,12 @@ subroutine allreduce_sum_rank1(comm, val, error)
    type(error_type), allocatable, intent(out) :: error
 
 #ifdef WITH_MPI
+   type(MPI_Comm) :: mpi_comm
    integer :: stat
 
+   mpi_comm%mpi_val = comm
    call MPI_Allreduce(MPI_IN_PLACE, val, size(val), MPI_DOUBLE_PRECISION, MPI_SUM, &
-      & comm, stat)
+      & mpi_comm, stat)
    if (stat /= MPI_SUCCESS) then
       call fatal_error(error, "Could not reduce results over MPI communicator")
       return
