@@ -15,7 +15,7 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_app_help
-   use dftd3, only : get_dftd3_version
+   use dftd3, only : get_dftd3_version, dftd3_has_mpi
    implicit none
    private
 
@@ -186,6 +186,7 @@ subroutine version(unit)
    call get_dftd3_version(string=version_string)
    write(unit, "(a, *(1x, a))") &
       & prog_name, "version", version_string
+   if (dftd3_has_mpi) write(unit, "(2x, a)") "+ MPI support"
 
 end subroutine version
 

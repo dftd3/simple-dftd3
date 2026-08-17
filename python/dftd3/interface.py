@@ -572,6 +572,10 @@ class DispersionModel(Structure):
         complete calculation. Structure dependent quantities are evaluated for
         the full system on every part, only the pairwise, three-body and
         reciprocal space loops are partitioned.
+
+        The MPI aware entry points of the C API are not bound here, binding a
+        communicator would make mpi4py a dependency. Distribute the parts
+        yourself and reduce the results.
         """
 
         library.set_model_work_partition(self._disp, part, nparts)
@@ -683,6 +687,10 @@ class GeometricCounterpoise(Structure):
 
         Parts are zero based, summing the results of all parts reproduces the
         complete calculation.
+
+        The MPI aware entry points of the C API are not bound here, binding a
+        communicator would make mpi4py a dependency. Distribute the parts
+        yourself and reduce the results.
         """
 
         library.set_gcp_work_partition(self._gcp, part, nparts)

@@ -43,6 +43,12 @@ if get_option('openmp')
   lib_deps += omp_dep
 endif
 
+if get_option('mpi')
+  mpi_dep = dependency('mpi', language: 'fortran')
+  lib_deps += mpi_dep
+  add_project_arguments('-DWITH_MPI', language: 'fortran')
+endif
+
 # Create the tool chain library as subproject
 mctc_dep = dependency(
   'mctc-lib',

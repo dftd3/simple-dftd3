@@ -127,6 +127,7 @@ if install
     'CMAKE_INSTALL_LIBDIR': get_option('libdir'),
     'SDFTD3_WITH_API': get_option('api') ? 'ON' : 'OFF',
     'SDFTD3_WITH_OpenMP': get_option('openmp') ? 'ON' : 'OFF',
+    'SDFTD3_WITH_MPI': get_option('mpi') ? 'ON' : 'OFF',
     'SDFTD3_USE_MCTCLIB': mctc_dep.type_name() != 'internal' ? 'ON' : 'OFF',
     'module-dir': module_id,
   })

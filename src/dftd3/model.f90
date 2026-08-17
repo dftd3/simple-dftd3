@@ -19,6 +19,7 @@ module dftd3_model
    use dftd3_citation, only : citation_type, get_citation, doi_fourier_d3
    use dftd3_data, only : get_r4r2_val, get_vdw_rad
    use dftd3_fourier_decomposition, only : d3_lowrank_c6, d3_lowrank_config, new_lowrank_c6
+   use dftd3_partition, only : work_partition, owns_pair
    use dftd3_reference, only : number_of_references, reference_cn, get_c6, init_reference_c6
    use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp
@@ -336,7 +337,8 @@ end function is_exceptional
 !>
 !> The second derivatives require a model without a low-rank expansion, which
 !> only provides the coefficients and their first derivatives.
-subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, d2c6dcnij)
+subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, &
+      & d2c6dcnij, partition)
 
    !> Instance of the dispersion model
    class(d3_model), intent(in) :: self
@@ -365,6 +367,10 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
    !> Mixed second derivative of the C6 w.r.t. both coordination numbers
    real(wp), intent(out), optional :: d2c6dcnij(:, :)
 
+   !> Only evaluate the pairs of this part, the caller has to know that the
+   !> missing coefficients are not consumed, see dftd3_partition
+   type(work_partition), intent(in), optional :: partition
+
    integer :: iat, jat, izp, jzp, iref, jref
    real(wp) :: refc6, dc6, dc6dcni, dc6dcnj
    real(wp) :: d2c6dcni, d2c6dcnj, d2c6mix
@@ -385,6 +391,7 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
 
       !$omp parallel do schedule(runtime) default(none) &
       !$omp shared(c6, dc6dcn, d2c6dcn2, d2c6dcnij, mol, self, gwvec, gwdcn, gwd2cn) &
+      !$omp shared(partition) &
       !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6, dc6dcni, dc6dcnj, &
       !$omp& d2c6dcni, d2c6dcnj, d2c6mix)
       do iat = 1, mol%nat
@@ -392,6 +399,7 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
          izp = mol%id(iat)
          do jat = 1, iat
             if (self%ghost(jat)) cycle
+            if (.not.owns_pair(partition, iat, jat)) cycle
             jzp = mol%id(jat)
             dc6 = 0.0_wp
             dc6dcni = 0.0_wp
@@ -426,13 +434,14 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
       dc6dcn(:, :) = 0.0_wp
 
       !$omp parallel do schedule(runtime) default(none) &
-      !$omp shared(c6, dc6dcn, mol, self, gwvec, gwdcn) &
+      !$omp shared(c6, dc6dcn, mol, self, gwvec, gwdcn, partition) &
       !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6, dc6dcni, dc6dcnj)
       do iat = 1, mol%nat
          if (self%ghost(iat)) cycle
          izp = mol%id(iat)
          do jat = 1, iat
             if (self%ghost(jat)) cycle
+            if (.not.owns_pair(partition, iat, jat)) cycle
             jzp = mol%id(jat)
             dc6 = 0.0_wp
             dc6dcni = 0.0_wp
@@ -457,13 +466,14 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
       c6(:, :) = 0.0_wp
 
       !$omp parallel do schedule(runtime) default(none) &
-      !$omp shared(c6, mol, self, gwvec) &
+      !$omp shared(c6, mol, self, gwvec, partition) &
       !$omp private(iat, jat, izp, jzp, iref, jref, refc6, dc6)
       do iat = 1, mol%nat
          if (self%ghost(iat)) cycle
          izp = mol%id(iat)
          do jat = 1, iat
             if (self%ghost(jat)) cycle
+            if (.not.owns_pair(partition, iat, jat)) cycle
             jzp = mol%id(jat)
             dc6 = 0.0_wp
             do iref = 1, self%ref(izp)

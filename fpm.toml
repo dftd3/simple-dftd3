@@ -16,6 +16,7 @@ mstore.git = "https://github.com/grimme-lab/mstore"
 mstore.tag = "v0.3.0"
 
 [build]
+external-modules = ["mpi_f08"]
 auto-tests = false
 
 [[executable]]

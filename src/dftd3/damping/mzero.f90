@@ -46,6 +46,9 @@ module dftd3_damping_mzero
       !> Evaluate ATM three-body dispersion energy expression
       procedure :: get_dispersion3_impl => get_dispersion3
 
+      !> Whether the three-body term contributes to the energy
+      procedure :: has_threebody
+
       !> Evaluate pairwise representation of additive dispersion energy
       procedure :: get_pairwise_dispersion2_impl => get_pairwise_dispersion2
 
@@ -85,6 +88,20 @@ subroutine new_mzero_damping(self, param)
    self%bet = param%bet
 
 end subroutine new_mzero_damping
+
+
+!> Whether the three-body term contributes to the energy
+pure function has_threebody(self) result(has)
+
+   !> Damping parameters
+   class(mzero_damping_param), intent(in) :: self
+
+   !> Whether the three-body term contributes
+   logical :: has
+
+   has = abs(self%s9) >= epsilon(1.0_wp)
+
+end function has_threebody
 
 
 !> Pair dispersion kernel and its derivatives w.r.t. squared distance and C6

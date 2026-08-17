@@ -54,6 +54,8 @@ module dftd3_damping
       procedure(dispersion3_hessian_interface), deferred :: get_dispersion3_hessian
       !> Whether the damping function can be evaluated by Ewald summation
       procedure :: supports_ewald
+      !> Whether the three-body term contributes to the energy
+      procedure :: has_threebody
       !> Reciprocal space representation of the damped pair potential
       procedure :: get_fourier_terms
       !> Evaluate the two-body dispersion energy by Ewald summation
@@ -245,6 +247,24 @@ contains
       supported = .false.
 
    end function supports_ewald
+
+
+   !> Whether the three-body term contributes to the energy.
+   !>
+   !> The three-body term reads the C6 coefficients of pairs outside the work
+   !> partition, a damping function without it only needs its own pairs.
+   !> Assume the worst for damping functions that do not answer.
+   pure function has_threebody(self) result(has)
+
+      !> Damping parameters
+      class(damping_param), intent(in) :: self
+
+      !> Whether the three-body term contributes
+      logical :: has
+
+      has = .true.
+
+   end function has_threebody
 
 
    !> Reciprocal space representation of the damped pair potential.

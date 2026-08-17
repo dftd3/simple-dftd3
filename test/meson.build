@@ -19,4 +19,7 @@ if get_option('api')
 endif
 
 subdir('unit')
+if get_option('mpi')
+  subdir('mpi')
+endif
 subdir('validation')

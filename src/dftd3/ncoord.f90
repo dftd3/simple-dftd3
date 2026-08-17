@@ -16,6 +16,7 @@
 
 module dftd3_ncoord
    use, intrinsic :: iso_fortran_env, only : error_unit
+   use dftd3_partition, only : work_partition, owns_pair
    use mctc_env, only : error_type, wp
    use mctc_io, only : structure_type
    use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
@@ -23,6 +24,7 @@ module dftd3_ncoord
    private
 
    public :: get_coordination_number, add_coordination_number_derivs
+   public :: get_partitioned_coordination_number
    public :: add_coordination_number_hessian
 
    !> Steepness of counting function
@@ -59,6 +61,11 @@ subroutine get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
    class(ncoord_type), allocatable :: ncoord
    type(error_type), allocatable :: error
 
+   if (.not.present(dcndr) .and. .not.present(dcndL)) then
+      call get_partitioned_coordination_number(mol, trans, cutoff, rcov, cn)
+      return
+   end if
+
    call new_ncoord(ncoord, mol, cn_count%exp, error, &
       & kcn=default_kcn, cutoff=cutoff, rcov=rcov)
    if(allocated(error)) then
@@ -71,7 +78,79 @@ subroutine get_coordination_number(mol, trans, cutoff, rcov, cn, dcndr, dcndL)
 end subroutine get_coordination_number
 
 
-subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, dEdcn, gradient, sigma)
+!> Geometric fractional coordination number with a partitioned pair loop.
+!>
+!> The counting function is reproduced here rather than taken from mctc-lib,
+!> which offers no way to restrict the pairs it evaluates. The unit tests check
+!> that both agree.
+subroutine get_partitioned_coordination_number(mol, trans, cutoff, rcov, cn, partition)
+
+   !> Molecular structure data
+   type(structure_type), intent(in) :: mol
+
+   !> Lattice points
+   real(wp), intent(in) :: trans(:, :)
+
+   !> Real space cutoff
+   real(wp), intent(in) :: cutoff
+
+   !> Covalent radius
+   real(wp), intent(in) :: rcov(:)
+
+   !> Error function coordination number.
+   real(wp), intent(out) :: cn(:)
+
+   !> Work partition of the pair loop, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
+
+   integer :: iat, jat, izp, jzp, itr
+   real(wp) :: vec(3), r2, r1, rc, cutoff2, countf
+   real(wp), allocatable :: cn_local(:)
+
+   cn(:) = 0.0_wp
+   cutoff2 = cutoff*cutoff
+
+   !$omp parallel default(none) &
+   !$omp shared(mol, trans, cutoff2, rcov, cn, partition) &
+   !$omp private(iat, jat, itr, izp, jzp, vec, r2, r1, rc, countf, cn_local)
+   allocate(cn_local(size(cn)), source=0.0_wp)
+   !$omp do schedule(runtime)
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
+         jzp = mol%id(jat)
+         rc = rcov(izp) + rcov(jzp)
+         do itr = 1, size(trans, 2)
+            vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, itr))
+            r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
+            if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
+            r1 = sqrt(r2)
+
+            countf = 1.0_wp/(1.0_wp + exp(-default_kcn*(rc/r1 - 1.0_wp)))
+
+            cn_local(iat) = cn_local(iat) + countf
+            if (iat /= jat) cn_local(jat) = cn_local(jat) + countf
+         end do
+      end do
+   end do
+   !$omp end do
+   !$omp critical (get_partitioned_coordination_number_)
+   cn(:) = cn(:) + cn_local(:)
+   !$omp end critical (get_partitioned_coordination_number_)
+   deallocate(cn_local)
+   !$omp end parallel
+
+end subroutine get_partitioned_coordination_number
+
+
+!> Contract the derivative of the coordination number with the derivative of
+!> the energy with respect to the coordination number.
+!>
+!> A partitioned pair loop requires the complete dEdcn, the parts have to
+!> exchange it beforehand.
+subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, dEdcn, gradient, &
+      & sigma, partition)
 
    !> Molecular structure data
    type(structure_type), intent(in) :: mol
@@ -94,17 +173,57 @@ subroutine add_coordination_number_derivs(mol, trans, cutoff, rcov, dEdcn, gradi
    !> Derivative of the CN with respect to strain deformations
    real(wp), intent(inout) :: sigma(:, :)
 
-   class(ncoord_type), allocatable :: ncoord
-   type(error_type), allocatable :: error
+   !> Work partition of the pair loop, absent selects the complete work
+   type(work_partition), intent(in), optional :: partition
 
-   call new_ncoord(ncoord, mol, cn_count%exp, error, &
-      & kcn=default_kcn, cutoff=cutoff, rcov=rcov)
-   if(allocated(error)) then
-      write(error_unit, '("[Error]:", 1x, a)') error%message
-      error stop
-   end if
+   integer :: iat, jat, izp, jzp, itr
+   real(wp) :: vec(3), r2, r1, rc, cutoff2, expterm, cf, dcf, countd(3), ds(3, 3)
+   real(wp), allocatable :: gradient_local(:, :), sigma_local(:, :)
 
-   call ncoord%add_coordination_number_derivs(mol, trans, dEdcn, gradient, sigma)
+   cutoff2 = cutoff*cutoff
+
+   !$omp parallel default(none) &
+   !$omp shared(mol, trans, cutoff2, rcov, dEdcn, gradient, sigma, partition) &
+   !$omp private(iat, jat, itr, izp, jzp, vec, r2, r1, rc, expterm, cf, dcf) &
+   !$omp private(countd, ds, gradient_local, sigma_local)
+   allocate(gradient_local(size(gradient, 1), size(gradient, 2)), source=0.0_wp)
+   allocate(sigma_local(size(sigma, 1), size(sigma, 2)), source=0.0_wp)
+   !$omp do schedule(runtime)
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      do jat = 1, iat
+         if (.not.owns_pair(partition, iat, jat)) cycle
+         jzp = mol%id(jat)
+         rc = rcov(izp) + rcov(jzp)
+         do itr = 1, size(trans, 2)
+            vec(:) = mol%xyz(:, iat) - (mol%xyz(:, jat) + trans(:, itr))
+            r2 = vec(1)*vec(1) + vec(2)*vec(2) + vec(3)*vec(3)
+            if (r2 > cutoff2 .or. r2 < 1.0e-12_wp) cycle
+            r1 = sqrt(r2)
+
+            expterm = exp(-default_kcn*(rc/r1 - 1.0_wp))
+            cf = 1.0_wp/(1.0_wp + expterm)
+            dcf = -cf*(1.0_wp - cf)*default_kcn*rc/r2
+            countd(:) = dcf * vec/r1
+
+            gradient_local(:, iat) = gradient_local(:, iat) &
+               & + countd*(dEdcn(iat) + dEdcn(jat))
+            gradient_local(:, jat) = gradient_local(:, jat) &
+               & - countd*(dEdcn(iat) + dEdcn(jat))
+
+            ds(:, :) = spread(countd, 1, 3) * spread(vec, 2, 3)
+            sigma_local(:, :) = sigma_local(:, :) &
+               & + ds*(dEdcn(iat) + merge(dEdcn(jat), 0.0_wp, jat /= iat))
+         end do
+      end do
+   end do
+   !$omp end do
+   !$omp critical (add_coordination_number_derivs_)
+   gradient(:, :) = gradient(:, :) + gradient_local(:, :)
+   sigma(:, :) = sigma(:, :) + sigma_local(:, :)
+   !$omp end critical (add_coordination_number_derivs_)
+   deallocate(gradient_local, sigma_local)
+   !$omp end parallel
 
 end subroutine add_coordination_number_derivs
 

@@ -15,3 +15,6 @@
 # along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 add_subdirectory("unit")
+if(SDFTD3_WITH_MPI)
+  add_subdirectory("mpi")
+endif()

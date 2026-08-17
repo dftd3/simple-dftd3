@@ -71,6 +71,12 @@ typedef struct _dftd3_param* dftd3_param;
 SDFTD3_API_ENTRY int SDFTD3_API_CALL
 dftd3_get_version() SDFTD3_API_SUFFIX__V_0_2;
 
+/// Query whether an optional feature is available in this build.
+///
+/// Currently only "mpi" is defined, unknown features are not available.
+SDFTD3_API_ENTRY bool SDFTD3_API_CALL
+dftd3_has_feature(char* /* feature */) SDFTD3_API_SUFFIX__V_1_6;
+
 /*
  * Error handle class
 **/
@@ -181,6 +187,15 @@ dftd3_set_model_work_partition(dftd3_error /* error */,
                                dftd3_model /* model */,
                                int /* part */,
                                int /* nparts */) SDFTD3_API_SUFFIX__V_1_6;
+
+/// Distribute the interaction loops of this model over an MPI communicator.
+///
+/// Communicators are passed as Fortran handles, use MPI_Comm_c2f to convert.
+/// Reports an error if the library was built without MPI support.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_model_mpi_comm(dftd3_error /* error */,
+                         dftd3_model /* model */,
+                         int /* comm */) SDFTD3_API_SUFFIX__V_1_6;
 
 /// Delete dispersion model
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
@@ -335,6 +350,17 @@ dftd3_set_gcp_work_partition(dftd3_error /* error */,
                              dftd3_gcp /* gcp */,
                              int /* part */,
                              int /* nparts */) SDFTD3_API_SUFFIX__V_1_6;
+
+/// Distribute the counter-poise correction over an MPI communicator.
+///
+/// In contrast to the externally managed work partition the results are reduced
+/// over the communicator, every rank receives the complete result.
+/// Communicators are passed as Fortran handles, use MPI_Comm_c2f to convert.
+/// Reports an error if the library was built without MPI support.
+SDFTD3_API_ENTRY void SDFTD3_API_CALL
+dftd3_set_gcp_mpi_comm(dftd3_error /* error */,
+                       dftd3_gcp /* gcp */,
+                       int /* comm */) SDFTD3_API_SUFFIX__V_1_6;
 
 /// Delete counter-poise parameters
 SDFTD3_API_ENTRY void SDFTD3_API_CALL

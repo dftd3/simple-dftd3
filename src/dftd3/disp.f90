@@ -19,9 +19,9 @@ module dftd3_disp
    use dftd3_cutoff, only : realspace_cutoff, get_lattice_points
    use dftd3_damping, only : damping_param, get_dispersion2_hessian
    use dftd3_model, only : d3_model
-   use dftd3_ncoord, only : get_coordination_number, add_coordination_number_derivs, &
-      & add_coordination_number_hessian
-   use dftd3_partition, only : work_partition
+   use dftd3_ncoord, only : get_coordination_number, get_partitioned_coordination_number, &
+      & add_coordination_number_derivs, add_coordination_number_hessian
+   use dftd3_partition, only : work_partition, work_reducer
    use mctc_data, only : get_covalent_rad
    use mctc_env, only : wp, error_type, fatal_error
    use mctc_io, only : structure_type
@@ -54,7 +54,7 @@ contains
 !> The dispersion model and the damping parameters have to agree on the summation
 !> technique, an inconsistent setup is reported in the error handler.
 subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
-      & gradient, sigma, hessian, partition)
+      & gradient, sigma, hessian, partition, reducer)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -86,6 +86,9 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
    !> Work partition of the interaction loops, see dftd3_partition
    type(work_partition), intent(in), optional :: partition
 
+   !> Communication backend, enables partitioning the coordination number
+   class(work_reducer), intent(in), optional :: reducer
+
    logical :: grad, hess, ewald
    integer :: mref
    real(wp), allocatable :: cn(:)
@@ -116,7 +119,14 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
 
    allocate(cn(mol%nat))
    call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-   call get_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
+   if (present(reducer)) then
+      call get_partitioned_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn, &
+         & partition)
+      call reducer%reduce(cn, error)
+      if (allocated(error)) return
+   else
+      call get_partitioned_coordination_number(mol, lattr, cutoff%cn, disp%rcov, cn)
+   end if
 
    allocate(gwvec(mref, mol%nat))
    if (grad) allocate(gwdcn(mref, mol%nat))
@@ -124,7 +134,12 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
 
    allocate(c6(mol%nat, mol%nat))
    if (grad) allocate(dc6dcn(mol%nat, mol%nat))
-   call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
+   if (param%has_threebody()) then
+      ! the three-body term reads coefficients of pairs this part does not own
+      call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
+   else
+      call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, partition=partition)
+   end if
 
    energies(:) = 0.0_wp
    if (grad) then
@@ -151,8 +166,15 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
       & sigma_local, partition)
    if (grad) then
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
-      call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
-         & gradient_local, sigma_local)
+      if (present(reducer)) then
+         call reducer%reduce(dEdcn, error)
+         if (allocated(error)) return
+         call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
+            & gradient_local, sigma_local, partition)
+      else
+         call add_coordination_number_derivs(mol, lattr, cutoff%cn, disp%rcov, dEdcn, &
+            & gradient_local, sigma_local)
+      end if
       if (present(gradient)) gradient(:, :) = gradient_local(:, :)
       if (present(sigma)) sigma(:, :) = sigma_local(:, :)
    end if
@@ -328,7 +350,7 @@ end subroutine get_dispersion_scalar
 
 !> Calculate scalar dispersion energy, reporting an inconsistent setup.
 subroutine get_dispersion_scalar_v2(error, mol, disp, param, cutoff, energy, &
-      & gradient, sigma, hessian, partition)
+      & gradient, sigma, hessian, partition, reducer)
 
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
@@ -360,13 +382,16 @@ subroutine get_dispersion_scalar_v2(error, mol, disp, param, cutoff, energy, &
    !> Work partition of the interaction loops, see dftd3_partition
    type(work_partition), intent(in), optional :: partition
 
+   !> Communication backend, enables partitioning the coordination number
+   class(work_reducer), intent(in), optional :: reducer
+
    real(wp), allocatable :: energies(:)
 
    allocate(energies(mol%nat))
    energy = 0.0_wp
 
    call get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
-      & gradient, sigma, hessian, partition)
+      & gradient, sigma, hessian, partition, reducer)
    if (allocated(error)) return
 
    energy = sum(energies)

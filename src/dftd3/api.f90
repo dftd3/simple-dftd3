@@ -32,9 +32,12 @@ module dftd3_api
    use dftd3_damping_z, only : z_damping_param, new_z_damping
    use dftd3_damping_zero, only : zero_damping_param, new_zero_damping
    use dftd3_disp, only : get_dispersion, get_pairwise_dispersion
+   use dftd3_feature, only : dftd3_has_feature
    use dftd3_gcp, only : gcp_param, get_gcp_param, get_geometric_counterpoise, &
       & get_geometric_counterpoise_hessian
    use dftd3_model, only : d3_model, new_d3_model, d3_lowrank_config
+   use dftd3_mpi, only : get_dispersion_mpi, get_counterpoise_mpi, &
+      & new_mpi_work_partition
    use dftd3_param, only : d3_param, get_rational_damping, get_zero_damping, &
       & get_mrational_damping, get_mzero_damping, get_optimizedpower_damping, &
       & get_cso_damping, get_z_damping
@@ -47,6 +50,7 @@ module dftd3_api
    private
 
    public :: get_version_api
+   public :: has_feature_api
 
    public :: vp_error
    public :: new_error_api, check_error_api, get_error_api, delete_error_api
@@ -56,6 +60,7 @@ module dftd3_api
 
    public :: set_model_realspace_cutoff, set_model_realspace_cutoff_smooth
    public :: set_model_ewald, set_model_work_partition
+   public :: set_model_mpi_comm
    public :: get_dispersion_api, get_pairwise_dispersion_api
    public :: get_dispersion_hessian_api
    public :: vp_model
@@ -74,6 +79,7 @@ module dftd3_api
    public :: vp_gcp
    public :: load_gcp_param_api, delete_gcp_api, set_gcp_realspace_cutoff
    public :: set_gcp_work_partition
+   public :: set_gcp_mpi_comm
    public :: get_counterpoise_api
    public :: get_counterpoise_hessian_api
 
@@ -98,6 +104,8 @@ module dftd3_api
       type(realspace_cutoff), allocatable :: cutoff
       !> Work partition of the interaction loops
       type(work_partition) :: partition
+      !> Communicator to distribute over, results are reduced over it when set
+      integer, allocatable :: comm
    end type vp_model
 
    !> Void pointer to damping parameters
@@ -114,6 +122,8 @@ module dftd3_api
       type(realspace_cutoff), allocatable :: cutoff
       !> Work partition of the interaction loops
       type(work_partition) :: partition
+      !> Communicator to distribute over, results are reduced over it when set
+      integer, allocatable :: comm
    end type vp_gcp
 
 
@@ -133,6 +143,23 @@ function get_version_api() result(version) &
    version = 10000_c_int * major + 100_c_int * minor + patch
 
 end function get_version_api
+
+
+!> Query whether an optional feature is available in this build, currently
+!> only "mpi" is defined
+function has_feature_api(charptr) result(has) &
+      & bind(C, name=namespace//"has_feature")
+   character(kind=c_char), intent(in), optional :: charptr(*)
+   logical(c_bool) :: has
+   character(len=:), allocatable :: feature
+
+   has = .false._c_bool
+   if (.not.present(charptr)) return
+
+   call c_f_character(charptr, feature)
+   has = logical(dftd3_has_feature(feature), c_bool)
+
+end function has_feature_api
 
 
 !> Create new error handle object
@@ -448,6 +475,32 @@ subroutine set_model_work_partition(verror, vdisp, part, nparts) &
 
    call new_work_partition(error%ptr, disp%partition, int(part), int(nparts))
 end subroutine set_model_work_partition
+
+
+!> Distribute the interaction loops of this model over an MPI communicator.
+subroutine set_model_mpi_comm(verror, vdisp, comm) &
+      & bind(C, name=namespace//"set_model_mpi_comm")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vdisp
+   type(vp_model), pointer :: disp
+   integer(c_int), value, intent(in) :: comm
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vdisp)) then
+      call fatal_error(error%ptr, "D3 dispersion model is missing")
+      return
+   end if
+   call c_f_pointer(vdisp, disp)
+
+   ! reports a missing MPI build or an unusable communicator
+   call new_mpi_work_partition(error%ptr, disp%partition, int(comm))
+   if (allocated(error%ptr)) return
+
+   disp%comm = int(comm)
+end subroutine set_model_mpi_comm
 
 
 subroutine set_model_ghost_index(verror, vdisp, ghost, nidx) &
@@ -1035,8 +1088,13 @@ subroutine get_dispersion_api(verror, vmol, vdisp, vparam, &
    if (allocated(disp%cutoff)) then
       cutoff = disp%cutoff
    end if
-   call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
-      & energy, gradient, sigma, partition=disp%partition)
+   if (allocated(disp%comm)) then
+      call get_dispersion_mpi(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
+         & disp%comm, energy, gradient, sigma)
+   else
+      call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
+         & energy, gradient, sigma, partition=disp%partition)
+   end if
    if (allocated(error%ptr)) return
 
    if (present(c_gradient)) then
@@ -1101,8 +1159,13 @@ subroutine get_dispersion_hessian_api(verror, vmol, vdisp, vparam, &
    if (allocated(disp%cutoff)) then
       cutoff = disp%cutoff
    end if
-   call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
-      & energy, hessian=hessian, partition=disp%partition)
+   if (allocated(disp%comm)) then
+      call get_dispersion_mpi(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
+         & disp%comm, energy, hessian=hessian)
+   else
+      call get_dispersion(error%ptr, mol%ptr, disp%ptr, param%ptr, cutoff, &
+         & energy, hessian=hessian, partition=disp%partition)
+   end if
    if (allocated(error%ptr)) return
 
    c_hessian(:ndim*ndim) = reshape(hessian, [ndim*ndim])
@@ -1251,6 +1314,36 @@ subroutine set_gcp_work_partition(verror, vgcp, part, nparts) &
 end subroutine set_gcp_work_partition
 
 
+!> Distribute the counter-poise correction over an MPI communicator.
+!>
+!> In contrast to the externally managed work partition the results are
+!> reduced over the communicator, every rank receives the complete result.
+!> Communicators are passed as Fortran handles, use MPI_Comm_c2f to convert.
+subroutine set_gcp_mpi_comm(verror, vgcp, comm) &
+      & bind(C, name=namespace//"set_gcp_mpi_comm")
+   type(c_ptr), value :: verror
+   type(vp_error), pointer :: error
+   type(c_ptr), value :: vgcp
+   type(vp_gcp), pointer :: gcp
+   integer(c_int), value, intent(in) :: comm
+
+   if (.not.c_associated(verror)) return
+   call c_f_pointer(verror, error)
+
+   if (.not.c_associated(vgcp)) then
+      call fatal_error(error%ptr, "Counter-poise parameters are missing")
+      return
+   end if
+   call c_f_pointer(vgcp, gcp)
+
+   ! reports a missing MPI build or an unusable communicator
+   call new_mpi_work_partition(error%ptr, gcp%partition, int(comm))
+   if (allocated(error%ptr)) return
+
+   gcp%comm = int(comm)
+end subroutine set_gcp_mpi_comm
+
+
 !> Delete counter-poise parameter handle object
 subroutine delete_gcp_api(vgcp) &
       & bind(C, name=namespace//"delete_gcp")
@@ -1312,8 +1405,14 @@ subroutine get_counterpoise_api(verror, vmol, vgcp, &
       cutoff = gcp%cutoff
    end if
    energy = 0.0_wp
-   call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, &
-      & energy, gradient, sigma, gcp%partition)
+   if (allocated(gcp%comm)) then
+      call get_counterpoise_mpi(error%ptr, mol%ptr, gcp%ptr, cutoff, gcp%comm, &
+         & energy, gradient, sigma)
+      if (allocated(error%ptr)) return
+   else
+      call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, &
+         & energy, gradient, sigma, gcp%partition)
+   end if
 
    if (present(c_gradient)) then
       c_gradient(:3, :mol%ptr%nat) = gradient
@@ -1365,8 +1464,16 @@ subroutine get_counterpoise_hessian_api(verror, vmol, vgcp, &
       cutoff = gcp%cutoff
    end if
    energy = 0.0_wp
-   call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, energy, partition=gcp%partition)
-   call get_geometric_counterpoise_hessian(mol%ptr, gcp%ptr, cutoff, hessian, gcp%partition)
+   if (allocated(gcp%comm)) then
+      call get_counterpoise_mpi(error%ptr, mol%ptr, gcp%ptr, cutoff, gcp%comm, &
+         & energy, hessian=hessian)
+      if (allocated(error%ptr)) return
+   else
+      call get_geometric_counterpoise(mol%ptr, gcp%ptr, cutoff, energy, &
+         & partition=gcp%partition)
+      call get_geometric_counterpoise_hessian(mol%ptr, gcp%ptr, cutoff, hessian, &
+         & gcp%partition)
+   end if
 
    c_hessian(:ndim*ndim) = reshape(hessian, [ndim*ndim])
 
