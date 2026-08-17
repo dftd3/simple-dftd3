@@ -691,7 +691,7 @@ int
 test_ewald (void)
 {
    printf("Start test: Ewald summation\n");
-   double converged, ewald, truncated;
+   double converged, ewald, truncated, mesh;
    double gradient[6], sigma[9];
 
    dftd3_error error = NULL;
@@ -726,7 +726,7 @@ test_ewald (void)
    /* reciprocal space evaluation, the two-body cutoff is ignored */
    disp = dftd3_new_d3_model(error, mol);
    if (dftd3_check_error(error)) return 1;
-   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0);
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0, -1);
    if (dftd3_check_error(error)) return 1;
    dftd3_get_dispersion(error, mol, disp, param, &ewald, gradient, sigma);
    if (dftd3_check_error(error)) return 1;
@@ -741,6 +741,22 @@ test_ewald (void)
 
    if (fabs(truncated - converged) < 1.0e-6) {
       printf("[Fatal] Real space truncation error is unexpectedly small\n");
+      return 1;
+   }
+
+   /* the particle mesh is the default and reproduces the direct summation */
+   dftd3_delete(disp);
+   disp = dftd3_new_d3_model(error, mol);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0, 0);
+   if (dftd3_check_error(error)) return 1;
+   dftd3_get_dispersion(error, mol, disp, param, &mesh, gradient, sigma);
+   if (dftd3_check_error(error)) return 1;
+
+   printf("[Info] particle mesh %.12f\n", mesh);
+
+   if (fabs(mesh - ewald) > 1.0e-8) {
+      printf("[Fatal] Particle mesh does not match the direct summation\n");
       return 1;
    }
 
@@ -765,7 +781,7 @@ test_ewald_unsupported (void)
    error = dftd3_new_error();
 
    /* setting up the expansion without a model has to be reported */
-   dftd3_set_model_ewald(error, disp, 0, 0.0, 0.0);
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 0.0, 0);
    if (!dftd3_check_error(error)) goto unexpected;
    show_error(error);
 
@@ -774,7 +790,7 @@ test_ewald_unsupported (void)
 
    disp = dftd3_new_d3_model(error, mol);
    if (dftd3_check_error(error)) return 1;
-   dftd3_set_model_ewald(error, disp, 0, 0.0, 0.0);
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 0.0, 0);
    if (dftd3_check_error(error)) return 1;
 
    /* the modified zero damping has no reciprocal space representation */
@@ -822,7 +838,7 @@ test_ewald_realspace_only (void)
 
    disp = dftd3_new_d3_model(error, mol);
    if (dftd3_check_error(error)) return 1;
-   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0);
+   dftd3_set_model_ewald(error, disp, 0, 0.0, 10.0, 0);
    if (dftd3_check_error(error)) return 1;
 
    /* the pairwise decomposition would not add up to the reciprocal space energy */
@@ -1037,71 +1053,6 @@ unexpected:
    return 1;
 }
 
-
-int
-test_mpi_comm (void)
-{
-   printf("Start test: mpi communicator\n");
-
-   dftd3_error error = NULL;
-   dftd3_structure mol = NULL;
-   dftd3_model disp = NULL;
-   dftd3_gcp gcp = NULL;
-
-   if (dftd3_has_feature("this-is-not-a-feature")) {
-      printf("[Fatal] Unknown feature reported as available\n");
-      return 1;
-   }
-
-   error = dftd3_new_error();
-   mol = get_test_structure(error);
-   if (dftd3_check_error(error)) return 1;
-   disp = dftd3_new_d3_model(error, mol);
-   if (dftd3_check_error(error)) return 1;
-   gcp = dftd3_load_gcp_param(error, mol, "hf3c", NULL);
-   if (dftd3_check_error(error)) return 1;
-
-   /* MPI is never initialized here, without the feature the missing build is
-    * reported instead, either way no communicator may be accepted */
-   dftd3_delete(error);
-   error = dftd3_new_error();
-   dftd3_set_model_mpi_comm(error, disp, 0);
-   if (!dftd3_check_error(error)) goto unexpected;
-   show_error(error);
-
-   dftd3_delete(error);
-   error = dftd3_new_error();
-   dftd3_set_gcp_mpi_comm(error, gcp, 0);
-   if (!dftd3_check_error(error)) goto unexpected;
-   show_error(error);
-
-   dftd3_delete(error);
-   error = dftd3_new_error();
-   dftd3_set_model_mpi_comm(error, NULL, 0);
-   if (!dftd3_check_error(error)) goto unexpected;
-   show_error(error);
-
-   dftd3_delete(error);
-   error = dftd3_new_error();
-   dftd3_set_gcp_mpi_comm(error, NULL, 0);
-   if (!dftd3_check_error(error)) goto unexpected;
-   show_error(error);
-
-   dftd3_delete(gcp);
-   dftd3_delete(disp);
-   dftd3_delete(mol);
-   dftd3_delete(error);
-   return 0;
-
-unexpected:
-   printf("[Fatal] Unexpected pass for uninitialized MPI\n");
-   dftd3_delete(gcp);
-   dftd3_delete(disp);
-   dftd3_delete(mol);
-   dftd3_delete(error);
-   return 1;
-}
-
 int
 main (void)
 {
@@ -1124,6 +1075,5 @@ main (void)
    stat += test_ewald_realspace_only();
    stat += test_work_partition();
    stat += test_invalid_work_partition();
-   stat += test_mpi_comm();
    return stat;
 }

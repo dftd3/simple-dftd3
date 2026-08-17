@@ -542,6 +542,7 @@ class DispersionModel(Structure):
         rank: int = 0,
         tolerance: float = 0.0,
         kcut: float = 0.0,
+        mesh: int = 0,
     ) -> None:
         """
         Evaluate the two-body dispersion energy by summation over the reciprocal
@@ -555,9 +556,16 @@ class DispersionModel(Structure):
         Non-positive arguments select the respective default, a vanishing rank
         derives the rank of the expansion from the tolerance and a vanishing
         reciprocal cutoff derives it from the damping radii.
+
+        The mesh selects how the reciprocal space sum is evaluated. Zero derives
+        a particle mesh from the reciprocal cutoff, which scales as O(N log N)
+        and is the default. A positive value interpolates the structure factors
+        on a mesh of that many points per direction, rounded up to a power of
+        two, and a negative value sums over the reciprocal lattice directly,
+        which is exact but scales quadratically with the number of atoms.
         """
 
-        library.set_model_ewald(self._disp, rank, tolerance, kcut)
+        library.set_model_ewald(self._disp, rank, tolerance, kcut, mesh)
 
     def set_ghost_atoms(self, ghost_atoms) -> None:
         """Disable dispersion contributions from selected atoms."""

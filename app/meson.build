@@ -49,6 +49,15 @@ if os != 'windows'
   test('ewald-kcut', sdftd3_exe,
     args: ['--bj', 'pbe', '--ewald-kcut', '8.0', '--noedisp', files('example.poscar')],
     suite: 'app')
+  test('ewald-mesh', sdftd3_exe,
+    args: ['--bj', 'pbe', '--ewald-mesh', '32', '--noedisp', files('example.poscar')],
+    suite: 'app')
+  test('ewald-direct', sdftd3_exe,
+    args: ['--bj', 'pbe', '--ewald-direct', '--noedisp', files('example.poscar')],
+    suite: 'app')
+  test('ewald-mesh-invalid', sdftd3_exe,
+    args: ['--bj', 'pbe', '--ewald-mesh', '0', '--noedisp', files('example.poscar')],
+    should_fail: true, suite: 'app')
   test('ewald-molecular', sdftd3_exe,
     args: ['--bj', 'pbe', '--ewald', '--noedisp', files('example.xyz')],
     should_fail: true, suite: 'app')

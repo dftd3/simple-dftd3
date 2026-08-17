@@ -20,7 +20,8 @@ program mpi_tester
    use, intrinsic :: iso_fortran_env, only : error_unit
    use dftd3, only : get_dispersion, get_dispersion_mpi, new_mpi_work_partition, &
       & work_partition, realspace_cutoff, d3_model, new_d3_model, d3_param, &
-      & rational_damping_param, new_rational_damping, dftd3_has_mpi
+      & rational_damping_param, new_rational_damping, dftd3_has_mpi, &
+      & d3_lowrank_config
    use mctc_env, only : wp, error_type
    use mctc_io, only : structure_type
    use mpi_f08, only : MPI_COMM_WORLD, MPI_Init, MPI_Finalize, MPI_Abort, MPI_Comm_rank
@@ -60,6 +61,32 @@ program mpi_tester
       input%s9 = merge(0.0_wp, 1.0_wp, idamp == 1)
       call new_rational_damping(param, input)
 
+      call check_distributed("real space")
+   end do
+
+   ! the reciprocal space summation hands out whole terms of the low-rank
+   ! expansion, on a particle mesh and over the reciprocal lattice alike
+   call get_structure(mol, "X23", "acetic")
+   deallocate(gradient, gradient_ref)
+   allocate(gradient(3, mol%nat), gradient_ref(3, mol%nat))
+   call new_rational_damping(param, pbe0_d3bj)
+
+   call new_d3_model(d3, mol, lowrank=d3_lowrank_config(tolerance=1.0e-6_wp))
+   call check_distributed("particle mesh")
+
+   call new_d3_model(d3, mol, lowrank=d3_lowrank_config(tolerance=1.0e-6_wp, mesh=-1))
+   call check_distributed("reciprocal lattice")
+
+   if (rank == 0) write(error_unit, "(a)") "# distributed result matches serial result"
+
+   call MPI_Finalize(stat)
+
+contains
+
+
+   subroutine check_distributed(label)
+      character(len=*), intent(in) :: label
+
       call get_dispersion(error, mol, d3, param, realspace_cutoff(), energy_ref, &
          & gradient_ref, sigma_ref)
       if (allocated(error)) call fatal(error%message)
@@ -68,16 +95,10 @@ program mpi_tester
          & MPI_COMM_WORLD%mpi_val, energy, gradient, sigma)
       if (allocated(error)) call fatal(error%message)
 
-      call expect(abs(energy - energy_ref) < thr, "energy")
-      call expect(all(abs(gradient - gradient_ref) < thr), "gradient")
-      call expect(all(abs(sigma - sigma_ref) < thr), "virial")
-   end do
-
-   if (rank == 0) write(error_unit, "(a)") "# distributed result matches serial result"
-
-   call MPI_Finalize(stat)
-
-contains
+      call expect(abs(energy - energy_ref) < thr, label//" energy")
+      call expect(all(abs(gradient - gradient_ref) < thr), label//" gradient")
+      call expect(all(abs(sigma - sigma_ref) < thr), label//" virial")
+   end subroutine check_distributed
 
    subroutine expect(cond, label)
       logical, intent(in) :: cond

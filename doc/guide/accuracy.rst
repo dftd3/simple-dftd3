@@ -105,6 +105,10 @@ The accuracy of the expansion and of the reciprocal sum are controlled independe
   Reciprocal space cutoff in inverse Bohr.
   The default of zero derives it from the damping radii.
 
+``mesh``
+  Number of particle mesh points per direction, see below.
+  The default of zero derives the mesh from ``kcut``, a negative value sums over the reciprocal lattice directly.
+
 Convergence with respect to ``kcut`` is exponential.
 The table lists the deviation from a reference computed with ``kcut`` of 14 a₀\ :sup:`-1`, in Hartree per atom:
 
@@ -133,5 +137,51 @@ The converged two-body energies used as reference above, for PBE-D3(BJ) with :ma
 =================== ======== ==========================
 
 Reproducing these with the real space summation requires a cutoff beyond 300 a₀.
+
+
+Particle mesh evaluation
+------------------------
+
+The direct reciprocal space sum visits every atom at every wave vector, so its cost grows quadratically with the number of atoms.
+Setting ``mesh`` interpolates the structure factors on an equispaced mesh with cardinal B-splines and evaluates the sum with a fast Fourier transform instead, which scales as :math:`O(N \log N)`.
+This is the default; a negative ``mesh`` falls back to the direct summation.
+
+The discretisation error is governed by the mesh spacing, not by the number of mesh points, so the mesh has to grow with the cell.
+The table lists the deviation from the direct summation for cubic carbon monoxide supercells, in Hartree per atom, against the resulting spacing in a₀:
+
+============ ============ ============
+ spacing      atoms        deviation
+============ ============ ============
+ 1.25         250          8.1e-07
+ 1.00         128          2.0e-07
+ 0.75         54           5.7e-09
+ 0.63         250          2.1e-10
+ 0.50         128          2.4e-10
+ 0.38         54           2.8e-11
+============ ============ ============
+
+A spacing near one Bohr matches a well converged real space calculation, and half a Bohr brings the mesh error below the reciprocal cutoff error.
+
+The two settings interact, because the mesh spans the whole Brillouin zone of the mesh while the direct sum stops at ``kcut``.
+Refining the mesh therefore converges past the direct summation rather than towards it.
+
+The cost is set by the mesh rather than by the number of atoms, so it is nearly flat in system size.
+Wall times for the two-body energy of the same supercells, on four threads:
+
+============ ============ ============ ============ ============
+ atoms        real space   direct       mesh 32³     mesh 64³
+============ ============ ============ ============ ============
+ 54           0.002        0.126        0.045        0.346
+ 128          0.005        0.565        0.069        0.354
+ 250          0.010        1.966        0.048        0.381
+============ ============ ============ ============ ============
+
+Against the direct summation the mesh is a clear win and grows more so with system size.
+Against the truncated real space sum it is not: that sum is :math:`O(N)` with a small prefactor and stays cheaper at the accuracy its default cutoff delivers.
+The mesh earns its cost where the real space cutoff cannot reach the required accuracy, which for the systems in the table above means anything below roughly 1e-6 Hartree per atom.
+
+Under a work partition the terms of the low-rank expansion are handed out whole, so the parallelism of the mesh evaluation is capped by the rank rather than by the size of the system.
+For a three-element crystal that rank is 5 at the default tolerance and 9 at a tolerance of 1e-6, and parts beyond it stay idle.
+The direct summation partitions over wave vectors instead and keeps scaling well past that, which is a reason to prefer it when distributing a small cell over many ranks.
 
 .. footbibliography::

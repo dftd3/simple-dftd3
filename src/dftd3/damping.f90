@@ -17,8 +17,10 @@
 module dftd3_damping
    use dftd3_cutoff, only : smooth_cutoff_r2
    use dftd3_fourier_ewald, only : get_dispersion_ewald
+   use dftd3_fourier_fft, only : valid_mesh_size
    use dftd3_fourier_kernel, only : fourier_term, max_fourier_terms, &
       & is_supported_term, get_reciprocal_cutoff
+   use dftd3_fourier_spme, only : get_dispersion_spme, get_spme_mesh
    use dftd3_model, only : d3_model
    use dftd3_partition, only : work_partition, owns_pair
    use mctc_env, only : wp, error_type, fatal_error
@@ -337,7 +339,7 @@ contains
       !> Work partition of the reciprocal space summation
       type(work_partition), intent(in), optional :: partition
 
-      integer :: isp, jsp, it
+      integer :: isp, jsp, it, mesh(3)
       real(wp) :: kcut
       integer, allocatable :: nterm(:, :)
       type(fourier_term), allocatable :: terms(:, :, :)
@@ -365,6 +367,17 @@ contains
       if (kcut <= 0.0_wp) return
 
       if (disp%lowrank%kcut > 0.0_wp) kcut = disp%lowrank%kcut
+
+      if (disp%lowrank%mesh >= 0) then
+         if (disp%lowrank%mesh > 0) then
+            mesh(:) = valid_mesh_size(disp%lowrank%mesh)
+         else
+            mesh(:) = get_spme_mesh(mol%lattice, kcut)
+         end if
+         call get_dispersion_spme(mol, disp%lowrank, disp%ghost, terms, nterm, &
+            & mesh, gwvec, gwdcn, energies, dEdcn, gradient, sigma, partition)
+         return
+      end if
 
       call get_dispersion_ewald(mol, disp%lowrank, disp%ghost, terms, nterm, kcut, &
          & gwvec, gwdcn, energies, dEdcn, gradient, sigma, partition)

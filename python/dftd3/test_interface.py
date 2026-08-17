@@ -283,10 +283,17 @@ def test_ewald_summation() -> None:
     disp = DispersionModel(
         numbers, positions, lattice=lattice, periodic=np.full(3, True)
     )
-    disp.set_ewald_summation(kcut=10.0)
+    disp.set_ewald_summation(kcut=10.0, mesh=-1)
     ewald = disp.get_dispersion(param, grad=False).get("energy")
 
+    disp = DispersionModel(
+        numbers, positions, lattice=lattice, periodic=np.full(3, True)
+    )
+    disp.set_ewald_summation(kcut=10.0)
+    mesh = disp.get_dispersion(param, grad=False).get("energy")
+
     assert ewald == approx(converged, abs=1.0e-7)
+    assert mesh == approx(ewald, abs=1.0e-8)
     assert truncated != approx(converged, abs=1.0e-6)
 
 

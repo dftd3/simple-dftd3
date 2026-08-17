@@ -54,6 +54,11 @@ module dftd3_fourier_decomposition
       !> Reciprocal space cutoff, zero selects the cutoff from the damping radii
       real(wp) :: kcut = 0.0_wp
 
+      !> Number of mesh points for the particle mesh evaluation, zero derives the
+      !> mesh from the reciprocal space cutoff and a negative value sums over the
+      !> reciprocal lattice directly
+      integer :: mesh = 0
+
    end type d3_lowrank_config
 
 
@@ -68,6 +73,9 @@ module dftd3_fourier_decomposition
 
       !> Reciprocal space cutoff, zero selects the cutoff from the damping radii
       real(wp) :: kcut = 0.0_wp
+
+      !> Number of mesh points for the particle mesh evaluation
+      integer :: mesh = 0
 
       !> Eigenvalues of the reference C6 matrix
       real(wp), allocatable :: lambda(:)
@@ -155,6 +163,7 @@ subroutine new_lowrank_c6(self, ref, c6ref, config)
 
    self%rank = nrank
    self%kcut = config%kcut
+   self%mesh = config%mesh
    self%lambda = eval(:nrank)
    allocate(self%vec(mref, nid, nrank), source=0.0_wp)
    do il = 1, nrank

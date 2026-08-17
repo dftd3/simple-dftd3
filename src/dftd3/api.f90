@@ -420,8 +420,9 @@ end subroutine set_model_realspace_cutoff_smooth
 !>
 !> Non-positive values select the respective default, a vanishing rank derives
 !> the rank from the tolerance and a vanishing reciprocal cutoff derives it from
-!> the damping radii.
-subroutine set_model_ewald(verror, vdisp, rank, tolerance, kcut) &
+!> the damping radii. A negative mesh sums over the reciprocal lattice directly
+!> instead of using the particle mesh.
+subroutine set_model_ewald(verror, vdisp, rank, tolerance, kcut, mesh) &
       & bind(C, name=namespace//"set_model_ewald")
    type(c_ptr), value :: verror
    type(vp_error), pointer :: error
@@ -430,6 +431,7 @@ subroutine set_model_ewald(verror, vdisp, rank, tolerance, kcut) &
    integer(c_int), value, intent(in) :: rank
    real(c_double), value, intent(in) :: tolerance
    real(c_double), value, intent(in) :: kcut
+   integer(c_int), value, intent(in) :: mesh
 
    type(d3_lowrank_config) :: config
 
@@ -446,6 +448,7 @@ subroutine set_model_ewald(verror, vdisp, rank, tolerance, kcut) &
    if (rank > 0) config%rank = rank
    if (tolerance > 0.0_wp) config%tolerance = tolerance
    if (kcut > 0.0_wp) config%kcut = kcut
+   config%mesh = mesh
 
    call disp%ptr%set_lowrank(config)
 end subroutine set_model_ewald
