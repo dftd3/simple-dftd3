@@ -149,6 +149,10 @@ Configure a new build with
 
    cmake -B _build -G Ninja -DCMAKE_INSTALL_PREFIX=$HOME/.local
 
+The Python extension can be enabled with CMake 3.18 or newer by adding
+``-DSDFTD3_WITH_PYTHON=ON`` and selecting the interpreter with
+``-DPython3_EXECUTABLE=/path/to/python3``.
+
 You can set the Fortran compiler in the ``FC`` environment variable.
 The installation location can be selected with the ``CMAKE_INSTALL_PREFIX``, GNU install directories are supported by default.
 CMake will automatically fetch the required Fortran modules, you can provide specific version in the *subprojects* directory which will be used instead.
@@ -208,7 +212,8 @@ Python extension module
 -----------------------
 
 The Python API is available as Python extension module.
-The easiest way to setup is to add ``-Dpython=true`` to a meson tree build and follow the :ref:`meson installation instructions <meson-build>`.
+With meson, the easiest way to setup is to add ``-Dpython=true`` to a tree build and follow the :ref:`meson installation instructions <meson-build>`.
+With CMake 3.18 or newer, use ``-DSDFTD3_WITH_PYTHON=ON`` and optionally select the interpreter with ``-DPython3_EXECUTABLE=/path/to/python3``.
 The extension module will become available once the project is installed.
 
 This section describes alternative ways to build the Python API

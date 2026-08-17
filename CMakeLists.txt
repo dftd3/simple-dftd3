@@ -122,6 +122,13 @@ add_library(
   "${PROJECT_NAME}"
 )
 target_link_libraries("${PROJECT_NAME}" INTERFACE "${PROJECT_NAME}-lib")
+
+if(SDFTD3_WITH_PYTHON)
+  if(NOT SDFTD3_WITH_API)
+    message(FATAL_ERROR "SDFTD3_WITH_PYTHON requires SDFTD3_WITH_API")
+  endif()
+  add_subdirectory("python")
+endif()
 install(
   TARGETS
   "${PROJECT_NAME}"

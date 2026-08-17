@@ -30,6 +30,8 @@ jobs:
         retention-days: 5
 
   sdist:
+    needs:
+      - source
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -43,11 +45,19 @@ jobs:
         create-args: >-
           meson-python
           python-build
+    - name: Download source distribution
+      uses: actions/download-artifact@v4
+      with:
+        name: dftd3-source
     - name: Reorganize repository
       run: |
         git config user.email ""
         git config user.name "dummy"
-        git subtree add --prefix python/subprojects/s-dftd3 . HEAD
+        mkdir -p python/subprojects/s-dftd3
+        tar -xJf s-dftd3-*.tar.xz \
+          --strip-components=1 \
+          -C python/subprojects/s-dftd3
+        git add --force python/subprojects/s-dftd3
         git mv {assets,python/dftd3}/parameters.toml
         git commit -m "Python dist"
     - run: |

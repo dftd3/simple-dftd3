@@ -18,4 +18,5 @@ dependencies:
   - meson >=1.2.3,!=1.8.0
   - meson-python
   - setuptools
+  - cmake
   - ninja
