@@ -134,11 +134,11 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
 
    allocate(c6(mol%nat, mol%nat))
    if (grad) allocate(dc6dcn(mol%nat, mol%nat))
-   if (abs(param%s9) < epsilon(1.0_wp)) then
+   if (param%has_threebody()) then
       ! the three-body term reads coefficients of pairs this part does not own
-      call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, partition=partition)
-   else
       call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
+   else
+      call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, partition=partition)
    end if
 
    energies(:) = 0.0_wp

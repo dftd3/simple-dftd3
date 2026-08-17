@@ -25,14 +25,27 @@ mpi_tester = executable(
   dependencies: [sdftd3_dep, mstore_dep, mpi_dep],
 )
 
-foreach n : ['1', '2', '3']
-  test(
-    'ranks-' + n,
-    mpiexec,
-    args: ['-n', n, mpi_tester],
-    suite: 'mpi',
-    # one thread per rank, oversubscribing the machine makes the ranks crawl
-    env: {'OMP_NUM_THREADS': '1'},
-    timeout: 120,
-  )
+mpi_testers = {'fortran': mpi_tester}
+if get_option('api')
+  mpi_testers += {
+    'c': executable(
+      'mpi-api-tester',
+      sources: files('main.c'),
+      dependencies: [sdftd3_dep, dependency('mpi', language: 'c')],
+    ),
+  }
+endif
+
+foreach lang, exe : mpi_testers
+  foreach n : ['1', '2', '3']
+    test(
+      lang + '-ranks-' + n,
+      mpiexec,
+      args: ['-n', n, exe],
+      suite: 'mpi',
+      # one thread per rank, oversubscribing the machine makes the ranks crawl
+      env: {'OMP_NUM_THREADS': '1'},
+      timeout: 120,
+    )
+  endforeach
 endforeach

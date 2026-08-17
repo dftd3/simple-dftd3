@@ -33,6 +33,7 @@ module dftd3_damping_z
    type, extends(damping_param) :: z_damping_param
       real(wp) :: s6
       real(wp) :: s8
+      real(wp) :: s9
       real(wp) :: a1
       real(wp) :: alp
    contains
@@ -42,6 +43,9 @@ module dftd3_damping_z
 
       !> Evaluate ATM three-body dispersion energy expression
       procedure :: get_dispersion3_impl => get_dispersion3
+
+      !> Whether the three-body term contributes to the energy
+      procedure :: has_threebody
 
       !> Evaluate pairwise representation of additive dispersion energy
       procedure :: get_pairwise_dispersion2_impl => get_pairwise_dispersion2
@@ -80,6 +84,20 @@ subroutine new_z_damping(self, param)
    self%alp = param%alp
 
 end subroutine new_z_damping
+
+
+!> Whether the three-body term contributes to the energy
+pure function has_threebody(self) result(has)
+
+   !> Damping parameters
+   class(z_damping_param), intent(in) :: self
+
+   !> Whether the three-body term contributes
+   logical :: has
+
+   has = abs(self%s9) >= epsilon(1.0_wp)
+
+end function has_threebody
 
 
 !> Pair dispersion kernel and its derivatives w.r.t. squared distance and C6

@@ -101,33 +101,66 @@ MPI support is an opt-in build option:
 
          cmake -B _build -DSDFTD3_WITH_MPI=ON
 
-It enables the ``dftd3_mpi`` module, which derives the partition from a communicator and reduces the results, replacing the whole boilerplate above:
+It enables the ``dftd3_mpi`` module, which derives the partition from a communicator and reduces the results, replacing the whole boilerplate above.
+The C API takes the communicator on the model instead of a part index, everything else stays the same:
 
-.. code-block:: fortran
+.. tab-set::
+   :sync-group: code
 
-   use dftd3, only : get_dispersion_mpi
-   use mpi, only : MPI_COMM_WORLD
+   .. tab-item:: Fortran
+      :sync: fortran
 
-   call get_dispersion_mpi(error, mol, disp, param, realspace_cutoff(), MPI_COMM_WORLD, &
-      & energy, gradient)
+      .. code-block:: fortran
 
-Communicators are passed as plain handles, users of ``mpi_f08`` pass ``comm%mpi_val``.
-For the calculations without an MPI aware entry point, ``new_mpi_work_partition`` creates the partition of the calling rank and leaves the reduction to you.
+         use dftd3, only : get_dispersion_mpi
+         use mpi, only : MPI_COMM_WORLD
+
+         call get_dispersion_mpi(error, mol, disp, param, realspace_cutoff(), &
+            & MPI_COMM_WORLD, energy, gradient)
+
+   .. tab-item:: C
+      :sync: c
+
+      .. code-block:: c
+
+         dftd3_set_model_mpi_comm(error, disp, MPI_Comm_c2f(MPI_COMM_WORLD));
+         dftd3_get_dispersion(error, mol, disp, param, &energy, gradient, NULL);
+
+Communicators are passed as plain Fortran handles, users of ``mpi_f08`` pass ``comm%mpi_val`` and C callers convert with ``MPI_Comm_c2f``.
+The counter-poise correction has the same entry points, ``get_counterpoise_mpi`` and ``dftd3_set_gcp_mpi_comm``.
+For everything else, ``new_mpi_work_partition`` creates the partition of the calling rank and leaves the reduction to you.
 
 .. note::
 
    The routines are collective, every rank of the communicator has to call them with the same input.
 
-Without MPI support the module is still there, but every entry point reports the missing feature in the error handler instead.
+Without MPI support the entry points are still there, but every one of them reports the missing feature in the error handler instead.
 The build configuration can be queried at compile time and at runtime:
 
-.. code-block:: fortran
+.. tab-set::
+   :sync-group: code
 
-   use dftd3, only : dftd3_has_mpi, dftd3_has_feature
+   .. tab-item:: Fortran
+      :sync: fortran
 
-   if (dftd3_has_feature("mpi")) then
-      ! ...
-   end if
+      .. code-block:: fortran
+
+         use dftd3, only : dftd3_has_mpi, dftd3_has_feature
+
+         if (dftd3_has_feature("mpi")) then
+            ! ...
+         end if
+
+   .. tab-item:: C
+      :sync: c
+
+      .. code-block:: c
+
+         if (dftd3_has_feature("mpi")) {
+            /* ... */
+         }
+
+The command line driver reports the same in ``s-dftd3 --version``.
 
 
 .. _reducer:

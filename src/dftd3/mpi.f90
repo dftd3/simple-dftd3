@@ -24,6 +24,8 @@ module dftd3_mpi
    use dftd3_cutoff, only : realspace_cutoff
    use dftd3_damping, only : damping_param
    use dftd3_disp, only : get_dispersion
+   use dftd3_gcp, only : gcp_param, get_geometric_counterpoise, &
+      & get_geometric_counterpoise_hessian
    use dftd3_model, only : d3_model
    use dftd3_mpi_utils, only : get_mpi_comm_info, mpi_allreduce_sum
    use dftd3_partition, only : work_partition, new_work_partition, work_reducer
@@ -32,7 +34,7 @@ module dftd3_mpi
    implicit none
    private
 
-   public :: new_mpi_work_partition, get_dispersion_mpi
+   public :: new_mpi_work_partition, get_dispersion_mpi, get_counterpoise_mpi
 
 
    !> Reduces the intermediates of a partitioned calculation over a communicator
@@ -204,6 +206,75 @@ subroutine get_dispersion_mpi_scalar(error, mol, disp, param, cutoff, comm, &
    energy = sum(energies)
 
 end subroutine get_dispersion_mpi_scalar
+
+
+!> Calculate the geometric counterpoise correction distributed over a communicator
+subroutine get_counterpoise_mpi(error, mol, param, cutoff, comm, energy, gradient, &
+      & sigma, hessian)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   !> Molecular structure data
+   class(structure_type), intent(in) :: mol
+
+   !> Geometric counterpoise parameters
+   type(gcp_param), intent(in) :: param
+
+   !> Realspace cutoffs
+   type(realspace_cutoff), intent(in) :: cutoff
+
+   !> MPI communicator handle, users of mpi_f08 pass comm%mpi_val
+   integer, intent(in) :: comm
+
+   !> Counter-poise energy
+   real(wp), intent(out) :: energy
+
+   !> Counter-poise gradient
+   real(wp), intent(out), contiguous, optional :: gradient(:, :)
+
+   !> Counter-poise virial
+   real(wp), intent(out), contiguous, optional :: sigma(:, :)
+
+   !> Counter-poise hessian
+   real(wp), intent(out), contiguous, optional :: hessian(:, :)
+
+   type(work_partition) :: partition
+   real(wp), allocatable :: energies(:), gradient_local(:, :), sigma_local(:, :)
+
+   energy = 0.0_wp
+
+   call new_mpi_work_partition(error, partition, comm)
+   if (allocated(error)) return
+
+   allocate(energies(mol%nat), source=0.0_wp)
+   if (present(gradient) .and. present(sigma)) then
+      allocate(gradient_local(3, mol%nat), source=0.0_wp)
+      allocate(sigma_local(3, 3), source=0.0_wp)
+   end if
+   call get_geometric_counterpoise(mol, param, cutoff, energies, gradient_local, &
+      & sigma_local, partition)
+
+   call mpi_allreduce_sum(comm, energies, error)
+   if (allocated(error)) return
+   energy = sum(energies)
+
+   if (allocated(gradient_local)) then
+      call mpi_allreduce_sum(comm, gradient_local, error)
+      if (allocated(error)) return
+      call mpi_allreduce_sum(comm, sigma_local, error)
+      if (allocated(error)) return
+      gradient(:, :) = gradient_local
+      sigma(:, :) = sigma_local
+   end if
+
+   if (present(hessian)) then
+      call get_geometric_counterpoise_hessian(mol, param, cutoff, hessian, partition)
+      call mpi_allreduce_sum(comm, hessian, error)
+      if (allocated(error)) return
+   end if
+
+end subroutine get_counterpoise_mpi
 
 
 end module dftd3_mpi
