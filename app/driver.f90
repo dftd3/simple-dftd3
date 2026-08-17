@@ -246,7 +246,7 @@ subroutine run_driver(config, error)
 
    if (config%ewald) then
       call new_d3_model(d3, mol, ghost=config%ghost, citation=ewald_citation, &
-         & lowrank=d3_lowrank_config(kcut=config%ewald_kcut))
+         & lowrank=d3_lowrank_config(kcut=config%ewald_kcut, mesh=config%ewald_mesh))
    else
       call new_d3_model(d3, mol, ghost=config%ghost)
    end if

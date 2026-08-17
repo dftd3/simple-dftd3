@@ -64,6 +64,7 @@ module dftd3_app_cli
       logical :: gcp = .false.
       logical :: ewald = .false.
       real(wp) :: ewald_kcut = 0.0_wp
+      integer :: ewald_mesh = 0
       character(len=:), allocatable :: citation_output
       integer, allocatable :: ghost(:)
       !> Parameter data base
@@ -125,6 +126,29 @@ subroutine get_argument_as_real(arg, val, error)
    end if
 
 end subroutine get_argument_as_real
+
+
+subroutine get_argument_as_int(arg, val, error)
+   !> Index of command line argument, range [0:command_argument_count()]
+   character(len=:), intent(in), allocatable :: arg
+   !> Integer value
+   integer, intent(out) :: val
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   integer :: stat
+
+   if (.not.allocated(arg)) then
+      call fatal_error(error, "Cannot read integer value, argument missing")
+      return
+   end if
+   read(arg, *, iostat=stat) val
+   if (stat /= 0) then
+      call fatal_error(error, "Cannot read integer value from '"//arg//"'")
+      return
+   end if
+
+end subroutine get_argument_as_int
 
 
 subroutine get_argument_as_integer_list(arg, vals, error)
@@ -383,6 +407,19 @@ subroutine get_run_arguments(config, list, start, error)
          call list%get(iarg, arg)
          call get_argument_as_real(arg, config%ewald_kcut, error)
          if (allocated(error)) exit
+         config%ewald = .true.
+      case("--ewald-mesh")
+         iarg = iarg + 1
+         call list%get(iarg, arg)
+         call get_argument_as_int(arg, config%ewald_mesh, error)
+         if (allocated(error)) exit
+         if (config%ewald_mesh < 1) then
+            call fatal_error(error, "Number of mesh points must be positive")
+            exit
+         end if
+         config%ewald = .true.
+      case("--ewald-direct")
+         config%ewald_mesh = -1
          config%ewald = .true.
       case("--atm-scale")
          iarg = iarg + 1

@@ -20,8 +20,10 @@ list(
   APPEND srcs
   "${dir}/decomposition.f90"
   "${dir}/ewald.f90"
+  "${dir}/fft.f90"
   "${dir}/jacobi.f90"
   "${dir}/kernel.f90"
+  "${dir}/spme.f90"
 )
 
 set(srcs "${srcs}" PARENT_SCOPE)

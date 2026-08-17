@@ -54,7 +54,8 @@ Supported keywords are
 The ewald dict enables the reciprocal space summation of the two-body dispersion
 energy, which removes the truncation error of the real space summation.
 An empty dict selects the default settings, the entries ``rank``, ``tolerance``
-and ``kcut`` allow to control the accuracy.
+and ``kcut`` allow to control the accuracy. The ``mesh`` entry switches to the
+particle mesh evaluation, which is substantially faster for large cells.
 Requires three-dimensional periodic boundary conditions and either the rational
 or the zero damping function.
 
@@ -309,6 +310,7 @@ class DFTD3(Calculator):
                 rank=self.parameters.ewald.get("rank", 0),
                 tolerance=self.parameters.ewald.get("tolerance", 0.0),
                 kcut=self.parameters.ewald.get("kcut", 0.0),
+                mesh=self.parameters.ewald.get("mesh", 0),
             )
         except RuntimeError as e:
             raise InputError("Cannot enable Ewald summation for dftd3") from e

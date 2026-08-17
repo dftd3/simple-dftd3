@@ -169,12 +169,19 @@ dftd3_set_model_realspace_cutoff_smooth(dftd3_error /* error */,
 /// Non-positive arguments select the respective default, a vanishing rank
 /// derives the rank of the expansion from the tolerance and a vanishing
 /// reciprocal cutoff derives it from the damping radii.
+///
+/// The mesh selects how the reciprocal space sum is evaluated: zero derives a
+/// particle mesh from the reciprocal cutoff, a positive value interpolates the
+/// structure factors on a mesh of that many points per direction, rounded up to
+/// a power of two, and a negative value sums over the reciprocal lattice
+/// directly, which is exact but scales quadratically with the number of atoms.
 SDFTD3_API_ENTRY void SDFTD3_API_CALL
 dftd3_set_model_ewald(dftd3_error /* error */,
                       dftd3_model /* model */,
                       int /* rank */,
                       double /* tolerance */,
-                      double /* kcut */) SDFTD3_API_SUFFIX__V_1_6;
+                      double /* kcut */,
+                      int /* mesh */) SDFTD3_API_SUFFIX__V_1_6;
 
 /// Assign an externally managed part of the interaction loops to this model.
 ///

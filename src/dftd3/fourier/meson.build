@@ -17,6 +17,8 @@
 srcs += files(
   'decomposition.f90',
   'ewald.f90',
+  'fft.f90',
   'jacobi.f90',
   'kernel.f90',
+  'spme.f90',
 )

@@ -106,6 +106,66 @@ The same is available from the command line with
 Note that the pairwise decomposition and the analytical Hessian are only implemented for the real space summation and are rejected for such a model.
 
 
+Choose how the reciprocal sum is evaluated
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default the structure factors are interpolated on a mesh with cardinal B-splines and the sum is evaluated with a fast Fourier transform, which costs :math:`O(N \log N)`.
+Summing over the reciprocal lattice directly instead visits every atom at every wave vector and costs :math:`O(N^2)`.
+
+The mesh is derived from the reciprocal cutoff unless it is given explicitly:
+
+.. tab-set::
+   :sync-group: code
+
+   .. tab-item:: Fortran
+      :sync: fortran
+
+      .. code-block:: fortran
+
+         ! explicit mesh, rounded up to a power of two
+         call new_d3_model(disp, mol, lowrank=d3_lowrank_config(mesh=32))
+
+         ! sum over the reciprocal lattice directly
+         call new_d3_model(disp, mol, lowrank=d3_lowrank_config(mesh=-1))
+
+   .. tab-item:: C
+      :sync: c
+
+      .. code-block:: c
+
+         /* explicit mesh, rounded up to a power of two */
+         dftd3_set_model_ewald(error, d3, 0, 0.0, 0.0, 32);
+
+         /* sum over the reciprocal lattice directly */
+         dftd3_set_model_ewald(error, d3, 0, 0.0, 0.0, -1);
+
+   .. tab-item:: Python
+      :sync: python
+
+      .. code-block:: python
+
+         # explicit mesh, rounded up to a power of two
+         model.set_ewald_summation(mesh=32)
+
+         # sum over the reciprocal lattice directly
+         model.set_ewald_summation(mesh=-1)
+
+Both reach the same energy for the cell above
+
+.. code-block:: text
+
+   Dispersion energy for r2SCAN-D3(BJ) is -0.0122603293 Hartree
+
+From the command line the mesh is selected with ``--ewald-mesh`` and the direct summation with ``--ewald-direct``
+
+.. code-block:: shell
+
+   ❯ s-dftd3 run --ewald-mesh 32 --bj r2scan structure.poscar
+   ❯ s-dftd3 run --ewald-direct --bj r2scan structure.poscar
+
+See :doc:`accuracy` for how to choose the mesh.
+
+
 Smooth the real space cutoff
 ----------------------------
 

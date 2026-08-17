@@ -145,7 +145,9 @@ class DFTD3Dispersion(lib.StreamObject):
     For a periodic cell the `ewald` dict enables the reciprocal space summation of the
     two-body dispersion energy, which removes the truncation error of the real space
     summation. An empty dict selects the default settings, the entries ``rank``,
-    ``tolerance`` and ``kcut`` allow to control the accuracy. This requires a cell with
+    ``tolerance`` and ``kcut`` allow to control the accuracy. The ``mesh`` entry
+    switches to the particle mesh evaluation, which is substantially faster for
+    large cells. This requires a cell with
     three-dimensional periodic boundary conditions and either the rational or the zero
     damping function.
 
@@ -233,6 +235,7 @@ class DFTD3Dispersion(lib.StreamObject):
                 rank=self.ewald.get("rank", 0),
                 tolerance=self.ewald.get("tolerance", 0.0),
                 kcut=self.ewald.get("kcut", 0.0),
+                mesh=self.ewald.get("mesh", 0),
             )
 
         return disp

@@ -43,8 +43,9 @@ int main(void)
   d3 = dftd3_new_d3_model(error, mol);
   if (dftd3_check_error(error)) goto handle_error;
 
-  // the zero arguments select the default rank and reciprocal space cutoff
-  dftd3_set_model_ewald(error, d3, 0, 0.0, 0.0);
+  // the zero arguments select the default rank and reciprocal space cutoff,
+  // the trailing zero sums over the reciprocal lattice directly
+  dftd3_set_model_ewald(error, d3, 0, 0.0, 0.0, 0);
   if (dftd3_check_error(error)) goto handle_error;
 
   double energy;

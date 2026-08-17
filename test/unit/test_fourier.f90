@@ -39,11 +39,21 @@ module test_fourier
    type(realspace_cutoff), parameter :: cutoff = &
       & realspace_cutoff(cn=30.0_wp, disp2=60.0_wp, disp3=15.0_wp)
 
-   !> Full rank is requested by asking for more terms than the expansion can hold
-   type(d3_lowrank_config), parameter :: exact = d3_lowrank_config(rank=10000)
+   !> Full rank is requested by asking for more terms than the expansion can hold,
+   !> the reference summation is the direct one rather than the particle mesh
+   type(d3_lowrank_config), parameter :: exact = &
+      & d3_lowrank_config(rank=10000, mesh=-1)
 
    !> Reciprocal cutoff large enough to make the truncation error negligible
    type(d3_lowrank_config), parameter :: tight = &
+      & d3_lowrank_config(rank=10000, kcut=10.0_wp, mesh=-1)
+
+   !> Same expansion evaluated on a particle mesh instead of the full lattice
+   type(d3_lowrank_config), parameter :: meshed = &
+      & d3_lowrank_config(rank=10000, kcut=10.0_wp, mesh=64)
+
+   !> The particle mesh is the default, with the mesh derived from the cutoff
+   type(d3_lowrank_config), parameter :: automesh = &
       & d3_lowrank_config(rank=10000, kcut=10.0_wp)
 
    type(d3_param), parameter :: pbe_bj = d3_param(&
@@ -90,6 +100,8 @@ subroutine collect_fourier(testsuite)
       & new_unittest("fourier-transform", test_fourier_transform), &
       & new_unittest("ewald-molecular", test_ewald_molecular), &
       & new_unittest("ewald-unsupported-damping", test_ewald_unsupported), &
+      & new_unittest("spme-energy", test_spme_energy), &
+      & new_unittest("spme-gradient", test_spme_gradient), &
       & new_unittest("ewald-hessian-rejected", test_ewald_hessian), &
       & new_unittest("ewald-pairwise-rejected", test_ewald_pairwise), &
       & new_unittest("ewald-converged-bj", test_ewald_converged_bj), &
@@ -579,7 +591,7 @@ subroutine test_energy_acetic(error)
    call get_structure(mol, "X23", "acetic")
    call new_d3_model(d3, mol, lowrank=tight)
    call new_d3_model(d3lr, mol, &
-      & lowrank=d3_lowrank_config(tolerance=1.0e-6_wp, kcut=10.0_wp))
+      & lowrank=d3_lowrank_config(tolerance=1.0e-6_wp, kcut=10.0_wp, mesh=-1))
    call new_rational_damping(param, pbe_bj)
 
    allocate(energies(mol%nat), energies_ref(mol%nat))
@@ -783,6 +795,75 @@ subroutine test_ewald_unsupported(error)
 end subroutine test_ewald_unsupported
 
 
+!> The particle mesh reproduces the energy of the direct reciprocal space sum
+subroutine test_spme_energy(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3lr, d3pm, d3am
+   type(rational_damping_param) :: param
+   real(wp), allocatable :: energies(:), energies_ref(:)
+
+   call get_cubic(mol, 8.0_wp, 2)
+   call new_d3_model(d3lr, mol, lowrank=tight)
+   call new_d3_model(d3pm, mol, lowrank=meshed)
+   call new_d3_model(d3am, mol, lowrank=automesh)
+   call new_rational_damping(param, pbe_bj)
+
+   allocate(energies(mol%nat), energies_ref(mol%nat))
+   call get_dispersion(mol, d3lr, param, cutoff, energies_ref)
+   call get_dispersion(mol, d3pm, param, cutoff, energies)
+
+   call check(error, sum(energies), sum(energies_ref), thr=1.0e-8_wp)
+   if (allocated(error)) return
+
+   ! the mesh is the default, an unset mesh has to reach the same energy
+   call get_dispersion(mol, d3am, param, cutoff, energies)
+
+   call check(error, sum(energies), sum(energies_ref), thr=1.0e-8_wp)
+
+end subroutine test_spme_energy
+
+
+!> The particle mesh reproduces the derivatives of the direct reciprocal space sum
+subroutine test_spme_gradient(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3lr, d3pm
+   type(rational_damping_param) :: param
+   real(wp) :: sigma(3, 3), sigma_ref(3, 3)
+   real(wp), allocatable :: energies(:), energies_ref(:)
+   real(wp), allocatable :: gradient(:, :), gradient_ref(:, :)
+
+   call get_cubic(mol, 8.0_wp, 2)
+   call new_d3_model(d3lr, mol, lowrank=tight)
+   call new_d3_model(d3pm, mol, lowrank=meshed)
+   call new_rational_damping(param, pbe_bj)
+
+   allocate(energies(mol%nat), energies_ref(mol%nat))
+   allocate(gradient(3, mol%nat), gradient_ref(3, mol%nat))
+
+   call get_dispersion(mol, d3lr, param, cutoff, energies_ref, gradient_ref, sigma_ref)
+   call get_dispersion(mol, d3pm, param, cutoff, energies, gradient, sigma)
+
+   if (any(abs(gradient - gradient_ref) > 1.0e-8_wp)) then
+      call test_failed(error, "Gradients do not match")
+      return
+   end if
+
+   if (any(abs(sigma - sigma_ref) > 1.0e-7_wp)) then
+      call test_failed(error, "Virials do not match")
+      return
+   end if
+
+end subroutine test_spme_gradient
+
+
 !> The second derivatives are only available from the real space summation
 subroutine test_ewald_hessian(error)
 
@@ -917,7 +998,7 @@ subroutine test_ewald_converged_zero(error)
    real(wp) :: ewald, converged
    real(wp), allocatable :: energies(:)
    type(d3_lowrank_config), parameter :: config = &
-      & d3_lowrank_config(rank=10000, kcut=20.0_wp)
+      & d3_lowrank_config(rank=10000, kcut=20.0_wp, mesh=-1)
 
    call get_cubic(mol, 8.0_wp, 1)
    call new_d3_model(d3, mol)
@@ -956,14 +1037,14 @@ subroutine test_ewald_kcut(error)
    call new_rational_damping(param, pbe_bj)
 
    allocate(energies(mol%nat))
-   call new_d3_model(d3lr, mol, lowrank=d3_lowrank_config(rank=10000, kcut=14.0_wp))
+   call new_d3_model(d3lr, mol, lowrank=d3_lowrank_config(rank=10000, kcut=14.0_wp, mesh=-1))
    call get_dispersion(mol, d3lr, param, cutoff, energies)
    eref = sum(energies)
 
    last = huge(1.0_wp)
    do istep = 1, 4
       call new_d3_model(d3lr, mol, &
-         & lowrank=d3_lowrank_config(rank=10000, kcut=2.0_wp*istep))
+         & lowrank=d3_lowrank_config(rank=10000, kcut=2.0_wp*istep, mesh=-1))
       call get_dispersion(mol, d3lr, param, cutoff, energies)
       ecur = sum(energies)
       diff = abs(ecur - eref)

@@ -169,13 +169,14 @@ Recreating a structure object requires to recreate the dispersion model as well.
    command line interface use one-based indices.
    Indices outside of the structure are reported in the error handle.
 
-.. c:function:: void dftd3_set_model_ewald(dftd3_error error, dftd3_model model, int rank, double tolerance, double kcut);
+.. c:function:: void dftd3_set_model_ewald(dftd3_error error, dftd3_model model, int rank, double tolerance, double kcut, int mesh);
 
    :param error: Error handle
    :param model: Dispersion model handle
    :param rank: Rank of the separable expansion of the C6 coefficients
    :param tolerance: Maximum relative error of the reconstructed reference C6 coefficients
    :param kcut: Reciprocal space cutoff in inverse Bohr
+   :param mesh: Number of particle mesh points per direction
 
    Evaluate the two-body dispersion energy by summation over the reciprocal lattice.
    This removes the truncation error of the real space summation, which decays only
@@ -191,6 +192,14 @@ Recreating a structure object requires to recreate the dispersion model as well.
    Non-positive arguments select the respective default.
    A vanishing rank derives the rank of the expansion from the tolerance, and a
    vanishing reciprocal cutoff derives it from the damping radii.
+
+   The mesh selects how the reciprocal space sum is evaluated.
+   Zero derives a particle mesh from the reciprocal cutoff, which scales as
+   :math:`O(N \log N)` and is the default.
+   A positive value interpolates the structure factors on a mesh of that many
+   points per direction, rounded up to a power of two.
+   A negative value sums over the reciprocal lattice directly, which is exact but
+   scales quadratically with the number of atoms.
 
    See :doc:`../guide/accuracy` for the accuracy of both summation techniques.
 

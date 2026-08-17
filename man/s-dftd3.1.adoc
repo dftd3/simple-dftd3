@@ -82,6 +82,20 @@ Implies *--ewald*.
 By default the cutoff is derived from the damping radii, a value of 8 is
 converged to below one picohartree per atom for rational damping.
 
+*--ewald-mesh* _n_::
+Number of points per direction of the particle mesh, rounded up to the next
+power of two.
+Implies *--ewald*.
+By default the mesh is derived from the reciprocal space cutoff.
+
+*--ewald-direct*::
+Sum over the reciprocal lattice directly instead of interpolating the structure
+factors on a particle mesh.
+Implies *--ewald*.
+The direct summation is exact up to the reciprocal cutoff but scales
+quadratically with the number of atoms, whereas the particle mesh used by
+default scales as O(N log N).
+
 *--ghost* _list_::
 Disable dispersion contributions from the given 1-based atom indices
 

@@ -54,6 +54,11 @@ module dftd3_app_help
       "                         and rational or zero damping"//nl//&
       "   --ewald-kcut <kcut>   Reciprocal space cutoff for the Ewald summation in 1/Bohr,"//nl//&
       "                         implies --ewald (default: derived from the damping radii)"//nl//&
+      "   --ewald-mesh <n>      Points per direction of the particle mesh, rounded up to a"//nl//&
+      "                         power of two, implies --ewald (default: derived from the"//nl//&
+      "                         reciprocal space cutoff)"//nl//&
+      "   --ewald-direct        Sum over the reciprocal lattice instead of using a particle"//nl//&
+      "                         mesh, exact but scales quadratically, implies --ewald"//nl//&
       "   --ghost <list>        Disable dispersion contributions from given 1-based atom indices"//nl//&
       "   --gcp <basis>         Include geometric counter-poise correction for given basis set"//nl//&
       "   --db <file>           Load parameters from external data file"//nl//&
