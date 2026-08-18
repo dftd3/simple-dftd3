@@ -108,6 +108,21 @@ This might require administrator access depending on the chosen install prefix.
 
 Meson is the primary build system and provides feature-complete functionality of this project.
 If you for any reason cannot use meson, this project also supports CMake and fpm as build systems.
+For example, a CMake build can be configured with
+
+```sh
+cmake -B _build -G Ninja -DCMAKE_INSTALL_PREFIX=/path/to/install
+```
+
+The Python extension can be enabled with CMake 3.18 or newer using
+
+```sh
+cmake -B _build -G Ninja \
+  -DSDFTD3_WITH_PYTHON=ON \
+  -DPython3_EXECUTABLE=$(which python3)
+```
+
+Building the Python extension requires the Python `cffi` and `setuptools` packages.
 For more details checkout the [installation guide](https://dftd3.readthedocs.io/en/latest/installation.html#building-from-source).
 
 
@@ -251,10 +266,18 @@ The user is responsible for creating and deleting the objects to avoid memory le
 
 The Python API is disabled by default and can be built in-tree or out-of-tree.
 The in-tree build is mainly meant for end users and packages.
-To build the Python API with the normal project set the ``python`` option in the configuration step with
+To build the Python API with Meson, set the ``python`` option in the configuration step with
 
 ```sh
 meson setup _build -Dpython=true -Dpython_version=$(which python3)
+```
+
+With CMake, use
+
+```sh
+cmake -B _build -G Ninja \
+  -DSDFTD3_WITH_PYTHON=ON \
+  -DPython3_EXECUTABLE=$(which python3)
 ```
 
 The Python version can be used to select a different Python version, it defaults to `'python3'`.

@@ -228,8 +228,10 @@ Now you are ready to use ``dftd3``, check if you can import it with
 Building the extension module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To perform an out-of-tree build some version of ``s-dftd3`` has to be available on your system and preferably findable by ``pkg-config``.
-Try to find a ``s-dftd3`` installation you build against first with
+The released Python source distribution bundles the native ``s-dftd3`` sources.
+When building directly from the repository, an installed ``s-dftd3`` must be
+available through CMake or ``pkg-config``, depending on the selected build
+system. Try to find the installation first with
 
 .. code:: sh
 
@@ -280,6 +282,22 @@ If you already have a ``s-dftd3`` installation, *e.g.* from conda-forge, you can
 
    pip install "https://github.com/dftd3/simple-dftd3/archive/refs/heads/main.zip#egg=dftd3-python&subdirectory=python"
 
+
+
+Using CMake
+^^^^^^^^^^^
+
+This directory contains a standalone CMake build for the CFFI extension.
+It first looks for an installed ``s-dftd3`` CMake package and then for a bundled
+``subprojects/s-dftd3`` source tree, as provided by the Python source distribution.
+It requires CMake 3.18 or newer and Python 3.8 or newer with ``cffi`` and
+``setuptools`` installed.
+
+.. code:: sh
+
+   cmake -S . -B _build -G Ninja -DPython3_EXECUTABLE=$(which python3)
+   cmake --build _build
+   cmake --install _build --prefix=/path/to/install --component python
 
 
 Using meson

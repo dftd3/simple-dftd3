@@ -32,6 +32,7 @@ option(SDFTD3_WITH_API "Enable support for C API via iso_c_binding module" ${WIT
 option(SDFTD3_WITH_OpenMP "Enable support for shared memory parallelisation with OpenMP" ${WITH_OpenMP})
 option(SDFTD3_WITH_MPI "Enable support for distributed memory parallelisation with MPI" ${WITH_MPI})
 option(SDFTD3_WITH_TESTS "Enable compilation of unit tests" ${WITH_TESTS})
+option(SDFTD3_WITH_PYTHON "Build the Python extension module" FALSE)
 set(SDFTD3_USE_MCTCLIB TRUE)
 if(NOT DEFINED "${PROJECT_NAME}-dependeny-method")
   set(
