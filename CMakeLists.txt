@@ -156,6 +156,7 @@ install(
   DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/${module-dir}"
 )
 if(SDFTD3_WITH_API)
+  enable_language("C")
   install(
     DIRECTORY
     "${CMAKE_CURRENT_SOURCE_DIR}/include/"

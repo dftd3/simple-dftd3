@@ -25,9 +25,6 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     VERSION 1.5.0
     DESCRIPTION "Python API of the DFT-D3 project"
   )
-elseif(NOT CMAKE_C_COMPILER_LOADED)
-  # The native s-dftd3 CMake project only enables Fortran by default.
-  enable_language(C)
 endif()
 
 include(GNUInstallDirs)
@@ -61,6 +58,7 @@ elseif(TARGET s-dftd3::s-dftd3-lib)
     set(_sdftd3_include_dir "${CMAKE_CURRENT_SOURCE_DIR}/../include")
   endif()
 elseif(_sdftd3_python_standalone)
+  enable_language(Fortran)
   find_package(s-dftd3 "${PROJECT_VERSION}" CONFIG QUIET)
   if(TARGET s-dftd3::s-dftd3)
     set(_sdftd3_target "s-dftd3::s-dftd3")
