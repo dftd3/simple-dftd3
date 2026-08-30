@@ -21,8 +21,12 @@ module dftd3_app_toml
       & optimizedpower_damping_param, new_optimizedpower_damping, &
       & cso_damping_param, new_cso_damping
    use mctc_env, only : error_type, fatal_error
-   use tomlf, only : toml_table, toml_array, toml_key, toml_error, toml_parse, &
-      & get_value, len
+   use tomlf_type_table, only : toml_table
+   use tomlf_type_array, only : toml_array, len
+   use tomlf_type_value, only : toml_key
+   use tomlf_error, only : toml_error
+   use tomlf_de, only : toml_parse
+   use tomlf_build, only : get_value
    implicit none
    private
 
