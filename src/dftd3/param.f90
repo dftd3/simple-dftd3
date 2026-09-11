@@ -333,6 +333,7 @@ subroutine get_rational_damping(param, method, error, s9, citation)
       doi = doi_dftd3_bj
    case(p_rpbe_df)
       param = d3_param(a1=0.1820_wp, s8=0.8318_wp, a2=4.0094_wp)
+      ! TODO: find reference (it is not GMTKN55)
    case(p_b97d_df)
       param = d3_param(a1=0.5545_wp, s8=2.2609_wp, a2=3.2297_wp)
       doi = doi_dftd3_bj
