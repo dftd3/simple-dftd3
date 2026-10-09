@@ -34,7 +34,7 @@ option(SDFTD3_WITH_MPI "Enable support for distributed memory parallelisation wi
 option(SDFTD3_WITH_TESTS "Enable compilation of unit tests" ${WITH_TESTS})
 option(SDFTD3_WITH_PYTHON "Build the Python extension module" FALSE)
 set(SDFTD3_USE_MCTCLIB TRUE)
-if(NOT DEFINED "${PROJECT_NAME}-dependeny-method")
+if(NOT DEFINED "${PROJECT_NAME}-dependency-method")
   set(
     "${PROJECT_NAME}-dependency-method"
     "subproject" "cmake" "pkgconf" "fetch"
