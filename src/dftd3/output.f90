@@ -494,6 +494,7 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
       end do read_file
       if (line_number < 2) then
          stat = 1
+         close(igrad)
          return
       end if
 
@@ -506,6 +507,7 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
       if (err == 0) read(line(33:51),*,iostat=err) escf
       if (err /= 0) then
          stat = 1
+         close(igrad)
          return
       end if
 
@@ -514,11 +516,13 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
          read(line,*,iostat=err) dlat(1,i),dlat(2,i),dlat(3,i)
          if (err /= 0) then
             stat = 1
+            close(igrad)
             return
          end if
       end do
       if (any(abs(dlat-mol%lattice) > 1.0e-8_wp)) then
          stat = 1
+         close(igrad)
          return
       end if
       do i = 1, 3
@@ -526,6 +530,7 @@ subroutine turbomole_gradlatt(mol, fname, energy, sigma, stat)
          read(line,*,iostat=err) glat(1,i),glat(2,i),glat(3,i)
          if (err /= 0) then
             stat = 1
+            close(igrad)
             return
          end if
       end do
@@ -586,6 +591,7 @@ subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
       end do read_file
       if (line_number < 2) then
          stat = 1
+         close(igrad)
          return
       end if
 
@@ -598,6 +604,7 @@ subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
       if (err == 0) read(line(33:51),*,iostat=err) escf
       if (err /= 0) then
          stat = 1
+         close(igrad)
          return
       end if
 
@@ -607,11 +614,13 @@ subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
          read(line,*,iostat=err) xyz(1,i),xyz(2,i),xyz(3,i)
          if (err /= 0) then
             stat = 1
+            close(igrad)
             return
          end if
       end do
       if (any(abs(xyz-mol%xyz) > 1.0e-8_wp)) then
          stat = 1
+         close(igrad)
          return
       end if
       do i = 1, mol%nat
@@ -619,6 +628,7 @@ subroutine turbomole_gradient(mol, fname, energy, gradient, stat)
          read(line,*,iostat=err) gscf(1,i),gscf(2,i),gscf(3,i)
          if (err /= 0) then
             stat = 1
+            close(igrad)
             return
          end if
       end do
