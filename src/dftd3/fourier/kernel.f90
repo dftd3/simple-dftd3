@@ -64,6 +64,7 @@ module dftd3_fourier_kernel
    !> Wave-number-independent coefficients of the Fourier transform
    type :: fourier_kernel
       private
+      integer :: npair = 0
       real(wp) :: prefactor = 0.0_wp, radius = 0.0_wp, zero = 0.0_wp
       real(wp), allocatable :: angle(:), cosine(:), sine(:), phase(:)
    end type fourier_kernel
@@ -100,7 +101,10 @@ pure elemental function new_fourier_kernel(term) result(kernel)
    kernel%prefactor = 4.0_wp*pi*pi / term%alpha * term%prefactor * term%radius**nexp
    kernel%radius = term%radius
    kernel%zero = kernel%prefactor * term%radius / sin(pi*(term%m + 3)/real(term%alpha, wp))
-   kernel%angle = [(pi * (2*ipole + 1) / real(term%alpha, wp), ipole=0, term%alpha/2-1)]
+   ! Reflected poles give equal contributions for even m and alpha. Retain one
+   ! pole per pair and the unpaired imaginary pole, if present.
+   kernel%npair = term%alpha / 4
+   kernel%angle = [(pi * (2*ipole + 1) / real(term%alpha, wp), ipole=0, (term%alpha-2)/4)]
    kernel%cosine = cos(kernel%angle)
    kernel%sine = sin(kernel%angle)
    kernel%phase = 0.5_wp*pi + nexp*kernel%angle
@@ -144,6 +148,7 @@ pure subroutine get_fourier_transform(kernel, kval, phi, dphi, grad)
    do ipole = 1, size(kernel%angle)
       arg = kernel%phase(ipole) + krad*kernel%cosine(ipole)
       damp = exp(-krad*kernel%sine(ipole))
+      if (ipole <= kernel%npair) damp = 2.0_wp * damp
       acc = acc + sin(arg) * damp
       if (grad) dacc = dacc + cos(arg + kernel%angle(ipole)) * damp
    end do

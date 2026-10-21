@@ -122,8 +122,9 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
    integer :: nat, nid, rank, iat, izp, jzp, il, it, ic, jc
    integer :: i1, i2, i3, j1, j2, j3, g1, g2, g3
    real(wp) :: vol, rec(3, 3), invlat(3, 3), kvec(3), knorm, erecip
-   real(wp) :: pval, dpval, phi, dphi, wgt, dwgt(3), sfac, qq, escale
+   real(wp) :: pval, wgt, dwgt(3), sfac, qq, escale
    real(wp) :: dudr(3, 3), tvec(3), dtvec(3)
+   complex(wp) :: potential
    integer, allocatable :: base(:, :)
    real(wp), allocatable :: theta(:, :, :), dtheta(:, :, :)
    real(wp), allocatable :: bfac(:, :), c6l(:, :), dc6ldcn(:, :)
@@ -196,7 +197,13 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
    do il = 1, rank
       if (.not.owns_index(partition, il)) cycle
 
-      qgrid(:, :, :, :) = cmplx(0.0_wp, 0.0_wp, wp)
+      !$omp parallel do schedule(static) default(none) collapse(2) &
+      !$omp shared(mesh, nid, qgrid) private(izp, i3)
+      do izp = 1, nid
+         do i3 = 1, mesh(3)
+            qgrid(:, :, i3, izp) = cmplx(0.0_wp, 0.0_wp, wp)
+         end do
+      end do
       do iat = 1, nat
          if (ghost(iat)) cycle
          izp = mol%id(iat)
@@ -221,19 +228,20 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
       ! contract the structure factors with the kernel to obtain the potential
       ! each species experiences, and accumulate energy and virial on the way
       do izp = 1, nid
-         tgrid(:, :, :) = cmplx(0.0_wp, 0.0_wp, wp)
          !$omp parallel do schedule(runtime) default(none) collapse(2) &
          !$omp shared(mesh, nid, izp, phik, bfac, qgrid, tgrid) &
-         !$omp private(i1, i2, i3, jzp, sfac)
+         !$omp private(i1, i2, i3, jzp, sfac, potential)
          do i3 = 1, mesh(3)
             do i2 = 1, mesh(2)
                do i1 = 1, mesh(1)
                   sfac = bfac(i1, 1) * bfac(i2, 2) * bfac(i3, 3)
+                  potential = cmplx(0.0_wp, 0.0_wp, wp)
                   do jzp = 1, nid
-                     tgrid(i1, i2, i3) = tgrid(i1, i2, i3) + sfac &
+                     potential = potential + sfac &
                         & * phik(pair_index(izp, jzp), i1, i2, i3) &
                         & * qgrid(i1, i2, i3, jzp)
                   end do
+                  tgrid(i1, i2, i3) = potential
                end do
             end do
          end do
