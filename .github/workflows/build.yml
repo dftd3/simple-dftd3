@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         build: [meson, cmake, fpm]
         build-type: [debug]
         compiler: [gnu]
@@ -24,7 +24,7 @@ jobs:
           compiler: gnu
           version: 12
 
-        - os: ubuntu-latest
+        - os: ubuntu-24.04
           build: meson
           build-type: coverage
           compiler: gnu
@@ -263,7 +263,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-24.04]
         build: [meson, cmake]
         gcc_v: [10]
         python_v: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13', '3.14']
