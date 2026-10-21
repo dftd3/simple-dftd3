@@ -27,8 +27,8 @@
 module dftd3_fourier_ewald
    use dftd3_cutoff, only : get_lattice_points
    use dftd3_fourier_decomposition, only : d3_lowrank_c6
-   use dftd3_fourier_kernel, only : fourier_term, get_fourier_transform, &
-      & get_potential_zero
+   use dftd3_fourier_kernel, only : fourier_term, fourier_kernel, new_fourier_kernel, &
+      & get_fourier_transform, get_potential_zero
    use dftd3_partition, only : work_partition, owns_index
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -87,7 +87,7 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    type(work_partition), intent(in), optional :: partition
 
    logical :: grad
-   type(work_partition) :: part
+   type(fourier_kernel), allocatable :: kernel(:, :, :)
    integer :: nat, nid, rank, nk, ik, iat, izp, jzp, il, it, ic
    real(wp) :: vol, rec(3, 3), kvec(3), knorm, kr, erecip, phi, dphi, pval, dpval
    real(wp) :: qq, zre, zim
@@ -110,6 +110,7 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    vol = abs(matdet_3x3(mol%lattice))
    call get_lattice_points([.true., .true., .true.], rec, kcut, kpoints)
    nk = size(kpoints, 2)
+   kernel = new_fourier_kernel(terms)
 
    allocate(c6l(rank, nat))
    allocate(dc6ldcn(rank, nat), source=0.0_wp)
@@ -144,7 +145,7 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
    erecip = -sum(esum)
 
    !$omp parallel default(none) &
-   !$omp shared(mol, lowrank, terms, nterm, kcut, kpoints, nk, nat, nid, rank, &
+   !$omp shared(mol, lowrank, kernel, nterm, kcut, kpoints, nk, nat, nid, rank, &
    !$omp& c6l, dc6ldcn, vol, grad, partition, esum, dsum, gsum, ssum) &
    !$omp private(ik, iat, izp, jzp, il, it, ic, kvec, knorm, kr, phi, dphi, &
    !$omp& pval, dpval, qq, zval, zre, zim, phihat, dphihat, phase, sf, fvec, &
@@ -168,7 +169,7 @@ subroutine get_dispersion_ewald(mol, lowrank, ghost, terms, nterm, kcut, gwvec, 
             phi = 0.0_wp
             dphi = 0.0_wp
             do it = 1, nterm(jzp, izp)
-               call get_fourier_transform(terms(it, jzp, izp), knorm, pval, dpval)
+               call get_fourier_transform(kernel(it, jzp, izp), knorm, pval, dpval, grad)
                phi = phi + pval
                dphi = dphi + dpval
             end do

@@ -122,7 +122,7 @@ The mesh is derived from the reciprocal cutoff unless it is given explicitly:
 
       .. code-block:: fortran
 
-         ! explicit mesh, rounded up to a power of two
+         ! explicit mesh, rounded up to a product of powers of two and three
          call new_d3_model(disp, mol, lowrank=d3_lowrank_config(mesh=32))
 
          ! sum over the reciprocal lattice directly
@@ -133,7 +133,7 @@ The mesh is derived from the reciprocal cutoff unless it is given explicitly:
 
       .. code-block:: c
 
-         /* explicit mesh, rounded up to a power of two */
+         /* explicit mesh, rounded up to a product of powers of two and three */
          dftd3_set_model_ewald(error, d3, 0, 0.0, 0.0, 32);
 
          /* sum over the reciprocal lattice directly */
@@ -144,7 +144,7 @@ The mesh is derived from the reciprocal cutoff unless it is given explicitly:
 
       .. code-block:: python
 
-         # explicit mesh, rounded up to a power of two
+         # explicit mesh, rounded up to a product of powers of two and three
          model.set_ewald_summation(mesh=32)
 
          # sum over the reciprocal lattice directly

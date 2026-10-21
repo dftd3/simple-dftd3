@@ -28,8 +28,8 @@
 module dftd3_fourier_spme
    use dftd3_fourier_decomposition, only : d3_lowrank_c6
    use dftd3_fourier_fft, only : fft_mesh, new_fft_mesh, fft_3d, valid_mesh_size
-   use dftd3_fourier_kernel, only : fourier_term, get_fourier_transform, &
-      & get_potential_zero
+   use dftd3_fourier_kernel, only : fourier_term, fourier_kernel, new_fourier_kernel, &
+      & get_fourier_transform, get_potential_zero
    use dftd3_partition, only : work_partition, owns_index
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -122,13 +122,14 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
    integer :: nat, nid, rank, iat, izp, jzp, il, it, ic, jc
    integer :: i1, i2, i3, j1, j2, j3, g1, g2, g3
    real(wp) :: vol, rec(3, 3), invlat(3, 3), kvec(3), knorm, erecip
-   real(wp) :: pval, dpval, phi, dphi, wgt, dwgt(3), sfac, qq, escale
+   real(wp) :: pval, wgt, dwgt(3), sfac, qq, escale
    real(wp) :: dudr(3, 3), tvec(3), dtvec(3)
+   complex(wp) :: potential
    integer, allocatable :: base(:, :)
    real(wp), allocatable :: theta(:, :, :), dtheta(:, :, :)
    real(wp), allocatable :: bfac(:, :), c6l(:, :), dc6ldcn(:, :)
    real(wp), allocatable :: phik(:, :, :, :), dphik(:, :, :, :)
-   real(wp), allocatable :: pot(:, :), esum(:), dsum(:), gsum(:, :), ssum(:, :)
+   real(wp), allocatable :: esum(:), dsum(:), gsum(:, :), ssum(:, :)
    complex(wp), allocatable :: qgrid(:, :, :, :), tgrid(:, :, :)
 
    grad = present(gwdcn) .and. present(dEdcn) .and. present(gradient) &
@@ -187,9 +188,8 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
 
    allocate(qgrid(mesh(1), mesh(2), mesh(3), nid))
    allocate(tgrid(mesh(1), mesh(2), mesh(3)))
-   allocate(pot(nat, nid))
 
-   erecip = 0.0_wp
+   erecip = -sum(esum)
    escale = -0.5_wp / vol
 
    ! the terms of the expansion decouple, so only one set of meshes is live and
@@ -197,7 +197,13 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
    do il = 1, rank
       if (.not.owns_index(partition, il)) cycle
 
-      qgrid(:, :, :, :) = cmplx(0.0_wp, 0.0_wp, wp)
+      !$omp parallel do schedule(static) default(none) collapse(2) &
+      !$omp shared(mesh, nid, qgrid) private(izp, i3)
+      do izp = 1, nid
+         do i3 = 1, mesh(3)
+            qgrid(:, :, i3, izp) = cmplx(0.0_wp, 0.0_wp, wp)
+         end do
+      end do
       do iat = 1, nat
          if (ghost(iat)) cycle
          izp = mol%id(iat)
@@ -222,19 +228,20 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
       ! contract the structure factors with the kernel to obtain the potential
       ! each species experiences, and accumulate energy and virial on the way
       do izp = 1, nid
-         tgrid(:, :, :) = cmplx(0.0_wp, 0.0_wp, wp)
          !$omp parallel do schedule(runtime) default(none) collapse(2) &
          !$omp shared(mesh, nid, izp, phik, bfac, qgrid, tgrid) &
-         !$omp private(i1, i2, i3, jzp, sfac)
+         !$omp private(i1, i2, i3, jzp, sfac, potential)
          do i3 = 1, mesh(3)
             do i2 = 1, mesh(2)
                do i1 = 1, mesh(1)
                   sfac = bfac(i1, 1) * bfac(i2, 2) * bfac(i3, 3)
+                  potential = cmplx(0.0_wp, 0.0_wp, wp)
                   do jzp = 1, nid
-                     tgrid(i1, i2, i3) = tgrid(i1, i2, i3) + sfac &
+                     potential = potential + sfac &
                         & * phik(pair_index(izp, jzp), i1, i2, i3) &
                         & * qgrid(i1, i2, i3, jzp)
                   end do
+                  tgrid(i1, i2, i3) = potential
                end do
             end do
          end do
@@ -242,9 +249,6 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
          call fft_3d(fmesh, tgrid, -1)
 
          ! gather the potential back onto the atoms of this species
-         do iat = 1, nat
-            pot(iat, izp) = 0.0_wp
-         end do
          do iat = 1, nat
             if (ghost(iat) .or. mol%id(iat) /= izp) cycle
             wgt = 0.0_wp
@@ -264,19 +268,17 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
                         dtvec(1) = dtheta(j1, 1, iat) * tvec(2) * tvec(3)
                         dtvec(2) = tvec(1) * dtheta(j2, 2, iat) * tvec(3)
                         dtvec(3) = tvec(1) * tvec(2) * dtheta(j3, 3, iat)
-                        dwgt(:) = dwgt(:) + matmul(dudr, dtvec) * sfac
+                        dwgt(:) = dwgt(:) + dtvec * sfac
                      end if
                   end do
                end do
             end do
-            pot(iat, izp) = wgt
             esum(iat) = esum(iat) + escale * lowrank%lambda(il) * c6l(il, iat) * wgt
-            erecip = erecip + escale * lowrank%lambda(il) * c6l(il, iat) * wgt
             if (grad) then
                dsum(iat) = dsum(iat) &
                   & + 2.0_wp * escale * lowrank%lambda(il) * dc6ldcn(il, iat) * wgt
                gsum(:, iat) = gsum(:, iat) &
-                  & + 2.0_wp * escale * lowrank%lambda(il) * c6l(il, iat) * dwgt(:)
+                  & + 2.0_wp * escale * lowrank%lambda(il) * c6l(il, iat) * matmul(dudr, dwgt)
             end if
          end do
       end do
@@ -317,6 +319,7 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
 
    energies(:) = energies(:) + esum(:)
    if (grad) then
+      erecip = erecip + sum(esum)
       do ic = 1, 3
          ssum(ic, ic) = ssum(ic, ic) - erecip
       end do
@@ -370,8 +373,12 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
    real(wp), allocatable, intent(out) :: dphik(:, :, :, :)
 
    integer :: i1, i2, i3, j1, j2, j3, izp, jzp, it, npair
+   integer :: m1, m2, m3
+   logical :: mirror
    real(wp) :: kvec(3), knorm, phi, dphi, pval, dpval
+   type(fourier_kernel), allocatable :: kernel(:, :, :)
 
+   kernel = new_fourier_kernel(terms)
    npair = nid * (nid + 1) / 2
    allocate(phik(npair, mesh(1), mesh(2), mesh(3)))
    if (grad) then
@@ -381,8 +388,8 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
    end if
 
    !$omp parallel do schedule(runtime) default(none) collapse(2) &
-   !$omp shared(mesh, rec, terms, nterm, nid, grad, phik, dphik) &
-   !$omp private(i1, i2, i3, j1, j2, j3, izp, jzp, it, kvec, knorm, phi, dphi, &
+   !$omp shared(mesh, rec, kernel, nterm, nid, grad, phik, dphik) &
+   !$omp private(i1, i2, i3, j1, j2, j3, m1, m2, m3, mirror, izp, jzp, it, kvec, knorm, phi, dphi, &
    !$omp& pval, dpval)
    do i3 = 1, mesh(3)
       do i2 = 1, mesh(2)
@@ -391,6 +398,18 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
             j1 = i1 - 1 - mesh(1) * ((2*(i1 - 1)) / mesh(1))
             j2 = i2 - 1 - mesh(2) * ((2*(i2 - 1)) / mesh(2))
             j3 = i3 - 1 - mesh(3) * ((2*(i3 - 1)) / mesh(3))
+            ! Opposite wave vectors have the same radial kernel. On a Nyquist
+            ! plane the opposite index is aliased, so a skew cell need not have
+            ! the same norm there; evaluate those points independently.
+            mirror = all(2*abs([j1, j2, j3]) /= mesh)
+            if (mirror) then
+               m1 = modulo(1 - i1, mesh(1)) + 1
+               m2 = modulo(1 - i2, mesh(2)) + 1
+               m3 = modulo(1 - i3, mesh(3)) + 1
+               if (i3 > m3) cycle
+               if (i3 == m3 .and. i2 > m2) cycle
+               if (i3 == m3 .and. i2 == m2 .and. i1 > m1) cycle
+            end if
             kvec(:) = rec(:, 1)*j1 + rec(:, 2)*j2 + rec(:, 3)*j3
             knorm = norm2(kvec)
             do izp = 1, nid
@@ -398,7 +417,7 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
                   phi = 0.0_wp
                   dphi = 0.0_wp
                   do it = 1, nterm(jzp, izp)
-                     call get_fourier_transform(terms(it, jzp, izp), knorm, pval, dpval)
+                     call get_fourier_transform(kernel(it, jzp, izp), knorm, pval, dpval, grad)
                      phi = phi + pval
                      dphi = dphi + dpval
                   end do
@@ -406,6 +425,10 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
                   if (grad) dphik(pair_index(izp, jzp), i1, i2, i3) = dphi
                end do
             end do
+            if (mirror) then
+               phik(:, m1, m2, m3) = phik(:, i1, i2, i3)
+               if (grad) dphik(:, m1, m2, m3) = dphik(:, i1, i2, i3)
+            end if
          end do
       end do
    end do

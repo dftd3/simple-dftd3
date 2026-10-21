@@ -145,6 +145,8 @@ Particle mesh evaluation
 The direct reciprocal space sum visits every atom at every wave vector, so its cost grows quadratically with the number of atoms.
 Setting ``mesh`` interpolates the structure factors on an equispaced mesh with cardinal B-splines and evaluates the sum with a fast Fourier transform instead, which scales as :math:`O(N \log N)`.
 This is the default; a negative ``mesh`` falls back to the direct summation.
+Each requested mesh length is rounded up to the smallest product of powers of two and three.
+For example, 271 points become 288 rather than 512, reducing the size of a cubic mesh by a factor of about 5.6.
 
 The discretisation error is governed by the mesh spacing, not by the number of mesh points, so the mesh has to grow with the cell.
 The table lists the deviation from the direct summation for cubic carbon monoxide supercells, in Hartree per atom, against the resulting spacing in a₀:

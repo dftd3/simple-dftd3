@@ -89,7 +89,7 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
    !> Communication backend, enables partitioning the coordination number
    class(work_reducer), intent(in), optional :: reducer
 
-   logical :: grad, hess, ewald
+   logical :: grad, hess, ewald, threebody
    integer :: mref
    real(wp), allocatable :: cn(:)
    real(wp), allocatable :: gwvec(:, :), gwdcn(:, :)
@@ -101,6 +101,7 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
    mref = maxval(disp%ref)
    grad = present(gradient) .or. present(sigma)
    hess = present(hessian)
+   threebody = param%has_threebody()
 
    ! a low-rank model under three-dimensional boundary conditions asks for the
    ! reciprocal space summation, which the damping function has to support
@@ -132,13 +133,15 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
    if (grad) allocate(gwdcn(mref, mol%nat))
    call disp%weight_references(mol, cn, gwvec, gwdcn)
 
-   allocate(c6(mol%nat, mol%nat))
-   if (grad) allocate(dc6dcn(mol%nat, mol%nat))
-   if (param%has_threebody()) then
-      ! the three-body term reads coefficients of pairs this part does not own
-      call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
-   else
-      call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, partition=partition)
+   if (.not.ewald .or. threebody) then
+      allocate(c6(mol%nat, mol%nat))
+      if (grad) allocate(dc6dcn(mol%nat, mol%nat))
+      if (threebody) then
+         ! the three-body term reads coefficients of pairs this part does not own
+         call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn)
+      else
+         call disp%get_atomic_c6(mol, gwvec, gwdcn, c6, dc6dcn, partition=partition)
+      end if
    end if
 
    energies(:) = 0.0_wp
@@ -160,10 +163,12 @@ subroutine get_dispersion_atomic_v2(error, mol, disp, param, cutoff, energies, &
          & disp%rvdw, disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, &
          & sigma_local, partition)
    end if
-   call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
-   call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
-      & disp%rvdw, disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, &
-      & sigma_local, partition)
+   if (threebody) then
+      call get_lattice_points(mol%periodic, mol%lattice, cutoff%disp3, lattr)
+      call param%get_dispersion3(mol, lattr, cutoff%disp3, cutoff%width3, &
+         & disp%rvdw, disp%r4r2, c6, dc6dcn, energies, dEdcn, gradient_local, &
+         & sigma_local, partition)
+   end if
    if (grad) then
       call get_lattice_points(mol%periodic, mol%lattice, cutoff%cn, lattr)
       if (present(reducer)) then
