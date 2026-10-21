@@ -9,11 +9,11 @@ keywords = ["dispersion-correction", "quantum-chemistry"]
 
 [dependencies]
 mctc-lib.git = "https://github.com/grimme-lab/mctc-lib"
-mctc-lib.tag = "v0.5.2"
+mctc-lib.tag = "v0.7.0"
 
 [dev-dependencies]
 mstore.git = "https://github.com/grimme-lab/mstore"
-mstore.tag = "v0.3.0"
+mstore.tag = "v0.4.0"
 
 [build]
 external-modules = ["mpi_f08"]
