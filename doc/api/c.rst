@@ -197,7 +197,7 @@ Recreating a structure object requires to recreate the dispersion model as well.
    Zero derives a particle mesh from the reciprocal cutoff, which scales as
    :math:`O(N \log N)` and is the default.
    A positive value interpolates the structure factors on a mesh of that many
-   points per direction, rounded up to a power of two.
+   points per direction, rounded up to a product of powers of two and three.
    A negative value sums over the reciprocal lattice directly, which is exact but
    scales quadratically with the number of atoms.
 

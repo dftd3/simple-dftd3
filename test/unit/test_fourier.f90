@@ -21,6 +21,7 @@ module test_fourier
       & new_zero_damping, mzero_damping_param, new_mzero_damping, d3_model, &
       & new_d3_model, d3_lowrank_config, get_pairwise_dispersion
    use dftd3_citation, only : citation_type, is_citation_present, doi_fourier_d3
+   use dftd3_fourier_fft, only : fft_mesh, new_fft_mesh, fft_3d, valid_mesh_size
    use dftd3_fourier_jacobi, only : symmetric_eigendecomposition
    use dftd3_fourier_kernel, only : fourier_term, fourier_kernel, new_fourier_kernel, &
       & get_fourier_transform, get_potential_zero
@@ -28,6 +29,7 @@ module test_fourier
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
    use mctc_io, only : structure_type, new
+   use mctc_io_constants, only : pi
    use mstore, only : get_structure
    implicit none
    private
@@ -98,10 +100,13 @@ subroutine collect_fourier(testsuite)
       & new_unittest("gradient-slab", test_gradient_acetic), &
       & new_unittest("hessian-mb01", test_hessian_mb01), &
       & new_unittest("fourier-transform", test_fourier_transform), &
+      & new_unittest("fft-mesh-size", test_fft_mesh_size), &
+      & new_unittest("fft-transform", test_fft_transform), &
       & new_unittest("ewald-molecular", test_ewald_molecular), &
       & new_unittest("ewald-unsupported-damping", test_ewald_unsupported), &
       & new_unittest("spme-energy", test_spme_energy), &
       & new_unittest("spme-gradient", test_spme_gradient), &
+      & new_unittest("spme-zero-mixed-mesh", test_spme_zero_mixed_mesh), &
       & new_unittest("ewald-hessian-rejected", test_ewald_hessian), &
       & new_unittest("ewald-pairwise-rejected", test_ewald_pairwise), &
       & new_unittest("ewald-converged-bj", test_ewald_converged_bj), &
@@ -165,6 +170,65 @@ subroutine get_cubic(mol, alat, rep, periodic)
    call new(mol, num, xyz, lattice=lattice, periodic=periodic)
 
 end subroutine get_cubic
+
+
+!> Select the smallest supported length, including the large zero-damping mesh
+subroutine test_fft_mesh_size(error)
+   type(error_type), allocatable, intent(out) :: error
+   integer :: ii
+   integer, parameter :: requested(*) = [1, 2, 3, 4, 5, 7, 9, 10, 13, 17, 19, 25, 28, 33, 37, 49, 114, 271]
+   integer, parameter :: expected(*) = [1, 2, 3, 4, 6, 8, 9, 12, 16, 18, 24, 27, 32, 36, 48, 54, 128, 288]
+
+   do ii = 1, size(requested)
+      call check(error, valid_mesh_size(requested(ii)), expected(ii))
+      if (allocated(error)) return
+   end do
+end subroutine test_fft_mesh_size
+
+
+!> Check both signs against a direct DFT, then check the unnormalised round trip
+subroutine test_fft_transform(error)
+   type(error_type), allocatable, intent(out) :: error
+   type(fft_mesh) :: fmesh
+   complex(wp), allocatable :: grid(:, :, :), input(:, :, :)
+   complex(wp) :: reference
+   real(wp) :: phase
+   integer :: icase, isign, ii, i1, i2, i3, j1, j2, j3, mesh(3)
+   integer, parameter :: shapes(3, 4) = reshape([4, 6, 9, 1, 8, 3, 8, 8, 8, 288, 1, 1], [3, 4])
+
+   do icase = 1, size(shapes, 2)
+      mesh = shapes(:, icase)
+      call new_fft_mesh(fmesh, mesh)
+      allocate(input(mesh(1), mesh(2), mesh(3)))
+      input = reshape([(cmplx(sin(0.37_wp*ii), cos(0.13_wp*ii), wp), ii=1, product(mesh))], mesh)
+      do isign = -1, 1, 2
+         grid = input
+         call fft_3d(fmesh, grid, isign)
+         do i3 = 1, mesh(3)
+            do i2 = 1, mesh(2)
+               do i1 = 1, mesh(1)
+                  reference = cmplx(0.0_wp, 0.0_wp, wp)
+                  do j3 = 1, mesh(3)
+                     do j2 = 1, mesh(2)
+                        do j1 = 1, mesh(1)
+                           phase = 2*pi*isign*sum(real([i1, i2, i3] - 1, wp) &
+                              & * real([j1, j2, j3] - 1, wp) / real(mesh, wp))
+                           reference = reference + input(j1, j2, j3) * cmplx(cos(phase), sin(phase), wp)
+                        end do
+                     end do
+                  end do
+                  call check(error, abs(grid(i1, i2, i3) - reference), 0.0_wp, thr=1.0e-10_wp)
+                  if (allocated(error)) return
+               end do
+            end do
+         end do
+      end do
+      call fft_3d(fmesh, grid, -1)
+      call check(error, maxval(abs(grid/product(mesh) - input)), 0.0_wp, thr=1.0e-12_wp)
+      if (allocated(error)) return
+      deallocate(input)
+   end do
+end subroutine test_fft_transform
 
 
 !> Cyclic Jacobi rotations reproduce the input matrix and orthogonal eigenvectors
@@ -871,6 +935,37 @@ subroutine test_spme_gradient(error)
 end subroutine test_spme_gradient
 
 
+!> Zero damping on a skew cell exercises different mixed-radix lengths per axis
+subroutine test_spme_zero_mixed_mesh(error)
+   type(error_type), allocatable, intent(out) :: error
+   type(structure_type) :: mol
+   type(d3_model) :: d3lr, d3pm
+   type(zero_damping_param) :: param
+   real(wp) :: sigma(3, 3), sigma_ref(3, 3), lattice(3, 3)
+   real(wp), allocatable :: energies(:), energies_ref(:)
+   real(wp), allocatable :: gradient(:, :), gradient_ref(:, :)
+
+   call get_cubic(mol, 8.0_wp, 1)
+   lattice = reshape([8.0_wp, 0.0_wp, 0.0_wp, 1.2_wp, 9.0_wp, 0.0_wp, 0.6_wp, -0.8_wp, 7.0_wp], [3, 3])
+   mol%xyz = matmul(lattice, mol%xyz / 8.0_wp)
+   mol%lattice = lattice
+   call new_d3_model(d3lr, mol, lowrank=d3_lowrank_config(rank=10000, kcut=20.0_wp, mesh=-1))
+   call new_d3_model(d3pm, mol, lowrank=d3_lowrank_config(rank=10000, kcut=20.0_wp))
+   call new_zero_damping(param, pbe_zero)
+
+   allocate(energies(mol%nat), energies_ref(mol%nat))
+   allocate(gradient(3, mol%nat), gradient_ref(3, mol%nat))
+   call get_dispersion(mol, d3lr, param, cutoff, energies_ref, gradient_ref, sigma_ref)
+   call get_dispersion(mol, d3pm, param, cutoff, energies, gradient, sigma)
+
+   call check(error, sum(energies), sum(energies_ref), thr=1.0e-8_wp)
+   if (allocated(error)) return
+   call check(error, maxval(abs(gradient - gradient_ref)), 0.0_wp, thr=1.0e-8_wp)
+   if (allocated(error)) return
+   call check(error, maxval(abs(sigma - sigma_ref)), 0.0_wp, thr=1.0e-7_wp)
+end subroutine test_spme_zero_mixed_mesh
+
+
 !> The second derivatives are only available from the real space summation
 subroutine test_ewald_hessian(error)
 
@@ -1187,7 +1282,7 @@ subroutine test_ewald_gradient(error)
 end subroutine test_ewald_gradient
 
 
-!> Analytical virial of the reciprocal summation
+!> Analytical virial of both reciprocal summations on a skew cell
 subroutine test_ewald_sigma(error)
 
    !> Error handling
@@ -1196,52 +1291,61 @@ subroutine test_ewald_sigma(error)
    type(structure_type) :: mol
    type(d3_model) :: d3lr
    type(rational_damping_param) :: param
-   integer :: ic, jc
+   integer :: ic, jc, iconfig
    real(wp) :: sigma(3, 3), numsigma(3, 3), er, el
    real(wp) :: eps(3, 3), lattice(3, 3)
    real(wp), allocatable :: energies(:), gradient(:, :), xyz(:, :)
    real(wp), parameter :: step = 1.0e-5_wp
+   type(d3_lowrank_config), parameter :: configs(*) = [tight, d3_lowrank_config(rank=10000, mesh=6)]
    real(wp), parameter :: unity(3, 3) = reshape(&
       & [1.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 1.0_wp, 0.0_wp, 0.0_wp, 0.0_wp, 1.0_wp], &
       & [3, 3])
 
    call get_cubic(mol, 8.0_wp, 1)
-   call new_d3_model(d3lr, mol, lowrank=tight)
    call new_rational_damping(param, pbe_bj)
 
    allocate(energies(mol%nat), gradient(3, mol%nat))
-   xyz = mol%xyz
    lattice(:, :) = mol%lattice
+   ! Keep periodic images away from the CN cutoff during finite differences.
+   lattice(1, 2) = 2.1_wp
+   xyz = matmul(lattice, mol%xyz / 8.0_wp)
+   mol%xyz = xyz
+   mol%lattice = lattice
 
-   do ic = 1, 3
-      do jc = 1, 3
-         eps(:, :) = unity
-         eps(jc, ic) = eps(jc, ic) + step
-         mol%xyz(:, :) = matmul(eps, xyz)
-         mol%lattice(:, :) = matmul(eps, lattice)
-         call get_dispersion(mol, d3lr, param, cutoff, energies)
-         er = sum(energies)
+   ! A coarse even mesh makes the Nyquist planes significant, including their
+   ! lack of inversion symmetry after aliasing in a skew reciprocal lattice.
+   do iconfig = 1, size(configs)
+      call new_d3_model(d3lr, mol, lowrank=configs(iconfig))
+      do ic = 1, 3
+         do jc = 1, 3
+            eps(:, :) = unity
+            eps(jc, ic) = eps(jc, ic) + step
+            mol%xyz(:, :) = matmul(eps, xyz)
+            mol%lattice(:, :) = matmul(eps, lattice)
+            call get_dispersion(mol, d3lr, param, cutoff, energies)
+            er = sum(energies)
 
-         eps(:, :) = unity
-         eps(jc, ic) = eps(jc, ic) - step
-         mol%xyz(:, :) = matmul(eps, xyz)
-         mol%lattice(:, :) = matmul(eps, lattice)
-         call get_dispersion(mol, d3lr, param, cutoff, energies)
-         el = sum(energies)
+            eps(:, :) = unity
+            eps(jc, ic) = eps(jc, ic) - step
+            mol%xyz(:, :) = matmul(eps, xyz)
+            mol%lattice(:, :) = matmul(eps, lattice)
+            call get_dispersion(mol, d3lr, param, cutoff, energies)
+            el = sum(energies)
 
-         numsigma(ic, jc) = 0.5_wp*(er - el)/step
+            numsigma(ic, jc) = 0.5_wp*(er - el)/step
+         end do
       end do
+
+      mol%xyz(:, :) = xyz
+      mol%lattice(:, :) = lattice
+      call get_dispersion(mol, d3lr, param, cutoff, energies, gradient, sigma)
+
+      if (any(abs(sigma - numsigma) > 1.0e-7_wp)) then
+         call test_failed(error, "Virial does not match numerical differentiation")
+         print "(3es21.13)", sigma - numsigma
+         return
+      end if
    end do
-
-   mol%xyz(:, :) = xyz
-   mol%lattice(:, :) = lattice
-   call get_dispersion(mol, d3lr, param, cutoff, energies, gradient, sigma)
-
-   if (any(abs(sigma - numsigma) > 1.0e-7_wp)) then
-      call test_failed(error, "Virial does not match numerical differentiation")
-      print "(3es21.13)", sigma - numsigma
-      return
-   end if
 
 end subroutine test_ewald_sigma
 

@@ -365,6 +365,8 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
    real(wp), allocatable, intent(out) :: dphik(:, :, :, :)
 
    integer :: i1, i2, i3, j1, j2, j3, izp, jzp, it, npair
+   integer :: m1, m2, m3
+   logical :: mirror
    real(wp) :: kvec(3), knorm, phi, dphi, pval, dpval
    type(fourier_kernel), allocatable :: kernel(:, :, :)
 
@@ -379,7 +381,7 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
 
    !$omp parallel do schedule(runtime) default(none) collapse(2) &
    !$omp shared(mesh, rec, kernel, nterm, nid, grad, phik, dphik) &
-   !$omp private(i1, i2, i3, j1, j2, j3, izp, jzp, it, kvec, knorm, phi, dphi, &
+   !$omp private(i1, i2, i3, j1, j2, j3, m1, m2, m3, mirror, izp, jzp, it, kvec, knorm, phi, dphi, &
    !$omp& pval, dpval)
    do i3 = 1, mesh(3)
       do i2 = 1, mesh(2)
@@ -388,6 +390,18 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
             j1 = i1 - 1 - mesh(1) * ((2*(i1 - 1)) / mesh(1))
             j2 = i2 - 1 - mesh(2) * ((2*(i2 - 1)) / mesh(2))
             j3 = i3 - 1 - mesh(3) * ((2*(i3 - 1)) / mesh(3))
+            ! Opposite wave vectors have the same radial kernel. On a Nyquist
+            ! plane the opposite index is aliased, so a skew cell need not have
+            ! the same norm there; evaluate those points independently.
+            mirror = all(2*abs([j1, j2, j3]) /= mesh)
+            if (mirror) then
+               m1 = modulo(1 - i1, mesh(1)) + 1
+               m2 = modulo(1 - i2, mesh(2)) + 1
+               m3 = modulo(1 - i3, mesh(3)) + 1
+               if (i3 > m3) cycle
+               if (i3 == m3 .and. i2 > m2) cycle
+               if (i3 == m3 .and. i2 == m2 .and. i1 > m1) cycle
+            end if
             kvec(:) = rec(:, 1)*j1 + rec(:, 2)*j2 + rec(:, 3)*j3
             knorm = norm2(kvec)
             do izp = 1, nid
@@ -403,6 +417,10 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
                   if (grad) dphik(pair_index(izp, jzp), i1, i2, i3) = dphi
                end do
             end do
+            if (mirror) then
+               phik(:, m1, m2, m3) = phik(:, i1, i2, i3)
+               if (grad) dphik(:, m1, m2, m3) = dphik(:, i1, i2, i3)
+            end if
          end do
       end do
    end do

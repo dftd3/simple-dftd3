@@ -16,10 +16,8 @@
 
 !> Complex fast Fourier transform on a three-dimensional mesh.
 !>
-!> Self-contained radix-2 implementation, sufficient for the particle mesh
-!> evaluation of the dispersion energy which is free to choose its mesh size.
-!> Supports powers of two only, a mixed-radix backend would lift the mesh
-!> quantisation but only matters once the transform dominates the runtime.
+!> Self-contained radix-2/3 Stockham transform. Allowing products of powers of
+!> two and three avoids padding the particle mesh to the next power of two.
 module dftd3_fourier_fft
    use mctc_env, only : wp
    use mctc_io_constants, only : pi
@@ -29,17 +27,14 @@ module dftd3_fourier_fft
    public :: fft_mesh, new_fft_mesh, fft_3d, valid_mesh_size
 
 
-   !> Twiddle factors shared by the transforms along all three mesh directions
+   !> Twiddle factors for the transforms along the three mesh directions
    type :: fft_mesh
 
       !> Number of points along each direction
       integer :: mesh(3) = 0
 
-      !> Length of the twiddle table, the largest mesh dimension
-      integer :: nmax = 0
-
-      !> Roots of unity exp(-2*pi*i*k/nmax) for k = 0 .. nmax/2 - 1
-      complex(wp), allocatable :: tw(:)
+      !> Roots of unity for each direction, whose lengths need not divide each other
+      complex(wp), allocatable :: tw(:, :)
 
    end type fft_mesh
 
@@ -55,10 +50,21 @@ pure function valid_mesh_size(npoint) result(nmesh)
 
    !> Supported number of mesh points
    integer :: nmesh
+   integer :: pow3, candidate
 
    nmesh = 1
    do while (nmesh < npoint)
       nmesh = 2 * nmesh
+   end do
+
+   pow3 = 3
+   do while (pow3 < nmesh)
+      candidate = pow3
+      do while (candidate < npoint)
+         candidate = 2 * candidate
+      end do
+      nmesh = min(nmesh, candidate)
+      pow3 = 3 * pow3
    end do
 
 end function valid_mesh_size
@@ -73,14 +79,14 @@ subroutine new_fft_mesh(self, mesh)
    !> Number of points along each direction
    integer, intent(in) :: mesh(3)
 
-   integer :: ik
+   integer :: ik, idir
 
    self%mesh(:) = mesh
-   self%nmax = maxval(mesh)
-
-   allocate(self%tw(0:self%nmax/2 - 1))
-   do ik = 0, self%nmax/2 - 1
-      self%tw(ik) = cmplx(cos(2*pi*ik/self%nmax), -sin(2*pi*ik/self%nmax), wp)
+   allocate(self%tw(0:maxval(mesh) - 1, 3))
+   do idir = 1, 3
+      do ik = 0, mesh(idir) - 1
+         self%tw(ik, idir) = cmplx(cos(2*pi*ik/mesh(idir)), -sin(2*pi*ik/mesh(idir)), wp)
+      end do
    end do
 
 end subroutine new_fft_mesh
@@ -99,13 +105,15 @@ subroutine fft_3d(self, grid, isign)
    integer, intent(in) :: isign
 
    integer :: i1, i2, i3
+   complex(wp), allocatable :: work(:, :)
 
-   !$omp parallel default(none) shared(self, grid, isign) private(i1, i2, i3)
+   !$omp parallel default(none) shared(self, grid, isign) private(i1, i2, i3, work)
+   allocate(work(size(self%tw, 1), 2))
 
    !$omp do schedule(runtime) collapse(2)
    do i3 = 1, self%mesh(3)
       do i2 = 1, self%mesh(2)
-         call fft_1d(grid(:, i2, i3), self%tw, self%nmax, isign)
+         call fft_1d(grid(:, i2, i3), self%tw(:, 1), work, isign)
       end do
    end do
    !$omp end do
@@ -113,7 +121,7 @@ subroutine fft_3d(self, grid, isign)
    !$omp do schedule(runtime) collapse(2)
    do i3 = 1, self%mesh(3)
       do i1 = 1, self%mesh(1)
-         call fft_1d(grid(i1, :, i3), self%tw, self%nmax, isign)
+         call fft_1d(grid(i1, :, i3), self%tw(:, 2), work, isign)
       end do
    end do
    !$omp end do
@@ -121,68 +129,73 @@ subroutine fft_3d(self, grid, isign)
    !$omp do schedule(runtime) collapse(2)
    do i2 = 1, self%mesh(2)
       do i1 = 1, self%mesh(1)
-         call fft_1d(grid(i1, i2, :), self%tw, self%nmax, isign)
+         call fft_1d(grid(i1, i2, :), self%tw(:, 3), work, isign)
       end do
    end do
    !$omp end do
 
+   deallocate(work)
    !$omp end parallel
 
 end subroutine fft_3d
 
 
-!> In-place radix-2 decimation in time transform of a single sequence
-pure subroutine fft_1d(zvec, tw, nmax, isign)
+!> Autosorting transform using two contiguous work vectors shared across stages
+pure subroutine fft_1d(zvec, tw, work, isign)
 
    !> Sequence to transform
    complex(wp), intent(inout) :: zvec(:)
 
-   !> Roots of unity for the largest mesh dimension
+   !> Roots of unity for this direction
    complex(wp), intent(in) :: tw(0:)
 
-   !> Length of the twiddle table
-   integer, intent(in) :: nmax
+   !> Per-thread scratch space, reused for every mesh line
+   complex(wp), intent(inout) :: work(:, :)
 
    !> Sign of the exponent
    integer, intent(in) :: isign
 
-   integer :: nn, ii, jj, kk, mm, istep, itw
-   complex(wp) :: wval, temp
+   integer :: nn, stride, radix, blocks, jj, kk, ii, io, src, dst
+   complex(wp) :: wval, wval2, aa, bb, cc, dd, omega
 
    nn = size(zvec)
    if (nn <= 1) return
 
-   jj = 1
-   do ii = 1, nn
-      if (jj > ii) then
-         temp = zvec(jj)
-         zvec(jj) = zvec(ii)
-         zvec(ii) = temp
-      end if
-      kk = nn / 2
-      do while (kk >= 2 .and. jj > kk)
-         jj = jj - kk
-         kk = kk / 2
-      end do
-      jj = jj + kk
-   end do
-
-   mm = 1
-   do while (mm < nn)
-      istep = 2 * mm
-      do kk = 1, mm
-         ! every supported length divides nmax, so the table is shared
-         itw = (kk - 1) * (nmax / istep)
-         wval = tw(itw)
+   work(:nn, 1) = zvec
+   omega = cmplx(0.0_wp, isign * sqrt(3.0_wp) / 2, wp)
+   src = 1
+   stride = 1
+   do while (stride < nn)
+      radix = 3
+      if (mod(nn / stride, 2) == 0) radix = 2
+      blocks = nn / (radix * stride)
+      dst = 3 - src
+      do jj = 0, stride - 1
+         wval = tw(jj * blocks)
          if (isign > 0) wval = conjg(wval)
-         do ii = kk, nn, istep
-            temp = wval * zvec(ii + mm)
-            zvec(ii + mm) = zvec(ii) - temp
-            zvec(ii) = zvec(ii) + temp
+         if (radix == 3) wval2 = wval * wval
+         do kk = 0, blocks - 1
+            ii = jj + kk * stride + 1
+            io = jj + kk * radix * stride + 1
+            aa = work(ii, src)
+            bb = wval * work(ii + nn/radix, src)
+            if (radix == 2) then
+               work(io, dst) = aa + bb
+               work(io + stride, dst) = aa - bb
+            else
+               cc = wval2 * work(ii + 2*nn/radix, src)
+               dd = omega * (bb - cc)
+               work(io, dst) = aa + bb + cc
+               aa = aa - 0.5_wp * (bb + cc)
+               work(io + stride, dst) = aa + dd
+               work(io + 2*stride, dst) = aa - dd
+            end if
          end do
       end do
-      mm = istep
+      src = dst
+      stride = radix * stride
    end do
+   zvec = work(:nn, src)
 
 end subroutine fft_1d
 
