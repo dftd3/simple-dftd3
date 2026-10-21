@@ -28,8 +28,8 @@
 module dftd3_fourier_spme
    use dftd3_fourier_decomposition, only : d3_lowrank_c6
    use dftd3_fourier_fft, only : fft_mesh, new_fft_mesh, fft_3d, valid_mesh_size
-   use dftd3_fourier_kernel, only : fourier_term, get_fourier_transform, &
-      & get_potential_zero
+   use dftd3_fourier_kernel, only : fourier_term, fourier_kernel, new_fourier_kernel, &
+      & get_fourier_transform, get_potential_zero
    use dftd3_partition, only : work_partition, owns_index
    use mctc_env, only : wp
    use mctc_io, only : structure_type
@@ -128,7 +128,7 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
    real(wp), allocatable :: theta(:, :, :), dtheta(:, :, :)
    real(wp), allocatable :: bfac(:, :), c6l(:, :), dc6ldcn(:, :)
    real(wp), allocatable :: phik(:, :, :, :), dphik(:, :, :, :)
-   real(wp), allocatable :: pot(:, :), esum(:), dsum(:), gsum(:, :), ssum(:, :)
+   real(wp), allocatable :: esum(:), dsum(:), gsum(:, :), ssum(:, :)
    complex(wp), allocatable :: qgrid(:, :, :, :), tgrid(:, :, :)
 
    grad = present(gwdcn) .and. present(dEdcn) .and. present(gradient) &
@@ -187,9 +187,8 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
 
    allocate(qgrid(mesh(1), mesh(2), mesh(3), nid))
    allocate(tgrid(mesh(1), mesh(2), mesh(3)))
-   allocate(pot(nat, nid))
 
-   erecip = 0.0_wp
+   erecip = -sum(esum)
    escale = -0.5_wp / vol
 
    ! the terms of the expansion decouple, so only one set of meshes is live and
@@ -243,9 +242,6 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
 
          ! gather the potential back onto the atoms of this species
          do iat = 1, nat
-            pot(iat, izp) = 0.0_wp
-         end do
-         do iat = 1, nat
             if (ghost(iat) .or. mol%id(iat) /= izp) cycle
             wgt = 0.0_wp
             dwgt(:) = 0.0_wp
@@ -264,19 +260,17 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
                         dtvec(1) = dtheta(j1, 1, iat) * tvec(2) * tvec(3)
                         dtvec(2) = tvec(1) * dtheta(j2, 2, iat) * tvec(3)
                         dtvec(3) = tvec(1) * tvec(2) * dtheta(j3, 3, iat)
-                        dwgt(:) = dwgt(:) + matmul(dudr, dtvec) * sfac
+                        dwgt(:) = dwgt(:) + dtvec * sfac
                      end if
                   end do
                end do
             end do
-            pot(iat, izp) = wgt
             esum(iat) = esum(iat) + escale * lowrank%lambda(il) * c6l(il, iat) * wgt
-            erecip = erecip + escale * lowrank%lambda(il) * c6l(il, iat) * wgt
             if (grad) then
                dsum(iat) = dsum(iat) &
                   & + 2.0_wp * escale * lowrank%lambda(il) * dc6ldcn(il, iat) * wgt
                gsum(:, iat) = gsum(:, iat) &
-                  & + 2.0_wp * escale * lowrank%lambda(il) * c6l(il, iat) * dwgt(:)
+                  & + 2.0_wp * escale * lowrank%lambda(il) * c6l(il, iat) * matmul(dudr, dwgt)
             end if
          end do
       end do
@@ -317,6 +311,7 @@ subroutine get_dispersion_spme(mol, lowrank, ghost, terms, nterm, mesh, gwvec, &
 
    energies(:) = energies(:) + esum(:)
    if (grad) then
+      erecip = erecip + sum(esum)
       do ic = 1, 3
          ssum(ic, ic) = ssum(ic, ic) - erecip
       end do
@@ -371,7 +366,9 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
 
    integer :: i1, i2, i3, j1, j2, j3, izp, jzp, it, npair
    real(wp) :: kvec(3), knorm, phi, dphi, pval, dpval
+   type(fourier_kernel), allocatable :: kernel(:, :, :)
 
+   kernel = new_fourier_kernel(terms)
    npair = nid * (nid + 1) / 2
    allocate(phik(npair, mesh(1), mesh(2), mesh(3)))
    if (grad) then
@@ -381,7 +378,7 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
    end if
 
    !$omp parallel do schedule(runtime) default(none) collapse(2) &
-   !$omp shared(mesh, rec, terms, nterm, nid, grad, phik, dphik) &
+   !$omp shared(mesh, rec, kernel, nterm, nid, grad, phik, dphik) &
    !$omp private(i1, i2, i3, j1, j2, j3, izp, jzp, it, kvec, knorm, phi, dphi, &
    !$omp& pval, dpval)
    do i3 = 1, mesh(3)
@@ -398,7 +395,7 @@ subroutine get_mesh_kernel(mesh, rec, terms, nterm, nid, grad, phik, dphik)
                   phi = 0.0_wp
                   dphi = 0.0_wp
                   do it = 1, nterm(jzp, izp)
-                     call get_fourier_transform(terms(it, jzp, izp), knorm, pval, dpval)
+                     call get_fourier_transform(kernel(it, jzp, izp), knorm, pval, dpval, grad)
                      phi = phi + pval
                      dphi = dphi + dpval
                   end do

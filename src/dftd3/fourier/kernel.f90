@@ -35,6 +35,7 @@ module dftd3_fourier_kernel
    private
 
    public :: fourier_term, max_fourier_terms
+   public :: fourier_kernel, new_fourier_kernel
    public :: is_supported_term, get_fourier_transform, get_potential_zero
    public :: get_reciprocal_cutoff
 
@@ -60,6 +61,13 @@ module dftd3_fourier_kernel
    end type fourier_term
 
 
+   !> Wave-number-independent coefficients of the Fourier transform
+   type :: fourier_kernel
+      private
+      real(wp) :: prefactor = 0.0_wp, radius = 0.0_wp, zero = 0.0_wp
+      real(wp), allocatable :: angle(:), cosine(:), sine(:), phase(:)
+   end type fourier_kernel
+
 contains
 
 
@@ -79,11 +87,32 @@ pure function is_supported_term(term) result(supported)
 end function is_supported_term
 
 
-!> Fourier transform of a single term and its derivative w.r.t. the wave number
-pure subroutine get_fourier_transform(term, kval, phi, dphi)
+!> Prepare a term once before evaluating it at many wave numbers
+pure elemental function new_fourier_kernel(term) result(kernel)
 
-   !> Term of the damped pair potential
    type(fourier_term), intent(in) :: term
+   type(fourier_kernel) :: kernel
+   integer :: ipole, nexp
+
+   if (abs(term%prefactor) <= 0.0_wp) return
+
+   nexp = term%m - term%alpha + 2
+   kernel%prefactor = 4.0_wp*pi*pi / term%alpha * term%prefactor * term%radius**nexp
+   kernel%radius = term%radius
+   kernel%zero = kernel%prefactor * term%radius / sin(pi*(term%m + 3)/real(term%alpha, wp))
+   kernel%angle = [(pi * (2*ipole + 1) / real(term%alpha, wp), ipole=0, term%alpha/2-1)]
+   kernel%cosine = cos(kernel%angle)
+   kernel%sine = sin(kernel%angle)
+   kernel%phase = 0.5_wp*pi + nexp*kernel%angle
+
+end function new_fourier_kernel
+
+
+!> Fourier transform and its derivative w.r.t. the wave number
+pure subroutine get_fourier_transform(kernel, kval, phi, dphi, grad)
+
+   !> Prepared coefficients of the damped pair potential
+   type(fourier_kernel), intent(in) :: kernel
 
    !> Wave number
    real(wp), intent(in) :: kval
@@ -94,37 +123,33 @@ pure subroutine get_fourier_transform(term, kval, phi, dphi)
    !> Derivative of the Fourier transform w.r.t. the wave number
    real(wp), intent(out) :: dphi
 
-   integer :: ipole, npole, nexp
-   real(wp) :: pre, theta, ct, st, arg, damp, acc, dacc, krad
+   !> Whether the derivative is required
+   logical, intent(in) :: grad
+
+   integer :: ipole
+   real(wp) :: arg, damp, acc, dacc, krad
 
    phi = 0.0_wp
    dphi = 0.0_wp
-   if (abs(term%prefactor) <= 0.0_wp) return
-
-   nexp = term%m - term%alpha + 2
-   pre = 4.0_wp*pi*pi / term%alpha * term%prefactor * term%radius**nexp
+   if (abs(kernel%prefactor) <= 0.0_wp) return
 
    if (kval <= 0.0_wp) then
-      phi = pre * term%radius / sin(pi*(term%m + 3)/real(term%alpha, wp))
+      phi = kernel%zero
       return
    end if
 
-   npole = term%alpha / 2
-   krad = kval * term%radius
+   krad = kval * kernel%radius
    acc = 0.0_wp
    dacc = 0.0_wp
-   do ipole = 0, npole - 1
-      theta = pi * (2*ipole + 1) / real(term%alpha, wp)
-      ct = cos(theta)
-      st = sin(theta)
-      arg = 0.5_wp*pi + nexp*theta + krad*ct
-      damp = exp(-krad*st)
+   do ipole = 1, size(kernel%angle)
+      arg = kernel%phase(ipole) + krad*kernel%cosine(ipole)
+      damp = exp(-krad*kernel%sine(ipole))
       acc = acc + sin(arg) * damp
-      dacc = dacc + cos(arg + theta) * damp
+      if (grad) dacc = dacc + cos(arg + kernel%angle(ipole)) * damp
    end do
 
-   phi = pre * acc / kval
-   dphi = (pre * term%radius * dacc - phi) / kval
+   phi = kernel%prefactor * acc / kval
+   if (grad) dphi = (kernel%prefactor * kernel%radius * dacc - phi) / kval
 
 end subroutine get_fourier_transform
 

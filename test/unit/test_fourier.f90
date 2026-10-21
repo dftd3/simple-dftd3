@@ -22,8 +22,8 @@ module test_fourier
       & new_d3_model, d3_lowrank_config, get_pairwise_dispersion
    use dftd3_citation, only : citation_type, is_citation_present, doi_fourier_d3
    use dftd3_fourier_jacobi, only : symmetric_eigendecomposition
-   use dftd3_fourier_kernel, only : fourier_term, get_fourier_transform, &
-      & get_potential_zero
+   use dftd3_fourier_kernel, only : fourier_term, fourier_kernel, new_fourier_kernel, &
+      & get_fourier_transform, get_potential_zero
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
@@ -692,16 +692,21 @@ subroutine test_fourier_transform(error)
    !> Error handling
    type(error_type), allocatable, intent(out) :: error
 
-   integer :: ik
+   integer :: ik, it
    real(wp) :: kval, bval, phi, dphi, ref, kb
    type(fourier_term) :: term
+   type(fourier_kernel) :: kernel
+   type(fourier_term), parameter :: terms(*) = [ &
+      & fourier_term(1.0_wp, 0, 6, 4.5_wp), fourier_term(1.0_wp, 0, 8, 4.5_wp), &
+      & fourier_term(1.0_wp, 8, 14, 4.5_wp), fourier_term(1.0_wp, 8, 16, 4.5_wp)]
    real(wp), parameter :: pi = 3.1415926535897932384626433832795029_wp
 
+   bval = 4.5_wp
+   term = fourier_term(1.0_wp, 0, 6, bval)
+   kernel = new_fourier_kernel(term)
    do ik = 0, 20
       kval = 0.05_wp * ik
-      bval = 4.5_wp
-      term = fourier_term(1.0_wp, 0, 6, bval)
-      call get_fourier_transform(term, kval, phi, dphi)
+      call get_fourier_transform(kernel, kval, phi, dphi, grad=.false.)
 
       kb = kval * bval
       if (kval > 0.0_wp) then
@@ -715,13 +720,15 @@ subroutine test_fourier_transform(error)
       if (allocated(error)) return
    end do
 
-   ! numerical derivative of the transform
-   term = fourier_term(1.0_wp, 0, 6, 4.5_wp)
-   call get_fourier_transform(term, 1.0_wp, phi, dphi)
-   call get_fourier_transform(term, 1.0_wp + 1.0e-6_wp, ref, kb)
-   call get_fourier_transform(term, 1.0_wp - 1.0e-6_wp, kval, kb)
-   call check(error, dphi, 0.5_wp*(ref - kval)/1.0e-6_wp, thr=1.0e-6_wp)
-   if (allocated(error)) return
+   ! numerical derivatives of the prepared BJ and zero-damping kernels
+   do it = 1, size(terms)
+      kernel = new_fourier_kernel(terms(it))
+      call get_fourier_transform(kernel, 1.0_wp, phi, dphi, grad=.true.)
+      call get_fourier_transform(kernel, 1.0_wp + 1.0e-6_wp, ref, kb, grad=.false.)
+      call get_fourier_transform(kernel, 1.0_wp - 1.0e-6_wp, kval, kb, grad=.false.)
+      call check(error, dphi, 0.5_wp*(ref - kval)/1.0e-6_wp, thr=1.0e-6_wp)
+      if (allocated(error)) return
+   end do
 
    ! bounded potential at the origin
    call check(error, get_potential_zero(term), 1.0_wp/4.5_wp**6, thr=thr)
