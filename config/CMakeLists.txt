@@ -41,9 +41,11 @@ if(NOT DEFINED "${PROJECT_NAME}-dependency-method")
   )
 endif()
 
-set(SDFTD3_INSTALL_FMODDIR
-    "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
-    CACHE STRING "Installation directory for Fortran modules")
+set(
+  SDFTD3_INSTALL_FMODDIR
+  "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
+  CACHE STRING "Installation directory for Fortran modules"
+)
 
 # Set build type as CMake does not provide defaults
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
