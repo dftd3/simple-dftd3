@@ -42,10 +42,10 @@ if(NOT DEFINED "${PROJECT_NAME}-dependency-method")
 endif()
 
 set(
-  module-dir
-  "${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
+  SDFTD3_INSTALL_FMODDIR
+  "${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}/${CMAKE_Fortran_COMPILER_ID}-${CMAKE_Fortran_COMPILER_VERSION}"
+  CACHE STRING "Installation directory for Fortran modules"
 )
-set(module-dir "${module-dir}" PARENT_SCOPE)
 
 # Set build type as CMake does not provide defaults
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -85,6 +85,12 @@ install(
   "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake"
   DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
 )
+
+if(IS_ABSOLUTE "${SDFTD3_INSTALL_FMODDIR}")
+  set(pkgconfig_fmoddir "${SDFTD3_INSTALL_FMODDIR}")
+else()
+  set(pkgconfig_fmoddir "\${prefix}/${SDFTD3_INSTALL_FMODDIR}")
+endif()
 
 configure_file(
   "${CMAKE_CURRENT_SOURCE_DIR}/template.pc"
