@@ -15,7 +15,6 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_model
-   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
    use dftd3_citation, only : citation_type, get_citation, doi_fourier_d3
    use dftd3_data, only : get_r4r2_val, get_vdw_rad
    use dftd3_fourier_decomposition, only : d3_lowrank_c6, d3_lowrank_config, new_lowrank_c6
@@ -328,7 +327,9 @@ end subroutine weight_references
 elemental function is_exceptional(val)
    real(wp), intent(in) :: val
    logical :: is_exceptional
-   is_exceptional = ieee_is_nan(val) .or. abs(val) > huge(val)
+   ! NaN is the only value that compares unequal to itself
+   ! (equivalent, but more compatible than using ieee_is_nan)
+   is_exceptional = val /= val .or. abs(val) > huge(val)
 end function is_exceptional
 
 
