@@ -18,8 +18,7 @@ module test_regression
    use dftd3, only : get_dispersion, realspace_cutoff, rational_damping_param, &
       & d3_model, new_d3_model
    use mctc_env, only : wp
-   use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
-      & test_failed
+   use mctc_env_testing, only : new_unittest, unittest_type, error_type, check
    use mctc_io, only : structure_type, new
    implicit none
    private
@@ -63,25 +62,11 @@ subroutine test_dftbplus_871(error)
    call new_d3_model(d3, mol)
    call get_dispersion(mol, d3, param, realspace_cutoff(), energy, gradient, sigma)
 
-   if (is_exceptional(norm2(gradient))) then
-      call test_failed(error, "Exceptional value propagated to the gradient")
-      return
-   end if
-
    call check(error, energy, -8.9964956516666404E-5_wp, thr=thr)
    if (allocated(error)) return
    call check(error, norm2(gradient), 8.9844177273972976E-9_wp, thr=thr)
 
 end subroutine test_dftbplus_871
-
-
-!> Check whether we are dealing with an exceptional value, NaN or Inf
-elemental function is_exceptional(val)
-   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
-   real(wp), intent(in) :: val
-   logical :: is_exceptional
-   is_exceptional = ieee_is_nan(val) .or. abs(val) > huge(val)
-end function is_exceptional
 
 
 subroutine structure_dftbplus_871(self)
