@@ -15,7 +15,6 @@
 ! along with s-dftd3.  If not, see <https://www.gnu.org/licenses/>.
 
 module dftd3_model
-   use, intrinsic :: ieee_arithmetic, only : ieee_is_nan
    use dftd3_citation, only : citation_type, get_citation, doi_fourier_d3
    use dftd3_data, only : get_r4r2_val, get_vdw_rad
    use dftd3_fourier_decomposition, only : d3_lowrank_c6, d3_lowrank_config, new_lowrank_c6
@@ -218,118 +217,47 @@ subroutine weight_references(self, mol, cn, gwvec, gwdcn, gwd2cn)
    !> second derivative of the weighting function w.r.t. the coordination number
    real(wp), intent(out), optional :: gwd2cn(:, :)
 
-   integer :: iat, izp, iref, mref
-   real(wp) :: norm, dnorm, d2norm, gw, expw, expd, expdd, gwk, dgwk, d2gwk
-   real(wp) :: wf2, dcn
-   real(wp), allocatable :: gwt(:)
+   integer :: iat, izp, nref
+   real(wp) :: dmin, norm, mean, var
+   real(wp), allocatable :: dcn(:), gw(:), slope(:)
 
-   mref = maxval(self%ref)
+   gwvec(:, :) = 0.0_wp
+   if (present(gwdcn)) gwdcn(:, :) = 0.0_wp
+   if (present(gwd2cn)) gwd2cn(:, :) = 0.0_wp
 
-   if (present(gwdcn)) then
-      gwvec(:, :) = 0.0_wp
-      gwdcn(:, :) = 0.0_wp
-      if (present(gwd2cn)) gwd2cn(:, :) = 0.0_wp
-      wf2 = 2 * self%wf
+   !$omp parallel default(none) &
+   !$omp shared(gwvec, gwdcn, gwd2cn, mol, self, cn) &
+   !$omp private(iat, izp, nref, dmin, norm, mean, var, dcn, gw, slope)
+   allocate(dcn(maxval(self%ref)), gw(maxval(self%ref)), slope(maxval(self%ref)))
+   !$omp do schedule(runtime)
+   do iat = 1, mol%nat
+      izp = mol%id(iat)
+      nref = self%ref(izp)
+      dcn(:nref) = self%cn(:nref, izp) - cn(iat)
+      ! Shift by the closest reference to keep the largest exponent at zero
+      ! and the normalization at least one (log-sum-exp), as done in D3S
+      dmin = minval(dcn(:nref)**2)
+      gw(:nref) = exp(-self%wf * (dcn(:nref)**2 - dmin))
+      norm = sum(gw(:nref))
+      gw(:nref) = gw(:nref) / norm
+      gwvec(:nref, iat) = gw(:nref)
 
-      !$omp parallel default(none) &
-      !$omp shared(gwvec, gwdcn, gwd2cn, mol, self, cn, wf2, mref) &
-      !$omp private(iat, izp, iref, norm, dnorm, d2norm, gw, expw, expd, expdd, &
-      !$omp& gwk, dgwk, d2gwk, dcn, gwt)
-      allocate(gwt(mref))
-      !$omp do schedule(runtime)
-      do iat = 1, mol%nat
-         izp = mol%id(iat)
-         norm = 0.0_wp
-         dnorm = 0.0_wp
-         d2norm = 0.0_wp
-         do iref = 1, self%ref(izp)
-            gw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
-            gwt(iref) = gw
-            dcn = self%cn(iref, izp) - cn(iat)
-            norm = norm + gw
-            dnorm = dnorm + wf2 * dcn * gw
-            d2norm = d2norm + (wf2*wf2*dcn*dcn - wf2) * gw
-         end do
-         norm = 1.0_wp / norm
-         do iref = 1, self%ref(izp)
-            expw = gwt(iref)
-            dcn = self%cn(iref, izp) - cn(iat)
-            expd = wf2 * dcn * expw
-            expdd = (wf2*wf2*dcn*dcn - wf2) * expw
-            gwk = expw * norm
-            if (is_exceptional(gwk)) then
-               if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
-                  gwk = 1.0_wp
-               else
-                  gwk = 0.0_wp
-               end if
-            end if
-            gwvec(iref, iat) = gwk
-
-            dgwk = expd * norm - expw * dnorm * norm**2
-            if (is_exceptional(dgwk)) then
-               dgwk = 0.0_wp
-            end if
-            gwdcn(iref, iat) = dgwk
-
-            if (present(gwd2cn)) then
-               d2gwk = expdd * norm - 2.0_wp * expd * dnorm * norm**2 &
-                  & - expw * d2norm * norm**2 + 2.0_wp * expw * dnorm**2 * norm**3
-               if (is_exceptional(d2gwk)) then
-                  d2gwk = 0.0_wp
-               end if
-               gwd2cn(iref, iat) = d2gwk
-            end if
-         end do
-      end do
-      !$omp end do
-      deallocate(gwt)
-      !$omp end parallel
-
-   else
-
-      gwvec(:, :) = 0.0_wp
-
-      !$omp parallel default(none) &
-      !$omp shared(gwvec, mol, self, cn, mref) &
-      !$omp private(iat, izp, iref, norm, gw, expw, gwk, gwt)
-      allocate(gwt(mref))
-      !$omp do schedule(runtime)
-      do iat = 1, mol%nat
-         izp = mol%id(iat)
-         norm = 0.0_wp
-         do iref = 1, self%ref(izp)
-            gw = weight_cn(self%wf, cn(iat), self%cn(iref, izp))
-            gwt(iref) = gw
-            norm = norm + gw
-         end do
-         norm = 1.0_wp / norm
-         do iref = 1, self%ref(izp)
-            gwk = gwt(iref) * norm
-            if (is_exceptional(gwk)) then
-               if (maxval(self%cn(:self%ref(izp), izp)) == self%cn(iref, izp)) then
-                  gwk = 1.0_wp
-               else
-                  gwk = 0.0_wp
-               end if
-            end if
-            gwvec(iref, iat) = gwk
-         end do
-      end do
-      !$omp end do
-      deallocate(gwt)
-      !$omp end parallel
-   end if
+      if (present(gwdcn)) then
+         slope(:nref) = 2 * self%wf * dcn(:nref)
+         mean = sum(gw(:nref) * slope(:nref))
+         slope(:nref) = slope(:nref) - mean
+         gwdcn(:nref, iat) = gw(:nref) * slope(:nref)
+         if (present(gwd2cn)) then
+            var = sum(gw(:nref) * slope(:nref)**2)
+            gwd2cn(:nref, iat) = gw(:nref) * (slope(:nref)**2 - var)
+         end if
+      end if
+   end do
+   !$omp end do
+   deallocate(dcn, gw, slope)
+   !$omp end parallel
 
 end subroutine weight_references
-
-
-!> Check whether we are dealing with an exceptional value, NaN or Inf
-elemental function is_exceptional(val)
-   real(wp), intent(in) :: val
-   logical :: is_exceptional
-   is_exceptional = ieee_is_nan(val) .or. abs(val) > huge(val)
-end function is_exceptional
 
 
 !> Calculate atomic dispersion coefficients and their derivatives w.r.t.
@@ -489,14 +417,6 @@ subroutine get_atomic_c6(self, mol, gwvec, gwdcn, c6, dc6dcn, gwd2cn, d2c6dcn2, 
    end if
 
 end subroutine get_atomic_c6
-
-
-elemental function weight_cn(wf,cn,cnref) result(cngw)
-   real(wp),intent(in) :: wf, cn, cnref
-   real(wp) :: cngw
-   intrinsic :: exp
-   cngw = exp ( -wf * ( cn - cnref )**2 )
-end function weight_cn
 
 
 end module dftd3_model

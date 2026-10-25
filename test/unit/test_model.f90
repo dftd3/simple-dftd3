@@ -23,7 +23,7 @@ module test_model
    use mctc_env, only : wp
    use mctc_env_testing, only : new_unittest, unittest_type, error_type, check, &
       & test_failed
-   use mctc_io_structure, only : structure_type
+   use mctc_io_structure, only : structure_type, new
    use mctc_ncoord, only : ncoord_type, new_ncoord, cn_count
    use mstore, only : get_structure
    implicit none
@@ -53,7 +53,8 @@ subroutine collect_model(testsuite)
       & new_unittest("gw-amf3", test_gw_amf3), &
       & new_unittest("ghost-atoms", test_ghost_atoms), &
       & new_unittest("dgw-mb04", test_dgw_mb04), &
-      & new_unittest("dgw-mb05", test_dgw_mb05) &
+      & new_unittest("dgw-mb05", test_dgw_mb05), &
+      & new_unittest("gw-stable", test_gw_stable) &
       & ]
 
 end subroutine collect_model
@@ -334,6 +335,59 @@ subroutine test_dgw_mb05(error)
    call test_dgw_gen(error, mol)
 
 end subroutine test_dgw_mb05
+
+
+!> Weights and derivatives must stay finite and normalized for CNs far away
+!> from all references, where the unshifted Gaussians underflow
+subroutine test_gw_stable(error)
+
+   !> Error handling
+   type(error_type), allocatable, intent(out) :: error
+
+   type(structure_type) :: mol
+   type(d3_model) :: d3
+   integer :: ic, iat, nref
+   real(wp), parameter :: step = 1.0e-5_wp
+   real(wp), parameter :: cns(*) = [-100.0_wp, -13.5_wp, 0.0_wp, 2.5_wp, 14.0_wp, 17.4_wp, 17.5_wp, &
+      & 30.0_wp, 100.0_wp, 1.0e4_wp]
+   real(wp) :: cn(3), xyz(3, 3)
+   real(wp), allocatable :: gwvec(:, :), gwdcn(:, :), gwd2cn(:, :)
+   real(wp), allocatable :: gwr(:, :), gwl(:, :), dgwr(:, :), dgwl(:, :)
+
+   xyz(:, :) = 0.0_wp
+   call new(mol, [1, 6, 73], xyz)
+   call new_d3_model(d3, mol)
+   allocate(gwvec(maxval(d3%ref), mol%nat), source=0.0_wp)
+   allocate(gwdcn, gwd2cn, gwr, gwl, dgwr, dgwl, mold=gwvec)
+
+   do ic = 1, size(cns)
+      cn(:) = cns(ic)
+      call d3%weight_references(mol, cn, gwvec, gwdcn, gwd2cn)
+      call d3%weight_references(mol, cn + step, gwr, dgwr)
+      call d3%weight_references(mol, cn - step, gwl, dgwl)
+
+      do iat = 1, mol%nat
+         nref = d3%ref(mol%id(iat))
+         call check(error, sum(gwvec(:nref, iat)), 1.0_wp, thr=thr)
+         if (allocated(error)) return
+         call check(error, minval(gwvec(:nref, iat)) >= 0.0_wp)
+         if (allocated(error)) return
+         ! far away from all references only the closest one survives
+         if (abs(cns(ic)) > 50.0_wp) then
+            call check(error, gwvec(minloc(abs(d3%cn(:nref, mol%id(iat)) - cns(ic)), 1), iat), &
+               & 1.0_wp, thr=thr)
+            if (allocated(error)) return
+         end if
+      end do
+
+      call check(error, norm2(gwdcn - (gwr - gwl) / (2*step)), 0.0_wp, thr=thr2)
+      if (allocated(error)) return
+      call check(error, norm2(gwd2cn - (dgwr - dgwl) / (2*step)), 0.0_wp, thr=10*thr2)
+      if (allocated(error)) return
+   end do
+
+end subroutine test_gw_stable
+
 
 
 subroutine test_ghost_atoms(error)
