@@ -455,7 +455,8 @@ def d3_energy(mf: scf.hf.SCF, method: Optional[str] = None, **kwargs) -> scf.hf.
             return enuc
 
         def reset(self, mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None) -> "DFTD3":
-            self.with_dftd3.reset(mol)
+            if mol is not None and self.with_dftd3:
+                self.with_dftd3.reset(mol)
             return mf.__class__.reset(self, mol)
 
         def nuc_grad_method(self) -> GradientsBase:
@@ -601,6 +602,12 @@ def d3_hess(scf_hess, **kwargs):
         scf_hess.base = d3_energy(scf_hess.base, **kwargs)
 
     class DFTD3Hess(_DFTD3Hess, scf_hess.__class__):
+        def reset(self, mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None) -> "DFTD3Hess":
+            if mol is not None:
+                self.mol = mol
+            self.base.reset(mol)
+            return self
+
         def hess_nuc(
             self,
             mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None,
