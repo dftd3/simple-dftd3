@@ -29,6 +29,57 @@ except ModuleNotFoundError:
 
 
 @pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+@pytest.mark.parametrize("wrapper", ["energy", "grad", "hess"])
+def test_d3_reset(wrapper: str) -> None:
+    mol = gto.M(atom="He 0 0 0; He 0 0 2", verbose=0)
+    mf = scf.RHF(mol)
+    if wrapper == "energy":
+        obj = disp.d3_energy(mf)
+    elif wrapper == "grad":
+        obj = disp.d3_grad(mf.nuc_grad_method())
+    else:
+        obj = disp.d3_hess(mf.Hessian())
+    base = obj if wrapper == "energy" else obj.base
+
+    assert obj.reset() is obj
+    assert base.with_dftd3.mol is mol
+
+    new_mol = mol.set_geom_("He 0 0 0; He 0 0 3", inplace=False)
+    assert obj.reset(new_mol) is obj
+    assert obj.mol is new_mol
+    assert base.mol is new_mol
+    assert base.with_dftd3.mol is new_mol
+    assert base.with_dftd3.kernel()[0] == approx(
+        disp.DFTD3Dispersion(new_mol).kernel()[0], abs=1.0e-14
+    )
+
+    assert obj.reset() is obj
+    assert base.with_dftd3.mol is new_mol
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
+@pytest.mark.parametrize("gradient", [False, True])
+def test_d3_scanner_reset(gradient: bool) -> None:
+    mol = gto.M(atom="He 0 0 0; He 0 0 2", verbose=0)
+    mf = disp.d3_energy(scf.RHF(mol))
+    scanner = (mf.nuc_grad_method() if gradient else mf).as_scanner()
+
+    for distance in [3, 4]:
+        new_mol = mol.set_geom_(f"He 0 0 0; He 0 0 {distance}", inplace=False)
+        result = scanner(new_mol)
+        base = scanner.base if gradient else scanner
+        assert base.with_dftd3.mol is new_mol
+
+        reference = disp.d3_energy(scf.RHF(new_mol)).run()
+        energy = result[0] if gradient else result
+        assert energy == approx(reference.e_tot, abs=1.0e-10)
+        if gradient:
+            assert result[1] == approx(
+                reference.nuc_grad_method().kernel(), abs=1.0e-10
+            )
+
+
+@pytest.mark.skipif(pyscf is None, reason="requires pyscf")
 def test_hessian_layout() -> None:
     """The dispersion hessian must use the pyscf (natm, natm, 3, 3) layout"""
     from dftd3.interface import DispersionModel, RationalDampingParam
