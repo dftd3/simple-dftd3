@@ -602,7 +602,9 @@ def d3_hess(scf_hess, **kwargs):
         scf_hess.base = d3_energy(scf_hess.base, **kwargs)
 
     class DFTD3Hess(_DFTD3Hess, scf_hess.__class__):
-        def reset(self, mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None) -> "DFTD3Hess":
+        def reset(
+            self, mol: Optional[Union[gto.Mole, pbc.gto.Cell]] = None
+        ) -> "DFTD3Hess":
             if mol is not None:
                 self.mol = mol
             self.base.reset(mol)
