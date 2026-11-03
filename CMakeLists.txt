@@ -37,7 +37,7 @@ if(NOT TARGET "MPI::MPI_Fortran" AND SDFTD3_WITH_MPI)
 endif()
 
 # Collect subprojects
-if(NOT TARGET "toml-f::toml-f")
+if(NOT TARGET "toml-f::toml-f" AND SDFTD3_WITH_APP)
   find_package("toml-f" REQUIRED)
 endif()
 if(NOT TARGET "mctc-lib::mctc-lib")
@@ -50,10 +50,10 @@ set(
   lib-deps
   "mctc-lib::mctc-lib"
 )
-set(
-  exe-deps
-  "toml-f::toml-f"
-)
+set(exe-deps)
+if(SDFTD3_WITH_APP)
+  list(APPEND exe-deps "toml-f::toml-f")
+endif()
 
 # Collect source of the project
 set(srcs)
@@ -112,7 +112,9 @@ target_include_directories(
 )
 
 # Add example application
-add_subdirectory("app")
+if(SDFTD3_WITH_APP)
+  add_subdirectory("app")
+endif()
 
 # Export targets for other projects
 add_library("${PROJECT_NAME}" INTERFACE)

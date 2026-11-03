@@ -47,6 +47,12 @@ option(
   description: 'Build C API using iso_c_binding module',
 )
 option(
+  'app',
+  type: 'boolean',
+  value: true,
+  description: 'Build the command line application',
+)
+option(
   'python',
   type: 'boolean',
   value: false,

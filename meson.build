@@ -63,7 +63,9 @@ sdftd3_parameters = files(
 )
 
 # Add applications
-subdir('app')
+if get_option('app')
+  subdir('app')
+endif
 
 # Package the license files
 sdftd3_lic = files(
@@ -103,7 +105,7 @@ if install
   )
 
   asciidoc = find_program('asciidoctor', required: false)
-  if asciidoc.found()
+  if asciidoc.found() and get_option('app')
     install_man(
       configure_file(
         command: [asciidoc, '-b', 'manpage', '@INPUT@', '-o', '@OUTPUT@'],
