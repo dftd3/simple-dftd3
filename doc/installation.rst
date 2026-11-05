@@ -96,8 +96,8 @@ To setup a new build run
    meson setup _build --prefix=$HOME/.local
 
 The command line application is built by default and requires ``toml-f``.
-To build only the library and omit this dependency, configure with
-``-Dapp=false``.
+To build only the library, configure with ``-Dapp=false``.
+Note that `mctc-lib`_ can also depend on ``toml-f`` through its JSON support, please see the `mctc-lib`_ documentation for more details.
 
 The Fortran and C compiler can be selected with the ``FC`` and ``CC`` environment variable, respectively.
 The installation location is selected using the ``--prefix`` option.
