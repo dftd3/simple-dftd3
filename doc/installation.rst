@@ -46,7 +46,7 @@ This library depends on few Fortran modules to provide the desired functionality
 
 - `mctc-lib`_: Modular computation tool chain library
 - `mstore`_: Molecular structure store (testing only)
-- `toml-f`_: TOML parser for Fortran
+- `toml-f`_: TOML parser for Fortran (command line application only)
 
 When building from source the dependencies will be downloaded automatically if not available on the system.
 To build offline install the dependencies before building the library or provide the source of the dependencies in the *subprojects* directory.
@@ -94,6 +94,10 @@ To setup a new build run
 .. code:: text
 
    meson setup _build --prefix=$HOME/.local
+
+The command line application is built by default and requires ``toml-f``.
+To build only the library, configure with ``-Dapp=false``.
+Note that `mctc-lib`_ can also depend on ``toml-f`` through its JSON support, please see the `mctc-lib`_ documentation for more details.
 
 The Fortran and C compiler can be selected with the ``FC`` and ``CC`` environment variable, respectively.
 The installation location is selected using the ``--prefix`` option.
@@ -148,6 +152,10 @@ Configure a new build with
 .. code:: text
 
    cmake -B _build -G Ninja -DCMAKE_INSTALL_PREFIX=$HOME/.local
+
+The command line application is built by default and requires ``toml-f``.
+To build only the library and omit this dependency, configure with
+``-DSDFTD3_WITH_APP=OFF``.
 
 The Python extension can be enabled with CMake 3.18 or newer by adding
 ``-DSDFTD3_WITH_PYTHON=ON`` and selecting the interpreter with

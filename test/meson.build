@@ -22,4 +22,6 @@ subdir('unit')
 if get_option('mpi')
   subdir('mpi')
 endif
-subdir('validation')
+if get_option('app')
+  subdir('validation')
+endif
